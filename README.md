@@ -112,14 +112,14 @@ would get either a 0.5 or 10 respectively.
 |Task 1 | low | 0.5 | Patrol B | 2.0 |  1.00 |
 |Task 1 | low | 0.5 | Patrol C | 0.5 |  0.25 |
 |Task 1 | low | 0.5 | Patrol D | 3.0 |  1.50 |
-|Task 2 | low | 1.0 | Patrol A | 1.0 |  1.0 |
-|Task 2 | low | 1.0 | Patrol B | 2.0 |  2.0 |
-|Task 2 | low | 1.0 | Patrol C | 0.5 |  0.5 |
-|Task 2 | low | 1.0 | Patrol D | 3.0 |  3.0 |
-|Task 3 | low | 5.0 | Patrol A | 1.0 |  5.0 |
-|Task 3 | low | 5.0 | Patrol B | 2.0 | 10.0 |
-|Task 3 | low | 5.0 | Patrol C | 0.5 |  2.5 |
-|Task 3 | low | 5.0 | Patrol D | 3.0 | 25.0 |
+|Task 2 | medium | 1.0 | Patrol A | 1.0 |  1.0 |
+|Task 2 | medium | 1.0 | Patrol B | 2.0 |  2.0 |
+|Task 2 | medium | 1.0 | Patrol C | 0.5 |  0.5 |
+|Task 2 | medium | 1.0 | Patrol D | 3.0 |  3.0 |
+|Task 3 | high | 5.0 | Patrol A | 1.0 |  5.0 |
+|Task 3 | high | 5.0 | Patrol B | 2.0 | 10.0 |
+|Task 3 | high | 5.0 | Patrol C | 0.5 |  2.5 |
+|Task 3 | high | 5.0 | Patrol D | 3.0 | 25.0 |
 
 ###### Task Score Active
 
