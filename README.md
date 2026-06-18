@@ -173,3 +173,21 @@ The Night Ops Adventures team will be hosting our own services for our own event
 That said, we will set it up in a way that we can offer it as a service to others
 running their own Night Ops Events should they wish to utilize the system without
 having to figure out how to run it on their own.
+
+## Backend Development
+
+### Setup
+
+1. Install dependencies:
+   ```bash
+   pip install .
+   ```
+
+2. Run the server:
+   ```bash
+   uvicorn nightrunner_backend.main:app --reload
+   ```
+
+### API
+
+- `GET /health`: Health check endpoint.

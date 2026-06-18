@@ -1,0 +1,20 @@
+[project]
+name = "nightrunner-backend"
+version = "0.1.0"
+dependencies = [
+    "falcon[asgi]",
+    "uvicorn",
+    "aiosqlite",
+    "psycopg[binary]",
+    "pyjwt[crypto]",
+    "pydantic",
+    "uuid6",
+    "python-dotenv",
+]
+
+[tool.setuptools]
+packages = ["nightrunner_backend"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
