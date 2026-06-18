@@ -4,6 +4,9 @@ import falcon.asgi
 from nightrunner_backend.transport.middleware.auth import AuthMiddleware
 from nightrunner_backend.app_context import get_driver, run_migrations, close_driver
 
+from nightrunner_backend.transport.events import EventsResource, EventResource
+from nightrunner_backend.transport.patrols import PatrolsResource, PatrolResource
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -43,3 +46,11 @@ class MeResource:
         }
 
 app.add_route("/me", MeResource())
+
+# Events
+app.add_route("/events", EventsResource())
+app.add_route("/events/{event_id}", EventResource())
+
+# Patrols
+app.add_route("/patrols", PatrolsResource())
+app.add_route("/patrols/{patrol_id}", PatrolResource())
