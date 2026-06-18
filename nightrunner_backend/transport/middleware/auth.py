@@ -4,7 +4,7 @@ import jwt
 from jwt import PyJWKClient
 from typing import Optional, List, Dict, Any
 from nightrunner_backend.config.settings import settings
-from nightrunner_backend.drivers.base import DatabaseDriver
+from nightrunner_backend.app_context import get_driver
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,13 @@ class AuthMiddleware:
         self.jwks_client: Optional[PyJWKClient] = None
         if settings.jwks_url:
             self.jwks_client = PyJWKClient(settings.jwks_url)
-        self.db = DatabaseDriver()
+        # We don't call get_driver() here to avoid early initialization at module load time if possible,
+        # but AuthMiddleware is instantiated in main.py. 
+        # Actually, it's better to get it when needed.
+
+    @property
+    def db(self):
+        return get_driver()
 
     async def process_request(self, req: falcon.Request, resp: falcon.Response):
         """
@@ -83,14 +89,12 @@ class AuthMiddleware:
         """
         if not self.jwks_client:
             if settings.dev_mode:
-                logger.warning("JWKS not configured. Skipping signature verification (DEV MODE).")
+                logger.warning("JWKS not configured. Using UNVERIFIED token (DEV MODE ONLY).")
                 return jwt.decode(token, options={"verify_signature": False})
             
-            # This should ideally be caught by settings validation, but as a safety:
-            raise falcon.HTTPInternalServerError(
-                description="OIDC configured but JWKS client missing and not in dev_mode."
-            )
+            raise jwt.PyJWTError("OIDC configured but JWKS client missing and not in dev_mode.")
 
+        # PyJWKClient.get_signing_key_from_jwt is synchronous but usually fast
         signing_key = self.jwks_client.get_signing_key_from_jwt(token)
         
         return jwt.decode(
