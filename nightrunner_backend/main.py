@@ -2,6 +2,7 @@ import os
 import logging
 import falcon.asgi
 from nightrunner_backend.drivers.base import DatabaseDriver
+from nightrunner_backend.transport.middleware.auth import AuthMiddleware
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -61,7 +62,7 @@ class MigrationMiddleware:
     async def process_startup(self, scope, event):
         await run_migrations()
 
-app = falcon.asgi.App(middleware=[MigrationMiddleware()])
+app = falcon.asgi.App(middleware=[MigrationMiddleware(), AuthMiddleware()])
 
 class HealthResource:
     """
@@ -71,3 +72,18 @@ class HealthResource:
         resp.media = {"status": "ok"}
 
 app.add_route("/health", HealthResource())
+
+class MeResource:
+    """
+    Protected endpoint to show current user info.
+    """
+    async def on_get(self, req, resp):
+        if not req.context.user:
+            raise falcon.HTTPUnauthorized(description="Authentication required.")
+        
+        resp.media = {
+            "user": req.context.user,
+            "roles": req.context.roles
+        }
+
+app.add_route("/me", MeResource())

@@ -180,12 +180,17 @@ having to figure out how to run it on their own.
 
 1. Install dependencies:
    ```bash
-   pip install .
+   pip install -e ".[test]"
    ```
 
 2. Run the server:
    ```bash
    uvicorn nightrunner_backend.main:app --reload
+   ```
+
+3. Run tests:
+   ```bash
+   pytest
    ```
 
 ### API
