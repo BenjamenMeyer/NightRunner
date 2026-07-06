@@ -16,10 +16,10 @@ async def test_create_and_get_patrol(db):
     store = PatrolsStore(db)
     patrol = Patrol(
         id=str(uuid6.uuid7()),
-        program_name="Scouts BSA",
+        program_name="Trail Life",
         members=[
-            PatrolMember(id=str(uuid6.uuid7()), name="Alice", rank="Patrol Leader", troop="123"),
-            PatrolMember(id=str(uuid6.uuid7()), name="Bob", rank="Member", troop="123")
+            PatrolMember(id=str(uuid6.uuid7()), name="Alice", rank="Patrol Leader", troop="GA-0594"),
+            PatrolMember(id=str(uuid6.uuid7()), name="Bob", rank="Member", troop="GA-0594")
         ]
     )
     

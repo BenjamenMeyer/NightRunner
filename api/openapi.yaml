@@ -970,7 +970,7 @@ components:
           readOnly: true
         programName:
           type: string
-          example: "Scout Troop 500"
+          example: "TL Troop GA-0594"
         members:
           type: array
           items:
@@ -988,10 +988,10 @@ components:
           example: "John Doe"
         rank:
           type: string
-          example: "First Class"
+          example: "Navigator"
         troop:
           type: string
-          example: "500"
+          example: "GA-0594"
     Station:
       type: object
       properties:

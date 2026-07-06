@@ -29,7 +29,7 @@ async def test_api_patrols_lifecycle(client):
     assert resp.status_code == 201
     created_patrol = resp.json
     patrol_id = created_patrol["id"]
-    assert created_patrol["programName"] == "Scouts BSA"
+    assert created_patrol["programName"] == "Trail Life"
     assert len(created_patrol["members"]) == 2
     
     # List Patrols
@@ -40,7 +40,7 @@ async def test_api_patrols_lifecycle(client):
     # Get Patrol
     resp = await client.simulate_get(f"/patrols/{patrol_id}", headers=headers)
     assert resp.status_code == 200
-    assert resp.json["programName"] == "Scouts BSA"
+    assert resp.json["programName"] == "Trail Life"
     
     # Update Patrol
     update_data = {

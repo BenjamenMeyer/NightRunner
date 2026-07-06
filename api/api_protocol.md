@@ -199,18 +199,18 @@ Represents a patrol participating in the event.
 ```json
 {
   "id": "uuid-string-patrol-1",
-  "programName": "Scout Troop 500",
+  "programName": "TL Troop GA-0594",
   "members": [
     {
       "id": "uuid-string-member-1",
       "name": "John Doe",
-      "rank": "First Class",
+      "rank": "Navigator",
       "troop": "500"
     },
     {
       "id": "uuid-string-member-2",
       "name": "Jane Smith",
-      "rank": "Star Scout",
+      "rank": "Adventurer",
       "troop": "500"
     }
   ]
@@ -399,7 +399,7 @@ Represents generated reports for the event.
   "patrolScores": [
     {
       "patrolId": "uuid-string-patrol-1",
-      "patrolName": "Scout Troop 500",
+      "patrolName": "TL Troop GA-0594",
       "totalScore": 850.5,
       "rank": 1,
       "stationBreakdown": [
@@ -412,4 +412,5 @@ Represents generated reports for the event.
     }
   ]
 }
+```
 ```
