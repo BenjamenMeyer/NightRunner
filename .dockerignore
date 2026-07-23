@@ -1,0 +1,17 @@
+.venv
+venv
+__pycache__
+.git
+.pytest_cache
+tests
+docs
+nightrunner.db
+*.egg-info
+.env
+Dockerfile
+docker-compose.yaml
+README.md
+LICENSE
+verify_*.py
+build
+dist
