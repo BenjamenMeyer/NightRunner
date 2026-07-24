@@ -29,7 +29,19 @@ class AuthMiddleware:
         Validates the Bearer token in the Authorization header.
         """
         # Skip auth for health check or if OIDC is not configured
-        if req.path == "/health" or not settings.oidc_issuer:
+
+        public_paths = {
+            "/health",
+            "/api/v1/auth/login",
+        }
+
+        if req.path in public_paths:
+            req.context.user = None
+            req.context.roles = []
+            return
+
+            # Skip authentication when OIDC is not configured
+        if not settings.oidc_issuer:
             req.context.user = None
             req.context.roles = []
             return

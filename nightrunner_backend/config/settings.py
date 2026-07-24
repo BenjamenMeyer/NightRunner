@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     oidc_issuer: str = ""
     oidc_audience: str = ""
     jwks_url: str = ""
+    front_end_url: str = os.getenv("FRONT_END_URL", "http://localhost:3000")
     
     # Database settings might be needed by the middleware to fetch user roles
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///nightrunner.db")

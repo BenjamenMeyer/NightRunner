@@ -21,6 +21,7 @@ services:
     environment:
       DATABASE_URL: postgresql://nightrunner:nightrunner_password@db:5432/nightrunner
       DEV_MODE: "true"
+      FRONT_END_URL: "http://localhost:3000"
     depends_on:
       db:
         condition: service_healthy
