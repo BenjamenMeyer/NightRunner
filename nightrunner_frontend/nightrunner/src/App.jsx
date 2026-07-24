@@ -1,27 +1,27 @@
-import NOAImage from './assets/nightopadventures.jpg'
+import { Routes, Route } from "react-router-dom";
 
-import './App.css'
+import Layout from "./components/Layout";
+
+import Login from "./pages/Login";
+import NotFound from "./pages/NotFound";
 
 function App() {
+    return (
+        <Routes>
 
-  return (
-    <>
-      <section>
-        <img
-            src={NOAImage}
-            alt="Night Ops Adventures"
-            style={{ maxWidth: '300px', width: '100%', height: 'auto' }}
-        />
-      </section>
+            {/* All pages using the main application layout */}
+            <Route element={<Layout />}>
 
+                <Route path="/" element={<Login />} />
+                <Route path="/404" element={<NotFound />} />
 
-      <body>
-      <p>
-        Welcome to Night Ops Adventures! This is a placeholder.
-      </p>
-      </body>
-    </>
-  )
+            </Route>
+
+            {/* Catch-all route */}
+            <Route path="*" element={<NotFound />} />
+
+        </Routes>
+    );
 }
 
-export default App
+export default App;

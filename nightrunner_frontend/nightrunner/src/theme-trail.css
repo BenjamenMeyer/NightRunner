@@ -1,0 +1,35 @@
+:root {
+
+    /* Primary */
+
+    --header-background: #8B1E23;
+    --sidebar-background: #2F343A;
+    --content-background: #ECEFF1;
+
+    /* Cards */
+
+    --card-background: #FFFFFF;
+
+    /* Text */
+
+    --header-text: #FFFFFF;
+    --sidebar-text: #FFFFFF;
+
+    --text-primary: #222222;
+    --text-secondary: #666666;
+
+    /* Borders */
+
+    --border-color: #D6D9DC;
+
+    /* Hover */
+
+    --sidebar-hover: #40474F;
+    --button-primary: #8B1E23;
+    --button-primary-hover: #74181C;
+
+    /* Sizes */
+
+    --sidebar-width: 260px;
+    --header-height: 72px;
+}

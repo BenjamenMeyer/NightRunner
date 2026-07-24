@@ -1,0 +1,98 @@
+/* ==========================================
+   Cards
+   ========================================== */
+
+.card {
+
+    border-radius: 8px;
+
+    padding: 24px;
+
+}
+
+/* ==========================================
+   Forms
+   ========================================== */
+
+.form {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 16px;
+
+}
+
+.form input,
+.form select,
+.form textarea {
+
+    padding: 12px;
+
+    border-radius: 6px;
+
+}
+
+.form button {
+
+    padding: 12px;
+
+    cursor: pointer;
+
+}
+
+/* ==========================================
+   Sidebar Navigation
+   ========================================== */
+
+.sidebar-nav {
+
+    display: flex;
+    flex-direction: column;
+
+    margin-top: 24px;
+
+}
+
+.sidebar-nav a {
+
+    text-decoration: none;
+
+    padding: 14px 24px;
+
+    transition: background .2s;
+
+}
+
+/* ==========================================
+   Sidebar Footer
+   ========================================== */
+
+.sidebar-footer {
+
+    margin-top: auto;
+
+    padding: 20px;
+
+}
+
+/* ==========================================
+   Tables
+   ========================================== */
+
+.table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+}
+
+.table th,
+.table td {
+
+    padding: 12px;
+
+    text-align: left;
+
+}

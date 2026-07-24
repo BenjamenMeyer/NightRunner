@@ -1,0 +1,108 @@
+:root {
+
+    /* Backgrounds */
+
+    --sidebar-bg: #2F343A;
+    --header-bg: #8B1E23;
+    --page-bg: #ECEFF1;
+
+    /* Cards */
+
+    --card-bg: #FFFFFF;
+
+    /* Text */
+
+    --sidebar-text: #FFFFFF;
+    --header-text: #FFFFFF;
+
+    --text-primary: #222222;
+    --text-secondary: #666666;
+
+    /* Borders */
+
+    --border: #D6D9DC;
+
+    /* Hover */
+
+    --sidebar-hover: #41474F;
+
+    /* Buttons */
+
+    --button-bg: #8B1E23;
+    --button-hover: #74181C;
+
+}
+
+body {
+
+    background: var(--page-bg);
+
+    color: var(--text-primary);
+
+}
+
+.sidebar {
+
+    background: var(--sidebar-bg);
+
+    color: var(--sidebar-text);
+
+}
+
+.header {
+
+    background: var(--header-bg);
+
+    color: var(--header-text);
+
+}
+
+.page-content {
+
+    background: var(--page-bg);
+
+}
+
+.card {
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border);
+
+}
+
+.form input,
+.form select,
+.form textarea {
+
+    border: 1px solid var(--border);
+
+}
+
+.form button {
+
+    background: var(--button-bg);
+
+    color: white;
+
+    border: none;
+
+}
+
+.form button:hover {
+
+    background: var(--button-hover);
+
+}
+
+.sidebar-nav a {
+
+    color: var(--sidebar-text);
+
+}
+
+.sidebar-nav a:hover {
+
+    background: var(--sidebar-hover);
+
+}
