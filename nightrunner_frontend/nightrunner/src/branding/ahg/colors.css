@@ -1,0 +1,78 @@
+:root {
+
+    /*
+     * Backgrounds
+     */
+
+    --sidebar-bg: #003B71;
+    --header-bg: #00539F;
+    --page-bg: #EEF3F8;
+
+    /*
+     * Cards
+     */
+
+    --card-bg: #FFFFFF;
+
+    /*
+     * Text
+     */
+
+    --sidebar-text: #FFFFFF;
+    --header-text: #FFFFFF;
+
+    --text-primary: #1F2937;
+    --text-secondary: #6B7280;
+
+    /*
+     * Borders
+     */
+
+    --border: #D4DCE5;
+
+    /*
+     * Hover
+     */
+
+    --sidebar-hover: #004C91;
+
+    /*
+     * Buttons
+     */
+
+    --button-bg: #00539F;
+    --button-hover: #003B71;
+    --button-text: #FFFFFF;
+
+    /*
+     * Forms
+     */
+
+    --input-bg: #FFFFFF;
+    --input-border: #D4DCE5;
+    --input-text: #1F2937;
+    --input-focus: #00539F;
+
+    /*
+     * Links
+     */
+
+    --link: #00539F;
+    --link-hover: #003B71;
+
+    /*
+     * Shadows
+     */
+
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+    /*
+     * Status
+     */
+
+    --success: #2E7D32;
+    --warning: #F9A825;
+    --error: #C62828;
+    --info: #0288D1;
+
+}
