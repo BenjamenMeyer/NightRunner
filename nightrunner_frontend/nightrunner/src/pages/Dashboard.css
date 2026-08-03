@@ -1,0 +1,149 @@
+.dashboard {
+
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+}
+
+.dashboard-top {
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+.dashboard-top h1 {
+
+    margin: 0;
+    color: var(--text-primary);
+
+}
+
+.dashboard-top p {
+
+    margin-top: 6px;
+    color: var(--text-secondary);
+
+}
+
+.dashboard-cards {
+
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+
+}
+
+.dashboard-card {
+
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    transition: .2s;
+
+}
+
+.dashboard-card.clickable {
+
+    cursor: pointer;
+
+}
+
+.dashboard-card.clickable:hover {
+
+    transform: translateY(-2px);
+    border-color: var(--button-bg);
+    box-shadow: 0 6px 16px rgba(0,0,0,.08);
+
+}
+
+.dashboard-card h2 {
+
+    margin: 0;
+    font-size: 18px;
+    color: var(--text-primary);
+
+}
+
+.dashboard-card span {
+
+    display: block;
+    margin-top: 18px;
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--button-bg);
+
+}
+
+.dashboard-section {
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+}
+
+.card {
+
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+
+}
+
+.section-header {
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+}
+
+.dashboard-table {
+
+    width: 100%;
+    border-collapse: collapse;
+
+}
+
+.dashboard-table th,
+.dashboard-table td {
+
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+
+}
+
+.dashboard-table th {
+
+    background: rgba(0,0,0,.03);
+
+}
+
+.table-clickable {
+
+    cursor: pointer;
+
+}
+
+.table-clickable:hover {
+
+    background: rgba(0,0,0,.04);
+
+}
+
+.error-banner {
+
+    padding: 14px;
+    border-radius: 8px;
+    background: #ffdcdc;
+    color: #8b0000;
+    border: 1px solid #f3b5b5;
+
+}

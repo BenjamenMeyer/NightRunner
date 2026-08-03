@@ -1,0 +1,191 @@
+.login-page {
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    min-height: 100%;
+
+    padding: 40px;
+
+    box-sizing: border-box;
+
+}
+
+.login-logo {
+
+    width: 220px;
+
+    height: auto;
+
+    margin-bottom: 30px;
+
+}
+
+.login-card {
+
+    width: 100%;
+
+    max-width: 460px;
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border);
+
+    border-radius: 10px;
+
+    padding: 32px;
+
+    box-shadow: var(--shadow);
+
+    box-sizing: border-box;
+
+}
+
+.login-card h1 {
+
+    margin: 0 0 10px;
+
+    text-align: center;
+
+}
+
+.login-subtitle {
+
+    margin-bottom: 24px;
+
+    text-align: center;
+
+    color: var(--text);
+
+}
+
+.login-form {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 16px;
+
+}
+
+.login-form input {
+
+    width: 100%;
+
+    padding: 12px 14px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 6px;
+
+    background: var(--input-bg);
+
+    color: var(--text-h);
+
+    font-size: 1rem;
+
+    box-sizing: border-box;
+
+}
+
+.login-form input:focus {
+
+    outline: none;
+
+    border-color: var(--accent);
+
+}
+
+.login-form button {
+
+    margin-top: 8px;
+
+    padding: 12px;
+
+    border: none;
+
+    border-radius: 6px;
+
+    background: var(--button-bg);
+
+    color: var(--button-text);
+
+    font-size: 1rem;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background-color 0.2s ease;
+
+}
+
+.login-form button:hover {
+
+    background: var(--button-hover);
+
+}
+
+.login-form button:disabled {
+
+    opacity: 0.6;
+
+    cursor: not-allowed;
+
+}
+
+.login-error {
+
+    color: #d32f2f;
+
+    text-align: center;
+
+    font-size: 0.95rem;
+
+}
+
+.login-divider {
+
+    margin: 24px 0;
+
+    border-top: 1px solid var(--border);
+
+}
+
+.register-section {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 8px;
+
+}
+
+.register-link {
+
+    color: var(--button-bg);
+
+    text-decoration: none;
+
+    font-weight: 600;
+
+    transition: color 0.2s ease;
+
+}
+
+.register-link:hover {
+
+    color: var(--button-hover);
+
+    text-decoration: underline;
+
+}

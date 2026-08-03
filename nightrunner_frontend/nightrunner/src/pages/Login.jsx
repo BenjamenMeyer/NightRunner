@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-import NOAImage from "../assets/nightopadventures.jpg";
+import NOAImage from "../../public/favicon.jpg";
 
-import { login } from "../api/AuthService";
+import "./Login.css";
+import ApiService from "@/api/ApiService.js";
 
 function Login() {
 
@@ -12,47 +13,34 @@ function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
-    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    const [error, setError] = useState("");
 
     async function handleSubmit(event) {
 
         event.preventDefault();
 
         setError("");
+
         setLoading(true);
 
         try {
 
-            const data = await login(
+            await ApiService.login(
                 username,
                 password
             );
 
-            /*
-             * Store the token temporarily.
-             *
-             * We will eventually replace this with
-             * a proper authentication context.
-             */
-
-            localStorage.setItem(
-                "night-runner-token",
-                data.token
-            );
-
-            localStorage.setItem(
-                "night-runner-user",
-                JSON.stringify(data.user)
-            );
-
             navigate("/dashboard");
 
-        } catch (error) {
+        }
+        catch (err) {
 
-            setError(error.message);
+            setError(err.message);
 
-        } finally {
+        }
+        finally {
 
             setLoading(false);
 
@@ -65,17 +53,21 @@ function Login() {
         <div className="login-page">
 
             <img
+                className="login-logo"
                 src={NOAImage}
                 alt="Night Ops Adventures"
-                className="logo"
             />
 
-            <div className="card login-card">
+            <div className="login-card">
 
-                <h1>Login</h1>
+                <h1>Night Runner</h1>
+
+                <p className="login-subtitle">
+                    Sign in to continue.
+                </p>
 
                 <form
-                    className="form"
+                    className="login-form"
                     onSubmit={handleSubmit}
                 >
 
@@ -83,41 +75,58 @@ function Login() {
                         type="text"
                         placeholder="Username"
                         value={username}
-                        onChange={(event) =>
-                            setUsername(event.target.value)
+                        onChange={(e) =>
+                            setUsername(e.target.value)
                         }
                         required
-                        autoComplete="current-username"
                     />
 
                     <input
                         type="password"
                         placeholder="Password"
                         value={password}
-                        onChange={(event) =>
-                            setPassword(event.target.value)
+                        onChange={(e) =>
+                            setPassword(e.target.value)
                         }
                         required
-                        autoComplete="current-password"
                     />
 
-                    {error && (
-                        <p className="form-error">
+                    {
+                        error &&
+                        <div className="login-error">
                             {error}
-                        </p>
-                    )}
+                        </div>
+                    }
 
                     <button
                         type="submit"
                         disabled={loading}
                     >
-                        {loading
-                            ? "Logging in..."
-                            : "Login"
+                        {
+                            loading
+                                ? "Signing In..."
+                                : "Sign In"
                         }
                     </button>
 
                 </form>
+
+                <div className="login-divider"></div>
+
+                <div className="register-section">
+
+                    <span>
+                        Don't have an account?
+                    </span>
+
+                    <Link
+                        to="/register"
+                        className="register-link"
+                    >
+                        Create Account
+                    </Link>
+
+                </div>
 
             </div>
 
