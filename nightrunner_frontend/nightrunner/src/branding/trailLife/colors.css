@@ -41,14 +41,6 @@ body {
 
 }
 
-.sidebar {
-
-    background: var(--sidebar-bg);
-
-    color: var(--sidebar-text);
-
-}
-
 .header {
 
     background: var(--header-bg);
@@ -92,17 +84,5 @@ body {
 .form button:hover {
 
     background: var(--button-hover);
-
-}
-
-.sidebar-nav a {
-
-    color: var(--sidebar-text);
-
-}
-
-.sidebar-nav a:hover {
-
-    background: var(--sidebar-hover);
 
 }
