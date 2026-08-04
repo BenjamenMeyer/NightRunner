@@ -26,6 +26,37 @@ export default function ScoreForm({
 
         try {
 
+            const missingTask = station.tasks.find(task => {
+                const value = scores[task.id];
+
+                switch (task.scoreValue?.type) {
+                    case "Completed":
+                        return typeof value !== "boolean";
+
+                    case "RangeRated":
+                    case "DeltaTime":
+                        return typeof value !== "number" || Number.isNaN(value);
+
+                    case "MultiChoice":
+                        return value === undefined || value === null;
+
+                    case "Stopwatch":
+                        return (
+                            !value ||
+                            !value.startTime ||
+                            !value.endTime
+                        );
+
+                    default:
+                        return value === undefined || value === null;
+                }
+            });
+
+            if (missingTask) {
+                alert(`Please complete "${missingTask.description}" before submitting.`);
+                return;
+            }
+
             const submission = {
 
                 eventId,
@@ -46,7 +77,7 @@ export default function ScoreForm({
 
                 })),
 
-                comments
+                comments: comments?.trim() || "None."
 
             };
 
