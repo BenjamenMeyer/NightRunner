@@ -10,7 +10,8 @@ function Sidebar() {
         { name: "Events", path: "/events" },
         { name: "Patrols", path: "/patrols" },
         { name: "Stations", path: "/stations" },
-        { name: "Reports", path: "/reports" }
+        { name: "Reports", path: "/reports" },
+        { name: "Scoring", path: "/scoring" },
     ];
 
 

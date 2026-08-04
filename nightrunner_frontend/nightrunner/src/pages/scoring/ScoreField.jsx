@@ -1,0 +1,424 @@
+import { useEffect, useState } from "react";
+
+import "./Scoring.css";
+
+export default function ScoreField({
+
+                                       task,
+                                       value,
+                                       onChange
+
+                                   }) {
+
+    const scoreValue = task.scoreValue ?? {};
+
+    /* Stopwatch State */
+
+    const [startedAt, setStartedAt] = useState(null);
+    const [endedAt, setEndedAt] = useState(null);
+    const [running, setRunning] = useState(false);
+    const [elapsed, setElapsed] = useState(0);
+
+    const [manual, setManual] = useState({
+        hours: "00",
+        minutes: "00",
+        seconds: "00",
+        milliseconds: "000"
+    });
+
+    useEffect(() => {
+
+        if (!running || !startedAt) {
+            return;
+        }
+
+        let frame;
+
+        const update = () => {
+
+            const newElapsed =
+                Date.now() - startedAt.getTime();
+
+            setElapsed(newElapsed);
+
+            onChange({
+                startTime: startedAt.toISOString(),
+                endTime: new Date(
+                    startedAt.getTime() + newElapsed
+                ).toISOString()
+            });
+
+            frame = requestAnimationFrame(update);
+
+        };
+
+        update();
+
+        return () =>
+            cancelAnimationFrame(frame);
+
+    }, [running, startedAt]);
+
+    function formatElapsed(ms) {
+
+        const hours = Math.floor(ms / 3600000);
+        const minutes = Math.floor((ms % 3600000) / 60000);
+        const seconds = Math.floor((ms % 60000) / 1000);
+        const millis = ms % 1000;
+
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
+
+    }
+
+    function startTimer() {
+
+        const now = new Date();
+
+        setStartedAt(now);
+        setEndedAt(null);
+        setElapsed(0);
+        setRunning(true);
+
+    }
+
+    function stopTimer() {
+
+        const end = new Date();
+
+        const finalElapsed =
+            end.getTime() - startedAt.getTime();
+
+        setEndedAt(end);
+        setElapsed(finalElapsed);
+        setRunning(false);
+
+        setManual({
+
+            hours: String(
+                Math.floor(finalElapsed / 3600000)
+            ).padStart(2, "0"),
+
+            minutes: String(
+                Math.floor((finalElapsed % 3600000) / 60000)
+            ).padStart(2, "0"),
+
+            seconds: String(
+                Math.floor((finalElapsed % 60000) / 1000)
+            ).padStart(2, "0"),
+
+            milliseconds: String(
+                finalElapsed % 1000
+            ).padStart(3, "0")
+
+        });
+
+        onChange({
+
+            startTime: startedAt.toISOString(),
+
+            endTime: end.toISOString()
+
+        });
+
+    }
+
+    function updateManual(field, newValue) {
+
+        setManual(current => ({
+
+            ...current,
+
+            [field]: newValue
+
+        }));
+
+    }
+
+    function applyManual() {
+
+        const adjustedElapsed =
+
+            Number(manual.hours) * 3600000 +
+
+            Number(manual.minutes) * 60000 +
+
+            Number(manual.seconds) * 1000 +
+
+            Number(manual.milliseconds);
+
+        setElapsed(adjustedElapsed);
+
+        const adjustedEnd = new Date(
+            startedAt.getTime() + adjustedElapsed
+        );
+
+        setEndedAt(adjustedEnd);
+
+        onChange({
+
+            startTime: startedAt.toISOString(),
+
+            endTime: adjustedEnd.toISOString()
+
+        });
+
+    }
+
+    switch (scoreValue.type) {
+
+        case "RangeRated":
+
+            return (
+
+                <div className="score-field">
+
+                    <label>{task.description}</label>
+
+                    <input
+                        type="number"
+                        min={scoreValue.min}
+                        max={scoreValue.max}
+                        value={value ?? ""}
+                        onChange={(e) =>
+                            onChange(Number(e.target.value))
+                        }
+                    />
+
+                    <small>
+                        {scoreValue.min} - {scoreValue.max}
+                    </small>
+
+                </div>
+
+            );
+
+        case "Completed":
+
+            return (
+
+                <div className="score-field">
+
+                    <label className="checkbox-option">
+
+                        <input
+                            type="checkbox"
+                            checked={value ?? false}
+                            onChange={(e) =>
+                                onChange(e.target.checked)
+                            }
+                        />
+
+                        {task.description}
+
+                    </label>
+
+                </div>
+
+            );
+
+        case "MultiChoice":
+
+            return (
+
+                <div className="score-field">
+
+                    <label>{task.description}</label>
+
+                    <select
+                        value={value ?? ""}
+                        onChange={(e) =>
+                            onChange(Number(e.target.value))
+                        }
+                    >
+
+                        <option value="">
+                            Select...
+                        </option>
+
+                        {scoreValue.options?.map(option => (
+
+                            <option
+                                key={option.label}
+                                value={option.value}
+                            >
+                                {option.label}
+                            </option>
+
+                        ))}
+
+                    </select>
+
+                </div>
+
+            );
+
+        case "DeltaTime":
+
+            return (
+
+                <div className="score-field">
+
+                    <label>{task.description}</label>
+
+                    <input
+                        type="number"
+                        value={value ?? ""}
+                        onChange={(e) =>
+                            onChange(Number(e.target.value))
+                        }
+                    />
+
+                    <small>
+                        {scoreValue.scalar} ms per point
+                    </small>
+
+                </div>
+
+            );
+
+        case "Stopwatch":
+
+            return (
+
+                <div className="score-field stopwatch-field">
+
+                    <label>{task.description}</label>
+
+                    <div className="stopwatch-card">
+
+                        <div className="timer-display">
+
+                            {formatElapsed(elapsed)}
+
+                        </div>
+
+                        <div className="timer-times">
+
+                            <div>
+
+                                <strong>Started</strong>
+
+                                <br />
+
+                                {startedAt
+                                    ? startedAt.toLocaleTimeString()
+                                    : "--"}
+
+                            </div>
+
+                            <div>
+
+                                <strong>Finished</strong>
+
+                                <br />
+
+                                {endedAt
+                                    ? endedAt.toLocaleTimeString()
+                                    : "--"}
+
+                            </div>
+
+                        </div>
+
+                        <div className="timer-buttons">
+
+                            <button
+                                className="primary-button"
+                                disabled={running}
+                                onClick={startTimer}
+                            >
+                                Start
+                            </button>
+
+                            <button
+                                className="secondary-button"
+                                disabled={!running}
+                                onClick={stopTimer}
+                            >
+                                Stop
+                            </button>
+
+                        </div>
+
+                        {!running && startedAt && (
+
+                            <>
+
+                                <label>
+
+                                    Adjust Recorded Time
+
+                                </label>
+
+                                <div className="manual-time-grid">
+
+                                    {[
+                                        ["hours", "HH", 99],
+                                        ["minutes", "MM", 59],
+                                        ["seconds", "SS", 59],
+                                        ["milliseconds", "MS", 999]
+                                    ].map(([field, label, max]) => (
+
+                                        <div key={field}>
+
+                                            <span>{label}</span>
+
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max={max}
+                                                value={manual[field]}
+                                                onChange={(e) =>
+                                                    updateManual(
+                                                        field,
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+
+                                        </div>
+
+                                    ))}
+
+                                </div>
+
+                                <button
+                                    className="secondary-button"
+                                    onClick={applyManual}
+                                >
+
+                                    Apply Adjusted Time
+
+                                </button>
+
+                            </>
+
+                        )}
+
+                    </div>
+
+                </div>
+
+            );
+
+        default:
+
+            return (
+
+                <div className="score-field unknown">
+
+                    Unsupported scoring type:{" "}
+
+                    <strong>
+
+                        {scoreValue.type ?? "Unknown"}
+
+                    </strong>
+
+                </div>
+
+            );
+
+    }
+
+}
