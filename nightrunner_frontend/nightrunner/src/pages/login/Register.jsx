@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import NOAImage from "../../public/favicon.jpg";
+import NOAImage from "../../../public/favicon.jpg";
 
 import "./Register.css";
 import ApiService from "@/api/ApiService.js";

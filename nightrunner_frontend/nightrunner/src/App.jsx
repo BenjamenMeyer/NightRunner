@@ -2,11 +2,14 @@ import { Routes, Route } from "react-router-dom";
 
 import Layout from "./components/Layout";
 
-import Login from "./pages/Login";
+import Me from "./pages/Me";
+import Login from "./pages/login/Login";
 import NotFound from "./pages/NotFound";
-import Register from "@/pages/Register.jsx";
 import Patrols from "@/pages/Patrols.jsx";
 import Dashboard from "@/pages/Dashboard.jsx";
+import Stations from "@/pages/stations/Stations.jsx";
+import Scoring from "@/pages/scoring/Scoring.jsx";
+import Register from "@/pages/login/Register.jsx";
 
 function App() {
     return (
@@ -17,6 +20,7 @@ function App() {
 
                 <Route path="/" element={<Login />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/me" element={<Me />} />
                 <Route path="/patrols" element={<Patrols />} />
                 <Route path="/register" element={<Register />}/>
                 <Route path="/404" element={<NotFound />} />

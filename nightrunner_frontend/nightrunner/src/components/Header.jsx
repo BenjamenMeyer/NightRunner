@@ -1,3 +1,6 @@
+import {NavLink} from "react-router-dom";
+import "./header.css";
+
 function Header() {
 
     return (
@@ -6,7 +9,14 @@ function Header() {
 
             <h2>Night Runner</h2>
 
-            <span>User</span>
+            <NavLink
+                to="/me"
+                className={({ isActive }) =>
+                    isActive ? "header-user active" : "header-user"
+                }
+            >
+                User
+            </NavLink>
 
         </header>
 
