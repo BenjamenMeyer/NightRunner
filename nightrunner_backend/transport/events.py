@@ -2,21 +2,20 @@ import falcon
 import uuid6
 from typing import Any, Dict
 from nightrunner_backend.app_context import get_driver
-from nightrunner_backend.drivers.events_store import EventsStore
+from nightrunner_backend.drivers.store.events import EventsStore
 from nightrunner_backend.models.event import Event
 
 class EventsResource:
     """
     Handles /events
     """
-    def __init__(self):
-        self.store = EventsStore(get_driver())
-
     async def on_get(self, req: falcon.Request, resp: falcon.Response):
-        events = await self.store.list()
+        store = EventsStore(get_driver())
+        events = await store.list()
         resp.media = [self._to_dict(e) for e in events]
 
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
+        store = EventsStore(get_driver())
         data = await req.get_media()
         event_id = str(uuid6.uuid7())
         event = Event(
@@ -29,7 +28,7 @@ class EventsResource:
             stations=data.get("stations", []),
             patrols=data.get("patrols", [])
         )
-        await self.store.create(event)
+        await store.create(event)
         resp.status = falcon.HTTP_201
         resp.media = self._to_dict(event)
 
@@ -49,17 +48,16 @@ class EventResource:
     """
     Handles /events/{event_id}
     """
-    def __init__(self):
-        self.store = EventsStore(get_driver())
-
     async def on_get(self, req: falcon.Request, resp: falcon.Response, event_id: str):
-        event = await self.store.get(event_id)
+        store = EventsStore(get_driver())
+        event = await store.get(event_id)
         if not event:
             raise falcon.HTTPNotFound()
         resp.media = self._to_dict(event)
 
     async def on_put(self, req: falcon.Request, resp: falcon.Response, event_id: str):
-        event = await self.store.get(event_id)
+        store = EventsStore(get_driver())
+        event = await store.get(event_id)
         if not event:
             raise falcon.HTTPNotFound()
         
@@ -72,14 +70,15 @@ class EventResource:
         event.stations = data.get("stations", event.stations)
         event.patrols = data.get("patrols", event.patrols)
         
-        await self.store.update(event)
+        await store.update(event)
         resp.media = self._to_dict(event)
 
     async def on_delete(self, req: falcon.Request, resp: falcon.Response, event_id: str):
-        event = await self.store.get(event_id)
+        store = EventsStore(get_driver())
+        event = await store.get(event_id)
         if not event:
             raise falcon.HTTPNotFound()
-        await self.store.delete(event_id)
+        await store.delete(event_id)
         resp.status = falcon.HTTP_204
 
     def _to_dict(self, event: Event) -> Dict[str, Any]:

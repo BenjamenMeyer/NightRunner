@@ -2,15 +2,15 @@ from typing import List, Optional
 from nightrunner_backend.drivers.base import DatabaseDriver
 from nightrunner_backend.models.patrol import Patrol, PatrolMember
 
-LIST_PATROLS = "SELECT id, program_name FROM patrols"
-GET_PATROL = "SELECT id, program_name FROM patrols WHERE id = :id"
+LIST_PATROLS = "SELECT id, name FROM patrols"
+GET_PATROL = "SELECT id, name FROM patrols WHERE id = :id"
 CREATE_PATROL = """
-    INSERT INTO patrols (id, program_name)
-    VALUES (:id, :program_name)
+    INSERT INTO patrols (id, name)
+    VALUES (:id, :name)
 """
 UPDATE_PATROL = """
     UPDATE patrols
-    SET program_name = :program_name
+    SET name = :name
     WHERE id = :id
 """
 DELETE_PATROL = "DELETE FROM patrols WHERE id = :id"
@@ -30,7 +30,7 @@ class PatrolsStore:
         rows = await self.driver.execute(LIST_PATROLS)
         patrols = []
         for row in rows:
-            patrol = Patrol(id=row["id"], program_name=row["program_name"])
+            patrol = Patrol(id=row["id"], name=row["name"])
             member_rows = await self.driver.execute(LIST_PATROL_MEMBERS, {"patrol_id": patrol.id})
             patrol.members = [
                 PatrolMember(
@@ -47,7 +47,7 @@ class PatrolsStore:
         row = await self.driver.fetch_one(GET_PATROL, {"id": patrol_id})
         if not row:
             return None
-        patrol = Patrol(id=row["id"], program_name=row["program_name"])
+        patrol = Patrol(id=row["id"], name=row["name"])
         member_rows = await self.driver.execute(LIST_PATROL_MEMBERS, {"patrol_id": patrol_id})
         patrol.members = [
             PatrolMember(
@@ -62,7 +62,7 @@ class PatrolsStore:
     async def create(self, patrol: Patrol) -> None:
         await self.driver.execute(CREATE_PATROL, {
             "id": patrol.id,
-            "program_name": patrol.program_name
+            "name": patrol.name
         })
         for member in patrol.members:
             await self.driver.execute(CREATE_PATROL_MEMBER, {
@@ -76,7 +76,7 @@ class PatrolsStore:
     async def update(self, patrol: Patrol) -> None:
         await self.driver.execute(UPDATE_PATROL, {
             "id": patrol.id,
-            "program_name": patrol.program_name
+            "name": patrol.name
         })
         # Simple sync for members: delete and re-insert
         await self.driver.execute(DELETE_PATROL_MEMBERS, {"patrol_id": patrol.id})

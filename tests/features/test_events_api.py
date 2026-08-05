@@ -5,15 +5,13 @@ from nightrunner_backend.main import app
 from nightrunner_backend.app_context import get_driver, close_driver
 
 @pytest.fixture
-async def client():
-    # Ensure we use a clean in-memory DB for API tests
-    driver = get_driver()
-    # In-memory SQLite might be tricky if get_driver() is called multiple times
-    # but for now let's assume it works or we override it.
-    await driver.run_migrations()
+async def client(test_database):
+    # Use the driver provided by the per-test in-memory DB fixture
+    driver = test_database
+    # Migrations have already been applied by the fixture
     async with falcon.testing.ASGITestClient(app) as client:
         yield client
-    await close_driver()
+    # No additional cleanup needed; test_database fixture handles it
 
 @pytest.mark.asyncio
 async def test_api_events_lifecycle(client):

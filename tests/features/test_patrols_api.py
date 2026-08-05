@@ -5,12 +5,13 @@ from nightrunner_backend.main import app
 from nightrunner_backend.app_context import get_driver, close_driver
 
 @pytest.fixture
-async def client():
-    driver = get_driver()
-    await driver.run_migrations()
+async def client(test_database):
+    # Use the driver provided by the per-test in-memory DB fixture
+    driver = test_database
+    # Migrations already applied by fixture
     async with falcon.testing.ASGITestClient(app) as client:
         yield client
-    await close_driver()
+    # Cleanup handled by test_database fixture
 
 @pytest.mark.asyncio
 async def test_api_patrols_lifecycle(client):
@@ -18,7 +19,7 @@ async def test_api_patrols_lifecycle(client):
     
     # Create Patrol
     patrol_data = {
-        "programName": "Scouts BSA",
+        "name": "Scouts BSA",
         "members": [
             {"name": "Alice", "rank": "Patrol Leader"},
             {"name": "Bob"}
@@ -29,7 +30,7 @@ async def test_api_patrols_lifecycle(client):
     assert resp.status_code == 201
     created_patrol = resp.json
     patrol_id = created_patrol["id"]
-    assert created_patrol["programName"] == "Trail Life"
+    assert created_patrol["name"] == "Scouts BSA"
     assert len(created_patrol["members"]) == 2
     
     # List Patrols
@@ -40,18 +41,18 @@ async def test_api_patrols_lifecycle(client):
     # Get Patrol
     resp = await client.simulate_get(f"/patrols/{patrol_id}", headers=headers)
     assert resp.status_code == 200
-    assert resp.json["programName"] == "Trail Life"
+    assert resp.json["name"] == "Scouts BSA"
     
     # Update Patrol
     update_data = {
-        "programName": "Updated Patrol",
+        "name": "Updated Patrol",
         "members": [
             {"name": "Charlie"}
         ]
     }
     resp = await client.simulate_put(f"/patrols/{patrol_id}", json=update_data, headers=headers)
     assert resp.status_code == 200
-    assert resp.json["programName"] == "Updated Patrol"
+    assert resp.json["name"] == "Updated Patrol"
     assert len(resp.json["members"]) == 1
     assert resp.json["members"][0]["name"] == "Charlie"
     

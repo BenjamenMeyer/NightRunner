@@ -1,15 +1,15 @@
-from dataclasses import dataclass, field
 from typing import List, Optional
 
-@dataclass
 class PatrolMember:
-    id: str
-    name: str
-    rank: Optional[str] = None
-    troop: Optional[str] = None
+    def __init__(self, id: str, name: str, rank: Optional[str] = None, troop: Optional[str] = None):
+        self.id = id
+        self.name = name
+        self.rank = rank
+        self.troop = troop
 
-@dataclass
 class Patrol:
-    id: str
-    program_name: str
-    members: List[PatrolMember] = field(default_factory=list)
+    """Patrol model with a `name` field."""
+    def __init__(self, id: str, name: Optional[str] = None, members: Optional[List[PatrolMember]] = None):
+        self.id = id
+        self.name = name
+        self.members = members if members is not None else []

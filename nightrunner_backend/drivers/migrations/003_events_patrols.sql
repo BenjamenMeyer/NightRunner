@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS event_organizers (
 
 CREATE TABLE IF NOT EXISTS patrols (
     id TEXT PRIMARY KEY, -- UUIDv7
-    program_name TEXT NOT NULL
+    name TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS patrol_members (

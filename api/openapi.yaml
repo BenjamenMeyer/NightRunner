@@ -842,6 +842,275 @@ paths:
                 $ref: '#/components/schemas/EventReport'
         '404':
           description: Report not found for this event.
+  /v1/reports/events/{eventId}:
+    get:
+      summary: Get Event Report
+      description: Retrieves the final scoring report for a given event.
+      tags:
+        - Reports
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The event report object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventReport'
+        '404':
+          description: Report not found for this event.
+
+
+  /v1/reports/stations/{stationId}:
+    get:
+      summary: Get Station Report
+      description: Retrieves the final scoring report for a given station.
+      tags:
+        - Reports
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: stationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The station report object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationReport'
+        '404':
+          description: Report not found for this station.
+
+  /v1/configuration-groups:
+    get:
+      summary: List Configuration Groups
+      description: Retrieves all configuration groups.
+      tags:
+        - Configuration Groups
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of configuration groups.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConfigurationGroup'
+    post:
+      summary: Create Configuration Group
+      description: Creates a new configuration group.
+      tags:
+        - Configuration Groups
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationGroup'
+      responses:
+        '201':
+          description: Configuration group created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationGroup'
+  /v1/configuration-groups/{groupId}:
+    get:
+      summary: Get Configuration Group
+      description: Retrieves a specific configuration group.
+      tags:
+        - Configuration Groups
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Configuration group object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationGroup'
+        '404':
+          description: Group not found.
+    put:
+      summary: Update Configuration Group
+      description: Updates a configuration group.
+      tags:
+        - Configuration Groups
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationGroup'
+      responses:
+        '200':
+          description: Configuration group updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationGroup'
+        '404':
+          description: Group not found.
+    delete:
+      summary: Delete Configuration Group
+      description: Deletes a configuration group.
+      tags:
+        - Configuration Groups
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Group deleted successfully.
+        '404':
+          description: Group not found.
+  /v1/configurations:
+    get:
+      summary: List Configurations
+      description: Retrieves all configurations.
+      tags:
+        - Configurations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of configurations.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Configuration'
+    post:
+      summary: Create Configuration
+      description: Creates a new configuration.
+      tags:
+        - Configurations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Configuration'
+      responses:
+        '201':
+          description: Configuration created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+  /v1/configurations/{configId}:
+    get:
+      summary: Get Configuration
+      description: Retrieves a specific configuration.
+      tags:
+        - Configurations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: configId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Configuration object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+        '404':
+          description: Configuration not found.
+    put:
+      summary: Update Configuration
+      description: Updates a configuration.
+      tags:
+        - Configurations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: configId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Configuration'
+      responses:
+        '200':
+          description: Configuration updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+        '404':
+          description: Configuration not found.
+    delete:
+      summary: Delete Configuration
+      description: Deletes a configuration.
+      tags:
+        - Configurations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: configId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Configuration deleted successfully.
+        '404':
+          description: Configuration not found.
 
 components:
   securitySchemes:
