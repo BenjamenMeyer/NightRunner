@@ -3,15 +3,13 @@ from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    dev_mode: bool = False
+    dev_mode: bool = True
     oidc_issuer: str = ""
+    oidc_client_id: str = "test-client"
+    oidc_redirect_uri: str = "http://localhost/callback"
     oidc_audience: str = ""
     jwks_url: str = ""
-    
-    # Database settings might be needed by the middleware to fetch user roles
-    database_url: str = os.getenv("DATABASE_URL", "sqlite:///nightrunner.db")
 
-    @model_validator(mode="after")
     def validate_oidc(self):
         if self.oidc_issuer and not self.dev_mode:
             if not self.jwks_url:

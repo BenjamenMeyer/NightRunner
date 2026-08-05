@@ -60,11 +60,23 @@ class ScoresStore:
         rows = await self.driver.execute(GET_SCORES_FOR_EVENT, {"event_id": event_id})
         return [Score(**row) for row in rows]
 
-    async def get(self, score_id: str, event_id: str) -> Optional[Score]:
-        row = await self.driver.fetch_one(GET_SCORE, {"id": score_id, "event_id": event_id})
+    async def get(self, score_id: str) -> Optional[Score]:
+        row = await self.driver.fetch_one("SELECT * FROM scores WHERE id = :id", {"id": score_id})
         return Score(**row) if row else None
 
-    async def create(self, score: Score) -> None:
+    async def update(self, score_id: str, **fields) -> Score:
+        # Build SET clause from provided fields
+        set_clause = ", ".join([f"{k} = :{k}" for k in fields.keys()])
+        sql = f"UPDATE scores SET {set_clause} WHERE id = :id"
+        params = {**fields, "id": score_id}
+        await self.driver.execute(sql, params)
+        # Return updated score
+        return await self.get(score_id)
+
+    async def delete(self, score_id: str) -> None:
+        await self.driver.execute("DELETE FROM scores WHERE id = :id", {"id": score_id})
+
+    async def create(self, score: Score) -> Score:
         await self.driver.execute(CREATE_SCORE, {
             "id": score.id,
             "event_id": score.event_id,
@@ -75,6 +87,7 @@ class ScoresStore:
             "score_weight": score.score_weight,
             "active": int(score.active),
         })
+        return score
 
     async def aggregate_station(self, event_id: str, station_id: str) -> List[Dict[str, Any]]:
         """Return a flat list of rows with patrol, task, raw/weighted scores, timestamps.

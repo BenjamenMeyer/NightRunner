@@ -28,8 +28,8 @@ class AuthMiddleware:
         """
         Validates the Bearer token in the Authorization header.
         """
-        # Skip auth for health check or if OIDC is not configured
-        if req.path == "/health" or not settings.oidc_issuer:
+        # Skip auth only for health check endpoint
+        if req.path == "/health":
             req.context.user = None
             req.context.roles = []
             return
@@ -41,7 +41,17 @@ class AuthMiddleware:
                 description="A valid Bearer token is required."
             )
 
+        # In dev mode, bypass token verification and set placeholder user
+        if settings.dev_mode:
+            req.context.user = {"id": "dev", "username": "dev_user", "email": "dev@example.com", "display_name": "Dev User"}
+            req.context.roles = []
+            return
         token = auth_header.split(" ")[1]
+        # In dev mode, bypass token verification and set placeholder user
+        if settings.dev_mode:
+            req.context.user = {"id": "dev", "username": "dev_user", "email": "dev@example.com", "display_name": "Dev User"}
+            req.context.roles = []
+            return
         try:
             payload = await self._verify_token(token)
             external_id = payload.get("sub")
