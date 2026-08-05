@@ -1,0 +1,254 @@
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+    margin: 0;
+}
+
+.page-header p {
+    margin: 0.35rem 0 0;
+    color: var(--text-secondary);
+}
+
+.search-box {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    background: var(--card-bg);
+    color: var(--text-primary);
+
+    font-size: 0.95rem;
+}
+
+.search-box:focus {
+    outline: none;
+    border-color: var(--button-bg);
+}
+
+.station-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.station-list {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+.station-card {
+    padding: 1rem;
+
+    border-bottom: 1px solid var(--border);
+
+    cursor: pointer;
+
+    transition:
+            background 0.2s,
+            border-color 0.2s;
+}
+
+.station-card:last-child {
+    border-bottom: none;
+}
+
+.station-card:hover {
+    background: var(--sidebar-hover);
+}
+
+.station-card.selected {
+    background: rgba(0,0,0,0.04);
+    border-left: 4px solid var(--button-bg);
+    padding-left: calc(1rem - 4px);
+}
+
+.station-card h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+}
+
+.station-card p {
+    margin: 0.35rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.loading-panel,
+.empty-panel {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.error-banner {
+    margin-bottom: 1rem;
+
+    padding: 0.85rem 1rem;
+
+    background: #ffe5e5;
+    border: 1px solid #d43f3a;
+    border-radius: 8px;
+
+    color: #b00020;
+}
+
+@media (max-width: 1000px) {
+
+    .station-layout {
+
+        grid-template-columns: 1fr;
+
+    }
+
+}
+
+/* ===========================================
+   Station Creator
+=========================================== */
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 1000;
+}
+
+.station-creator {
+    width: min(650px, 90vw);
+
+    background: var(--card-bg);
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.creator-header {
+    padding: 1.25rem 1.5rem;
+
+    border-bottom: 1px solid var(--border);
+
+    background: var(--page-bg);
+}
+
+.creator-header h2 {
+    margin: 0;
+}
+
+.creator-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    padding: 1.5rem;
+}
+
+.creator-body label {
+    display: flex;
+    flex-direction: column;
+
+    gap: .45rem;
+
+    font-weight: 600;
+}
+
+.creator-body input,
+.creator-body select,
+.creator-body textarea {
+    padding: .7rem .8rem;
+
+    border: 1px solid var(--border);
+
+    border-radius: 6px;
+
+    background: white;
+
+    font: inherit;
+}
+
+.creator-body textarea {
+    resize: vertical;
+
+    min-height: 100px;
+}
+
+.creator-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: .75rem;
+
+    padding: 1rem 1.5rem;
+
+    border-top: 1px solid var(--border);
+
+    background: var(--page-bg);
+}
+
+/* ===========================================
+   Task Editor
+=========================================== */
+
+.task-editor {
+    display: flex;
+    flex-direction: column;
+
+    gap: 1rem;
+
+    margin-top: .5rem;
+
+    padding-top: 1rem;
+
+    border-top: 1px solid var(--border);
+}
+
+.task-editor h3 {
+    margin: 0;
+}
+
+.task-editor label {
+    display: flex;
+    flex-direction: column;
+
+    gap: .45rem;
+
+    font-weight: 600;
+}
+
+.task-editor input,
+.task-editor textarea {
+    padding: .7rem .8rem;
+
+    border: 1px solid var(--border);
+
+    border-radius: 6px;
+
+    font: inherit;
+}
+
+.task-editor textarea {
+    resize: vertical;
+
+    min-height: 120px;
+}
