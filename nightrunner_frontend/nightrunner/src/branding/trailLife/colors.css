@@ -31,6 +31,23 @@
     --button-bg: #8B1E23;
     --button-hover: #74181C;
 
+    --button-text: #FFFFFF;
+
+    --input-bg: #FFFFFF;
+    --input-border: #D6D9DC;
+    --input-text: #222222;
+    --input-focus: #8B1E23;
+
+    --link: #8B1E23;
+    --link-hover: #74181C;
+
+    --shadow: 0 2px 8px rgba(0,0,0,.12);
+
+    --success: #2E7D32;
+    --warning: #F9A825;
+    --error: #C62828;
+    --info: #0288D1;
+
 }
 
 body {

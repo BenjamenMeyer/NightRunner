@@ -1,22 +1,22 @@
 :root {
 
-    /*
-     * Backgrounds
-     */
+    /* ==========================================
+       Backgrounds
+       ========================================== */
 
     --sidebar-bg: #003B71;
     --header-bg: #00539F;
     --page-bg: #EEF3F8;
 
-    /*
-     * Cards
-     */
+    /* ==========================================
+       Cards
+       ========================================== */
 
     --card-bg: #FFFFFF;
 
-    /*
-     * Text
-     */
+    /* ==========================================
+       Text
+       ========================================== */
 
     --sidebar-text: #FFFFFF;
     --header-text: #FFFFFF;
@@ -24,55 +24,128 @@
     --text-primary: #1F2937;
     --text-secondary: #6B7280;
 
-    /*
-     * Borders
-     */
+    /* ==========================================
+       Borders
+       ========================================== */
 
     --border: #D4DCE5;
 
-    /*
-     * Hover
-     */
+    /* ==========================================
+       Navigation
+       ========================================== */
 
     --sidebar-hover: #004C91;
 
-    /*
-     * Buttons
-     */
+    /* ==========================================
+       Buttons
+       ========================================== */
 
     --button-bg: #00539F;
     --button-hover: #003B71;
     --button-text: #FFFFFF;
 
-    /*
-     * Forms
-     */
+    /* ==========================================
+       Forms
+       ========================================== */
 
     --input-bg: #FFFFFF;
     --input-border: #D4DCE5;
     --input-text: #1F2937;
     --input-focus: #00539F;
 
-    /*
-     * Links
-     */
+    /* ==========================================
+       Links
+       ========================================== */
 
     --link: #00539F;
     --link-hover: #003B71;
 
-    /*
-     * Shadows
-     */
+    /* ==========================================
+       Shadows
+       ========================================== */
 
     --shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 
-    /*
-     * Status
-     */
+    /* ==========================================
+       Status Colors
+       ========================================== */
 
     --success: #2E7D32;
     --warning: #F9A825;
     --error: #C62828;
     --info: #0288D1;
+
+}
+
+body {
+
+    background: var(--page-bg);
+    color: var(--text-primary);
+
+}
+
+.header {
+
+    background: var(--header-bg);
+    color: var(--header-text);
+
+}
+
+.page-content {
+
+    background: var(--page-bg);
+
+}
+
+.card {
+
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+
+}
+
+.form input,
+.form select,
+.form textarea {
+
+    background: var(--input-bg);
+    color: var(--input-text);
+    border: 1px solid var(--input-border);
+
+}
+
+.form input:focus,
+.form select:focus,
+.form textarea:focus {
+
+    outline: none;
+    border-color: var(--input-focus);
+
+}
+
+.form button {
+
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+
+}
+
+.form button:hover {
+
+    background: var(--button-hover);
+
+}
+
+a {
+
+    color: var(--link);
+
+}
+
+a:hover {
+
+    color: var(--link-hover);
 
 }
