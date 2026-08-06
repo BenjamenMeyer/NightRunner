@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import {Routes, Route, Navigate} from "react-router-dom";
 
 import Layout from "./components/Layout";
 
@@ -10,6 +10,31 @@ import Dashboard from "@/pages/Dashboard.jsx";
 import Stations from "@/pages/stations/Stations.jsx";
 import Scoring from "@/pages/scoring/Scoring.jsx";
 import Register from "@/pages/login/Register.jsx";
+import ApiService from "@/api/ApiService.js";
+
+function RequireAuth({ children }) {
+
+    return ApiService.isAuthenticated()
+        ? children
+        : <Navigate to="/login" replace />;
+
+}
+
+function HomeRedirect() {
+
+    return ApiService.isAuthenticated()
+        ? <Navigate to="/dashboard" replace />
+        : <Navigate to="/login" replace />;
+
+}
+
+function LoginRoute() {
+
+    return ApiService.isAuthenticated()
+        ? <Navigate to="/dashboard" replace />
+        : <Login />;
+
+}
 
 function App() {
     return (
@@ -18,13 +43,46 @@ function App() {
             {/* All pages using the main application layout */}
             <Route element={<Layout />}>
 
-                <Route path="/" element={<Login />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/me" element={<Me />} />
-                <Route path="/patrols" element={<Patrols />} />
-                <Route path="/register" element={<Register />}/>
-                <Route path="/scoring" element={<Scoring/>} />
-                <Route path="/stations" element={<Stations/>}/>
+                <Route path="/" element={<HomeRedirect />} />
+
+                <Route path="/dashboard" element={
+                    <RequireAuth>
+                        <Dashboard />
+                    </RequireAuth>
+                } />
+
+                <Route path="/login" element={<LoginRoute />} />
+
+                <Route path="/me" element={
+                    <RequireAuth>
+                        <Me />
+                    </RequireAuth>
+                } />
+
+                <Route path="/patrols" element={
+                    <RequireAuth>
+                        <Patrols />
+                    </RequireAuth>
+                } />
+
+                <Route path="/register" element={
+                    <RequireAuth>
+                        <Register />
+                    </RequireAuth>
+                }/>
+
+                <Route path="/scoring" element={
+                    <RequireAuth>
+                        <Scoring />
+                    </RequireAuth>
+                } />
+
+                <Route path="/stations" element={
+                    <RequireAuth>
+                        <Stations />
+                    </RequireAuth>
+                }/>
+                
                 <Route path="/404" element={<NotFound />} />
 
             </Route>

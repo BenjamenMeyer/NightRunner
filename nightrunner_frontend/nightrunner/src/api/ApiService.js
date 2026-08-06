@@ -1,3 +1,5 @@
+import { jwtDecode } from "jwt-decode";
+
 const API_BASE = "http://localhost:8000/api/v1";
 
 const TOKEN_KEY = "night-runner-token";
@@ -56,7 +58,24 @@ class ApiService {
 
     isAuthenticated() {
 
-        return this.getToken() !== null;
+        const token = this.getToken()
+
+        if (!token) {
+            return false;
+        }
+
+        try {
+
+            const decoded = jwtDecode(token);
+
+            return decoded.exp * 1000 > Date.now();
+
+        }
+        catch {
+
+            return false;
+
+        }
 
     }
 
