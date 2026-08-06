@@ -35,13 +35,9 @@ class AuthMiddleware:
             "/api/v1/auth/login",
         }
 
-        if req.path in public_paths:
-            req.context.user = None
-            req.context.roles = []
-            return
-
-            # Skip authentication when OIDC is not configured
-        if not settings.oidc_issuer:
+        # Skip authentication when OIDC is not configured
+        # Skips Auth is it is a public-access path
+        if req.path in public_paths or not settings.oidc_issuer:
             req.context.user = None
             req.context.roles = []
             return
