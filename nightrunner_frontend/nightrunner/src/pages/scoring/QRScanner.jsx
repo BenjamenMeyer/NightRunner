@@ -1,12 +1,10 @@
 import "./Scoring.css";
 
-export default function QRScanner({
-
-                                      onScan,
-
-                                      onCancel
-
-                                  }) {
+export default function QRScanner(
+    {
+        onScan,
+        onCancel
+    }) {
 
     function simulateScan() {
 
