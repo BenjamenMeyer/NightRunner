@@ -29,6 +29,8 @@ export default function Scoring() {
 
     const [showScanner, setShowScanner] = useState(false);
 
+    const [scoringStarted, setScoringStarted] = useState(false);
+
     useEffect(() => {
 
         loadData();
@@ -180,14 +182,6 @@ export default function Scoring() {
 
     }
 
-    function handleScan(patrol) {
-
-        setSelectedPatrol(patrol);
-
-        setShowScanner(false);
-
-    }
-
     function handleManualSelection(event) {
 
         const patrol = patrols.find(
@@ -195,6 +189,17 @@ export default function Scoring() {
         );
 
         setSelectedPatrol(patrol ?? null);
+        setScoringStarted(false);
+
+    }
+
+    function handleScan(patrol) {
+
+        setSelectedPatrol(patrol);
+
+        setShowScanner(false);
+
+        setScoringStarted(false);
 
     }
 
@@ -205,6 +210,20 @@ export default function Scoring() {
         );
 
         setSelectedStation(station ?? null);
+        setScoringStarted(false);
+
+    }
+
+    async function startScoring() {
+
+        // TODO:
+        // await ApiService.post("/scores/start", {
+        //     patrolId: selectedPatrol.id,
+        //     stationId: selectedStation.id,
+        //     timestamp: new Date().toISOString()
+        // });
+
+        setScoringStarted(true);
 
     }
 
@@ -332,15 +351,15 @@ export default function Scoring() {
 
                             <div className="selected-patrol">
 
-                                <strong>
+                                <span>✓</span>
 
-                                    Selected Patrol:
+                                <div>
 
-                                </strong>
+                                    <small>Selected Patrol</small>
 
-                                {" "}
+                                    <div>{selectedPatrol.programName}</div>
 
-                                {selectedPatrol.programName}
+                                </div>
 
                             </div>
 
@@ -390,22 +409,50 @@ export default function Scoring() {
 
                     {selectedPatrol && selectedStation ? (
 
-                        <ScoreForm
+                        scoringStarted ? (
 
-                            patrol={selectedPatrol}
+                            <ScoreForm
+                                patrol={selectedPatrol}
+                                station={selectedStation}
+                            />
 
-                            station={selectedStation}
+                        ) : (
 
-                        />
+                            <div className="ready-panel">
+
+                                <h2>
+                                    Ready to Begin
+                                </h2>
+
+                                <p>
+
+                                    <strong>Patrol:</strong> {selectedPatrol.programName}
+
+                                    <br />
+
+                                    <strong>Station:</strong> {selectedStation.name}
+
+                                </p>
+
+                                <button
+                                    className="primary-button"
+                                    onClick={startScoring}
+                                >
+
+                                    Start Scoring
+
+                                </button>
+
+                            </div>
+
+                        )
 
                     ) : (
 
                         <div className="empty-panel">
 
                             <h2>
-
                                 Ready to Score
-
                             </h2>
 
                             <p>

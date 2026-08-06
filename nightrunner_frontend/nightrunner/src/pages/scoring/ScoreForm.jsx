@@ -3,6 +3,8 @@ import { useState } from "react";
 import ApiService from "@/api/ApiService";
 import ScoreField from "./ScoreField";
 
+import "./Scoring.css";
+
 export default function ScoreForm({
                                       patrol,
                                       station,
@@ -23,6 +25,14 @@ export default function ScoreForm({
     }
 
     async function submitScore() {
+
+        const confirmed = window.confirm(
+            "Are you sure you want to submit this score?\n\nThis action cannot be undone."
+        );
+
+        if (!confirmed) {
+            return;
+        }
 
         try {
 
