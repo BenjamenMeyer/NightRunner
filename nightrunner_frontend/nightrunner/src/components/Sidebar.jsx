@@ -2,27 +2,29 @@ import { NavLink } from "react-router-dom";
 
 import NOAImage from "../../public/favicon.jpg";
 import "./Sidebar.css";
+
 import ApiService from "@/api/ApiService.js";
 
-function Sidebar() {
+function Sidebar({
 
-    const loggedIn = ApiService.isAuthenticated()
+                     open,
+                     close
+
+                 }) {
+
+    const loggedIn = ApiService.isAuthenticated();
 
     const links = [
 
         ...(loggedIn
-            ? [
-                {
-                    name: "Dashboard",
-                    path: "/dashboard"
-                }
-            ]
-            : [
-                {
-                    name: "Login",
-                    path: "/login"
-                }
-            ]),
+            ? [{
+                name: "Dashboard",
+                path: "/dashboard"
+            }]
+            : [{
+                name: "Login",
+                path: "/login"
+            }]),
 
         {
             name: "Events",
@@ -49,53 +51,77 @@ function Sidebar() {
 
     return (
 
-        <aside className="sidebar">
+        <>
 
-            <div className="sidebar-header">
-
-                <img
-                    src={NOAImage}
-                    alt="Night Runner"
-                    className="sidebar-logo"
+            {open && (
+                <div
+                    className="sidebar-backdrop"
+                    onClick={close}
                 />
+            )}
 
-                <h2>
-                    Night Runner
-                </h2>
+            <aside
+                className={`sidebar ${open ? "open" : ""}`}
+            >
 
-            </div>
+                <div className="sidebar-header">
 
-            <nav className="sidebar-nav">
+                    <img
+                        src={NOAImage}
+                        alt="Night Runner"
+                        className="sidebar-logo"
+                    />
 
-                {links.map(link => (
+                    <h2>
 
-                    <NavLink
-                        key={link.path}
-                        to={link.path}
-                        className={({ isActive }) =>
-                            isActive
-                                ? "sidebar-link active"
-                                : "sidebar-link"
-                        }
-                    >
-                        {link.name}
-                    </NavLink>
+                        Night Runner
 
-                ))}
+                    </h2>
 
-            </nav>
+                </div>
 
-            <div className="sidebar-footer">
+                <nav className="sidebar-nav">
 
-                <span>Night Runner</span>
+                    {links.map(link => (
 
-                <small>
-                    NightOps Tracking System
-                </small>
+                        <NavLink
+                            key={link.path}
+                            to={link.path}
+                            onClick={close}
+                            className={({ isActive }) =>
+                                isActive
+                                    ? "sidebar-link active"
+                                    : "sidebar-link"
+                            }
+                        >
 
-            </div>
+                            {link.name}
 
-        </aside>
+                        </NavLink>
+
+                    ))}
+
+                </nav>
+
+                <div className="sidebar-footer">
+
+                    <span>
+
+                        Night Runner
+
+                    </span>
+
+                    <small>
+
+                        NightOps Tracking System
+
+                    </small>
+
+                </div>
+
+            </aside>
+
+        </>
 
     );
 

@@ -1,26 +1,55 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+
 import ApiService from "@/api/ApiService.js";
 
 function Layout() {
 
     const loggedIn = ApiService.isAuthenticated();
 
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
     return (
+
         <div className="app-layout">
 
-            {loggedIn && <Sidebar />}
+            {loggedIn && (
 
-            <Header />
+                <Sidebar
+                    open={sidebarOpen}
+                    close={() => setSidebarOpen(false)}
+                />
 
-            <main className="page-content">
+            )}
+
+            <Header
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+            />
+
+            <main
+                className="page-content"
+                onClick={() => {
+
+                    // Clicking the page closes the mobile sidebar.
+                    if (sidebarOpen) {
+                        setSidebarOpen(false);
+                    }
+
+                }}
+            >
+
                 <Outlet />
+
             </main>
 
         </div>
+
     );
+
 }
 
 export default Layout;
