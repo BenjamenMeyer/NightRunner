@@ -30,8 +30,8 @@ SPEC_PATH = pathlib.Path(__file__).parents[2] / "api" / "openapi.yaml"
 # Add entries here as new endpoints are implemented.
 IMPLEMENTED_PATHS: set[tuple[str, str]] = {
     ("GET",    "/health"),
-    ("GET",    "/auth/login"),
-    ("POST",   "/auth/login"),
+    ("GET",    "/v1/auth/login"),
+    ("POST",   "/v1/auth/login"),
     ("GET",    "/v1/me"),
     ("GET",    "/v1/events"),
     ("POST",   "/v1/events"),

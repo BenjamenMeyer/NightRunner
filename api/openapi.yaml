@@ -12,6 +12,21 @@ security:
   - bearerAuth: []
 
 paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Returns the status of the service.
+      responses:
+        '200':
+          description: Service is healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
   /v1/auth/login:
     post:
       summary: Authenticate User
