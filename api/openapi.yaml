@@ -12,7 +12,7 @@ security:
   - bearerAuth: []
 
 paths:
-  /auth/login:
+  /v1/auth/login:
     post:
       summary: Authenticate User
       description: Authenticates a user and returns a session token.
@@ -37,7 +37,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /users:
+  /v1/users:
     get:
       summary: List Users
       description: Retrieves a list of all users.
@@ -79,7 +79,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /users/{userId}:
+  /v1/users/{userId}:
     get:
       summary: Get User
       description: Retrieves a specific user by their ID.
@@ -151,7 +151,7 @@ paths:
           description: User deleted successfully.
         '404':
           description: User not found.
-  /events:
+  /v1/events:
     get:
       summary: List Events
       description: Retrieves a list of all events.
@@ -189,7 +189,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Event'
 
-  /events/{eventId}:
+  /v1/events/{eventId}:
     get:
       summary: Get Event
       description: Retrieves a specific event by its ID.
@@ -262,7 +262,7 @@ paths:
         '404':
           description: Event not found.
 
-  /patrols:
+  /v1/patrols:
     get:
       summary: List Patrols
       description: Retrieves a list of all patrols.
@@ -300,7 +300,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Patrol'
 
-  /patrols/{patrolId}:
+  /v1/patrols/{patrolId}:
     get:
       summary: Get Patrol
       description: Retrieves a specific patrol by its ID.
@@ -373,7 +373,7 @@ paths:
         '404':
           description: Patrol not found.
 
-  /stations:
+  /v1/stations:
     get:
       summary: List Stations
       description: Retrieves a list of all stations.
@@ -411,7 +411,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Station'
 
-  /stations/{stationId}:
+  /v1/stations/{stationId}:
     get:
       summary: Get Station
       description: Retrieves a specific station by its ID.
@@ -484,7 +484,7 @@ paths:
         '404':
           description: Station not found.
 
-  /stations/{stationId}/configurations:
+  /v1/stations/{stationId}/configurations:
     get:
       summary: List Station Configurations
       description: Retrieves all configurations for a station.
@@ -536,7 +536,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/StationConfiguration'
 
-  /stations/{stationId}/configurations/{configId}:
+  /v1/stations/{stationId}/configurations/{configId}:
     get:
       summary: Get Station Configuration
       description: Retrieves a specific station configuration.
@@ -627,7 +627,7 @@ paths:
         '404':
           description: Station configuration not found.
 
-  /stations/{stationId}/configurations/{configId}/tasks:
+  /v1/stations/{stationId}/configurations/{configId}/tasks:
     get:
       summary: List Station Tasks
       description: Retrieves all tasks for a station configuration.
@@ -691,7 +691,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/StationTask'
 
-  /stations/{stationId}/configurations/{configId}/tasks/{taskId}:
+  /v1/stations/{stationId}/configurations/{configId}/tasks/{taskId}:
     get:
       summary: Get Station Task
       description: Retrieves a specific station task.
@@ -800,7 +800,7 @@ paths:
         '404':
           description: Station task not found.
 
-  /scores:
+  /v1/scores:
     post:
       summary: Submit Scores
       description: Submits a set of scores for a patrol's performance at a station.
@@ -818,7 +818,7 @@ paths:
         '201':
           description: Scores submitted successfully.
 
-  /reports/event/{eventId}:
+  /v1/reports/event/{eventId}:
     get:
       summary: Get Event Report
       description: Retrieves the final scoring report for a given event.

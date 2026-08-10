@@ -16,18 +16,32 @@ class PatrolsResource:
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
         store = PatrolsStore(get_driver())
         data = await req.get_media()
-        members = [
-            PatrolMember(
-                id=str(uuid6.uuid7()),
-                name=m["name"],
-                rank=m.get("rank"),
-                troop=m.get("troop"),
+        if not isinstance(data, dict):
+            raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
+        members_data = data.get("members", [])
+        if not isinstance(members_data, list):
+            raise falcon.HTTPBadRequest(description="'members' must be a list.")
+        members = []
+        for m in members_data:
+            if not isinstance(m, dict):
+                continue
+            name_val = m.get("name")
+            if not name_val:
+                continue
+            rank_val = m.get("rank")
+            troop_val = m.get("troop")
+            members.append(
+                PatrolMember(
+                    id=str(uuid6.uuid7()),
+                    name=str(name_val),
+                    rank=str(rank_val) if rank_val is not None and not isinstance(rank_val, str) else rank_val,
+                    troop=str(troop_val) if troop_val is not None and not isinstance(troop_val, str) else troop_val,
+                )
             )
-            for m in data.get("members", [])
-        ]
+        patrol_name = data.get("name") or "Trail Life"
         patrol = Patrol(
             id=str(uuid6.uuid7()),
-            name=data.get("name", "Trail Life"),
+            name=str(patrol_name),
             members=members,
         )
         await store.create(patrol)

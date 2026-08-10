@@ -16,15 +16,49 @@ class EventsResource:
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
         store = EventsStore(get_driver())
         data = await req.get_media()
+        if not isinstance(data, dict):
+            raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
+        name = data.get("name")
+        if not name:
+            raise falcon.HTTPBadRequest(description="'name' is required.")
+        date = data.get("date")
+        description = data.get("description")
+        rounding_precision_val = data.get("roundingPrecision")
+        if rounding_precision_val is not None:
+            if isinstance(rounding_precision_val, (dict, list)):
+                raise falcon.HTTPBadRequest(description="'roundingPrecision' must be an integer.")
+            try:
+                rounding_precision = int(rounding_precision_val)
+            except (ValueError, TypeError):
+                raise falcon.HTTPBadRequest(description="'roundingPrecision' must be an integer.")
+        else:
+            rounding_precision = 1000
+
+        orgs_data = data.get("organizers", [])
+        stats_data = data.get("stations", [])
+        pats_data = data.get("patrols", [])
+
+        if not isinstance(orgs_data, list):
+            raise falcon.HTTPBadRequest(description="'organizers' must be a list.")
+        if not isinstance(stats_data, list):
+            raise falcon.HTTPBadRequest(description="'stations' must be a list.")
+        if not isinstance(pats_data, list):
+            raise falcon.HTTPBadRequest(description="'patrols' must be a list.")
+
+        # Filter out non-strings, convert to string, deduplicate keeping order
+        orgs = list(dict.fromkeys(str(x) for x in orgs_data if x is not None and not isinstance(x, (dict, list))))
+        stats = list(dict.fromkeys(str(x) for x in stats_data if x is not None and not isinstance(x, (dict, list))))
+        pats = list(dict.fromkeys(str(x) for x in pats_data if x is not None and not isinstance(x, (dict, list))))
+
         event = Event(
             id=str(uuid6.uuid7()),
-            name=data["name"],
-            date=data.get("date"),
-            description=data.get("description"),
-            rounding_precision=data.get("roundingPrecision", 1000),
-            organizers=data.get("organizers", []),
-            stations=data.get("stations", []),
-            patrols=data.get("patrols", []),
+            name=str(name),
+            date=str(date) if date is not None and not isinstance(date, str) else date,
+            description=str(description) if description is not None and not isinstance(description, str) else description,
+            rounding_precision=rounding_precision,
+            organizers=orgs,
+            stations=stats,
+            patrols=pats,
         )
         await store.create(event)
         resp.status = falcon.HTTP_201

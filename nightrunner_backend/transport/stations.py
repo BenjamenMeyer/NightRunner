@@ -16,11 +16,16 @@ class StationsResource:
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
         store = StationsStore(get_driver())
         data = await req.get_media()
+        if not isinstance(data, dict):
+            raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
+        name = data.get("name") or ""
+        description = data.get("description")
+        active_config_id = data.get("activeConfigurationId")
         station = Station(
             id=str(uuid6.uuid7()),
-            name=data.get("name", ""),
-            description=data.get("description"),
-            active_configuration_id=data.get("activeConfigurationId"),
+            name=str(name),
+            description=str(description) if description is not None and not isinstance(description, str) else description,
+            active_configuration_id=str(active_config_id) if active_config_id is not None and not isinstance(active_config_id, str) else active_config_id,
             members=data.get("members", []),
         )
         await store.create(station)
