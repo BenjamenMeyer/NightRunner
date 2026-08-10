@@ -2,7 +2,14 @@ from typing import List, Optional
 from nightrunner_backend.drivers.base import DatabaseDriver
 from nightrunner_backend.models.patrol import Patrol, PatrolMember
 
-LIST_PATROLS = "SELECT id, name FROM patrols"
+LIST_PATROLS_BATCH = """
+SELECT
+    p.id AS patrol_id, p.name AS patrol_name,
+    pm.id AS member_id, pm.name AS member_name, pm.rank, pm.troop
+FROM patrols p
+LEFT JOIN patrol_members pm ON p.id = pm.patrol_id
+ORDER BY p.id
+"""
 GET_PATROL = "SELECT id, name FROM patrols WHERE id = :id"
 CREATE_PATROL = """
     INSERT INTO patrols (id, name)
@@ -22,26 +29,29 @@ CREATE_PATROL_MEMBER = """
 """
 DELETE_PATROL_MEMBERS = "DELETE FROM patrol_members WHERE patrol_id = :patrol_id"
 
+
 class PatrolsStore:
     def __init__(self, driver: DatabaseDriver):
         self.driver = driver
 
     async def list(self) -> List[Patrol]:
-        rows = await self.driver.execute(LIST_PATROLS)
-        patrols = []
+        """Fetch all patrols and their members in a single batched JOIN query."""
+        rows = await self.driver.execute(LIST_PATROLS_BATCH)
+        patrols: dict[str, Patrol] = {}
         for row in rows:
-            patrol = Patrol(id=row["id"], name=row["name"])
-            member_rows = await self.driver.execute(LIST_PATROL_MEMBERS, {"patrol_id": patrol.id})
-            patrol.members = [
-                PatrolMember(
-                    id=m["id"],
-                    name=m["name"],
-                    rank=m["rank"],
-                    troop=m["troop"]
-                ) for m in member_rows
-            ]
-            patrols.append(patrol)
-        return patrols
+            patrol_id = row["patrol_id"]
+            if patrol_id not in patrols:
+                patrols[patrol_id] = Patrol(id=patrol_id, name=row["patrol_name"])
+            if row["member_id"]:
+                patrols[patrol_id].members.append(
+                    PatrolMember(
+                        id=row["member_id"],
+                        name=row["member_name"],
+                        rank=row["rank"],
+                        troop=row["troop"],
+                    )
+                )
+        return list(patrols.values())
 
     async def get(self, patrol_id: str) -> Optional[Patrol]:
         row = await self.driver.fetch_one(GET_PATROL, {"id": patrol_id})
@@ -50,35 +60,25 @@ class PatrolsStore:
         patrol = Patrol(id=row["id"], name=row["name"])
         member_rows = await self.driver.execute(LIST_PATROL_MEMBERS, {"patrol_id": patrol_id})
         patrol.members = [
-            PatrolMember(
-                id=m["id"],
-                name=m["name"],
-                rank=m["rank"],
-                troop=m["troop"]
-            ) for m in member_rows
+            PatrolMember(id=m["id"], name=m["name"], rank=m["rank"], troop=m["troop"])
+            for m in member_rows
         ]
         return patrol
 
     async def create(self, patrol: Patrol) -> None:
-        await self.driver.execute(CREATE_PATROL, {
-            "id": patrol.id,
-            "name": patrol.name
-        })
+        await self.driver.execute(CREATE_PATROL, {"id": patrol.id, "name": patrol.name})
         for member in patrol.members:
             await self.driver.execute(CREATE_PATROL_MEMBER, {
                 "id": member.id,
                 "patrol_id": patrol.id,
                 "name": member.name,
                 "rank": member.rank,
-                "troop": member.troop
+                "troop": member.troop,
             })
 
     async def update(self, patrol: Patrol) -> None:
-        await self.driver.execute(UPDATE_PATROL, {
-            "id": patrol.id,
-            "name": patrol.name
-        })
-        # Simple sync for members: delete and re-insert
+        await self.driver.execute(UPDATE_PATROL, {"id": patrol.id, "name": patrol.name})
+        # Sync members: delete then re-insert
         await self.driver.execute(DELETE_PATROL_MEMBERS, {"patrol_id": patrol.id})
         for member in patrol.members:
             await self.driver.execute(CREATE_PATROL_MEMBER, {
@@ -86,9 +86,8 @@ class PatrolsStore:
                 "patrol_id": patrol.id,
                 "name": member.name,
                 "rank": member.rank,
-                "troop": member.troop
+                "troop": member.troop,
             })
 
     async def delete(self, patrol_id: str) -> None:
-        # Cascade should handle member deletion
         await self.driver.execute(DELETE_PATROL, {"id": patrol_id})

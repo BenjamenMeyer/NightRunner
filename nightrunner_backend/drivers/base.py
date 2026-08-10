@@ -119,7 +119,9 @@ class DatabaseDriver:
             )
         """)
 
-        files = sorted([f for f in os.listdir(migrations_dir) if f.endswith(".sql")])
+        files = await asyncio.to_thread(
+            lambda: sorted(f for f in os.listdir(migrations_dir) if f.endswith(".sql"))
+        )
         for filename in files:
             # Check if migration already applied
             rows = await self.execute("SELECT id FROM _migrations WHERE id = :id", {"id": filename})
@@ -128,8 +130,7 @@ class DatabaseDriver:
 
             logger.info(f"Applying migration: {filename}")
             filepath = os.path.join(migrations_dir, filename)
-            with open(filepath, "r") as f:
-                sql = f.read()
+            sql = await asyncio.to_thread(lambda: open(filepath, "r").read())
 
             try:
                 if self.is_sqlite:

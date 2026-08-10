@@ -29,15 +29,15 @@ class AuthMiddleware:
         """
         Validates the Bearer token in the Authorization header.
         """
+        # Initialise context with safe defaults; overwritten below as appropriate.
+        req.context.user = None
+        req.context.roles = []
+
         # Skip auth for health endpoint
         if req.path == "/health":
-            req.context.user = None
-            req.context.roles = []
             return
         # Skip auth for login endpoint
         if req.path.startswith("/auth/login"):
-            req.context.user = None
-            req.context.roles = []
             return
 
         # In development mode, bypass authentication entirely

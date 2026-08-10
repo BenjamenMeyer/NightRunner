@@ -1,11 +1,13 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
+
 
 @dataclass
 class StationMember:
     """Member of a station (e.g., a user with a role)."""
     user_id: str
     role: str
+
 
 @dataclass
 class Station:
@@ -18,3 +20,12 @@ class Station:
     description: Optional[str] = None
     active_configuration_id: Optional[str] = None
     members: List[StationMember] = field(default_factory=list)
+
+    def to_api_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "activeConfigurationId": self.active_configuration_id,
+            "members": self.members,
+        }

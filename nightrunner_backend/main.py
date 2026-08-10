@@ -34,7 +34,13 @@ app = falcon.asgi.App(middleware=[MigrationMiddleware(), AuthMiddleware()])
 
 
 
+_routes_registered = False
+
 def register_routes(app):
+    global _routes_registered
+    if _routes_registered:
+        return
+    _routes_registered = True
     # Add authentication login endpoint
     app.add_route("/auth/login", LoginResource())
     app.add_route("/v1/scores", ScoresResource())

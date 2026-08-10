@@ -125,7 +125,12 @@ async def test_configuration_endpoints(test_client, dev_mode_enabled):
     resp = await test_client.simulate_get("/v1/configuration-groups")
     assert resp.status == falcon.HTTP_200
 
-    # Scores endpoint – POST submission (dummy store does not implement submit, just ensure route exists)
-    score_body = {"patrol_id": "p1", "station_id": "s1", "task_id": "t1", "score": 5}
+    # Scores endpoint – POST submission with valid required fields
+    score_body = {
+        "eventId": "e1",
+        "stationId": "s1",
+        "patrolId": "p1",
+        "scores": [{"taskId": "t1", "scoreValue": 5}]
+    }
     resp = await test_client.simulate_post("/v1/scores", json=score_body)
-    assert resp.status == falcon.HTTP_200
+    assert resp.status == falcon.HTTP_201
