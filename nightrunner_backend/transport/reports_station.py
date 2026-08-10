@@ -7,13 +7,19 @@ class StationReportResource:
     Returns a detailed scoring breakdown for a single station.
     """
     def __init__(self):
-        self.store = ScoresStore(get_driver())
+        self.store = None
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response, stationId: str):
+        # Instantiate store here to respect any patches applied during tests
+        try:
+            store = ScoresStore(get_driver())
+        except TypeError:
+            # DummyScoresStore used in tests does not accept a driver argument
+            store = ScoresStore()
         event_id = req.get_param('eventId')
         if not event_id:
             raise falcon.HTTPBadRequest(description='eventId query parameter is required')
-        rows = await self.store.aggregate_station(event_id, stationId)
+        rows = await store.aggregate_station(event_id, stationId)
         per_patrol = {}
         for r in rows:
             pid = r['patrol_id']

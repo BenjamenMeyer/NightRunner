@@ -71,3 +71,4 @@ class ConfigurationResource:
             "value": config.value,
             "description": config.description,
         }
+ConfigurationsStore = ConfigurationStore

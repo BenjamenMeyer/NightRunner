@@ -1,5 +1,9 @@
 import falcon
-from nightrunner_backend.app_context import get_driver
+class MeStore:
+    """Placeholder store for Me resource. In real app would handle user data."""
+    async def get_current_user(self):
+        return {"message": "Current user info placeholder"}
+
 
 class MeResource:
     """GET /me

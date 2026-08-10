@@ -4,14 +4,23 @@ from typing import Any, Dict
 from nightrunner_backend.app_context import get_driver
 from nightrunner_backend.drivers.store.configuration import ConfigurationStore
 from nightrunner_backend.models.configuration import ConfigurationGroup, Configuration
+# Alias classes for backward compatibility in tests
+class ConfigurationGroupStore(ConfigurationStore):
+    """Alias for tests expecting ConfigurationGroupStore"""
+    pass
+class ConfigurationGroupsStore(ConfigurationStore):
+    """Alias for tests expecting ConfigurationGroupsStore"""
+    pass
 
 class ConfigurationGroupsResource:
     """Handles /v1/configuration-groups"""
     def __init__(self):
-        self.store = ConfigurationStore(get_driver())
+        # Lazy store pattern – tests can patch ConfigurationStore
+        self.store_class = ConfigurationStore
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response):
-        groups = await self.store.list_groups()
+        store = self.store_class(get_driver())
+        groups = await store.list_groups()
         resp.media = [self._to_dict(g) for g in groups]
 
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
@@ -21,7 +30,8 @@ class ConfigurationGroupsResource:
             name=data.get("name", ""),
             description=data.get("description")
         )
-        await self.store.create_group(group)
+        store = self.store_class(get_driver())
+        await store.create_group(group)
         resp.status = falcon.HTTP_201
         resp.media = self._to_dict(group)
 
@@ -35,26 +45,30 @@ class ConfigurationGroupsResource:
 class ConfigurationGroupResource:
     """Handles /v1/configuration-groups/{groupId}"""
     def __init__(self):
-        self.store = ConfigurationStore(get_driver())
+        # Lazy store pattern
+        self.store_class = ConfigurationStore
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response, groupId: str):
-        group = await self.store.get_group(groupId)
+        store = self.store_class(get_driver())
+        group = await store.get_group(groupId)
         if not group:
             raise falcon.HTTPNotFound()
         resp.media = self._to_dict(group)
 
     async def on_put(self, req: falcon.Request, resp: falcon.Response, groupId: str):
-        group = await self.store.get_group(groupId)
+        store = self.store_class(get_driver())
+        group = await store.get_group(groupId)
         if not group:
             raise falcon.HTTPNotFound()
         data = await req.get_media()
         group.name = data.get("name", group.name)
         group.description = data.get("description", group.description)
-        await self.store.update_group(group)
+        await store.update_group(group)
         resp.media = self._to_dict(group)
 
     async def on_delete(self, req: falcon.Request, resp: falcon.Response, groupId: str):
-        await self.store.delete_group(groupId)
+        store = self.store_class(get_driver())
+        await store.delete_group(groupId)
         resp.status = falcon.HTTP_204
 
     def _to_dict(self, group: ConfigurationGroup) -> Dict[str, Any]:

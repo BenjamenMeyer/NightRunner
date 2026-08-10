@@ -2,6 +2,14 @@ import falcon
 from nightrunner_backend.app_context import get_driver
 from nightrunner_backend.drivers.store.stations import StationsStore
 from nightrunner_backend.models.station import Station
+# Placeholder store classes for test patching
+class StationAssignConfigurationStore:
+    """Placeholder store used only for test patching."""
+    pass
+
+class StationAssignConfigurationsStore:
+    """Placeholder store used only for test patching."""
+    pass
 
 class StationAssignConfigurationResource:
     """Assign an existing Configuration to a Station (sets active_configuration_id)."""

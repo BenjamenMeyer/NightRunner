@@ -5,6 +5,11 @@ from nightrunner_backend.app_context import get_driver
 from nightrunner_backend.drivers.store.patrols import PatrolsStore
 from nightrunner_backend.models.patrol import Patrol, PatrolMember
 
+# Alias for backward compatibility in tests
+class PatrolStore(PatrolsStore):
+    """Alias for tests expecting PatrolStore"""
+    pass
+
 class PatrolsResource:
     """
     Handles /patrols

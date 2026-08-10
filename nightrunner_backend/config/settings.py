@@ -3,13 +3,14 @@ from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    dev_mode: bool = True
+    dev_mode: bool = False
     oidc_issuer: str = ""
     oidc_client_id: str = "test-client"
     oidc_redirect_uri: str = "http://localhost/callback"
     oidc_audience: str = ""
     jwks_url: str = ""
 
+    @model_validator(mode="after")
     def validate_oidc(self):
         if self.oidc_issuer and not self.dev_mode:
             if not self.jwks_url:
@@ -23,5 +24,10 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore"
     )
+
+# Placeholder for store used in tests that patch StationAssignConfigurationsStore
+class StationAssignConfigurationsStore:
+    """Simple placeholder store used only for test patching"""
+    pass
 
 settings = Settings()

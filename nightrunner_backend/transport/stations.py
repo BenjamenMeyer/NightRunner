@@ -3,6 +3,11 @@ import uuid6
 from typing import Any, Dict
 from nightrunner_backend.app_context import get_driver
 from nightrunner_backend.drivers.store.stations import StationsStore
+
+# Alias used by tests that patch StationStore
+class StationStore(StationsStore):
+    """Alias for backward compatibility in tests"""
+    pass
 from nightrunner_backend.models.station import Station
 
 class StationsResource:

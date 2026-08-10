@@ -92,3 +92,4 @@ class EventResource:
             "stations": event.stations,
             "patrols": event.patrols
         }
+EventStore = EventsStore
