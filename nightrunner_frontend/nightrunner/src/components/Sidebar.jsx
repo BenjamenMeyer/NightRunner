@@ -101,6 +101,15 @@ function Sidebar({
 
                     ))}
 
+                    <a
+                        href="/live"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="sidebar-link"
+                    >
+                        Live Progress
+                    </a>
+
                 </nav>
 
                 <div className="sidebar-footer">

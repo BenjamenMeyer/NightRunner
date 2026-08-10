@@ -58,7 +58,7 @@ export default function Scoring() {
             //]);
 
             const demoPatrol = {
-                id: "demo",
+                id: "6a0f20c1-535d-415e-873a-a9bdbbd7f419",
                 programName: "Demo Patrol",
                 members: [
                     {

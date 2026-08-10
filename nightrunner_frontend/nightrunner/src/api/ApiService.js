@@ -1,6 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = __API_BACKEND_URL__ || "http://localhost:8000/api/v1";
 
 const TOKEN_KEY = "night-runner-token";
 const USER_KEY = "night-runner-user";

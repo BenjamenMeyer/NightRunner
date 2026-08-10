@@ -11,8 +11,11 @@ import Stations from "@/pages/stations/Stations.jsx";
 import Scoring from "@/pages/scoring/Scoring.jsx";
 import Register from "@/pages/login/Register.jsx";
 import ApiService from "@/api/ApiService.js";
+import LiveScoring from "@/pages/livescoring/LiveScoring.jsx";
 
 function RequireAuth({ children }) {
+
+    //return children;
 
     return ApiService.isAuthenticated()
         ? children
@@ -22,6 +25,8 @@ function RequireAuth({ children }) {
 
 function HomeRedirect() {
 
+    //return <Navigate to="/dashboard" replace />;
+
     return ApiService.isAuthenticated()
         ? <Navigate to="/dashboard" replace />
         : <Navigate to="/login" replace />;
@@ -29,6 +34,7 @@ function HomeRedirect() {
 }
 
 function LoginRoute() {
+    //return <Login />;
 
     return ApiService.isAuthenticated()
         ? <Navigate to="/dashboard" replace />
@@ -86,6 +92,12 @@ function App() {
                 <Route path="/404" element={<NotFound />} />
 
             </Route>
+
+            <Route path="/live" element={
+                <RequireAuth>
+                    <LiveScoring/>
+                </RequireAuth>
+            } />
 
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
