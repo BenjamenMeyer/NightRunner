@@ -16,12 +16,17 @@ class ConfigurationsResource:
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
         store = ConfigurationStore(get_driver())
         data = await req.get_media()
+        if not isinstance(data, dict):
+            raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
+        key = data.get("key") or ""
+        value = data.get("value") or ""
+        description = data.get("description")
         config = Configuration(
             id=str(uuid6.uuid7()),
-            group_id=data.get("group_id", ""),
-            key=data.get("key", ""),
-            value=data.get("value", ""),
-            description=data.get("description"),
+            group_id=str(data.get("group_id", "")),
+            key=str(key),
+            value=str(value),
+            description=str(description) if description is not None and not isinstance(description, str) else description,
         )
         await store.create_configuration(config)
         resp.status = falcon.HTTP_201

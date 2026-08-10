@@ -4,7 +4,7 @@ info:
   description: API for the Night Runner application to manage events, patrols, stations, and scoring.
   version: "1.0.0"
 servers:
-  - url: /api/v1
+  - url: /
     description: Main API endpoint
 
 security:
@@ -1190,6 +1190,43 @@ components:
         displayName:
           type: string
           example: "Jane Doe"
+    ConfigurationGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          example: "uuid-string-group-1"
+        name:
+          type: string
+          example: "Ropework Group"
+        description:
+          type: string
+          nullable: true
+          example: "Configuration group for ropework stations"
+    Configuration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          example: "uuid-string-config-1"
+        group_id:
+          type: string
+          format: uuid
+          example: "uuid-string-group-1"
+        key:
+          type: string
+          example: "max_score"
+        value:
+          type: string
+          example: "100"
+        description:
+          type: string
+          nullable: true
+          example: "Maximum score for this task"
     Event:
       type: object
       properties:

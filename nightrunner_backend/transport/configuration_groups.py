@@ -16,10 +16,14 @@ class ConfigurationGroupsResource:
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
         store = ConfigurationStore(get_driver())
         data = await req.get_media()
+        if not isinstance(data, dict):
+            raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
+        name = data.get("name") or ""
+        description = data.get("description")
         group = ConfigurationGroup(
             id=str(uuid6.uuid7()),
-            name=data.get("name", ""),
-            description=data.get("description"),
+            name=str(name),
+            description=str(description) if description is not None and not isinstance(description, str) else description,
         )
         await store.create_group(group)
         resp.status = falcon.HTTP_201
