@@ -2,6 +2,7 @@ import pytest
 import asyncio
 import os
 import sys
+import time
 import jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -70,7 +71,7 @@ def token_factory(rsa_keypair):
             "sub": "test-user-id",
             "iss": "http://test-issuer",
             "aud": "test-audience",
-            "exp": int((asyncio.get_event_loop().time() + 3600)),
+            "exp": int(time.time() + 3600),
             "roles": roles or {},
             "isAdmin": is_admin,
         }

@@ -17,6 +17,9 @@ async def test_client():
 
 # Dummy store classes returning predictable data
 class DummyScoresStore:
+    def __init__(self, driver=None):
+        pass
+
     async def aggregate_station(self, event_id, station_id):
         return [
             {
@@ -43,14 +46,17 @@ class DummyScoresStore:
         ]
 
 class DummyBaseStore:
+    def __init__(self, driver=None):
+        pass
+
     async def list(self):
         return []
     async def create(self, data):
-        return {"id": "id1", **data}
+        return None
     async def get(self, id):
         return {"id": id, "name": "obj"}
-    async def update(self, id, data):
-        return {"id": id, **data}
+    async def update(self, id_or_obj, data=None):
+        return None
     async def delete(self, id):
         return None
 
@@ -58,15 +64,10 @@ class DummyBaseStore:
 @patch("nightrunner_backend.transport.reports_station.ScoresStore", DummyScoresStore)
 @patch("nightrunner_backend.transport.reports_event.ScoresStore", DummyScoresStore)
 @patch("nightrunner_backend.transport.scores.ScoresStore", DummyScoresStore)
-@patch("nightrunner_backend.transport.configuration_groups.ConfigurationGroupStore", DummyBaseStore)
-@patch("nightrunner_backend.transport.configuration_groups.ConfigurationGroupsStore", DummyBaseStore)
+@patch("nightrunner_backend.transport.configuration_groups.ConfigurationStore", DummyBaseStore)
 @patch("nightrunner_backend.transport.configurations.ConfigurationStore", DummyBaseStore)
-@patch("nightrunner_backend.transport.configurations.ConfigurationsStore", DummyBaseStore)
-@patch("nightrunner_backend.transport.events.EventStore", DummyBaseStore)
 @patch("nightrunner_backend.transport.events.EventsStore", DummyBaseStore)
-@patch("nightrunner_backend.transport.patrols.PatrolStore", DummyBaseStore)
 @patch("nightrunner_backend.transport.patrols.PatrolsStore", DummyBaseStore)
-@patch("nightrunner_backend.transport.stations.StationStore", DummyBaseStore)
 @patch("nightrunner_backend.transport.stations.StationsStore", DummyBaseStore)
 @patch("nightrunner_backend.transport.station_assign_configuration.StationAssignConfigurationStore", DummyBaseStore)
 @patch("nightrunner_backend.transport.station_assign_configuration.StationAssignConfigurationsStore", DummyBaseStore)

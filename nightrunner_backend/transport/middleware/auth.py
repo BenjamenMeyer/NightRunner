@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import falcon
 import jwt
@@ -54,8 +55,8 @@ class AuthMiddleware:
             )
 
         token = auth_header.split(" ")[1]
-        if token == "test-token":
-            # Simple bypass for test suite when a placeholder token is used
+        if settings.dev_mode and token == "test-token":
+            # Convenience bypass for test suite — only active in dev_mode
             req.context.user = {"id": "test", "username": "test_user", "email": "test@example.com", "display_name": "Test User"}
             req.context.roles = []
             return
@@ -112,8 +113,12 @@ class AuthMiddleware:
             
             raise jwt.PyJWTError("OIDC configured but JWKS client missing and not in dev_mode.")
 
-        # PyJWKClient.get_signing_key_from_jwt is synchronous but usually fast
-        signing_key = self.jwks_client.get_signing_key_from_jwt(token)
+        # PyJWKClient.get_signing_key_from_jwt is synchronous and makes a network
+        # request — run it in a thread pool to avoid blocking the event loop.
+        loop = asyncio.get_event_loop()
+        signing_key = await loop.run_in_executor(
+            None, self.jwks_client.get_signing_key_from_jwt, token
+        )
         
         return jwt.decode(
             token,

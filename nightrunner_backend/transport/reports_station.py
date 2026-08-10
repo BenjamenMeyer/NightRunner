@@ -2,20 +2,14 @@ import falcon
 from nightrunner_backend.app_context import get_driver
 from nightrunner_backend.drivers.store.scores import ScoresStore
 
+
 class StationReportResource:
     """GET /v1/reports/stations/{stationId}?eventId={eventId}
     Returns a detailed scoring breakdown for a single station.
     """
-    def __init__(self):
-        self.store = None
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response, stationId: str):
-        # Instantiate store here to respect any patches applied during tests
-        try:
-            store = ScoresStore(get_driver())
-        except TypeError:
-            # DummyScoresStore used in tests does not accept a driver argument
-            store = ScoresStore()
+        store = ScoresStore(get_driver())
         event_id = req.get_param('eventId')
         if not event_id:
             raise falcon.HTTPBadRequest(description='eventId query parameter is required')

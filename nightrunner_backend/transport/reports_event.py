@@ -2,16 +2,16 @@ import falcon
 from nightrunner_backend.app_context import get_driver
 from nightrunner_backend.drivers.store.scores import ScoresStore
 
+
 class EventReportResource:
     """GET /v1/reports/events/{eventId}
-    Returns the final event scoring report: totals per patrol, per‑station breakdowns, and ranking.
+    Returns the final event scoring report: totals per patrol, per-station breakdowns, and ranking.
     """
-    def __init__(self):
-        self.store = ScoresStore(get_driver())
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response, eventId: str):
-        rows = await self.store.aggregate_event(eventId)
-        # Build per‑patrol aggregation
+        store = ScoresStore(get_driver())
+        rows = await store.aggregate_event(eventId)
+        # Build per-patrol aggregation
         patrols = {}
         for r in rows:
             pid = r["patrol_id"]

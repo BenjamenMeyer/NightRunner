@@ -14,6 +14,9 @@ async def test_client():
 
 
 class DummyConfigStore:
+    def __init__(self, driver=None):
+        pass
+
     # ConfigurationGroup methods
     async def list_groups(self):
         return []
