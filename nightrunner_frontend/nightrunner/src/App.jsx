@@ -5,13 +5,15 @@ import Layout from "./components/Layout";
 import Me from "./pages/Me";
 import Login from "./pages/login/Login";
 import NotFound from "./pages/NotFound";
-import Patrols from "@/pages/Patrols.jsx";
+import Patrols from "@/pages/user/Patrols.jsx";
 import Dashboard from "@/pages/Dashboard.jsx";
-import Stations from "@/pages/stations/Stations.jsx";
+import Stations from "@/pages/user/Stations.jsx";
 import Scoring from "@/pages/scoring/Scoring.jsx";
 import Register from "@/pages/login/Register.jsx";
 import ApiService from "@/api/ApiService.js";
 import LiveScoring from "@/pages/livescoring/LiveScoring.jsx";
+import AdminRoutes from "@/pages/admin/AdminRoutes.jsx";
+import Events from "@/pages/user/Events.jsx";
 
 function RequireAuth({ children }) {
 
@@ -65,6 +67,11 @@ function App() {
                     </RequireAuth>
                 } />
 
+                <Route
+                    path="/events"
+                    element={<Events />}
+                />
+
                 <Route path="/patrols" element={
                     <RequireAuth>
                         <Patrols />
@@ -88,6 +95,12 @@ function App() {
                         <Stations />
                     </RequireAuth>
                 }/>
+
+                <Route path="/admin/*" element={
+                    <RequireAuth>
+                        <AdminRoutes />
+                    </RequireAuth>
+                } />
                 
                 <Route path="/404" element={<NotFound />} />
 

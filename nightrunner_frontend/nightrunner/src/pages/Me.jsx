@@ -17,33 +17,13 @@ export default function Me() {
 
             try {
 
-                //const storedUser = ApiService.getUser();
+                const storedUser = ApiService.userData.get();
 
-                const storedUser = {
-                    id: "7f3d9c2e-6a41-4b8e-9d7f-2c5a1e8b4f90",
-                    username: "theodore.demo",
-                    email: "theodore.demo@example.com",
-                    displayName: "Theodore Demo",
-                    roles: [
-                        "station_leader",
-                        "volunteer"
-                    ]
-                };
+                if (!storedUser?.id) {
+                    throw new Error("No logged in user found.");
+                }
 
                 setUser(storedUser);
-
-                // If no stored user is found, we'll use the fake data
-                // if (!storedUser?.id) {
-
-                //     throw new Error("No logged in user found.");
-
-                // }
-
-                //const data = await ApiService.get(
-                //    `/users/${storedUser.id}`
-                //);
-
-                //setUser(data);
 
             }
             catch (err) {

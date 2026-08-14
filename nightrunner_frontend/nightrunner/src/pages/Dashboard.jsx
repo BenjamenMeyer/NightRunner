@@ -10,14 +10,8 @@ export default function Dashboard() {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(true);
-
     const [error, setError] = useState(null);
-
-    const [stats, setStats] = useState({
-        events: [],
-        patrols: [],
-        stations: []
-    });
+    const [event, setEvent] = useState(null);
 
     useEffect(() => {
 
@@ -32,33 +26,80 @@ export default function Dashboard() {
             setLoading(true);
             setError(null);
 
-            const [
-                events,
-                patrols,
-                stations
-            ] = await Promise.all([
+            const user = ApiService.userData.get();
 
-                ApiService.get("/events"),
-                ApiService.get("/patrols"),
-                ApiService.get("/stations")
+            if (!user) {
 
-            ]);
+                throw new Error(
+                    "Unable to determine the current user."
+                );
 
-            setStats({
-                events,
-                patrols,
-                stations
-            });
+            }
 
-        } catch (error) {
+            /*
+             * A normal user should have an event assigned.
+             *
+             * System administrators are allowed to have no
+             * event, but they should be using /admin instead.
+             */
+            if (!user.event) {
 
-            setError(error.message);
+                throw new Error(
+                    "No event is currently assigned to your account."
+                );
 
-        } finally {
+            }
+
+            const eventResponse =
+                await ApiService.eventData.getEvent(user.event);
+
+            setEvent(eventResponse);
+
+        }
+        catch (error) {
+
+            console.error(
+                "Failed to load dashboard:",
+                error
+            );
+
+            setError(
+                error.message ??
+                "Failed to load dashboard."
+            );
+
+        }
+        finally {
 
             setLoading(false);
 
         }
+
+    }
+
+    if (loading) {
+
+        return (
+
+            <div className="dashboard">
+
+                <div className="dashboard-top">
+
+                    <div>
+
+                        <h1>Dashboard</h1>
+
+                        <p>
+                            Loading event information...
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        );
 
     }
 
@@ -73,9 +114,7 @@ export default function Dashboard() {
                     <h1>Dashboard</h1>
 
                     <p>
-
-                        Welcome to Night Runner.
-
+                        Your Night Runner event information.
                     </p>
 
                 </div>
@@ -92,164 +131,263 @@ export default function Dashboard() {
 
             )}
 
-            <div className="dashboard-cards">
+            {!error && event && (
 
-                <div
-                    className="dashboard-card clickable"
-                    onClick={() => navigate("/dashboard/events")}
-                >
+                <>
 
-                    <h2>Events</h2>
+                    {/* Current Event */}
 
-                    <span>
+                    <section className="dashboard-section">
 
-                        {loading
-                            ? "..."
-                            : stats.events.length}
+                        <div className="card">
 
-                    </span>
+                            <div className="section-header">
 
-                </div>
+                                <div>
 
-                <div
-                    className="dashboard-card clickable"
-                    onClick={() => navigate("/patrols")}
-                >
+                                    <h2>Current Event</h2>
 
-                    <h2>Patrols</h2>
+                                    <p>
+                                        The event you are currently
+                                        participating in.
+                                    </p>
 
-                    <span>
+                                </div>
 
-                        {loading
-                            ? "..."
-                            : stats.patrols.length}
+                            </div>
 
-                    </span>
+                            <div className="event-information">
 
-                </div>
+                                <div className="information-item">
 
-                <div
-                    className="dashboard-card clickable"
-                    onClick={() => navigate("/dashboard/stations")}
-                >
+                                    <span className="information-label">
+                                        Event
+                                    </span>
 
-                    <h2>Stations</h2>
+                                    <strong>
+                                        {event.name}
+                                    </strong>
 
-                    <span>
+                                </div>
 
-                        {loading
-                            ? "..."
-                            : stats.stations.length}
+                                <div className="information-item">
 
-                    </span>
+                                    <span className="information-label">
+                                        Date
+                                    </span>
 
-                </div>
+                                    <strong>
+                                        {event.date}
+                                    </strong>
 
-                <div
-                    className="dashboard-card clickable"
-                    onClick={() => navigate("/dashboard/reports")}
-                >
+                                </div>
 
-                    <h2>Reports</h2>
+                                {event.location && (
 
-                    <span>
+                                    <div className="information-item">
 
-                        View
+                                        <span className="information-label">
+                                            Location
+                                        </span>
 
-                    </span>
+                                        <strong>
+                                            {event.location}
+                                        </strong>
 
-                </div>
+                                    </div>
 
-            </div>
+                                )}
 
-            <div className="dashboard-section">
+                                {event.description && (
 
-                <div className="card">
+                                    <div className="information-item information-item-full">
 
-                    <div className="section-header">
+                                        <span className="information-label">
+                                            About
+                                        </span>
 
-                        <h2>Upcoming Events</h2>
+                                        <p>
+                                            {event.description}
+                                        </p>
 
-                        <button
-                            className="secondary-button"
-                            onClick={() => navigate("/dashboard/events")}
-                        >
+                                    </div>
 
-                            View All
+                                )}
 
-                        </button>
+                            </div>
 
-                    </div>
+                        </div>
 
-                    {loading ? (
+                    </section>
 
-                        <p>
 
-                            Loading...
+                    {/* Event Access */}
 
-                        </p>
+                    <section className="dashboard-section">
 
-                    ) : stats.events.length === 0 ? (
+                        <div className="card">
 
-                        <p>
+                            <div className="section-header">
 
-                            No events have been created.
+                                <div>
 
-                        </p>
+                                    <h2>Event Information</h2>
 
-                    ) : (
+                                    <p>
+                                        View information about events,
+                                        patrols, and scoring.
+                                    </p>
 
-                        <table className="dashboard-table">
+                                </div>
 
-                            <thead>
+                            </div>
 
-                            <tr>
+                            <div className="dashboard-action-grid">
 
-                                <th>Name</th>
-
-                                <th>Date</th>
-
-                            </tr>
-
-                            </thead>
-
-                            <tbody>
-
-                            {stats.events.map(event => (
-
-                                <tr
-                                    key={event.id}
-                                    className="table-clickable"
+                                <button
+                                    className="dashboard-action-card"
                                     onClick={() =>
-                                        navigate("/dashboard/events")
+                                        navigate("/events")
                                     }
                                 >
 
-                                    <td>
+                                    <div>
 
-                                        {event.name}
+                                        <h3>
+                                            Events
+                                        </h3>
 
-                                    </td>
+                                        <p>
+                                            View known events and
+                                            information about the
+                                            current event.
+                                        </p>
 
-                                    <td>
+                                    </div>
 
-                                        {event.date}
+                                    <span>
+                                        →
+                                    </span>
 
-                                    </td>
+                                </button>
 
-                                </tr>
 
-                            ))}
+                                <button
+                                    className="dashboard-action-card"
+                                    onClick={() =>
+                                        navigate("/live")
+                                    }
+                                >
 
-                            </tbody>
+                                    <div>
 
-                        </table>
+                                        <h3>
+                                            Live Scoring
+                                        </h3>
 
-                    )}
+                                        <p>
+                                            View patrol progress
+                                            during the event.
+                                        </p>
 
-                </div>
+                                    </div>
 
-            </div>
+                                    <span>
+                                        →
+                                    </span>
+
+                                </button>
+
+
+                                <button
+                                    className="dashboard-action-card"
+                                    onClick={() =>
+                                        navigate("/patrols")
+                                    }
+                                >
+
+                                    <div>
+
+                                        <h3>
+                                            Patrols
+                                        </h3>
+
+                                        <p>
+                                            View the patrols
+                                            participating in this event.
+                                        </p>
+
+                                    </div>
+
+                                    <span>
+                                        →
+                                    </span>
+
+                                </button>
+
+
+                                <button
+                                    className="dashboard-action-card"
+                                    onClick={() =>
+                                        navigate("/stations")
+                                    }
+                                >
+
+                                    <div>
+
+                                        <h3>
+                                            Stations
+                                        </h3>
+
+                                        <p>
+                                            View scoring stations
+                                            and requirements.
+                                        </p>
+
+                                    </div>
+
+                                    <span>
+                                        →
+                                    </span>
+
+                                </button>
+
+
+                                <button
+                                    className="dashboard-action-card"
+                                    onClick={() =>
+                                        navigate("/scoring")
+                                    }
+                                >
+
+                                    <div>
+
+                                        <h3>
+                                            Scoring
+                                        </h3>
+
+                                        <p>
+                                            Check in, score, and
+                                            check out of stations.
+                                        </p>
+
+                                    </div>
+
+                                    <span>
+                                        →
+                                    </span>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                </>
+
+            )}
 
         </div>
 

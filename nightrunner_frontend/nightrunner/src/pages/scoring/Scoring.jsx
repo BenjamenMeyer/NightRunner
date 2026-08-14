@@ -45,130 +45,16 @@ export default function Scoring() {
 
             setError(null);
 
-            //const [
-            //    patrols,
-            //    stations
-            //] = await Promise.all([
-            //    JSON.stringify("taco"),
-            //    JSON.stringify("burrito")
-
-                //ApiService.get("/patrols"),
-                //ApiService.get("/stations")
-
-            //]);
-
-            const demoPatrol = {
-                id: "6a0f20c1-535d-415e-873a-a9bdbbd7f419",
-                programName: "Demo Patrol",
-                members: [
-                    {
-                        id: "1",
-                        name: "John Smith",
-                        rank: "Navigator",
-                        troop: "GA-0594"
-                    }
-                ]
-            };
-
-            setPatrols([demoPatrol]);
-
-            //setPatrols(patrols);
-
-            //setStations(stations);
-
-            setStations([
-                {
-                    id: "demo-station",
-
-                    name: "Fire Building",
-
-                    activeConfigurationId: "demo-config",
-
-                    tasks: [
-
-                        {
-                            id: "task-1",
-
-                            description: "Overall teamwork and communication",
-
-                            scoreWeight: 5,
-
-                            scoreValue: {
-                                type: "RangeRated",
-                                min: 0,
-                                max: 10
-                            }
-                        },
-
-                        {
-                            id: "task-2",
-
-                            description: "Fire was successfully started",
-
-                            scoreWeight: 10,
-
-                            scoreValue: {
-                                type: "Completed"
-                            }
-                        },
-
-                        {
-                            id: "task-3",
-
-                            description: "Fire quality",
-
-                            scoreWeight: 3,
-
-                            scoreValue: {
-                                type: "MultiChoice",
-
-                                options: [
-                                    {
-                                        label: "Poor",
-                                        value: 0
-                                    },
-                                    {
-                                        label: "Fair",
-                                        value: 5
-                                    },
-                                    {
-                                        label: "Excellent",
-                                        value: 10
-                                    }
-                                ]
-                            }
-                        },
-
-                        {
-                            id: "task-4",
-
-                            description: "Time adjustment",
-
-                            scoreWeight: 1,
-
-                            scoreValue: {
-                                type: "DeltaTime",
-
-                                scalar: 1000
-                            }
-                        },
-
-                        {
-                            id: "task-5",
-
-                            description: "Completion Time",
-
-                            scoreWeight: 8,
-
-                            scoreValue: {
-                                type: "Stopwatch"
-                            }
-                        }
-
-                    ]
-
-                }
+            const [
+                patrols,
+                stations
+            ] = await Promise.all([
+                ApiService.patrolData.getPatrols(),
+                ApiService.stationData.getStations()
             ]);
+
+            setPatrols(patrols);
+            setStations(stations);
 
         } catch (error) {
 

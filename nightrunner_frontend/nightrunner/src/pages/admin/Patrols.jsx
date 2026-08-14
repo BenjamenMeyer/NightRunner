@@ -47,7 +47,7 @@ export default function Patrols() {
 
             setLoading(true);
 
-            const patrols = await ApiService.get("/patrols");
+            const patrols = await ApiService.patrolData.getPatrols();
 
             setPatrols(patrols);
 
@@ -159,10 +159,7 @@ export default function Patrols() {
 
             setError(null);
 
-            const createdPatrol = await ApiService.post(
-                "/patrols",
-                newPatrol
-            );
+            const createdPatrol = await ApiService.patrolData.createPatrol(newPatrol);
 
             const patrols = await loadPatrols();
 
@@ -194,9 +191,7 @@ export default function Patrols() {
 
             setError(null);
 
-            await ApiService.delete(
-                `/patrols/${id}`
-            );
+            await ApiService.patrolData.deletePatrol(id);
 
             await loadPatrols();
 

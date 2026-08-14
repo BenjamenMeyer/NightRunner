@@ -1,218 +1,136 @@
-import { jwtDecode } from "jwt-decode";
+import BackendTransport from "./BackendTransport";
 
-const API_BASE = __API_BACKEND_URL__ || "http://localhost:8000/api/v1";
-
-const TOKEN_KEY = "night-runner-token";
-const USER_KEY = "night-runner-user";
+import UserService from "./UserService";
+import EventService from "./EventService";
+import PatrolService from "./PatrolService";
+import StationService from "./StationService";
 
 class ApiService {
 
     //
-    // Session
+    // Domain Services
     //
 
-    saveSession(data) {
-
-        if (data.token) {
-
-            localStorage.setItem(
-                TOKEN_KEY,
-                data.token
-            );
-
-        }
-
-        if (data.user) {
-
-            localStorage.setItem(
-                USER_KEY,
-                JSON.stringify(data.user)
-            );
-
-        }
-
-    }
-
-    logout() {
-
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-
-    }
-
-    getToken() {
-
-        return localStorage.getItem(TOKEN_KEY);
-
-    }
-
-    getUser() {
-
-        const user = localStorage.getItem(USER_KEY);
-
-        return user
-            ? JSON.parse(user)
-            : null;
-
-    }
-
-    isAuthenticated() {
-
-        const token = this.getToken()
-
-        if (!token) {
-            return false;
-        }
-
-        try {
-
-            const decoded = jwtDecode(token);
-
-            return decoded.exp * 1000 > Date.now();
-
-        }
-        catch {
-
-            return false;
-
-        }
-
-    }
-
-    //
-    // Headers
-    //
-
-    authHeaders() {
-
-        const headers = {
-            "Content-Type": "application/json"
-        };
-
-        const token = this.getToken();
-
-        if (token) {
-
-            headers.Authorization = `Bearer ${token}`;
-
-        }
-
-        return headers;
-
-    }
-
-    //
-    // Generic Request
-    //
-
-    async request(method, url, body = null) {
-
-        const response = await fetch(
-            `${API_BASE}${url}`,
-            {
-                method,
-                headers: this.authHeaders(),
-                body: body
-                    ? JSON.stringify(body)
-                    : undefined
-            }
-        );
-
-        if (response.status === 401) {
-
-            this.logout();
-
-        }
-
-        if (response.status === 204) {
-
-            return null;
-
-        }
-
-        const data = await response.json();
-
-        if (!response.ok) {
-
-            throw new Error(
-                data?.error?.message ??
-                response.statusText
-            );
-
-        }
-
-        return data;
-
-    }
-
-    //
-    // HTTP Methods
-    //
-
-    get(url) {
-
-        return this.request(
-            "GET",
-            url
-        );
-
-    }
-
-    post(url, body) {
-
-        return this.request(
-            "POST",
-            url,
-            body
-        );
-
-    }
-
-    put(url, body) {
-
-        return this.request(
-            "PUT",
-            url,
-            body
-        );
-
-    }
-
-    delete(url) {
-
-        return this.request(
-            "DELETE",
-            url
-        );
-
+    /**
+     * Provides access to the currently authenticated user
+     * and user-related operations.
+     * @type {UserService}
+     */
+    userData;
+
+    /**
+     * Provides access to event-related operations.
+     * @type {EventService}
+     */
+    eventData;
+
+    /**
+     * Provides access to patrol-related operations.
+     * @type {PatrolService}
+     */
+    patrolData;
+
+    /**
+     * Provides access to station-related operations.
+     * @type {StationService}
+     */
+    stationData;
+
+    /**
+     * Direct talk to Backend API
+     * @type {BackendTransport}
+     */
+    backendTransport;
+
+    constructor() {
+        this.backendTransport = BackendTransport;
+        this.userData = new UserService();
+        this.eventData = new EventService(this.backendTransport, this.userData);
+        this.patrolData = new PatrolService(this.backendTransport, this.userData);
+        this.stationData = new StationService(this.backendTransport, this.userData);
     }
 
     //
     // Authentication
     //
 
+    /**
+     * Authenticate a user.
+     *
+     * Saves the returned session locally.
+     *
+     * @param {string} username
+     * @param {string} password
+     *
+     * @returns {Promise<Object>}
+     * The authentication response returned by the backend.
+     */
     async login(username, password) {
 
-        const data = await this.post(
-            "/auth/login",
-            {
-                username,
-                password
-            }
-        );
+        const data =
+            await BackendTransport.post(
+                "/auth/login",
+                {
+                    username,
+                    password
+                }
+            );
 
-        this.saveSession(data);
+        BackendTransport.saveSession(data);
 
         return data;
 
     }
 
+    /**
+     * Register a new user.
+     *
+     * @param {Object} user
+     *
+     * @returns {Promise<Object>}
+     * The newly created user returned by the backend.
+     */
     async register(user) {
 
-        return await this.post(
+        return await BackendTransport.post(
             "/users",
             user
         );
+
+    }
+
+    /**
+     * Log out the current user.
+     */
+    logout() {
+
+        BackendTransport.logout();
+
+    }
+
+    //
+    // Session
+    //
+
+    /**
+     * Get the current authentication token.
+     *
+     * @returns {string|null}
+     */
+    getToken() {
+
+        return BackendTransport.getToken();
+
+    }
+
+    /**
+     * Determine whether the current session is authenticated.
+     *
+     * @returns {boolean}
+     */
+    isAuthenticated() {
+
+        return BackendTransport.isAuthenticated();
 
     }
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import TaskEditor from "./TaskEditor";
+import TaskEditor from "./TaskEditor.jsx";
 
 const STATION_TYPES = [
     "Challenge",

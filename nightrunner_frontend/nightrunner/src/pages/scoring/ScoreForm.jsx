@@ -91,7 +91,7 @@ export default function ScoreForm({
 
             };
 
-            await ApiService.post(
+            await ApiService.backendTransport.post(
                 "/scores",
                 submission
             );

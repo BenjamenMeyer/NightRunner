@@ -1,0 +1,120 @@
+.stations-page {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 1.5rem;
+
+}
+
+.station-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fill, minmax(300px, 1fr));
+
+    gap: 1rem;
+
+}
+
+.station-card {
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    box-shadow: var(--shadow, none);
+
+}
+
+.station-card-header {
+
+    padding: 1rem 1.25rem;
+
+    background: var(--header-bg);
+
+    color: var(--header-text);
+
+}
+
+.station-card-header h2 {
+
+    margin: 0;
+
+    font-size: 1.1rem;
+
+}
+
+.station-card-body {
+
+    padding: 1.25rem;
+
+}
+
+.station-description {
+
+    margin: 0 0 1.25rem;
+
+    color: var(--text-primary);
+
+    line-height: 1.5;
+
+}
+
+.station-description.muted {
+
+    color: var(--text-secondary);
+
+}
+
+.station-info {
+
+    display: flex;
+
+    gap: 1rem;
+
+    padding-top: 1rem;
+
+    border-top: 1px solid var(--border);
+
+}
+
+.station-info div {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: .25rem;
+
+}
+
+.station-info span {
+
+    color: var(--text-secondary);
+
+    font-size: .8rem;
+
+}
+
+.station-info strong {
+
+    font-size: 1.1rem;
+
+}
+
+@media (max-width: 768px) {
+
+    .station-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+}

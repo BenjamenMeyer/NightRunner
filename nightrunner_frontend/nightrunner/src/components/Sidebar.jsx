@@ -13,51 +13,86 @@ function Sidebar({
                  }) {
 
     const loggedIn = ApiService.isAuthenticated();
+    const isAdmin = ApiService.userData.isAdmin();
 
-    const links = [
+    const links = loggedIn
 
-        ...(loggedIn
-            ? [{
+        ? [
+
+            {
                 name: "Dashboard",
                 path: "/dashboard"
-            }]
-            : [{
+            },
+
+            ...(isAdmin
+
+                    ? [
+
+                        {
+                            name: "Admin Dashboard",
+                            path: "/admin"
+                        },
+                        {
+                            name: "Event Manager",
+                            path: "/admin/events"
+                        },
+                        {
+                            name: "Patrol Manager",
+                            path: "/admin/patrols"
+                        },
+                        {
+                            name: "Station Manager",
+                            path: "/admin/stations"
+                        }
+
+                    ]
+
+                    : [
+
+                        {
+                            name: "Events",
+                            path: "/events"
+                        },
+                        {
+                            name: "Patrols",
+                            path: "/patrols"
+                        },
+                        {
+                            name: "Stations",
+                            path: "/stations"
+                        }
+
+                    ]
+
+            ),
+
+            {
+                name: "Scoring",
+                path: "/scoring"
+            }
+
+        ]
+
+        : [
+
+            {
                 name: "Login",
                 path: "/login"
-            }]),
+            }
 
-        {
-            name: "Events",
-            path: "/events"
-        },
-        {
-            name: "Patrols",
-            path: "/patrols"
-        },
-        {
-            name: "Stations",
-            path: "/stations"
-        },
-        {
-            name: "Reports",
-            path: "/reports"
-        },
-        {
-            name: "Scoring",
-            path: "/scoring"
-        }
-
-    ];
+        ];
 
     return (
 
         <>
 
             {open && (
+
                 <div
                     className="sidebar-backdrop"
                     onClick={close}
                 />
+
             )}
 
             <aside
@@ -73,9 +108,7 @@ function Sidebar({
                     />
 
                     <h2>
-
                         Night Runner
-
                     </h2>
 
                 </div>
@@ -101,29 +134,60 @@ function Sidebar({
 
                     ))}
 
-                    <a
-                        href="/live"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="sidebar-link"
-                    >
-                        Live Progress
-                    </a>
+                    {loggedIn && (
+
+                        <a
+                            href="/live"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="sidebar-link"
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px"
+                            }}
+                        >
+
+                            Live Scoring
+
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+
+                                <polyline points="15 3 21 3 21 9" />
+
+                                <line
+                                    x1="10"
+                                    y1="14"
+                                    x2="21"
+                                    y2="3"
+                                />
+
+                            </svg>
+
+                        </a>
+
+                    )}
 
                 </nav>
 
                 <div className="sidebar-footer">
 
                     <span>
-
                         Night Runner
-
                     </span>
 
                     <small>
-
                         NightOps Tracking System
-
                     </small>
 
                 </div>

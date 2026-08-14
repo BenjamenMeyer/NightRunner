@@ -34,11 +34,9 @@
     display: none;
 
     width: 42px;
-
     height: 42px;
 
     border: none;
-
     border-radius: 8px;
 
     background: transparent;
@@ -55,33 +53,54 @@
 
 .sidebar-toggle:hover {
 
-    background: rgba(255,255,255,.12);
+    background: rgba(255, 255, 255, .12);
 
 }
 
 .header-user {
 
-    color: var(--header-text);
+    display: flex;
+    align-items: center;
 
-    text-decoration: none;
-
-    cursor: pointer;
+    gap: 8px;
 
     padding: 8px 12px;
 
-    border-radius: 4px;
+    color: #ffffff;
+
+    text-decoration: none;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    transition:
+            background-color .2s ease,
+            color .2s ease;
 
 }
 
-.header-user:hover {
+.header-user:hover,
+.header-user.active {
 
-    background: var(--sidebar-hover);
+    color: #ffffff;
+
+    background: rgba(255, 255, 255, .12);
 
 }
 
 .header-user.active {
 
     font-weight: bold;
+
+}
+
+.header-user-icon {
+
+    width: 24px;
+    height: 24px;
+
+    flex-shrink: 0;
 
 }
 
@@ -92,7 +111,6 @@
         display: flex;
 
         align-items: center;
-
         justify-content: center;
 
     }

@@ -93,6 +93,11 @@ export default function LiveScoring() {
 
     }
 
+    // Only duplicate rows if there are more than 10 patrols AND displayMode is "auto"
+    const patrolsToMap = (data.patrols.length > 10 && displayMode === "auto")
+        ? [...data.patrols, ...data.patrols]
+        : data.patrols;
+
     return (
 
         <div className="live-scoring-container">
@@ -167,23 +172,23 @@ export default function LiveScoring() {
 
                         <tbody>
 
-                        {[...data.patrols, ...data.patrols].map((patrol, index) => (
+                        {patrolsToMap.map((patrol, index) => (
 
                             <tr key={`${patrol.id}-${index}`}>
 
                                 <td className="sticky-column patrol-name">
 
-                                    {patrol.name}
+                                    {patrol.programName}
 
                                 </td>
 
                                 {data.stations.map(station => {
 
-                                    const completed =
-                                        patrol.completed[station.id];
+                                    const completed = true;
+                                        //patrol.completed[station.id];
 
-                                    const current =
-                                        patrol.currentStation === station.id;
+                                    const current = false;
+                                        //patrol.currentStation === station.id;
 
                                     let className = "";
                                     let value = "";

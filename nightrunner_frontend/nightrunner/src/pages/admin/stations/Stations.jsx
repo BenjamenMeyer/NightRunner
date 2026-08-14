@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 
-import ApiService from "@/api/ApiService";
+import ApiService from "@/api/ApiService.js";
 
-import StationCreator from "./StationCreator";
-import StationDetails from "./StationDetails";
+import StationCreator from "./StationCreator.jsx";
+import StationDetails from "./StationDetails.jsx";
 
 import "./Stations.css";
 
@@ -35,7 +35,7 @@ export default function Stations() {
 
             setError(null);
 
-            const stations = await ApiService.get("/stations");
+            const stations = await ApiService.stationData.getStations();
 
             setStations(stations);
 
@@ -67,10 +67,7 @@ export default function Stations() {
 
             setError(null);
 
-            const created = await ApiService.post(
-                "/stations",
-                station
-            );
+            const created = await ApiService.stationData.createStation(station);
 
             await loadStations();
 
@@ -96,9 +93,7 @@ export default function Stations() {
 
         try {
 
-            await ApiService.delete(
-                `/stations/${id}`
-            );
+            await ApiService.stationData.deleteStation(id);
 
             await loadStations();
 
