@@ -1,10 +1,13 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import AdminDashboard from "./AdminDashboard.jsx";
-import Patrols from "@/pages/admin/Patrols.jsx";
+import Patrols from "@/pages/admin/patrols/Patrols.jsx";
 import Stations from "@/pages/admin/stations/Stations.jsx";
 import EventManager from "@/pages/admin/events/EventManager.jsx";
 import EventCreator from "@/pages/admin/events/EventCreator.jsx";
+import UserManager from "@/pages/admin/user/UserManager.jsx";
+import StationEditor from "@/pages/admin/stations/StationEditor.jsx";
+import PatrolEditor from "@/pages/admin/patrols/PatrolEditor.jsx";
 
 export default function AdminRoutes() {
 
@@ -24,22 +27,52 @@ export default function AdminRoutes() {
                 element={<Patrols />}
             />
 
+            <Route
+                path="patrols/create"
+                element={
+                    <PatrolEditor mode="create" />
+                }
+            />
+
+            <Route
+                path="patrols/edit"
+                element={
+                    <PatrolEditor mode="edit" />
+                }
+            />
+
             {/* Stations */}
             <Route
                 path="stations"
                 element={<Stations />}
             />
 
+            <Route
+                path="stations/create"
+                element={<StationEditor />}
+            />
+
+            <Route
+                path="stations/edit"
+                element={<StationEditor />}
+            />
+
             {/* Events */}
             {/* Events */}
             <Route
-                path="event"
+                path="events"
                 element={<EventManager />}
             />
 
             <Route
                 path="event/create"
                 element={<EventCreator />}
+            />
+
+            {/* User Management */}
+            <Route
+                path="users"
+                element={<UserManager />}
             />
 
             {/* Unknown admin route */}

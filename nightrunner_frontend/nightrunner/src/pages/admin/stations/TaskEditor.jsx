@@ -1,6 +1,6 @@
 import "./Stations.css";
 
-const TASK_TYPES = [
+const DEFAULT_TASK_TYPES = [
     "Timed Challenge",
     "Score Challenge",
     "Pass / Fail",
@@ -12,7 +12,8 @@ const TASK_TYPES = [
 
 export default function TaskEditor({
                                        task,
-                                       onChange
+                                       onChange,
+                                       taskTypes = DEFAULT_TASK_TYPES
                                    }) {
 
     function update(field, value) {
@@ -28,60 +29,92 @@ export default function TaskEditor({
 
         <div className="task-editor">
 
-            <h3>Task Configuration</h3>
+            <div className="task-editor-heading">
 
-            <label>
+                <div>
 
-                Task Name
+                    <h3>
+                        Task Configuration
+                    </h3>
 
-                <input
-                    value={task.name}
-                    onChange={(e) =>
-                        update("name", e.target.value)
-                    }
-                />
+                    <p>
+                        Configure how this task is scored.
+                    </p>
 
-            </label>
+                </div>
 
-            <label>
+            </div>
 
-                Task Type
+            <div className="task-form-grid">
 
-                <select
-                    value={task.type}
-                    onChange={(e) =>
-                        update("type", e.target.value)
-                    }
-                >
+                <label className="form-field">
 
-                    {TASK_TYPES.map(type => (
+                    <span>
+                        Task Name
+                    </span>
 
-                        <option
-                            key={type}
-                            value={type}
-                        >
-                            {type}
-                        </option>
+                    <input
+                        value={task.name}
+                        onChange={event =>
+                            update(
+                                "name",
+                                event.target.value
+                            )
+                        }
+                        placeholder="Enter task name"
+                    />
 
-                    ))}
+                </label>
 
-                </select>
+                <label className="form-field">
 
-            </label>
+                    <span>
+                        Task Type
+                    </span>
 
-            <label>
+                    <select
+                        value={task.type}
+                        onChange={event =>
+                            update(
+                                "type",
+                                event.target.value
+                            )
+                        }
+                    >
 
-                Instructions
+                        {taskTypes.map(type => (
+
+                            <option
+                                key={type}
+                                value={type}
+                            >
+                                {type}
+                            </option>
+
+                        ))}
+
+                    </select>
+
+                </label>
+
+            </div>
+
+            <label className="form-field">
+
+                <span>
+                    Instructions
+                </span>
 
                 <textarea
                     rows={4}
                     value={task.instructions}
-                    onChange={(e) =>
+                    onChange={event =>
                         update(
                             "instructions",
-                            e.target.value
+                            event.target.value
                         )
                     }
+                    placeholder="Explain what the patrol needs to do..."
                 />
 
             </label>
@@ -89,18 +122,20 @@ export default function TaskEditor({
             {(task.type === "Score Challenge" ||
                 task.type === "Timed Challenge") && (
 
-                <label>
+                <label className="form-field">
 
-                    Maximum Score
+                    <span>
+                        Maximum Score
+                    </span>
 
                     <input
                         type="number"
                         min="0"
                         value={task.maxScore}
-                        onChange={(e) =>
+                        onChange={event =>
                             update(
                                 "maxScore",
-                                Number(e.target.value)
+                                Number(event.target.value)
                             )
                         }
                     />
@@ -111,21 +146,31 @@ export default function TaskEditor({
 
             {task.type === "Timed Challenge" && (
 
-                <label>
+                <label className="form-field">
 
-                    Time Limit (seconds)
+                    <span>
+                        Time Limit
+                    </span>
 
-                    <input
-                        type="number"
-                        min="0"
-                        value={task.timeLimit}
-                        onChange={(e) =>
-                            update(
-                                "timeLimit",
-                                Number(e.target.value)
-                            )
-                        }
-                    />
+                    <div className="input-with-suffix">
+
+                        <input
+                            type="number"
+                            min="0"
+                            value={task.timeLimit}
+                            onChange={event =>
+                                update(
+                                    "timeLimit",
+                                    Number(event.target.value)
+                                )
+                            }
+                        />
+
+                        <span>
+                            seconds
+                        </span>
+
+                    </div>
 
                 </label>
 
@@ -133,18 +178,21 @@ export default function TaskEditor({
 
             {task.type === "Multiple Choice" && (
 
-                <label>
+                <label className="form-field">
 
-                    Correct Answer
+                    <span>
+                        Correct Answer
+                    </span>
 
                     <input
                         value={task.correctAnswer}
-                        onChange={(e) =>
+                        onChange={event =>
                             update(
                                 "correctAnswer",
-                                e.target.value
+                                event.target.value
                             )
                         }
+                        placeholder="Enter the correct answer"
                     />
 
                 </label>
@@ -153,18 +201,21 @@ export default function TaskEditor({
 
             {task.type === "Text Answer" && (
 
-                <label>
+                <label className="form-field">
 
-                    Expected Answer
+                    <span>
+                        Expected Answer
+                    </span>
 
                     <input
                         value={task.expectedAnswer}
-                        onChange={(e) =>
+                        onChange={event =>
                             update(
                                 "expectedAnswer",
-                                e.target.value
+                                event.target.value
                             )
                         }
+                        placeholder="Enter the expected answer"
                     />
 
                 </label>
@@ -173,18 +224,51 @@ export default function TaskEditor({
 
             {task.type === "Checkpoint" && (
 
-                <p className="task-note">
-                    Checkpoint stations simply record that a patrol
-                    successfully checked in.
-                </p>
+                <div className="task-note">
+
+                    <strong>
+                        Checkpoint
+                    </strong>
+
+                    <p>
+                        This task records that a patrol successfully
+                        checked in at the station.
+                    </p>
+
+                </div>
 
             )}
 
             {task.type === "Pass / Fail" && (
 
-                <p className="task-note">
-                    Judges will mark the patrol as either Pass or Fail.
-                </p>
+                <div className="task-note">
+
+                    <strong>
+                        Pass / Fail
+                    </strong>
+
+                    <p>
+                        Judges will mark the patrol as either
+                        Pass or Fail.
+                    </p>
+
+                </div>
+
+            )}
+
+            {task.type === "Custom" && (
+
+                <div className="task-note">
+
+                    <strong>
+                        Custom Task
+                    </strong>
+
+                    <p>
+                        This task uses custom scoring behavior.
+                    </p>
+
+                </div>
 
             )}
 

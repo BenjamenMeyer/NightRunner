@@ -1,24 +1,112 @@
+/* ==========================================
+   Page
+   ========================================== */
+
+.stations-page,
+.station-editor-page {
+    width: 100%;
+}
+
+/* ==========================================
+   Common Typography
+   ========================================== */
+
+.page-eyebrow {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: var(--button-bg);
+
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+/* ==========================================
+   Page Header
+   ========================================== */
+
 .page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+
+    gap: 24px;
+    margin-bottom: 24px;
 }
 
-.page-header h1 {
+.page-header h1,
+.editor-title h1 {
     margin: 0;
+
+    color: var(--text-primary);
 }
 
-.page-header p {
-    margin: 0.35rem 0 0;
+.page-header p,
+.editor-title p {
+    margin: 6px 0 0;
+
     color: var(--text-secondary);
 }
 
-.search-box {
+/* ==========================================
+   Error
+   ========================================== */
+
+.error-banner {
+    margin-bottom: 20px;
+
+    padding: 14px 16px;
+
+    border: 1px solid #f3b5b5;
+    border-radius: 8px;
+
+    background: #ffdcdc;
+    color: #8b0000;
+}
+
+/* ==========================================
+   Toolbar
+   ========================================== */
+
+.station-toolbar {
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+}
+
+.search-wrapper {
+    position: relative;
+
+    flex: 1;
+}
+
+.search-icon {
+    position: absolute;
+
+    left: 14px;
+    top: 50%;
+
+    width: 18px;
+    height: 18px;
+
+    transform: translateY(-50%);
+
+    color: var(--text-secondary);
+
+    pointer-events: none;
+}
+
+.station-search-box {
     width: 100%;
-    padding: 0.75rem 1rem;
-    margin-bottom: 1.5rem;
+
+    padding: 12px 14px 12px 42px;
 
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -26,229 +114,792 @@
     background: var(--card-bg);
     color: var(--text-primary);
 
-    font-size: 0.95rem;
+    font-size: 15px;
+
+    outline: none;
+
+    transition:
+            border-color .15s,
+            box-shadow .15s;
 }
 
-.search-box:focus {
-    outline: none;
+.station-search-box:focus {
     border-color: var(--button-bg);
+
+    box-shadow:
+            0 0 0 3px
+            rgba(0, 0, 0, .06);
 }
+
+.station-count {
+    flex-shrink: 0;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+}
+
+/* ==========================================
+   Station Layout
+   ========================================== */
 
 .station-layout {
     display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 1.5rem;
-    align-items: start;
+
+    grid-template-columns:
+        minmax(280px, 340px)
+        minmax(0, 1fr);
+
+    gap: 20px;
+
+    align-items: stretch;
 }
 
-.station-list {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+/* ==========================================
+   Panels
+   ========================================== */
 
+.station-list-panel,
+.station-details {
+    background: var(--card-bg);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.station-list-panel {
     overflow: hidden;
 }
 
-.station-card {
-    padding: 1rem;
+.station-details {
+    min-height: 520px;
+
+    padding: 24px;
+}
+
+/* ==========================================
+   Panel Header
+   ========================================== */
+
+.panel-header {
+    padding: 20px;
 
     border-bottom: 1px solid var(--border);
+}
+
+.panel-header h2 {
+    margin: 0;
+
+    color: var(--text-primary);
+
+    font-size: 18px;
+}
+
+.panel-header p {
+    margin: 5px 0 0;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+}
+
+/* ==========================================
+   Station List
+   ========================================== */
+
+.station-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+
+    padding: 8px;
+}
+
+.station-card {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding: 14px;
+
+    border: 1px solid transparent;
+    border-radius: 8px;
+
+    background: transparent;
+    color: var(--text-primary);
+
+    text-align: left;
 
     cursor: pointer;
 
     transition:
-            background 0.2s,
-            border-color 0.2s;
-}
-
-.station-card:last-child {
-    border-bottom: none;
+            background-color .15s,
+            border-color .15s;
 }
 
 .station-card:hover {
-    background: var(--sidebar-hover);
+    background: var(--page-bg);
 }
 
 .station-card.selected {
-    background: rgba(0,0,0,0.04);
-    border-left: 4px solid var(--button-bg);
-    padding-left: calc(1rem - 4px);
+    background: var(--page-bg);
+
+    border-color: var(--button-bg);
 }
 
-.station-card h2 {
-    margin: 0;
-    font-size: 1.05rem;
-    color: var(--text-primary);
+.station-card-content {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
 }
 
-.station-card p {
-    margin: 0.35rem 0 0;
+.station-card-content strong {
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-size: 15px;
+}
+
+.station-card-content span {
     color: var(--text-secondary);
-    font-size: 0.9rem;
+
+    font-size: 13px;
 }
+
+.station-card-arrow {
+    flex-shrink: 0;
+
+    color: var(--text-secondary);
+
+    font-size: 18px;
+
+    transition:
+            transform .15s,
+            color .15s;
+}
+
+.station-card:hover .station-card-arrow,
+.station-card.selected .station-card-arrow {
+    color: var(--button-bg);
+
+    transform: translateX(2px);
+}
+
+/* ==========================================
+   Empty / Loading
+   ========================================== */
 
 .loading-panel,
-.empty-panel {
-    padding: 2rem;
-    text-align: center;
+.empty-list {
+    padding: 40px 20px;
+
     color: var(--text-secondary);
+
+    text-align: center;
 }
 
-.error-banner {
-    margin-bottom: 1rem;
+.loading-panel.large {
+    min-height: 300px;
 
-    padding: 0.85rem 1rem;
-
-    background: #ffe5e5;
-    border: 1px solid #d43f3a;
-    border-radius: 8px;
-
-    color: #b00020;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-@media (max-width: 1000px) {
+.loading-spinner {
+    display: inline-block;
 
-    .station-layout {
+    width: 16px;
+    height: 16px;
 
-        grid-template-columns: 1fr;
+    margin-right: 8px;
 
+    border: 2px solid var(--border);
+    border-top-color: var(--button-bg);
+
+    border-radius: 50%;
+
+    vertical-align: -3px;
+
+    animation: station-spin .7s linear infinite;
+}
+
+@keyframes station-spin {
+
+    to {
+        transform: rotate(360deg);
     }
 
 }
 
-/* ===========================================
-   Station Creator
-=========================================== */
+.empty-list h3 {
+    margin: 0 0 5px;
 
-.modal-backdrop {
-    position: fixed;
-    inset: 0;
-
-    background: rgba(0, 0, 0, 0.45);
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    z-index: 1000;
+    color: var(--text-primary);
 }
 
-.station-creator {
-    width: min(650px, 90vw);
+.empty-list p {
+    margin: 0;
+}
+
+/* ==========================================
+   Editor
+   ========================================== */
+
+.station-editor-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+
+.editor-header {
+    margin-bottom: 28px;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+
+    margin-bottom: 20px;
+    padding: 7px 0;
+
+    border: none;
+
+    background: transparent;
+    color: var(--text-secondary);
+
+    font-size: 14px;
+
+    cursor: pointer;
+}
+
+.back-button:hover {
+    color: var(--text-primary);
+}
+
+.editor-title h1 {
+    font-size: 30px;
+}
+
+/* ==========================================
+   Editor Sections
+   ========================================== */
+
+.editor-section {
+    margin-bottom: 24px;
+
+    padding: 24px;
 
     background: var(--card-bg);
 
+    border: 1px solid var(--border);
     border-radius: 12px;
-
-    overflow: hidden;
-
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
 }
 
-.creator-header {
-    padding: 1.25rem 1.5rem;
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
 
-    border-bottom: 1px solid var(--border);
+    gap: 20px;
 
-    background: var(--page-bg);
+    margin-bottom: 22px;
 }
 
-.creator-header h2 {
+.section-heading h2 {
     margin: 0;
+
+    color: var(--text-primary);
+
+    font-size: 19px;
 }
 
-.creator-body {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+.section-heading p {
+    margin: 5px 0 0;
 
-    padding: 1.5rem;
+    color: var(--text-secondary);
+
+    font-size: 14px;
 }
 
-.creator-body label {
+/* ==========================================
+   Forms
+   ========================================== */
+
+.station-form-grid,
+.task-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 18px;
+}
+
+.form-field {
     display: flex;
     flex-direction: column;
 
-    gap: .45rem;
+    gap: 7px;
 
+    margin-bottom: 18px;
+}
+
+.form-field > span {
+    color: var(--text-primary);
+
+    font-size: 14px;
     font-weight: 600;
 }
 
-.creator-body input,
-.creator-body select,
-.creator-body textarea {
-    padding: .7rem .8rem;
+.form-field input,
+.form-field select,
+.form-field textarea {
+    width: 100%;
+
+    padding: 10px 12px;
 
     border: 1px solid var(--border);
+    border-radius: 8px;
 
-    border-radius: 6px;
+    background: var(--card-bg);
+    color: var(--text-primary);
 
-    background: white;
+    font-size: 15px;
 
-    font: inherit;
+    outline: none;
+
+    transition:
+            border-color .15s,
+            box-shadow .15s;
 }
 
-.creator-body textarea {
+.form-field textarea {
     resize: vertical;
 
     min-height: 100px;
+
+    line-height: 1.5;
 }
 
-.creator-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: .75rem;
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    border-color: var(--button-bg);
 
-    padding: 1rem 1.5rem;
+    box-shadow:
+            0 0 0 3px
+            rgba(0, 0, 0, .05);
+}
+
+/* ==========================================
+   Buttons
+   ========================================== */
+
+.primary-button,
+.secondary-button,
+.remove-button,
+.danger {
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    transition:
+            background-color .15s,
+            border-color .15s,
+            opacity .15s;
+}
+
+.primary-button {
+    padding: 10px 18px;
+
+    background: var(--button-bg);
+    color: var(--button-text);
+
+    border: 1px solid var(--button-bg);
+
+    white-space: nowrap;
+}
+
+.primary-button:hover {
+    background: var(--button-hover);
+}
+
+.secondary-button {
+    padding: 10px 18px;
+
+    background: var(--card-bg);
+    color: var(--text-primary);
+
+    border: 1px solid var(--border);
+}
+
+.secondary-button:hover {
+    background: var(--page-bg);
+}
+
+.remove-button {
+    padding: 8px 12px;
+
+    background: transparent;
+    color: #c62828;
+
+    border: 1px solid transparent;
+}
+
+.remove-button:hover {
+    background: rgba(198, 40, 40, .08);
+
+    border-color: rgba(198, 40, 40, .2);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+    opacity: .5;
+
+    cursor: not-allowed;
+}
+
+/* ==========================================
+   Tasks
+   ========================================== */
+
+.task-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.task-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    background: var(--card-bg);
+
+    overflow: hidden;
+}
+
+.task-card.editing {
+    border-color: var(--button-bg);
+}
+
+.task-card-header {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 16px;
+}
+
+.task-number {
+    width: 34px;
+    height: 34px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--page-bg);
+
+    color: var(--text-secondary);
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.task-summary {
+    min-width: 0;
+
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.task-summary h3 {
+    margin: 0;
+
+    overflow: hidden;
+
+    color: var(--text-primary);
+
+    font-size: 15px;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.task-summary span {
+    color: var(--text-secondary);
+
+    font-size: 13px;
+}
+
+.task-actions {
+    display: flex;
+
+    gap: 8px;
+
+    flex-shrink: 0;
+}
+
+.task-summary-description {
+    margin: 0;
+
+    padding: 0 16px 16px 64px;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+
+    line-height: 1.5;
+}
+
+.task-editor-container {
+    padding: 20px;
 
     border-top: 1px solid var(--border);
 
     background: var(--page-bg);
 }
 
-/* ===========================================
-   Task Editor
-=========================================== */
-
 .task-editor {
-    display: flex;
-    flex-direction: column;
-
-    gap: 1rem;
-
-    margin-top: .5rem;
-
-    padding-top: 1rem;
-
-    border-top: 1px solid var(--border);
+    width: 100%;
 }
 
-.task-editor h3 {
+.task-editor-heading {
+    margin-bottom: 18px;
+}
+
+.task-editor-heading h3 {
     margin: 0;
+
+    color: var(--text-primary);
+
+    font-size: 16px;
 }
 
-.task-editor label {
-    display: flex;
-    flex-direction: column;
+.task-editor-heading p {
+    margin: 4px 0 0;
 
-    gap: .45rem;
+    color: var(--text-secondary);
 
-    font-weight: 600;
+    font-size: 13px;
 }
 
-.task-editor input,
-.task-editor textarea {
-    padding: .7rem .8rem;
+/* ==========================================
+   Task Notes
+   ========================================== */
+
+.task-note {
+    margin-top: 4px;
+
+    padding: 14px 16px;
 
     border: 1px solid var(--border);
+    border-radius: 8px;
 
-    border-radius: 6px;
-
-    font: inherit;
+    background: var(--card-bg);
 }
 
-.task-editor textarea {
-    resize: vertical;
+.task-note strong {
+    color: var(--text-primary);
 
-    min-height: 120px;
+    font-size: 14px;
+}
+
+.task-note p {
+    margin: 5px 0 0;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+
+    line-height: 1.5;
+}
+
+/* ==========================================
+   Input Suffix
+   ========================================== */
+
+.input-with-suffix {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+.input-with-suffix input {
+    flex: 1;
+}
+
+.input-with-suffix span {
+    color: var(--text-secondary);
+
+    font-size: 14px;
+
+    white-space: nowrap;
+}
+
+/* ==========================================
+   Empty Tasks
+   ========================================== */
+
+.empty-tasks {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+
+    padding: 48px 24px;
+
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+
+    color: var(--text-secondary);
+
+    text-align: center;
+}
+
+.empty-icon {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 14px;
+
+    border: 1px solid var(--border);
+    border-radius: 50%;
+
+    color: var(--button-bg);
+
+    font-size: 24px;
+}
+
+.empty-tasks h3 {
+    margin: 0 0 5px;
+
+    color: var(--text-primary);
+}
+
+.empty-tasks p {
+    max-width: 420px;
+
+    margin: 0 0 18px;
+
+    line-height: 1.5;
+}
+
+/* ==========================================
+   Editor Footer
+   ========================================== */
+
+.editor-footer {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    padding-top: 4px;
+}
+
+/* ==========================================
+   Responsive
+   ========================================== */
+
+@media (max-width: 1000px) {
+
+    .station-layout {
+        grid-template-columns:
+            280px
+            minmax(0, 1fr);
+    }
+
+}
+
+@media (max-width: 768px) {
+
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-header .primary-button {
+        width: 100%;
+    }
+
+    .station-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .station-count {
+        text-align: right;
+    }
+
+    .station-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .station-details {
+        min-height: 400px;
+    }
+
+    .station-form-grid,
+    .task-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-heading {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .section-heading .primary-button {
+        width: 100%;
+    }
+
+    .task-card-header {
+        align-items: flex-start;
+    }
+
+    .task-actions {
+        flex-direction: column;
+    }
+
+    .task-summary-description {
+        padding-left: 16px;
+    }
+
+    .editor-footer {
+        flex-direction: column-reverse;
+    }
+
+    .editor-footer button {
+        width: 100%;
+    }
+
 }

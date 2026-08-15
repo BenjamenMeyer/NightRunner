@@ -13,7 +13,7 @@ export default class StationService {
 
         this.fakeStations = [
             {
-                id: "uuid-string-station-1",
+                id: "e92e54e4-7627-434c-a086-e63355bf4e5e",
                 name: "Ropes Challenge",
                 description: "A station focused on knot-tying and lashing skills.",
                 activeConfigurationId: "uuid-string-config-2",

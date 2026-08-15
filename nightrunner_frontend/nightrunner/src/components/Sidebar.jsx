@@ -30,7 +30,8 @@ function Sidebar({
 
                         {
                             name: "Admin Dashboard",
-                            path: "/admin"
+                            path: "/admin",
+                            exact: true
                         },
                         {
                             name: "Event Manager",
@@ -43,6 +44,10 @@ function Sidebar({
                         {
                             name: "Station Manager",
                             path: "/admin/stations"
+                        },
+                        {
+                            name: "User Manager",
+                            path: "/admin/users"
                         }
 
                     ]
@@ -120,6 +125,7 @@ function Sidebar({
                         <NavLink
                             key={link.path}
                             to={link.path}
+                            end={link.exact}
                             onClick={close}
                             className={({ isActive }) =>
                                 isActive
@@ -140,12 +146,7 @@ function Sidebar({
                             href="/live"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="sidebar-link"
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "4px"
-                            }}
+                            className="sidebar-link live-link"
                         >
 
                             Live Scoring
@@ -159,6 +160,7 @@ function Sidebar({
                                 strokeWidth="2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
+                                aria-hidden="true"
                             >
 
                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
