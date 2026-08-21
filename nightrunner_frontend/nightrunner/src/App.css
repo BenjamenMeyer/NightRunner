@@ -37,6 +37,15 @@
 
   overflow-y: auto;
 
+  display: flex;
+  flex-direction: column;
+
+}
+
+.page-content-inner {
+
+  flex: 1;
+
 }
 
 /* ==========================================

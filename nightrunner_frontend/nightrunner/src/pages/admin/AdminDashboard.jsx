@@ -253,6 +253,9 @@ export default function AdminDashboard() {
                     <AdminAction title="Event" description="Edit event details and configuration." path="/admin/event" />
                     <AdminAction title="Patrols" description="Register and manage event patrols." path="/admin/patrols" />
                     <AdminAction title="Stations" description="Manage scoring stations and requirements." path="/admin/stations" />
+                    {ApiService.userData.isSystemAdmin() && (
+                        <AdminAction title="Configurations" description="Manage event configuration presets." path="/admin/configurations" />
+                    )}
                 </div>
             </section>
 

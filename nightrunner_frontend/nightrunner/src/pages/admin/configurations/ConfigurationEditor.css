@@ -1,0 +1,613 @@
+/* ==========================================
+   Page
+   ========================================== */
+
+.configuration-editor-page {
+    width: 100%;
+    max-width: 1100px;
+
+    margin: 0 auto;
+}
+
+/* ==========================================
+   Header
+   ========================================== */
+
+.editor-header {
+    margin-bottom: 28px;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+
+    margin-bottom: 20px;
+
+    padding: 0;
+
+    border: none;
+
+    background: transparent;
+    color: var(--text-secondary);
+
+    font-size: 14px;
+
+    cursor: pointer;
+
+    transition: color .15s;
+}
+
+.back-button:hover {
+    color: var(--text-primary);
+}
+
+.editor-header h1 {
+    margin: 0;
+
+    color: var(--text-primary);
+}
+
+.editor-header p {
+    margin: 6px 0 0;
+
+    color: var(--text-secondary);
+}
+
+.page-eyebrow {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: var(--button-bg);
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+/* ==========================================
+   Error
+   ========================================== */
+
+.error-banner {
+    margin-bottom: 20px;
+
+    padding: 12px 14px;
+
+    border: 1px solid #f3b5b5;
+    border-radius: 8px;
+
+    background: #ffdcdc;
+    color: #8b0000;
+
+    font-size: 14px;
+}
+
+/* ==========================================
+   Layout
+   ========================================== */
+
+.configuration-editor-layout {
+    display: flex;
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+/* ==========================================
+   Cards
+   ========================================== */
+
+.editor-card {
+    overflow: hidden;
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.editor-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 20px 24px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.editor-card-header h2 {
+    margin: 0;
+
+    color: var(--text-primary);
+
+    font-size: 18px;
+}
+
+.editor-card-header p {
+    margin: 5px 0 0;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+}
+
+.editor-card-body {
+    display: flex;
+    flex-direction: column;
+
+    gap: 20px;
+
+    padding: 24px;
+}
+
+/* ==========================================
+   Configuration Form
+   ========================================== */
+
+.configuration-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        1fr 2fr;
+
+    gap: 16px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+.form-field > span {
+    color: var(--text-primary);
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.form-field small {
+    color: var(--text-secondary);
+
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 11px 12px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    background: var(--card-bg);
+    color: var(--text-primary);
+
+    outline: none;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    resize: vertical;
+
+    transition:
+            border-color .15s,
+            box-shadow .15s;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    border-color: var(--button-bg);
+
+    box-shadow:
+            0 0 0 3px
+            rgba(0, 0, 0, .06);
+}
+
+.hidden-file-input {
+    display: none;
+}
+
+/* ==========================================
+   Task Count
+   ========================================== */
+
+.member-badge {
+    min-width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 8px;
+
+    border-radius: 50%;
+
+    background: var(--page-bg);
+    color: var(--text-secondary);
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* ==========================================
+   Task List
+   ========================================== */
+
+.configuration-task-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+
+    margin-bottom: 20px;
+}
+
+.configuration-task-card {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 14px;
+
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    background: var(--card-bg);
+
+    transition:
+            border-color .15s,
+            background-color .15s;
+}
+
+.configuration-task-card.editing {
+    border-color: var(--button-bg);
+
+    background: var(--page-bg);
+}
+
+/* ==========================================
+   Task Order
+   ========================================== */
+
+.task-order {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 2px;
+
+    flex-shrink: 0;
+}
+
+.task-order button {
+    width: 24px;
+    height: 20px;
+
+    padding: 0;
+
+    border: none;
+
+    background: transparent;
+    color: var(--text-secondary);
+
+    cursor: pointer;
+}
+
+.task-order button:hover:not(:disabled) {
+    color: var(--text-primary);
+}
+
+.task-order button:disabled {
+    opacity: .25;
+
+    cursor: not-allowed;
+}
+
+.task-order span {
+    color: var(--text-primary);
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* ==========================================
+   Task Content
+   ========================================== */
+
+.task-card-content {
+    flex: 1;
+
+    min-width: 0;
+}
+
+.task-card-title {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+}
+
+.task-card-title h3 {
+    margin: 0;
+
+    overflow: hidden;
+
+    color: var(--text-primary);
+
+    font-size: 15px;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.task-card-title span {
+    flex-shrink: 0;
+
+    padding: 3px 7px;
+
+    border-radius: 5px;
+
+    background: var(--page-bg);
+    color: var(--text-secondary);
+
+    font-size: 11px;
+}
+
+.task-card-content p {
+    margin: 5px 0 0;
+
+    overflow: hidden;
+
+    color: var(--text-secondary);
+
+    font-size: 13px;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ==========================================
+   Task Actions
+   ========================================== */
+
+.task-card-actions {
+    display: flex;
+
+    gap: 7px;
+
+    flex-shrink: 0;
+}
+
+/* ==========================================
+   Empty
+   ========================================== */
+
+.empty-tasks {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+
+    padding: 30px;
+
+    margin-bottom: 20px;
+
+    border: 1px dashed var(--border);
+    border-radius: 9px;
+
+    text-align: center;
+}
+
+.empty-tasks strong {
+    color: var(--text-primary);
+}
+
+.empty-tasks span {
+    margin-top: 5px;
+
+    color: var(--text-secondary);
+
+    font-size: 13px;
+}
+
+/* ==========================================
+   Task Editor Container
+   ========================================== */
+
+.task-editor-container {
+    border-top: 1px solid var(--border);
+
+    padding-top: 20px;
+}
+
+.task-editor-actions {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 8px;
+
+    margin-top: 14px;
+}
+
+/* ==========================================
+   Buttons
+   ========================================== */
+
+.primary-button,
+.secondary-button,
+.danger {
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    transition:
+            background-color .15s,
+            border-color .15s,
+            opacity .15s;
+}
+
+.primary-button {
+    padding: 10px 18px;
+
+    border: 1px solid var(--button-bg);
+
+    background: var(--button-bg);
+    color: var(--button-text);
+
+    white-space: nowrap;
+}
+
+.primary-button:hover {
+    background: var(--button-hover);
+}
+
+.secondary-button {
+    padding: 10px 18px;
+
+    border: 1px solid var(--border);
+
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+.secondary-button:hover {
+    background: var(--page-bg);
+}
+
+.danger {
+    padding: 10px 18px;
+
+    border: 1px solid #c62828;
+
+    background: #c62828;
+    color: #ffffff;
+}
+
+.danger:hover {
+    background: #a51f1f;
+}
+
+.primary-button.small,
+.secondary-button.small,
+.danger.small {
+    padding: 7px 12px;
+
+    font-size: 13px;
+}
+
+/* ==========================================
+   Footer
+   ========================================== */
+
+.editor-footer {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 24px;
+    padding-bottom: 24px;
+}
+
+/* ==========================================
+   Loading
+   ========================================== */
+
+.editor-loading {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 300px;
+
+    color: var(--text-secondary);
+}
+
+.loading-spinner {
+    display: inline-block;
+
+    width: 16px;
+    height: 16px;
+
+    margin-right: 8px;
+
+    border: 2px solid var(--border);
+    border-top-color: var(--button-bg);
+
+    border-radius: 50%;
+
+    animation: configuration-editor-spin .7s linear infinite;
+}
+
+@keyframes configuration-editor-spin {
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+/* ==========================================
+   Responsive
+   ========================================== */
+
+@media (max-width: 700px) {
+
+    .configuration-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .configuration-task-card {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .task-card-content {
+        width: calc(100% - 50px);
+    }
+
+    .task-card-actions {
+        width: 100%;
+
+        margin-left: 38px;
+    }
+
+    .task-card-actions button {
+        flex: 1;
+    }
+
+    .editor-card-header,
+    .editor-card-body {
+        padding: 20px;
+    }
+
+    .editor-footer {
+        flex-direction: column-reverse;
+    }
+
+    .editor-footer button {
+        width: 100%;
+    }
+
+}

@@ -4,6 +4,7 @@ import UserService from "./UserService";
 import EventService from "./EventService";
 import PatrolService from "./PatrolService";
 import StationService from "./StationService";
+import ConfigurationService from "@/api/ConfigurationService.js";
 
 class ApiService {
 
@@ -37,6 +38,12 @@ class ApiService {
     stationData;
 
     /**
+     * Provides access to station-config related operations
+     * @type {ConfigurationService}
+     */
+    configurationData;
+
+    /**
      * Direct talk to Backend API
      * @type {BackendTransport}
      */
@@ -48,6 +55,7 @@ class ApiService {
         this.eventData = new EventService(this.backendTransport, this.userData);
         this.patrolData = new PatrolService(this.backendTransport, this.userData);
         this.stationData = new StationService(this.backendTransport, this.userData);
+        this.configurationData = new ConfigurationService();
     }
 
     //

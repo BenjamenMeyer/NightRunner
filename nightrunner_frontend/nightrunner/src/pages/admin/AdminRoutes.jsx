@@ -8,6 +8,8 @@ import EventCreator from "@/pages/admin/events/EventCreator.jsx";
 import UserManager from "@/pages/admin/user/UserManager.jsx";
 import StationEditor from "@/pages/admin/stations/StationEditor.jsx";
 import PatrolEditor from "@/pages/admin/patrols/PatrolEditor.jsx";
+import Configurations from "@/pages/admin/configurations/Configurations.jsx";
+import ConfigurationEditor from "@/pages/admin/configurations/ConfigurationEditor.jsx";
 
 export default function AdminRoutes() {
 
@@ -57,7 +59,30 @@ export default function AdminRoutes() {
                 element={<StationEditor />}
             />
 
-            {/* Events */}
+            {/* Configurations */}
+            <Route
+                path="configurations"
+                element={<Configurations />}
+            />
+
+            <Route
+                path="configurations/create"
+                element={
+                    <ConfigurationEditor
+                        mode="create"
+                    />
+                }
+            />
+
+            <Route
+                path="configurations/edit"
+                element={
+                    <ConfigurationEditor
+                        mode="edit"
+                    />
+                }
+            />
+
             {/* Events */}
             <Route
                 path="events"

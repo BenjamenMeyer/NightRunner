@@ -5,6 +5,7 @@ import Header from "./Header";
 import Sidebar from "./Sidebar";
 
 import ApiService from "@/api/ApiService.js";
+import Footer from "@/components/Footer.jsx";
 
 function Layout() {
 
@@ -42,7 +43,13 @@ function Layout() {
                 }}
             >
 
-                <Outlet />
+                <div className="page-content-inner">
+
+                    <Outlet />
+
+                </div>
+
+                <Footer />
 
             </main>
 

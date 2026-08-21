@@ -48,7 +48,14 @@ function Sidebar({
                         {
                             name: "User Manager",
                             path: "/admin/users"
-                        }
+                        },
+
+                        ...(ApiService.userData.isSystemAdmin() ? [
+                            {
+                                name: "Configuration Manager",
+                                path: "/admin/configurations"
+                            }
+                        ] : [])
 
                     ]
 

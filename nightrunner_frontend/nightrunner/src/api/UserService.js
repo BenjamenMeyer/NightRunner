@@ -73,7 +73,7 @@ export default class UserService {
      */
     isSystemAdmin() {
 
-        return true; //this.getRole() === "admin";
+        return false; //this.getRole() === "admin";
 
     }
 
@@ -85,7 +85,7 @@ export default class UserService {
      */
     isEventAdmin() {
 
-        return this.getRole() === "event-admin";
+        return true;//this.getRole() === "event-admin";
 
     }
 

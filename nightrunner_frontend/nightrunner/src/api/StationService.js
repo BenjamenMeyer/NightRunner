@@ -57,9 +57,13 @@ export default class StationService {
 
         }
 
-        return await this.transport.get(
-            `/stations/${stationId}`
+        return this.fakeStations.find(
+            station => station.id === stationId
         );
+
+        //return await this.transport.get(
+        //    `/stations/${stationId}`
+        //);
 
     }
 
