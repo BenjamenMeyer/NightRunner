@@ -6,12 +6,12 @@ LIST_EVENTS_BATCH = """
 SELECT
     e.id, e.name, e.date, e.description, e.rounding_precision,
     GROUP_CONCAT(DISTINCT eo.user_id) AS organizers,
-    GROUP_CONCAT(DISTINCT es.station_id) AS stations,
-    GROUP_CONCAT(DISTINCT ep.patrol_id) AS patrols
+    GROUP_CONCAT(DISTINCT s.id) AS stations,
+    GROUP_CONCAT(DISTINCT p.id) AS patrols
 FROM events e
 LEFT JOIN event_organizers eo ON e.id = eo.event_id
-LEFT JOIN event_stations es ON e.id = es.event_id
-LEFT JOIN event_patrols ep ON e.id = ep.event_id
+LEFT JOIN stations s ON e.id = s.event_id
+LEFT JOIN patrols p ON e.id = p.event_id
 GROUP BY e.id, e.name, e.date, e.description, e.rounding_precision
 """
 GET_EVENT = "SELECT id, name, date, description, rounding_precision FROM events WHERE id = :id"
@@ -26,18 +26,13 @@ UPDATE_EVENT = """
 """
 DELETE_EVENT = "DELETE FROM events WHERE id = :id"
 
-# Many-to-Many queries
+# Many-to-Many queries (only organizers remain M2M)
 GET_EVENT_ORGANIZERS = "SELECT user_id FROM event_organizers WHERE event_id = :event_id"
 ADD_EVENT_ORGANIZER = "INSERT INTO event_organizers (event_id, user_id) VALUES (:event_id, :user_id)"
 DELETE_EVENT_ORGANIZERS = "DELETE FROM event_organizers WHERE event_id = :event_id"
 
-GET_EVENT_STATIONS = "SELECT station_id FROM event_stations WHERE event_id = :event_id"
-ADD_EVENT_STATION = "INSERT INTO event_stations (event_id, station_id) VALUES (:event_id, :station_id)"
-DELETE_EVENT_STATIONS = "DELETE FROM event_stations WHERE event_id = :event_id"
-
-GET_EVENT_PATROLS = "SELECT patrol_id FROM event_patrols WHERE event_id = :event_id"
-ADD_EVENT_PATROL = "INSERT INTO event_patrols (event_id, patrol_id) VALUES (:event_id, :patrol_id)"
-DELETE_EVENT_PATROLS = "DELETE FROM event_patrols WHERE event_id = :event_id"
+GET_EVENT_STATIONS = "SELECT id FROM stations WHERE event_id = :event_id"
+GET_EVENT_PATROLS = "SELECT id FROM patrols WHERE event_id = :event_id"
 
 
 class EventsStore:
@@ -45,7 +40,7 @@ class EventsStore:
         self.driver = driver
 
     async def list(self) -> List[Event]:
-        """Fetch all events with their M2M relations in a single batched query."""
+        """Fetch all events with their relations in a single batched query."""
         rows = await self.driver.execute(LIST_EVENTS_BATCH)
         events = []
         for row in rows:
@@ -69,8 +64,8 @@ class EventsStore:
             return None
         event = Event(**row)
         event.organizers = [r["user_id"] for r in await self.driver.execute(GET_EVENT_ORGANIZERS, {"event_id": event_id})]
-        event.stations = [r["station_id"] for r in await self.driver.execute(GET_EVENT_STATIONS, {"event_id": event_id})]
-        event.patrols = [r["patrol_id"] for r in await self.driver.execute(GET_EVENT_PATROLS, {"event_id": event_id})]
+        event.stations = [r["id"] for r in await self.driver.execute(GET_EVENT_STATIONS, {"event_id": event_id})]
+        event.patrols = [r["id"] for r in await self.driver.execute(GET_EVENT_PATROLS, {"event_id": event_id})]
         return event
 
     async def create(self, event: Event) -> None:
@@ -83,10 +78,6 @@ class EventsStore:
         })
         for user_id in event.organizers:
             await self.driver.execute(ADD_EVENT_ORGANIZER, {"event_id": event.id, "user_id": user_id})
-        for station_id in event.stations:
-            await self.driver.execute(ADD_EVENT_STATION, {"event_id": event.id, "station_id": station_id})
-        for patrol_id in event.patrols:
-            await self.driver.execute(ADD_EVENT_PATROL, {"event_id": event.id, "patrol_id": patrol_id})
 
     async def update(self, event: Event) -> None:
         await self.driver.execute(UPDATE_EVENT, {
@@ -96,16 +87,10 @@ class EventsStore:
             "description": event.description,
             "rounding_precision": event.rounding_precision,
         })
-        # Sync M2M: delete then re-insert
+        # Sync organizers: delete then re-insert
         await self.driver.execute(DELETE_EVENT_ORGANIZERS, {"event_id": event.id})
         for user_id in event.organizers:
             await self.driver.execute(ADD_EVENT_ORGANIZER, {"event_id": event.id, "user_id": user_id})
-        await self.driver.execute(DELETE_EVENT_STATIONS, {"event_id": event.id})
-        for station_id in event.stations:
-            await self.driver.execute(ADD_EVENT_STATION, {"event_id": event.id, "station_id": station_id})
-        await self.driver.execute(DELETE_EVENT_PATROLS, {"event_id": event.id})
-        for patrol_id in event.patrols:
-            await self.driver.execute(ADD_EVENT_PATROL, {"event_id": event.id, "patrol_id": patrol_id})
 
     async def delete(self, event_id: str) -> None:
         await self.driver.execute(DELETE_EVENT, {"id": event_id})

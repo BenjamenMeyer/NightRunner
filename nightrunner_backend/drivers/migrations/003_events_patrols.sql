@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS event_organizers (
 
 CREATE TABLE IF NOT EXISTS patrols (
     id TEXT PRIMARY KEY, -- UUIDv7
+    event_id TEXT REFERENCES events(id) ON DELETE CASCADE,
     name TEXT NOT NULL
 );
 
@@ -25,16 +26,4 @@ CREATE TABLE IF NOT EXISTS patrol_members (
     name TEXT NOT NULL,
     rank TEXT,
     troop TEXT
-);
-
-CREATE TABLE IF NOT EXISTS event_patrols (
-    event_id TEXT REFERENCES events(id) ON DELETE CASCADE,
-    patrol_id TEXT REFERENCES patrols(id) ON DELETE CASCADE,
-    PRIMARY KEY (event_id, patrol_id)
-);
-
-CREATE TABLE IF NOT EXISTS event_stations (
-    event_id TEXT REFERENCES events(id) ON DELETE CASCADE,
-    station_id TEXT, -- Placeholder for when stations are implemented
-    PRIMARY KEY (event_id, station_id)
 );

@@ -25,23 +25,26 @@ async def events_store(test_database):
         );
     """)
     await driver.execute("""
-        CREATE TABLE IF NOT EXISTS event_stations (
+        CREATE TABLE IF NOT EXISTS stations (
+            id TEXT PRIMARY KEY,
             event_id TEXT,
-            station_id TEXT,
-            PRIMARY KEY (event_id, station_id)
+            name TEXT NOT NULL,
+            description TEXT,
+            active_configuration_id TEXT
         );
     """)
     await driver.execute("""
-        CREATE TABLE IF NOT EXISTS event_patrols (
+        CREATE TABLE IF NOT EXISTS patrols (
+            id TEXT PRIMARY KEY,
             event_id TEXT,
-            patrol_id TEXT,
-            PRIMARY KEY (event_id, patrol_id)
+            name TEXT NOT NULL
         );
     """)
     return EventsStore(driver)
 
 @pytest.mark.asyncio
-async def test_event_crud(events_store: EventsStore):
+async def test_event_crud(events_store: EventsStore, test_database):
+    driver = test_database
     ev = Event(
         id=str(uuid6.uuid7()),
         name="Test Event",
@@ -52,6 +55,11 @@ async def test_event_crud(events_store: EventsStore):
         stations=["s1"],
         patrols=["p1", "p2"]
     )
+    # Insert associated stations and patrols pointing to this event
+    await driver.execute("INSERT INTO stations (id, event_id, name) VALUES ('s1', :event_id, 'Station 1')", {"event_id": ev.id})
+    await driver.execute("INSERT INTO patrols (id, event_id, name) VALUES ('p1', :event_id, 'Patrol 1')", {"event_id": ev.id})
+    await driver.execute("INSERT INTO patrols (id, event_id, name) VALUES ('p2', :event_id, 'Patrol 2')", {"event_id": ev.id})
+
     await events_store.create(ev)
     fetched = await events_store.get(ev.id)
     assert fetched is not None
@@ -64,8 +72,13 @@ async def test_event_crud(events_store: EventsStore):
     assert any(e.id == ev.id for e in all_events)
     ev.name = "Updated Event"
     ev.organizers = ["u3"]
-    ev.stations = ["s2", "s3"]
-    ev.patrols = ["p3"]
+    # Associated stations/patrols update should be handled by modifying the station/patrol objects
+    await driver.execute("DELETE FROM stations WHERE event_id = :event_id", {"event_id": ev.id})
+    await driver.execute("DELETE FROM patrols WHERE event_id = :event_id", {"event_id": ev.id})
+    await driver.execute("INSERT INTO stations (id, event_id, name) VALUES ('s2', :event_id, 'Station 2')", {"event_id": ev.id})
+    await driver.execute("INSERT INTO stations (id, event_id, name) VALUES ('s3', :event_id, 'Station 3')", {"event_id": ev.id})
+    await driver.execute("INSERT INTO patrols (id, event_id, name) VALUES ('p3', :event_id, 'Patrol 3')", {"event_id": ev.id})
+
     await events_store.update(ev)
     updated = await events_store.get(ev.id)
     assert updated.name == "Updated Event"

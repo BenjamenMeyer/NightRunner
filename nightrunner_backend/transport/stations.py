@@ -21,8 +21,10 @@ class StationsResource:
         name = data.get("name") or ""
         description = data.get("description")
         active_config_id = data.get("activeConfigurationId")
+        event_id = data.get("eventId")
         station = Station(
             id=str(uuid6.uuid7()),
+            event_id=str(event_id) if event_id is not None and not isinstance(event_id, str) else event_id,
             name=str(name),
             description=str(description) if description is not None and not isinstance(description, str) else description,
             active_configuration_id=str(active_config_id) if active_config_id is not None and not isinstance(active_config_id, str) else active_config_id,
@@ -53,6 +55,8 @@ class StationResource:
         station.description = data.get("description", station.description)
         station.active_configuration_id = data.get("activeConfigurationId", station.active_configuration_id)
         station.members = data.get("members", station.members)
+        if "eventId" in data:
+            station.event_id = data.get("eventId")
         await store.update(station)
         resp.media = station.to_api_dict()
 

@@ -39,8 +39,10 @@ class PatrolsResource:
                 )
             )
         patrol_name = data.get("name") or "Trail Life"
+        event_id = data.get("eventId")
         patrol = Patrol(
             id=str(uuid6.uuid7()),
+            event_id=str(event_id) if event_id is not None and not isinstance(event_id, str) else event_id,
             name=str(patrol_name),
             members=members,
         )
@@ -66,6 +68,8 @@ class PatrolResource:
             raise falcon.HTTPNotFound()
         data = await req.get_media()
         patrol.name = data.get("name", patrol.name)
+        if "eventId" in data:
+            patrol.event_id = data.get("eventId")
         if "members" in data:
             patrol.members = [
                 PatrolMember(

@@ -69,8 +69,6 @@ class DummyBaseStore:
 @patch("nightrunner_backend.transport.events.EventsStore", DummyBaseStore)
 @patch("nightrunner_backend.transport.patrols.PatrolsStore", DummyBaseStore)
 @patch("nightrunner_backend.transport.stations.StationsStore", DummyBaseStore)
-@patch("nightrunner_backend.transport.station_assign_configuration.StationAssignConfigurationStore", DummyBaseStore)
-@patch("nightrunner_backend.transport.station_assign_configuration.StationAssignConfigurationsStore", DummyBaseStore)
 @patch("nightrunner_backend.transport.me.MeStore", DummyBaseStore)
 @patch("nightrunner_backend.transport.login.LoginResource.__init__", lambda self: None)
 @patch("nightrunner_backend.transport.middleware.auth.AuthMiddleware.process_request", AsyncMock(return_value=None))

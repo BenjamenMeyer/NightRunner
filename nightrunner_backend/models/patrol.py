@@ -19,14 +19,16 @@ class PatrolMember:
 
 class Patrol:
     """Patrol model with a `name` field."""
-    def __init__(self, id: str, name: Optional[str] = None, members: Optional[List[PatrolMember]] = None):
+    def __init__(self, id: str, event_id: Optional[str] = None, name: Optional[str] = None, members: Optional[List[PatrolMember]] = None):
         self.id = id
+        self.event_id = event_id
         self.name = name
         self.members = members if members is not None else []
 
     def to_api_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
+            "eventId": self.event_id,
             "name": self.name,
             "members": [m.to_api_dict() for m in self.members],
         }

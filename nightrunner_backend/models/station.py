@@ -16,6 +16,7 @@ class Station:
     members is a list of StationMember.
     """
     id: str = field(default_factory=lambda: "")
+    event_id: Optional[str] = None
     name: str = ""
     description: Optional[str] = None
     active_configuration_id: Optional[str] = None
@@ -24,6 +25,7 @@ class Station:
     def to_api_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
+            "eventId": self.event_id,
             "name": self.name,
             "description": self.description,
             "activeConfigurationId": self.active_configuration_id,
