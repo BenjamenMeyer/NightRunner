@@ -79,9 +79,7 @@ function App() {
                 } />
 
                 <Route path="/register" element={
-                    <RequireAuth>
-                        <Register />
-                    </RequireAuth>
+                    <Register />
                 }/>
 
                 <Route path="/scoring" element={
