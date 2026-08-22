@@ -1,0 +1,50 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, master, enhancement_missing-endpoints ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  integration-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Start Docker Compose Stack
+      run: |
+        docker compose up -d --build
+
+    - name: Wait for API Server to become healthy
+      run: |
+        echo "Waiting for API server health check..."
+        for i in {1..20}; do
+          if curl -s -f http://localhost:8000/health > /dev/null; then
+            echo "API server is healthy!"
+            exit 0
+          fi
+          echo "Waiting... ($i/20)"
+          sleep 3
+        done
+        echo "Error: API server failed to respond to health checks in time."
+        echo "=== Container logs ==="
+        docker compose logs
+        exit 1
+
+    - name: Verify Health Endpoint Response
+      run: |
+        RESPONSE=$(curl -s http://localhost:8000/health)
+        echo "Health Response: $RESPONSE"
+        if [ "$RESPONSE" != '{"status":"ok"}' ] && [ "$RESPONSE" != '{"status": "ok"}' ]; then
+          echo "Error: Unexpected health status output."
+          exit 1
+        fi
+        echo "Integration check successful!"
+
+    - name: Tear Down Stack
+      if: always()
+      run: |
+        docker compose down
