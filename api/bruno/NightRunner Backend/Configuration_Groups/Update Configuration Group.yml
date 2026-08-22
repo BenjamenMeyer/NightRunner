@@ -1,0 +1,89 @@
+info:
+  name: Update Configuration Group
+  type: http
+  seq: 4
+  tags:
+    - Configuration_Groups
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/v1/configuration-groups/:groupId"
+  params:
+    - name: groupId
+      value: ""
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "id": "uuid-string-group-1",
+        "name": "Ropework Group",
+        "description": "Configuration group for ropework stations"
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: Configuration group updated.
+    request:
+      url: "{{baseUrl}}/v1/configuration-groups/:groupId"
+      method: PUT
+      params:
+        - name: groupId
+          value: ""
+          type: path
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-group-1",
+            "name": "Ropework Group",
+            "description": "Configuration group for ropework stations"
+          }
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-group-1",
+            "name": "Ropework Group",
+            "description": "Configuration group for ropework stations"
+          }
+  - name: 404 Response
+    description: Group not found.
+    request:
+      url: "{{baseUrl}}/v1/configuration-groups/:groupId"
+      method: PUT
+      params:
+        - name: groupId
+          value: ""
+          type: path
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-group-1",
+            "name": "Ropework Group",
+            "description": "Configuration group for ropework stations"
+          }
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: text
+        data: ""
+
+docs: Updates a configuration group.

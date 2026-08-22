@@ -1,0 +1,90 @@
+info:
+  name: Register User
+  type: http
+  seq: 2
+  tags:
+    - Users
+
+http:
+  method: POST
+  url: "{{baseUrl}}/v1/users"
+  body:
+    type: json
+    data: |-
+      {
+        "username": "jane.doe",
+        "email": "jane.doe@example.com",
+        "password": "another-strong-password",
+        "displayName": "Jane Doe"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 201 Response
+    description: User created successfully.
+    request:
+      url: "{{baseUrl}}/v1/users"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "username": "jane.doe",
+            "email": "jane.doe@example.com",
+            "password": "another-strong-password",
+            "displayName": "Jane Doe"
+          }
+    response:
+      status: 201
+      statusText: Created
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-user-1",
+            "username": "john.doe",
+            "email": "john.doe@example.com",
+            "displayName": "John Doe",
+            "roles": [
+              "station_leader"
+            ]
+          }
+  - name: 400 Response
+    description: Invalid input
+    request:
+      url: "{{baseUrl}}/v1/users"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "username": "jane.doe",
+            "email": "jane.doe@example.com",
+            "password": "another-strong-password",
+            "displayName": "Jane Doe"
+          }
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": {
+              "message": "A descriptive error message."
+            }
+          }
+
+docs: Creates a new user.

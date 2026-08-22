@@ -1,0 +1,82 @@
+info:
+  name: Create Station
+  type: http
+  seq: 2
+  tags:
+    - Stations
+
+http:
+  method: POST
+  url: "{{baseUrl}}/v1/stations"
+  body:
+    type: json
+    data: |-
+      {
+        "id": "uuid-string-station-1",
+        "eventId": "uuid-string-event-1",
+        "name": "Ropes Challenge",
+        "description": "A station focused on knot-tying and lashing skills.",
+        "activeConfigurationId": "uuid-string-config-2",
+        "members": [
+          {
+            "userId": "uuid-string-user-1",
+            "role": "station_leader"
+          }
+        ]
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 201 Response
+    description: Station created successfully.
+    request:
+      url: "{{baseUrl}}/v1/stations"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-station-1",
+            "eventId": "uuid-string-event-1",
+            "name": "Ropes Challenge",
+            "description": "A station focused on knot-tying and lashing skills.",
+            "activeConfigurationId": "uuid-string-config-2",
+            "members": [
+              {
+                "userId": "uuid-string-user-1",
+                "role": "station_leader"
+              }
+            ]
+          }
+    response:
+      status: 201
+      statusText: Created
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-station-1",
+            "eventId": "uuid-string-event-1",
+            "name": "Ropes Challenge",
+            "description": "A station focused on knot-tying and lashing skills.",
+            "activeConfigurationId": "uuid-string-config-2",
+            "members": [
+              {
+                "userId": "uuid-string-user-1",
+                "role": "station_leader"
+              }
+            ]
+          }
+
+docs: Creates a new station.

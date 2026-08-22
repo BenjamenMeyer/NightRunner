@@ -1,0 +1,65 @@
+info:
+  name: Get Configuration Group
+  type: http
+  seq: 3
+  tags:
+    - Configuration_Groups
+
+http:
+  method: GET
+  url: "{{baseUrl}}/v1/configuration-groups/:groupId"
+  params:
+    - name: groupId
+      value: ""
+      type: path
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: Configuration group object.
+    request:
+      url: "{{baseUrl}}/v1/configuration-groups/:groupId"
+      method: GET
+      params:
+        - name: groupId
+          value: ""
+          type: path
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-group-1",
+            "name": "Ropework Group",
+            "description": "Configuration group for ropework stations"
+          }
+  - name: 404 Response
+    description: Group not found.
+    request:
+      url: "{{baseUrl}}/v1/configuration-groups/:groupId"
+      method: GET
+      params:
+        - name: groupId
+          value: ""
+          type: path
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: text
+        data: ""
+
+docs: Retrieves a specific configuration group.

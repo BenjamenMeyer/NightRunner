@@ -1,7 +1,7 @@
 info:
-  name: Authenticate User
+  name: Authenticate User - Member
   type: http
-  seq: 1
+  seq: 6
   tags:
     - Authentication
 
@@ -28,7 +28,7 @@ http:
 runtime:
   variables:
     - name: userName
-      value: "{{loginAdminUser}}"
+      value: "{{loginMemberUser}}"
     - name: userPassword
       value: "{{loginPassword}}"
   scripts:
@@ -38,6 +38,7 @@ runtime:
         if (data && data.access_token) {
             bru.setVar("token", data.access_token);
             bru.setVar("userToken", data.access_token);
+            bru.setVar("memberUserToken", data.access_token);
         }
 
 settings:

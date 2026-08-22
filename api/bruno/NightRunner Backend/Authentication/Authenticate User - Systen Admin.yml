@@ -1,7 +1,7 @@
 info:
-  name: Authenticate User
+  name: Authenticate User - Systen Admin
   type: http
-  seq: 1
+  seq: 2
   tags:
     - Authentication
 
@@ -38,6 +38,7 @@ runtime:
         if (data && data.access_token) {
             bru.setVar("token", data.access_token);
             bru.setVar("userToken", data.access_token);
+            bru.setVar("adminToken", data.access_token);
         }
 
 settings:
