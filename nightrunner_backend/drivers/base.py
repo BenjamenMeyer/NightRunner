@@ -43,13 +43,12 @@ class DatabaseDriver:
             self._sqlite_conn.row_factory = aiosqlite.Row
         return self._sqlite_conn
     async def _get_pg_pool(self) -> Any:
-        async with self._lock:
-            if self._pg_pool is None:
-                if AsyncConnectionPool is None:
-                    raise ImportError("psycopg_pool is required for PostgreSQL connection pooling")
-                self._pg_pool = AsyncConnectionPool(self.pg_conn_info)
-                await self._pg_pool.open()
-            return self._pg_pool
+        if self._pg_pool is None:
+            if AsyncConnectionPool is None:
+                raise ImportError("psycopg_pool is required for PostgreSQL connection pooling")
+            self._pg_pool = AsyncConnectionPool(self.pg_conn_info)
+            await self._pg_pool.open()
+        return self._pg_pool
 
     def _map_sql(self, sql: str) -> str:
         """

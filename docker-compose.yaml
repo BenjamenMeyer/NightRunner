@@ -20,10 +20,143 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://nightrunner:nightrunner_password@db:5432/nightrunner
-      DEV_MODE: "true"
+      DEV_MODE: "false"
+      OIDC_ISSUER: "http://localhost:4000"
+      OIDC_AUDIENCE: "client-id"
+      JWKS_URL: "http://localhost:4000/.well-known/openid-configuration/jwks"
+    extra_hosts:
+      - "localhost:host-gateway"
     depends_on:
       db:
         condition: service_healthy
+      oidc:
+        condition: service_healthy
+
+  oidc:
+    image: ghcr.io/soluto/oidc-server-mock:0.8.0
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4000/.well-known/openid-configuration || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    environment:
+      ASPNETCORE_URLS: "http://+:4000"
+      ISSUER: "http://localhost:4000"
+      USERS_CONFIGURATION_INLINE: |
+        [
+          {
+            "SubjectId": "admin-user-id",
+            "Username": "adminuser",
+            "Password": "password",
+            "Claims": [
+              { "Type": "name", "Value": "Admin User" },
+              { "Type": "email", "Value": "admin@example.com" },
+              { "Type": "isAdmin", "Value": "true", "ValueType": "boolean" }
+            ]
+          },
+          {
+            "SubjectId": "organizer-user-id",
+            "Username": "organizeruser",
+            "Password": "password",
+            "Claims": [
+              { "Type": "name", "Value": "Organizer User" },
+              { "Type": "email", "Value": "organizer@example.com" },
+              { "Type": "roles", "Value": "{\"01a022b8-45f0-7612-872e-201e8c8158db\": \"organizer\"}", "ValueType": "json" }
+            ]
+          },
+          {
+            "SubjectId": "scorer-user-id",
+            "Username": "scoreruser",
+            "Password": "password",
+            "Claims": [
+              { "Type": "name", "Value": "Scorer User" },
+              { "Type": "email", "Value": "scorer@example.com" },
+              { "Type": "roles", "Value": "{\"01a022b8-45f0-7612-872e-201e8c8158db\": \"scorer\"}", "ValueType": "json" }
+            ]
+          },
+          {
+            "SubjectId": "leader-user-id",
+            "Username": "leaderuser",
+            "Password": "password",
+            "Claims": [
+              { "Type": "name", "Value": "Station Leader User" },
+              { "Type": "email", "Value": "leader@example.com" },
+              { "Type": "roles", "Value": "{\"01a022b8-45f0-7612-872e-201e8c8158db\": \"station_leader\"}", "ValueType": "json" }
+            ]
+          },
+          {
+            "SubjectId": "member-user-id",
+            "Username": "memberuser",
+            "Password": "password",
+            "Claims": [
+              { "Type": "name", "Value": "Station Member User" },
+              { "Type": "email", "Value": "member@example.com" },
+              { "Type": "roles", "Value": "{\"01a022b8-45f0-7612-872e-201e8c8158db\": \"station_member\"}", "ValueType": "json" }
+            ]
+          }
+        ]
+      CLIENTS_CONFIGURATION_INLINE: |
+        [
+          {
+            "ClientId": "client-id",
+            "ClientSecrets": ["secret"],
+            "AllowedGrantTypes": ["password", "client_credentials"],
+            "AllowedScopes": ["openid", "profile", "email"]
+          }
+        ]
+  seed:
+    image: postgres:16-alpine
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        echo "Seeding database..."
+        psql postgresql://nightrunner:nightrunner_password@db:5432/nightrunner <<'EOF'
+        INSERT INTO events (id, name, date, description, rounding_precision)
+        VALUES ('01a022b8-45f0-7612-872e-201e8c8158db', 'Mock Testing Event', '2026-09-15', 'Seeded for local OIDC testing.', 1000)
+        ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO users (id, external_id, username, email, display_name)
+        VALUES ('u-admin-id', 'admin-user-id', 'adminuser', 'admin@example.com', 'Admin User')
+        ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO users (id, external_id, username, email, display_name)
+        VALUES ('u-org-id', 'organizer-user-id', 'organizeruser', 'organizer@example.com', 'Organizer User')
+        ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO users (id, external_id, username, email, display_name)
+        VALUES ('u-scorer-id', 'scorer-user-id', 'scoreruser', 'scorer@example.com', 'Scorer User')
+        ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO users (id, external_id, username, email, display_name)
+        VALUES ('u-leader-id', 'leader-user-id', 'leaderuser', 'leader@example.com', 'Station Leader User')
+        ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO users (id, external_id, username, email, display_name)
+        VALUES ('u-member-id', 'member-user-id', 'memberuser', 'member@example.com', 'Station Member User')
+        ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO user_roles (user_id, role)
+        VALUES ('u-org-id', 'organizer')
+        ON CONFLICT(user_id, role) DO NOTHING;
+
+        INSERT INTO user_roles (user_id, role)
+        VALUES ('u-scorer-id', 'scorer')
+        ON CONFLICT(user_id, role) DO NOTHING;
+
+        INSERT INTO user_roles (user_id, role)
+        VALUES ('u-leader-id', 'station_leader')
+        ON CONFLICT(user_id, role) DO NOTHING;
+
+        INSERT INTO user_roles (user_id, role)
+        VALUES ('u-member-id', 'station_member')
+        ON CONFLICT(user_id, role) DO NOTHING;
+        EOF
+        echo "Database seeding completed!"
 
 volumes:
   postgres_data:
