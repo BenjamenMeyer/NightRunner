@@ -103,7 +103,11 @@ services:
             "ClientId": "client-id",
             "ClientSecrets": ["secret"],
             "AllowedGrantTypes": ["password", "client_credentials"],
-            "AllowedScopes": ["openid", "profile", "email"]
+            "AllowedScopes": ["openid", "profile", "email"],
+            "AlwaysSendClientClaims": true,
+            "Claims": [
+              { "Type": "aud", "Value": "client-id" }
+            ]
           }
         ]
   seed:
