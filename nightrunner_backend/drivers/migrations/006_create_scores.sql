@@ -6,7 +6,7 @@ CREATE TABLE scores (
     task_id TEXT NOT NULL,
     score_value REAL NOT NULL,
     score_weight REAL NOT NULL,
-    active BOOLEAN NOT NULL DEFAULT 1,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (event_id)   REFERENCES events(id),
     FOREIGN KEY (station_id) REFERENCES stations(id),
