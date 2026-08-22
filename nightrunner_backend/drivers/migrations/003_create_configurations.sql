@@ -12,3 +12,12 @@ CREATE TABLE IF NOT EXISTS configurations (
     value TEXT,
     description TEXT
 );
+
+CREATE TABLE IF NOT EXISTS station_tasks (
+    id TEXT PRIMARY KEY,
+    configuration_id TEXT REFERENCES configurations(id) ON DELETE CASCADE,
+    description TEXT,
+    score_value TEXT, -- JSON configuration string mapping to ScoreValue properties
+    score_weight REAL NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE
+);
