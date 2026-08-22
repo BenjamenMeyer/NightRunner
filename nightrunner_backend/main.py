@@ -43,6 +43,7 @@ def register_routes(app):
     _routes_registered = True
     # Add authentication login endpoint
     app.add_route("/auth/login", LoginResource())
+    app.add_route("/v1/auth/login", LoginResource())
     app.add_route("/v1/scores", ScoresResource())
     app.add_route("/health", HealthResource())
     app.add_route("/v1/me", MeResource())

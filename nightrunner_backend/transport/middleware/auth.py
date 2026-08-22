@@ -37,7 +37,7 @@ class AuthMiddleware:
         if req.path == "/health":
             return
         # Skip auth for login endpoint
-        if req.path.startswith("/auth/login"):
+        if req.path.startswith("/auth/login") or req.path.startswith("/v1/auth/login"):
             return
 
         # In development mode, bypass authentication entirely
