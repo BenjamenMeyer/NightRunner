@@ -118,43 +118,67 @@ services:
         psql postgresql://nightrunner:nightrunner_password@db:5432/nightrunner <<'EOF'
         INSERT INTO events (id, name, date, description, rounding_precision)
         VALUES ('01a022b8-45f0-7612-872e-201e8c8158db', 'Mock Testing Event', '2026-09-15', 'Seeded for local OIDC testing.', 1000)
-        ON CONFLICT(id) DO NOTHING;
+        ON CONFLICT (id) DO UPDATE SET 
+          name = EXCLUDED.name, 
+          date = EXCLUDED.date, 
+          description = EXCLUDED.description, 
+          rounding_precision = EXCLUDED.rounding_precision;
 
         INSERT INTO users (id, external_id, username, email, display_name)
         VALUES ('u-admin-id', 'admin-user-id', 'adminuser', 'admin@example.com', 'Admin User')
-        ON CONFLICT(id) DO NOTHING;
+        ON CONFLICT (id) DO UPDATE SET 
+          external_id = EXCLUDED.external_id, 
+          username = EXCLUDED.username, 
+          email = EXCLUDED.email, 
+          display_name = EXCLUDED.display_name;
 
         INSERT INTO users (id, external_id, username, email, display_name)
         VALUES ('u-org-id', 'organizer-user-id', 'organizeruser', 'organizer@example.com', 'Organizer User')
-        ON CONFLICT(id) DO NOTHING;
+        ON CONFLICT (id) DO UPDATE SET 
+          external_id = EXCLUDED.external_id, 
+          username = EXCLUDED.username, 
+          email = EXCLUDED.email, 
+          display_name = EXCLUDED.display_name;
 
         INSERT INTO users (id, external_id, username, email, display_name)
         VALUES ('u-scorer-id', 'scorer-user-id', 'scoreruser', 'scorer@example.com', 'Scorer User')
-        ON CONFLICT(id) DO NOTHING;
+        ON CONFLICT (id) DO UPDATE SET 
+          external_id = EXCLUDED.external_id, 
+          username = EXCLUDED.username, 
+          email = EXCLUDED.email, 
+          display_name = EXCLUDED.display_name;
 
         INSERT INTO users (id, external_id, username, email, display_name)
         VALUES ('u-leader-id', 'leader-user-id', 'leaderuser', 'leader@example.com', 'Station Leader User')
-        ON CONFLICT(id) DO NOTHING;
+        ON CONFLICT (id) DO UPDATE SET 
+          external_id = EXCLUDED.external_id, 
+          username = EXCLUDED.username, 
+          email = EXCLUDED.email, 
+          display_name = EXCLUDED.display_name;
 
         INSERT INTO users (id, external_id, username, email, display_name)
         VALUES ('u-member-id', 'member-user-id', 'memberuser', 'member@example.com', 'Station Member User')
-        ON CONFLICT(id) DO NOTHING;
+        ON CONFLICT (id) DO UPDATE SET 
+          external_id = EXCLUDED.external_id, 
+          username = EXCLUDED.username, 
+          email = EXCLUDED.email, 
+          display_name = EXCLUDED.display_name;
 
         INSERT INTO user_roles (user_id, role)
         VALUES ('u-org-id', 'organizer')
-        ON CONFLICT(user_id, role) DO NOTHING;
+        ON CONFLICT (user_id, role) DO NOTHING;
 
         INSERT INTO user_roles (user_id, role)
         VALUES ('u-scorer-id', 'scorer')
-        ON CONFLICT(user_id, role) DO NOTHING;
+        ON CONFLICT (user_id, role) DO NOTHING;
 
         INSERT INTO user_roles (user_id, role)
         VALUES ('u-leader-id', 'station_leader')
-        ON CONFLICT(user_id, role) DO NOTHING;
+        ON CONFLICT (user_id, role) DO NOTHING;
 
         INSERT INTO user_roles (user_id, role)
         VALUES ('u-member-id', 'station_member')
-        ON CONFLICT(user_id, role) DO NOTHING;
+        ON CONFLICT (user_id, role) DO NOTHING;
         EOF
         echo "Database seeding completed!"
 
