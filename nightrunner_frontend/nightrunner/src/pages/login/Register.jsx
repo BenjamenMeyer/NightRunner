@@ -112,6 +112,7 @@ function Register() {
                     <input
                         name="displayName"
                         placeholder="Display Name"
+                        autoComplete="display-name"
                         value={form.displayName}
                         onChange={updateField}
                         required
@@ -130,6 +131,7 @@ function Register() {
                         type="email"
                         name="email"
                         placeholder="Email Address"
+                        autoComplete="email"
                         value={form.email}
                         onChange={updateField}
                         required
