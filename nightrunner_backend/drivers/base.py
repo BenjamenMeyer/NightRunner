@@ -23,8 +23,8 @@ class DatabaseDriver:
         self.db_url = db_url or os.getenv("DATABASE_URL", "sqlite:///nightrunner.db")
         self.is_sqlite = self.db_url.startswith("sqlite")
         self._sqlite_conn: Optional[aiosqlite.Connection] = None
-        self._pg_pool: Optional[Any] = None
-        self._lock = asyncio.Lock()
+        self._pg_pool = None
+        self._lock: Optional[asyncio.Lock] = None
         
         if self.is_sqlite:
             # sqlite:///path/to/db -> path/to/db
@@ -56,12 +56,21 @@ class DatabaseDriver:
         """
         if self.is_sqlite:
             return sql # aiosqlite supports :param natively
-        # For Postgres, map :param to %(param)s
-        return re.sub(r':(\w+)', r'%(\1)s', sql)
+        # For Postgres, map :param to %(param)s and translate GROUP_CONCAT(DISTINCT ...) to string_agg(DISTINCT ..., ',')
+        sql = re.sub(r':(\w+)', r'%(\1)s', sql)
+        # Case insensitive mapping of GROUP_CONCAT(DISTINCT ...) or GROUP_CONCAT(...)
+        sql = re.sub(
+            r'(?i)\bgroup_concat\s*\(\s*(distinct\s+)?([^)]+)\)',
+            r"string_agg(\1\2, ',')",
+            sql
+        )
+        return sql
 
     async def execute(self, sql: str, params: Optional[Dict[str, Any]] = None) -> Union[List[Dict[str, Any]], int]:
         """Executes a SQL query and returns results as a list of dicts or row count."""
         mapped_sql = self._map_sql(sql)
+        if self._lock is None:
+            self._lock = asyncio.Lock()
         try:
             async with self._lock:
                 if self.is_sqlite:
@@ -159,6 +168,8 @@ class DatabaseDriver:
         """
         Closes database connections/pools.
         """
+        if self._lock is None:
+            self._lock = asyncio.Lock()
         async with self._lock:
             if self._sqlite_conn:
                 await self._sqlite_conn.close()
