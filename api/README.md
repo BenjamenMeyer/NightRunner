@@ -55,8 +55,8 @@ import { AuthProvider } from "react-oidc-context";
 import App from "./App";
 
 const oidcConfig = {
-  authority: process.env.REACT_APP_OIDC_AUTHORITY || "http://localhost:4000",
-  client_id: process.env.REACT_APP_OIDC_CLIENT_ID || "client-id",
+  authority: import.meta.env.VITE_OIDC_AUTHORITY || "http://localhost:4000",
+  client_id: import.meta.env.VITE_OIDC_CLIENT_ID || "client-id",
   redirect_uri: window.location.origin + "/callback",
   response_type: "code",
   scope: "openid profile email",
