@@ -105,6 +105,7 @@ services:
             "AllowedGrantTypes": ["password", "client_credentials"],
             "AllowedScopes": ["openid", "profile", "email"],
             "AlwaysSendClientClaims": true,
+            "ClientClaimsPrefix": "",
             "Claims": [
               { "Type": "aud", "Value": "client-id" }
             ]
