@@ -1,0 +1,57 @@
+info:
+  name: Delete Configuration
+  type: http
+  seq: 5
+  tags:
+    - Configurations
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/v1/configurations/:configId"
+  params:
+    - name: configId
+      value: ""
+      type: path
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 204 Response
+    description: Configuration deleted successfully.
+    request:
+      url: "{{baseUrl}}/v1/configurations/:configId"
+      method: DELETE
+      params:
+        - name: configId
+          value: ""
+          type: path
+    response:
+      status: 204
+      statusText: No Content
+      body:
+        type: text
+        data: ""
+  - name: 404 Response
+    description: Configuration not found.
+    request:
+      url: "{{baseUrl}}/v1/configurations/:configId"
+      method: DELETE
+      params:
+        - name: configId
+          value: ""
+          type: path
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: text
+        data: ""
+
+docs: Deletes a configuration.

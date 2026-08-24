@@ -1,0 +1,35 @@
+name: Main API endpoint
+variables:
+  - name: baseUrl
+    value: localhost:8000
+    description: API Endpoint URL for NightRunner API Application
+  - name: loginAdminUser
+    value: adminuser
+    description: Docker Demo User with Admin Role
+  - name: loginOrganizationUser
+    value: organizationuser
+    description: Docker Demo User with Organization Role
+  - name: loginScorerUser
+    value: scoreruser
+    description: Docker Demo User with Scorer Role
+  - name: loginLeaderUser
+    value: leaderuser
+    description: Docker Demo User with Leader Role
+  - name: loginMemberUser
+    value: memberuser
+    description: Docker Demo User with Member Role
+  - name: oidcUrl
+    value: localhost:4000
+    description: OIDC Provider
+  - name: startupEventId
+    value: 01a022b8-45f0-7612-872e-201e8c8158db
+    description: Event ID for the built-in Docker Demo users
+  - secret: true
+    name: loginPassword
+    description: Login Password for Docker Demo Users (they're all the same)
+  - secret: true
+    name: oidcClientSecret
+    description: OIDC Provider Client Secret
+  - secret: true
+    name: oidcClientId
+    description: OIDC Provider Client ID

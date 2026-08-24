@@ -1,0 +1,36 @@
+opencollection: 1.0.0
+
+info:
+  name: NightRunner Backend
+  version: "1"
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  auth:
+    type: apikey
+    key: X-API-Key
+    value: "{{apiKey}}"
+    placement: header
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git
+    openapi:
+      - sourceUrl: ../../openapi.yaml
+        groupBy: tags
+        lastSyncDate: 2026-08-22T03:48:28.178Z
+        specHash: d246eec54a867aaf815ee6276166821a
+        autoCheck: true
+        autoCheckInterval: 5

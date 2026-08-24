@@ -1,0 +1,7 @@
+info:
+  name: Configuration_Groups
+  type: folder
+  seq: 1
+
+request:
+  auth: inherit

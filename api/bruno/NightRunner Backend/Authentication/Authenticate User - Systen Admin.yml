@@ -1,0 +1,113 @@
+info:
+  name: Authenticate User - Systen Admin
+  type: http
+  seq: 2
+  tags:
+    - Authentication
+
+http:
+  method: POST
+  url: http://{{oidcUrl}}/connect/token
+  body:
+    type: form-urlencoded
+    data:
+      - name: client_id
+        value: "{{oidcClientId}}"
+      - name: client_secret
+        value: "{{oidcClientSecret}}"
+      - name: grant_type
+        value: password
+      - name: username
+        value: "{{userName}}"
+      - name: password
+        value: "{{userPassword}}"
+      - name: scope
+        value: openid profile email
+  auth: inherit
+
+runtime:
+  variables:
+    - name: userName
+      value: "{{loginAdminUser}}"
+    - name: userPassword
+      value: "{{loginPassword}}"
+  scripts:
+    - type: after-response
+      code: |-
+        const data = res.getBody();
+        if (data && data.access_token) {
+            bru.setVar("token", data.access_token);
+            bru.setVar("userToken", data.access_token);
+            bru.setVar("adminToken", data.access_token);
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+examples:
+  - name: 200 Response
+    description: Authentication successful
+    request:
+      url: "{{baseUrl}}/v1/auth/login"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "username": "john.doe",
+            "password": "a-strong-password"
+          }
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "token": "a-jwt-token",
+            "expiresIn": 3600,
+            "user": {
+              "id": "uuid-string-user-1",
+              "username": "john.doe",
+              "email": "john.doe@example.com",
+              "displayName": "John Doe",
+              "roles": [
+                "station_leader"
+              ]
+            }
+          }
+  - name: 401 Response
+    description: Unauthorized
+    request:
+      url: "{{baseUrl}}/v1/auth/login"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "username": "john.doe",
+            "password": "a-strong-password"
+          }
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": {
+              "message": "A descriptive error message."
+            }
+          }
+
+docs: Authenticates a user and returns a session token.

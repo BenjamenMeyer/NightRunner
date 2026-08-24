@@ -1,0 +1,58 @@
+info:
+  name: Create Configuration Group
+  type: http
+  seq: 2
+  tags:
+    - Configuration_Groups
+
+http:
+  method: POST
+  url: "{{baseUrl}}/v1/configuration-groups"
+  body:
+    type: json
+    data: |-
+      {
+        "id": "uuid-string-group-1",
+        "name": "Ropework Group",
+        "description": "Configuration group for ropework stations"
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 201 Response
+    description: Configuration group created.
+    request:
+      url: "{{baseUrl}}/v1/configuration-groups"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-group-1",
+            "name": "Ropework Group",
+            "description": "Configuration group for ropework stations"
+          }
+    response:
+      status: 201
+      statusText: Created
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-group-1",
+            "name": "Ropework Group",
+            "description": "Configuration group for ropework stations"
+          }
+
+docs: Creates a new configuration group.

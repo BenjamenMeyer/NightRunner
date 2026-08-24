@@ -1,0 +1,121 @@
+info:
+  name: Update Patrol
+  type: http
+  seq: 4
+  tags:
+    - Patrols
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/v1/patrols/:patrolId"
+  params:
+    - name: patrolId
+      value: ""
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "id": "uuid-string-patrol-1",
+        "eventId": "uuid-string-event-1",
+        "name": "TL Troop GA-0594",
+        "members": [
+          {
+            "id": "uuid-string-member-1",
+            "name": "John Doe",
+            "rank": "Navigator",
+            "troop": "GA-0594"
+          }
+        ]
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: Patrol updated successfully.
+    request:
+      url: "{{baseUrl}}/v1/patrols/:patrolId"
+      method: PUT
+      params:
+        - name: patrolId
+          value: ""
+          type: path
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-patrol-1",
+            "eventId": "uuid-string-event-1",
+            "name": "TL Troop GA-0594",
+            "members": [
+              {
+                "id": "uuid-string-member-1",
+                "name": "John Doe",
+                "rank": "Navigator",
+                "troop": "GA-0594"
+              }
+            ]
+          }
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-patrol-1",
+            "eventId": "uuid-string-event-1",
+            "name": "TL Troop GA-0594",
+            "members": [
+              {
+                "id": "uuid-string-member-1",
+                "name": "John Doe",
+                "rank": "Navigator",
+                "troop": "GA-0594"
+              }
+            ]
+          }
+  - name: 404 Response
+    description: Patrol not found.
+    request:
+      url: "{{baseUrl}}/v1/patrols/:patrolId"
+      method: PUT
+      params:
+        - name: patrolId
+          value: ""
+          type: path
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-patrol-1",
+            "eventId": "uuid-string-event-1",
+            "name": "TL Troop GA-0594",
+            "members": [
+              {
+                "id": "uuid-string-member-1",
+                "name": "John Doe",
+                "rank": "Navigator",
+                "troop": "GA-0594"
+              }
+            ]
+          }
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: text
+        data: ""
+
+docs: Updates a patrol's details.

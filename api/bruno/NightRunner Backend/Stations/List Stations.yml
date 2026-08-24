@@ -1,0 +1,52 @@
+info:
+  name: List Stations
+  type: http
+  seq: 1
+  tags:
+    - Stations
+
+http:
+  method: GET
+  url: "{{baseUrl}}/v1/stations"
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: A list of stations.
+    request:
+      url: "{{baseUrl}}/v1/stations"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          [
+            {
+              "id": "uuid-string-station-1",
+              "eventId": "uuid-string-event-1",
+              "name": "Ropes Challenge",
+              "description": "A station focused on knot-tying and lashing skills.",
+              "activeConfigurationId": "uuid-string-config-2",
+              "members": [
+                {
+                  "userId": "uuid-string-user-1",
+                  "role": "station_leader"
+                }
+              ]
+            }
+          ]
+
+docs: Retrieves a list of all stations.

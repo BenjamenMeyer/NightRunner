@@ -4,7 +4,7 @@ info:
   description: API for the Night Runner application to manage events, patrols, stations, and scoring.
   version: "1.0.0"
 servers:
-  - url: /api/v1
+  - url: /
     description: Main API endpoint
 
 security:
@@ -12,7 +12,22 @@ security:
   - bearerAuth: []
 
 paths:
-  /auth/login:
+  /health:
+    get:
+      summary: Health Check
+      description: Returns the status of the service.
+      responses:
+        '200':
+          description: Service is healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+  /v1/auth/login:
     post:
       summary: Authenticate User
       description: Authenticates a user and returns a session token.
@@ -37,7 +52,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /users:
+  /v1/users:
     get:
       summary: List Users
       description: Retrieves a list of all users.
@@ -79,7 +94,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /users/{userId}:
+  /v1/users/{userId}:
     get:
       summary: Get User
       description: Retrieves a specific user by their ID.
@@ -151,7 +166,7 @@ paths:
           description: User deleted successfully.
         '404':
           description: User not found.
-  /events:
+  /v1/events:
     get:
       summary: List Events
       description: Retrieves a list of all events.
@@ -189,7 +204,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Event'
 
-  /events/{eventId}:
+  /v1/events/{eventId}:
     get:
       summary: Get Event
       description: Retrieves a specific event by its ID.
@@ -262,7 +277,7 @@ paths:
         '404':
           description: Event not found.
 
-  /patrols:
+  /v1/patrols:
     get:
       summary: List Patrols
       description: Retrieves a list of all patrols.
@@ -300,7 +315,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Patrol'
 
-  /patrols/{patrolId}:
+  /v1/patrols/{patrolId}:
     get:
       summary: Get Patrol
       description: Retrieves a specific patrol by its ID.
@@ -373,7 +388,7 @@ paths:
         '404':
           description: Patrol not found.
 
-  /stations:
+  /v1/stations:
     get:
       summary: List Stations
       description: Retrieves a list of all stations.
@@ -411,7 +426,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Station'
 
-  /stations/{stationId}:
+  /v1/stations/{stationId}:
     get:
       summary: Get Station
       description: Retrieves a specific station by its ID.
@@ -484,323 +499,7 @@ paths:
         '404':
           description: Station not found.
 
-  /stations/{stationId}/configurations:
-    get:
-      summary: List Station Configurations
-      description: Retrieves all configurations for a station.
-      tags:
-        - Stations
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: stationId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: A list of station configurations.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StationConfiguration'
-    post:
-      summary: Create Station Configuration
-      description: Creates a new configuration for a station.
-      tags:
-        - Stations
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: stationId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StationConfiguration'
-      responses:
-        '201':
-          description: Station configuration created successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StationConfiguration'
-
-  /stations/{stationId}/configurations/{configId}:
-    get:
-      summary: Get Station Configuration
-      description: Retrieves a specific station configuration.
-      tags:
-        - Stations
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: stationId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: configId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: The station configuration object.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StationConfiguration'
-        '404':
-          description: Station configuration not found.
-    put:
-      summary: Update Station Configuration
-      description: Updates a station configuration.
-      tags:
-        - Stations
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: stationId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: configId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StationConfiguration'
-      responses:
-        '200':
-          description: Station configuration updated successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StationConfiguration'
-        '404':
-          description: Station configuration not found.
-    delete:
-      summary: Delete Station Configuration
-      description: Deletes a station configuration.
-      tags:
-        - Stations
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: stationId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: configId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Station configuration deleted successfully.
-        '404':
-          description: Station configuration not found.
-
-  /stations/{stationId}/configurations/{configId}/tasks:
-    get:
-      summary: List Station Tasks
-      description: Retrieves all tasks for a station configuration.
-      tags:
-        - Stations
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: stationId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: configId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: A list of station tasks.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StationTask'
-    post:
-      summary: Create Station Task
-      description: Creates a new task for a station configuration.
-      tags:
-        - Stations
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: stationId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: configId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StationTask'
-      responses:
-        '201':
-          description: Station task created successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StationTask'
-
-  /stations/{stationId}/configurations/{configId}/tasks/{taskId}:
-    get:
-      summary: Get Station Task
-      description: Retrieves a specific station task.
-      tags:
-        - Stations
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: stationId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: configId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: taskId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: The station task object.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StationTask'
-        '404':
-          description: Station task not found.
-    put:
-      summary: Update Station Task
-      description: Updates a station task.
-      tags:
-        - Stations
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: stationId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: configId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: taskId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StationTask'
-      responses:
-        '200':
-          description: Station task updated successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StationTask'
-        '404':
-          description: Station task not found.
-    delete:
-      summary: Delete Station Task
-      description: Deletes a station task.
-      tags:
-        - Stations
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: stationId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: configId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: taskId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Station task deleted successfully.
-        '404':
-          description: Station task not found.
-
-  /scores:
+  /v1/scores:
     post:
       summary: Submit Scores
       description: Submits a set of scores for a patrol's performance at a station.
@@ -818,7 +517,7 @@ paths:
         '201':
           description: Scores submitted successfully.
 
-  /reports/event/{eventId}:
+  /v1/reports/event/{eventId}:
     get:
       summary: Get Event Report
       description: Retrieves the final scoring report for a given event.
@@ -842,6 +541,275 @@ paths:
                 $ref: '#/components/schemas/EventReport'
         '404':
           description: Report not found for this event.
+  /v1/reports/events/{eventId}:
+    get:
+      summary: Get Event Report
+      description: Retrieves the final scoring report for a given event.
+      tags:
+        - Reports
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The event report object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventReport'
+        '404':
+          description: Report not found for this event.
+
+
+  /v1/reports/stations/{stationId}:
+    get:
+      summary: Get Station Report
+      description: Retrieves the final scoring report for a given station.
+      tags:
+        - Reports
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: stationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The station report object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationReport'
+        '404':
+          description: Report not found for this station.
+
+  /v1/configuration-groups:
+    get:
+      summary: List Configuration Groups
+      description: Retrieves all configuration groups.
+      tags:
+        - Configuration Groups
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of configuration groups.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConfigurationGroup'
+    post:
+      summary: Create Configuration Group
+      description: Creates a new configuration group.
+      tags:
+        - Configuration Groups
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationGroup'
+      responses:
+        '201':
+          description: Configuration group created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationGroup'
+  /v1/configuration-groups/{groupId}:
+    get:
+      summary: Get Configuration Group
+      description: Retrieves a specific configuration group.
+      tags:
+        - Configuration Groups
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Configuration group object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationGroup'
+        '404':
+          description: Group not found.
+    put:
+      summary: Update Configuration Group
+      description: Updates a configuration group.
+      tags:
+        - Configuration Groups
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationGroup'
+      responses:
+        '200':
+          description: Configuration group updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationGroup'
+        '404':
+          description: Group not found.
+    delete:
+      summary: Delete Configuration Group
+      description: Deletes a configuration group.
+      tags:
+        - Configuration Groups
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Group deleted successfully.
+        '404':
+          description: Group not found.
+  /v1/configurations:
+    get:
+      summary: List Configurations
+      description: Retrieves all configurations.
+      tags:
+        - Configurations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of configurations.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Configuration'
+    post:
+      summary: Create Configuration
+      description: Creates a new configuration.
+      tags:
+        - Configurations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Configuration'
+      responses:
+        '201':
+          description: Configuration created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+  /v1/configurations/{configId}:
+    get:
+      summary: Get Configuration
+      description: Retrieves a specific configuration.
+      tags:
+        - Configurations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: configId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Configuration object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+        '404':
+          description: Configuration not found.
+    put:
+      summary: Update Configuration
+      description: Updates a configuration.
+      tags:
+        - Configurations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: configId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Configuration'
+      responses:
+        '200':
+          description: Configuration updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+        '404':
+          description: Configuration not found.
+    delete:
+      summary: Delete Configuration
+      description: Deletes a configuration.
+      tags:
+        - Configurations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: configId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Configuration deleted successfully.
+        '404':
+          description: Configuration not found.
 
 components:
   securitySchemes:
@@ -921,6 +889,43 @@ components:
         displayName:
           type: string
           example: "Jane Doe"
+    ConfigurationGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          example: "uuid-string-group-1"
+        name:
+          type: string
+          example: "Ropework Group"
+        description:
+          type: string
+          nullable: true
+          example: "Configuration group for ropework stations"
+    Configuration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          example: "uuid-string-config-1"
+        group_id:
+          type: string
+          format: uuid
+          example: "uuid-string-group-1"
+        key:
+          type: string
+          example: "max_score"
+        value:
+          type: string
+          example: "100"
+        description:
+          type: string
+          nullable: true
+          example: "Maximum score for this task"
     Event:
       type: object
       properties:
@@ -968,7 +973,11 @@ components:
           format: uuid
           example: "uuid-string-patrol-1"
           readOnly: true
-        programName:
+        eventId:
+          type: string
+          format: uuid
+          example: "uuid-string-event-1"
+        name:
           type: string
           example: "TL Troop GA-0594"
         members:
@@ -1000,6 +1009,10 @@ components:
           format: uuid
           example: "uuid-string-station-1"
           readOnly: true
+        eventId:
+          type: string
+          format: uuid
+          example: "uuid-string-event-1"
         name:
           type: string
           example: "Ropes Challenge"

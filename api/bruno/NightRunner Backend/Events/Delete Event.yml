@@ -1,0 +1,57 @@
+info:
+  name: Delete Event
+  type: http
+  seq: 5
+  tags:
+    - Events
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/v1/events/:eventId"
+  params:
+    - name: eventId
+      value: ""
+      type: path
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 204 Response
+    description: Event deleted successfully.
+    request:
+      url: "{{baseUrl}}/v1/events/:eventId"
+      method: DELETE
+      params:
+        - name: eventId
+          value: ""
+          type: path
+    response:
+      status: 204
+      statusText: No Content
+      body:
+        type: text
+        data: ""
+  - name: 404 Response
+    description: Event not found.
+    request:
+      url: "{{baseUrl}}/v1/events/:eventId"
+      method: DELETE
+      params:
+        - name: eventId
+          value: ""
+          type: path
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: text
+        data: ""
+
+docs: Deletes an event from the system.

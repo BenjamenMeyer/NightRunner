@@ -1,0 +1,82 @@
+info:
+  name: Create Patrol
+  type: http
+  seq: 2
+  tags:
+    - Patrols
+
+http:
+  method: POST
+  url: "{{baseUrl}}/v1/patrols"
+  body:
+    type: json
+    data: |-
+      {
+        "id": "uuid-string-patrol-1",
+        "eventId": "uuid-string-event-1",
+        "name": "TL Troop GA-0594",
+        "members": [
+          {
+            "id": "uuid-string-member-1",
+            "name": "John Doe",
+            "rank": "Navigator",
+            "troop": "GA-0594"
+          }
+        ]
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 201 Response
+    description: Patrol created successfully.
+    request:
+      url: "{{baseUrl}}/v1/patrols"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-patrol-1",
+            "eventId": "uuid-string-event-1",
+            "name": "TL Troop GA-0594",
+            "members": [
+              {
+                "id": "uuid-string-member-1",
+                "name": "John Doe",
+                "rank": "Navigator",
+                "troop": "GA-0594"
+              }
+            ]
+          }
+    response:
+      status: 201
+      statusText: Created
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-patrol-1",
+            "eventId": "uuid-string-event-1",
+            "name": "TL Troop GA-0594",
+            "members": [
+              {
+                "id": "uuid-string-member-1",
+                "name": "John Doe",
+                "rank": "Navigator",
+                "troop": "GA-0594"
+              }
+            ]
+          }
+
+docs: Creates a new patrol.

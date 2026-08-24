@@ -1,0 +1,94 @@
+info:
+  name: Create Event
+  type: http
+  seq: 2
+  tags:
+    - Events
+
+http:
+  method: POST
+  url: "{{baseUrl}}/v1/events"
+  body:
+    type: json
+    data: |-
+      {
+        "id": "uuid-string-event-2026",
+        "name": "Night Ops 2026",
+        "date": "2026-09-15",
+        "description": "The 2026 annual Night Ops event.",
+        "roundingPrecision": 1000,
+        "organizers": [
+          "uuid-string-user-organizer-1"
+        ],
+        "stations": [
+          "uuid-string-station-1",
+          "uuid-string-station-2"
+        ],
+        "patrols": [
+          "uuid-string-patrol-1"
+        ]
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 201 Response
+    description: Event created successfully.
+    request:
+      url: "{{baseUrl}}/v1/events"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-event-2026",
+            "name": "Night Ops 2026",
+            "date": "2026-09-15",
+            "description": "The 2026 annual Night Ops event.",
+            "roundingPrecision": 1000,
+            "organizers": [
+              "uuid-string-user-organizer-1"
+            ],
+            "stations": [
+              "uuid-string-station-1",
+              "uuid-string-station-2"
+            ],
+            "patrols": [
+              "uuid-string-patrol-1"
+            ]
+          }
+    response:
+      status: 201
+      statusText: Created
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-event-2026",
+            "name": "Night Ops 2026",
+            "date": "2026-09-15",
+            "description": "The 2026 annual Night Ops event.",
+            "roundingPrecision": 1000,
+            "organizers": [
+              "uuid-string-user-organizer-1"
+            ],
+            "stations": [
+              "uuid-string-station-1",
+              "uuid-string-station-2"
+            ],
+            "patrols": [
+              "uuid-string-patrol-1"
+            ]
+          }
+
+docs: Creates a new event.

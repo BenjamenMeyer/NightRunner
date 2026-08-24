@@ -1,0 +1,56 @@
+info:
+  name: List Events
+  type: http
+  seq: 1
+  tags:
+    - Events
+
+http:
+  method: GET
+  url: "{{baseUrl}}/v1/events"
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: A list of events.
+    request:
+      url: "{{baseUrl}}/v1/events"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          [
+            {
+              "id": "uuid-string-event-2026",
+              "name": "Night Ops 2026",
+              "date": "2026-09-15",
+              "description": "The 2026 annual Night Ops event.",
+              "roundingPrecision": 1000,
+              "organizers": [
+                "uuid-string-user-organizer-1"
+              ],
+              "stations": [
+                "uuid-string-station-1",
+                "uuid-string-station-2"
+              ],
+              "patrols": [
+                "uuid-string-patrol-1"
+              ]
+            }
+          ]
+
+docs: Retrieves a list of all events.

@@ -1,0 +1,48 @@
+info:
+  name: List Users
+  type: http
+  seq: 1
+  tags:
+    - Users
+
+http:
+  method: GET
+  url: "{{baseUrl}}/v1/users"
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: A list of users.
+    request:
+      url: "{{baseUrl}}/v1/users"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          [
+            {
+              "id": "uuid-string-user-1",
+              "username": "john.doe",
+              "email": "john.doe@example.com",
+              "displayName": "John Doe",
+              "roles": [
+                "station_leader"
+              ]
+            }
+          ]
+
+docs: Retrieves a list of all users.

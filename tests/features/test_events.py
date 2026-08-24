@@ -1,7 +1,7 @@
 import pytest
 import uuid6
 from nightrunner_backend.drivers.base import DatabaseDriver
-from nightrunner_backend.drivers.events_store import EventsStore
+from nightrunner_backend.drivers.store.events import EventsStore
 from nightrunner_backend.models.event import Event
 
 @pytest.fixture

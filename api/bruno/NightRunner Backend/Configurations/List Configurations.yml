@@ -1,0 +1,46 @@
+info:
+  name: List Configurations
+  type: http
+  seq: 1
+  tags:
+    - Configurations
+
+http:
+  method: GET
+  url: "{{baseUrl}}/v1/configurations"
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: A list of configurations.
+    request:
+      url: "{{baseUrl}}/v1/configurations"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          [
+            {
+              "id": "uuid-string-config-1",
+              "group_id": "uuid-string-group-1",
+              "key": "max_score",
+              "value": "100",
+              "description": "Maximum score for this task"
+            }
+          ]
+
+docs: Retrieves all configurations.
