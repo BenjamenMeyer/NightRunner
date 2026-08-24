@@ -1,0 +1,66 @@
+info:
+  name: Submit Scores
+  type: http
+  seq: 1
+  tags:
+    - Scoring
+
+http:
+  method: POST
+  url: "{{baseUrl}}/v1/scores"
+  body:
+    type: json
+    data: |-
+      {
+        "eventId": "",
+        "patrolId": "",
+        "stationId": "",
+        "configurationId": "",
+        "timestamp": "",
+        "scores": [
+          {
+            "taskId": "",
+            "value": ""
+          }
+        ]
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 201 Response
+    description: Scores submitted successfully.
+    request:
+      url: "{{baseUrl}}/v1/scores"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "eventId": "",
+            "patrolId": "",
+            "stationId": "",
+            "configurationId": "",
+            "timestamp": "",
+            "scores": [
+              {
+                "taskId": "",
+                "value": ""
+              }
+            ]
+          }
+    response:
+      status: 201
+      statusText: Created
+      body:
+        type: text
+        data: ""
+
+docs: Submits a set of scores for a patrol's performance at a station.

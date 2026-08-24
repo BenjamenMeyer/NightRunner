@@ -1,0 +1,57 @@
+info:
+  name: Delete Configuration Group
+  type: http
+  seq: 5
+  tags:
+    - Configuration_Groups
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/v1/configuration-groups/:groupId"
+  params:
+    - name: groupId
+      value: ""
+      type: path
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 204 Response
+    description: Group deleted successfully.
+    request:
+      url: "{{baseUrl}}/v1/configuration-groups/:groupId"
+      method: DELETE
+      params:
+        - name: groupId
+          value: ""
+          type: path
+    response:
+      status: 204
+      statusText: No Content
+      body:
+        type: text
+        data: ""
+  - name: 404 Response
+    description: Group not found.
+    request:
+      url: "{{baseUrl}}/v1/configuration-groups/:groupId"
+      method: DELETE
+      params:
+        - name: groupId
+          value: ""
+          type: path
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: text
+        data: ""
+
+docs: Deletes a configuration group.

@@ -1,108 +1,92 @@
 import falcon
 import uuid6
-from typing import Any, Dict
 from nightrunner_backend.app_context import get_driver
-from nightrunner_backend.drivers.patrols_store import PatrolsStore
+from nightrunner_backend.drivers.store.patrols import PatrolsStore
 from nightrunner_backend.models.patrol import Patrol, PatrolMember
 
+
 class PatrolsResource:
-    """
-    Handles /patrols
-    """
-    def __init__(self):
-        self.store = PatrolsStore(get_driver())
+    """Handles /v1/patrols"""
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response):
-        patrols = await self.store.list()
-        resp.media = [self._to_dict(p) for p in patrols]
+        store = PatrolsStore(get_driver())
+        patrols = await store.list()
+        resp.media = [p.to_api_dict() for p in patrols]
 
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
+        store = PatrolsStore(get_driver())
         data = await req.get_media()
-        patrol_id = str(uuid6.uuid7())
+        if not isinstance(data, dict):
+            raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
         members_data = data.get("members", [])
-        members = [
-            PatrolMember(
-                id=str(uuid6.uuid7()),
-                name=m["name"],
-                rank=m.get("rank"),
-                troop=m.get("troop")
-            ) for m in members_data
-        ]
+        if not isinstance(members_data, list):
+            raise falcon.HTTPBadRequest(description="'members' must be a list.")
+        members = []
+        for m in members_data:
+            if not isinstance(m, dict):
+                continue
+            name_val = m.get("name")
+            if not name_val:
+                continue
+            rank_val = m.get("rank")
+            troop_val = m.get("troop")
+            members.append(
+                PatrolMember(
+                    id=str(uuid6.uuid7()),
+                    name=str(name_val),
+                    rank=str(rank_val) if rank_val is not None and not isinstance(rank_val, str) else rank_val,
+                    troop=str(troop_val) if troop_val is not None and not isinstance(troop_val, str) else troop_val,
+                )
+            )
+        patrol_name = data.get("name") or "Trail Life"
+        event_id = data.get("eventId")
         patrol = Patrol(
-            id=patrol_id,
-            program_name=data["programName"],
-            members=members
+            id=str(uuid6.uuid7()),
+            event_id=str(event_id) if event_id is not None and not isinstance(event_id, str) else event_id,
+            name=str(patrol_name),
+            members=members,
         )
-        await self.store.create(patrol)
+        await store.create(patrol)
         resp.status = falcon.HTTP_201
-        resp.media = self._to_dict(patrol)
+        resp.media = patrol.to_api_dict()
 
-    def _to_dict(self, patrol: Patrol) -> Dict[str, Any]:
-        return {
-            "id": patrol.id,
-            "programName": patrol.program_name,
-            "members": [
-                {
-                    "id": m.id,
-                    "name": m.name,
-                    "rank": m.rank,
-                    "troop": m.troop
-                } for m in patrol.members
-            ]
-        }
 
 class PatrolResource:
-    """
-    Handles /patrols/{patrol_id}
-    """
-    def __init__(self):
-        self.store = PatrolsStore(get_driver())
+    """Handles /v1/patrols/{patrol_id}"""
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response, patrol_id: str):
-        patrol = await self.store.get(patrol_id)
+        store = PatrolsStore(get_driver())
+        patrol = await store.get(patrol_id)
         if not patrol:
             raise falcon.HTTPNotFound()
-        resp.media = self._to_dict(patrol)
+        resp.media = patrol.to_api_dict()
 
     async def on_put(self, req: falcon.Request, resp: falcon.Response, patrol_id: str):
-        patrol = await self.store.get(patrol_id)
+        store = PatrolsStore(get_driver())
+        patrol = await store.get(patrol_id)
         if not patrol:
             raise falcon.HTTPNotFound()
-        
         data = await req.get_media()
-        patrol.program_name = data.get("programName", patrol.program_name)
-        
+        patrol.name = data.get("name", patrol.name)
+        if "eventId" in data:
+            patrol.event_id = data.get("eventId")
         if "members" in data:
-            members_data = data["members"]
             patrol.members = [
                 PatrolMember(
                     id=m.get("id") or str(uuid6.uuid7()),
                     name=m["name"],
                     rank=m.get("rank"),
-                    troop=m.get("troop")
-                ) for m in members_data
+                    troop=m.get("troop"),
+                )
+                for m in data["members"]
             ]
-        
-        await self.store.update(patrol)
-        resp.media = self._to_dict(patrol)
+        await store.update(patrol)
+        resp.media = patrol.to_api_dict()
 
     async def on_delete(self, req: falcon.Request, resp: falcon.Response, patrol_id: str):
-        patrol = await self.store.get(patrol_id)
+        store = PatrolsStore(get_driver())
+        patrol = await store.get(patrol_id)
         if not patrol:
             raise falcon.HTTPNotFound()
-        await self.store.delete(patrol_id)
+        await store.delete(patrol_id)
         resp.status = falcon.HTTP_204
-
-    def _to_dict(self, patrol: Patrol) -> Dict[str, Any]:
-        return {
-            "id": patrol.id,
-            "programName": patrol.program_name,
-            "members": [
-                {
-                    "id": m.id,
-                    "name": m.name,
-                    "rank": m.rank,
-                    "troop": m.troop
-                } for m in patrol.members
-            ]
-        }

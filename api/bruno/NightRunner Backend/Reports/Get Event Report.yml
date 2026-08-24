@@ -1,0 +1,84 @@
+info:
+  name: Get Event Report
+  type: http
+  seq: 1
+  tags:
+    - Reports
+
+http:
+  method: GET
+  url: "{{baseUrl}}/v1/reports/event/:eventId"
+  params:
+    - name: eventId
+      value: ""
+      type: path
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: The event report object.
+    request:
+      url: "{{baseUrl}}/v1/reports/event/:eventId"
+      method: GET
+      params:
+        - name: eventId
+          value: ""
+          type: path
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "eventId": "",
+            "eventName": "",
+            "generatedAt": "",
+            "summary": {
+              "totalPatrols": 0,
+              "totalStations": 0
+            },
+            "patrolScores": [
+              {
+                "patrolId": "",
+                "patrolName": "",
+                "totalScore": 0,
+                "rank": 0,
+                "stationBreakdown": [
+                  {
+                    "stationId": "",
+                    "stationName": "",
+                    "score": 0
+                  }
+                ]
+              }
+            ]
+          }
+  - name: 404 Response
+    description: Report not found for this event.
+    request:
+      url: "{{baseUrl}}/v1/reports/event/:eventId"
+      method: GET
+      params:
+        - name: eventId
+          value: ""
+          type: path
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: text
+        data: ""
+
+docs: Retrieves the final scoring report for a given event.

@@ -1,0 +1,44 @@
+info:
+  name: List Configuration Groups
+  type: http
+  seq: 1
+  tags:
+    - Configuration_Groups
+
+http:
+  method: GET
+  url: "{{baseUrl}}/v1/configuration-groups"
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: A list of configuration groups.
+    request:
+      url: "{{baseUrl}}/v1/configuration-groups"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          [
+            {
+              "id": "uuid-string-group-1",
+              "name": "Ropework Group",
+              "description": "Configuration group for ropework stations"
+            }
+          ]
+
+docs: Retrieves all configuration groups.

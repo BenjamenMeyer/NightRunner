@@ -1,0 +1,73 @@
+info:
+  name: Get Patrol
+  type: http
+  seq: 3
+  tags:
+    - Patrols
+
+http:
+  method: GET
+  url: "{{baseUrl}}/v1/patrols/:patrolId"
+  params:
+    - name: patrolId
+      value: ""
+      type: path
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 Response
+    description: The patrol object.
+    request:
+      url: "{{baseUrl}}/v1/patrols/:patrolId"
+      method: GET
+      params:
+        - name: patrolId
+          value: ""
+          type: path
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-patrol-1",
+            "eventId": "uuid-string-event-1",
+            "name": "TL Troop GA-0594",
+            "members": [
+              {
+                "id": "uuid-string-member-1",
+                "name": "John Doe",
+                "rank": "Navigator",
+                "troop": "GA-0594"
+              }
+            ]
+          }
+  - name: 404 Response
+    description: Patrol not found.
+    request:
+      url: "{{baseUrl}}/v1/patrols/:patrolId"
+      method: GET
+      params:
+        - name: patrolId
+          value: ""
+          type: path
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: text
+        data: ""
+
+docs: Retrieves a specific patrol by its ID.

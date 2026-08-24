@@ -1,68 +1,85 @@
 import falcon
 import uuid6
-from typing import Any, Dict
 from nightrunner_backend.app_context import get_driver
-from nightrunner_backend.drivers.events_store import EventsStore
+from nightrunner_backend.drivers.store.events import EventsStore
 from nightrunner_backend.models.event import Event
 
+
 class EventsResource:
-    """
-    Handles /events
-    """
-    def __init__(self):
-        self.store = EventsStore(get_driver())
+    """Handles /v1/events"""
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response):
-        events = await self.store.list()
-        resp.media = [self._to_dict(e) for e in events]
+        store = EventsStore(get_driver())
+        events = await store.list()
+        resp.media = [e.to_api_dict() for e in events]
 
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
+        store = EventsStore(get_driver())
         data = await req.get_media()
-        event_id = str(uuid6.uuid7())
-        event = Event(
-            id=event_id,
-            name=data["name"],
-            date=data.get("date"),
-            description=data.get("description"),
-            rounding_precision=data.get("roundingPrecision", 1000),
-            organizers=data.get("organizers", []),
-            stations=data.get("stations", []),
-            patrols=data.get("patrols", [])
-        )
-        await self.store.create(event)
-        resp.status = falcon.HTTP_201
-        resp.media = self._to_dict(event)
+        if not isinstance(data, dict):
+            raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
+        name = data.get("name")
+        if not name:
+            raise falcon.HTTPBadRequest(description="'name' is required.")
+        date = data.get("date")
+        description = data.get("description")
+        rounding_precision_val = data.get("roundingPrecision")
+        if rounding_precision_val is not None:
+            if isinstance(rounding_precision_val, (dict, list)):
+                raise falcon.HTTPBadRequest(description="'roundingPrecision' must be an integer.")
+            try:
+                rounding_precision = int(rounding_precision_val)
+            except (ValueError, TypeError):
+                raise falcon.HTTPBadRequest(description="'roundingPrecision' must be an integer.")
+        else:
+            rounding_precision = 1000
 
-    def _to_dict(self, event: Event) -> Dict[str, Any]:
-        return {
-            "id": event.id,
-            "name": event.name,
-            "date": event.date,
-            "description": event.description,
-            "roundingPrecision": event.rounding_precision,
-            "organizers": event.organizers,
-            "stations": event.stations,
-            "patrols": event.patrols
-        }
+        orgs_data = data.get("organizers", [])
+        stats_data = data.get("stations", [])
+        pats_data = data.get("patrols", [])
+
+        if not isinstance(orgs_data, list):
+            raise falcon.HTTPBadRequest(description="'organizers' must be a list.")
+        if not isinstance(stats_data, list):
+            raise falcon.HTTPBadRequest(description="'stations' must be a list.")
+        if not isinstance(pats_data, list):
+            raise falcon.HTTPBadRequest(description="'patrols' must be a list.")
+
+        # Filter out non-strings, convert to string, deduplicate keeping order
+        orgs = list(dict.fromkeys(str(x) for x in orgs_data if x is not None and not isinstance(x, (dict, list))))
+        stats = list(dict.fromkeys(str(x) for x in stats_data if x is not None and not isinstance(x, (dict, list))))
+        pats = list(dict.fromkeys(str(x) for x in pats_data if x is not None and not isinstance(x, (dict, list))))
+
+        event = Event(
+            id=str(uuid6.uuid7()),
+            name=str(name),
+            date=str(date) if date is not None and not isinstance(date, str) else date,
+            description=str(description) if description is not None and not isinstance(description, str) else description,
+            rounding_precision=rounding_precision,
+            organizers=orgs,
+            stations=stats,
+            patrols=pats,
+        )
+        await store.create(event)
+        resp.status = falcon.HTTP_201
+        resp.media = event.to_api_dict()
+
 
 class EventResource:
-    """
-    Handles /events/{event_id}
-    """
-    def __init__(self):
-        self.store = EventsStore(get_driver())
+    """Handles /v1/events/{event_id}"""
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response, event_id: str):
-        event = await self.store.get(event_id)
+        store = EventsStore(get_driver())
+        event = await store.get(event_id)
         if not event:
             raise falcon.HTTPNotFound()
-        resp.media = self._to_dict(event)
+        resp.media = event.to_api_dict()
 
     async def on_put(self, req: falcon.Request, resp: falcon.Response, event_id: str):
-        event = await self.store.get(event_id)
+        store = EventsStore(get_driver())
+        event = await store.get(event_id)
         if not event:
             raise falcon.HTTPNotFound()
-        
         data = await req.get_media()
         event.name = data.get("name", event.name)
         event.date = data.get("date", event.date)
@@ -71,25 +88,13 @@ class EventResource:
         event.organizers = data.get("organizers", event.organizers)
         event.stations = data.get("stations", event.stations)
         event.patrols = data.get("patrols", event.patrols)
-        
-        await self.store.update(event)
-        resp.media = self._to_dict(event)
+        await store.update(event)
+        resp.media = event.to_api_dict()
 
     async def on_delete(self, req: falcon.Request, resp: falcon.Response, event_id: str):
-        event = await self.store.get(event_id)
+        store = EventsStore(get_driver())
+        event = await store.get(event_id)
         if not event:
             raise falcon.HTTPNotFound()
-        await self.store.delete(event_id)
+        await store.delete(event_id)
         resp.status = falcon.HTTP_204
-
-    def _to_dict(self, event: Event) -> Dict[str, Any]:
-        return {
-            "id": event.id,
-            "name": event.name,
-            "date": event.date,
-            "description": event.description,
-            "roundingPrecision": event.rounding_precision,
-            "organizers": event.organizers,
-            "stations": event.stations,
-            "patrols": event.patrols
-        }

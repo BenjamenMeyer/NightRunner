@@ -176,7 +176,7 @@ having to figure out how to run it on their own.
 
 ## Backend Development
 
-### Setup
+### Local Setup (Virtualenv)
 
 1. Install dependencies:
    ```bash
@@ -193,6 +193,31 @@ having to figure out how to run it on their own.
    pytest
    ```
 
-### API
+### Local Setup (Docker / Podman Compose)
 
-- `GET /health`: Health check endpoint.
+For a full-stack local development environment containing the Python ASGI app, PostgreSQL database, and a mock OIDC server, you can use Docker Compose (or Podman Compose):
+
+1. **Start the environment:**
+   ```bash
+   docker compose up --build
+   ```
+   *(For Podman, run `podman-compose up --build`)*
+
+   This boots up:
+   - **API Server** on `http://localhost:8000`
+   - **Postgres Database** on port `5432` (with migrations auto-applied)
+   - **Mock OIDC Server** on `http://localhost:4000`
+   - **Seed Service** (automatically populates local database with default events and testing OIDC users)
+
+2. **Stop the environment:**
+   ```bash
+   docker compose down
+   ```
+
+### API & Playground Testing
+
+- `GET /health`: Health check endpoint (public).
+- **Interactive Playground (Bruno):** 
+  An organized API collection is available under [`api/bruno/`](api/bruno/). You can import this folder into the [Bruno API Client](https://www.usebruno.com/) to interact with all versioned endpoints (`/v1/events`, `/v1/patrols`, `/v1/stations`, etc.).
+  
+  Refer to the [`api/README.md`](api/README.md) for instructions on environment configuration, local authentication tokens acquisition, and automatic OpenAPI contract synchronization settings.

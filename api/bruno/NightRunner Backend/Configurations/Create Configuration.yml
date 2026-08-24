@@ -1,0 +1,64 @@
+info:
+  name: Create Configuration
+  type: http
+  seq: 2
+  tags:
+    - Configurations
+
+http:
+  method: POST
+  url: "{{baseUrl}}/v1/configurations"
+  body:
+    type: json
+    data: |-
+      {
+        "id": "uuid-string-config-1",
+        "group_id": "uuid-string-group-1",
+        "key": "max_score",
+        "value": "100",
+        "description": "Maximum score for this task"
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 201 Response
+    description: Configuration created.
+    request:
+      url: "{{baseUrl}}/v1/configurations"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-config-1",
+            "group_id": "uuid-string-group-1",
+            "key": "max_score",
+            "value": "100",
+            "description": "Maximum score for this task"
+          }
+    response:
+      status: 201
+      statusText: Created
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": "uuid-string-config-1",
+            "group_id": "uuid-string-group-1",
+            "key": "max_score",
+            "value": "100",
+            "description": "Maximum score for this task"
+          }
+
+docs: Creates a new configuration.

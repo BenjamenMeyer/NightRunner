@@ -23,8 +23,8 @@ class DatabaseDriver:
         self.db_url = db_url or os.getenv("DATABASE_URL", "sqlite:///nightrunner.db")
         self.is_sqlite = self.db_url.startswith("sqlite")
         self._sqlite_conn: Optional[aiosqlite.Connection] = None
-        self._pg_pool: Optional[Any] = None
-        self._lock = asyncio.Lock()
+        self._pg_pool = None
+        self._lock: Optional[asyncio.Lock] = None
         
         if self.is_sqlite:
             # sqlite:///path/to/db -> path/to/db
@@ -32,22 +32,23 @@ class DatabaseDriver:
         else:
             self.pg_conn_info = self.db_url
 
-    async def _get_sqlite_conn(self) -> aiosqlite.Connection:
-        async with self._lock:
-            if self._sqlite_conn is None:
-                self._sqlite_conn = await aiosqlite.connect(self.sqlite_path)
-                self._sqlite_conn.row_factory = aiosqlite.Row
-            return self._sqlite_conn
+    # No longer keep a persistent SQLite connection; each execute will open its own.
 
+    async def _get_sqlite_conn(self) -> aiosqlite.Connection:
+        """Return a persistent SQLite connection for in‑memory databases.
+        For file‑based databases we open a fresh connection per operation to avoid locks.
+        """
+        if self._sqlite_conn is None:
+            self._sqlite_conn = await aiosqlite.connect(self.sqlite_path)
+            self._sqlite_conn.row_factory = aiosqlite.Row
+        return self._sqlite_conn
     async def _get_pg_pool(self) -> Any:
-        async with self._lock:
-            if self._pg_pool is None:
-                if AsyncConnectionPool is None:
-                    raise ImportError("psycopg_pool is required for PostgreSQL connection pooling")
-                self._pg_pool = AsyncConnectionPool(self.pg_conn_info)
-                # Ensure the pool is open
-                await self._pg_pool.open()
-            return self._pg_pool
+        if self._pg_pool is None:
+            if AsyncConnectionPool is None:
+                raise ImportError("psycopg_pool is required for PostgreSQL connection pooling")
+            self._pg_pool = AsyncConnectionPool(self.pg_conn_info)
+            await self._pg_pool.open()
+        return self._pg_pool
 
     def _map_sql(self, sql: str) -> str:
         """
@@ -55,33 +56,56 @@ class DatabaseDriver:
         """
         if self.is_sqlite:
             return sql # aiosqlite supports :param natively
-        # For Postgres, map :param to %(param)s
-        return re.sub(r':(\w+)', r'%(\1)s', sql)
+        # For Postgres, map :param to %(param)s and translate GROUP_CONCAT(DISTINCT ...) to string_agg(DISTINCT ..., ',')
+        sql = re.sub(r':(\w+)', r'%(\1)s', sql)
+        # Case insensitive mapping of GROUP_CONCAT(DISTINCT ...) or GROUP_CONCAT(...)
+        sql = re.sub(
+            r'(?i)\bgroup_concat\s*\(\s*(distinct\s+)?([^)]+)\)',
+            r"string_agg(\1\2, ',')",
+            sql
+        )
+        return sql
 
     async def execute(self, sql: str, params: Optional[Dict[str, Any]] = None) -> Union[List[Dict[str, Any]], int]:
-        """
-        Executes a SQL query and returns results as a list of dicts or row count.
-        """
+        """Executes a SQL query and returns results as a list of dicts or row count."""
         mapped_sql = self._map_sql(sql)
+        if self._lock is None:
+            self._lock = asyncio.Lock()
         try:
-            if self.is_sqlite:
-                db = await self._get_sqlite_conn()
-                async with db.execute(mapped_sql, params or {}) as cursor:
-                    if cursor.description is None:
-                        await db.commit()
-                        return cursor.rowcount
-                    rows = await cursor.fetchall()
-                    await db.commit()
-                    return [dict(row) for row in rows]
-            else:
-                pool = await self._get_pg_pool()
-                async with pool.connection() as conn:
-                    async with conn.cursor(row_factory=dict_row) as cur:
-                        await cur.execute(mapped_sql, params or {})
-                        await conn.commit()
-                        if cur.description is None:
-                            return cur.rowcount
-                        return await cur.fetchall()
+            async with self._lock:
+                if self.is_sqlite:
+                    # Use a fresh connection for file‑based SQLite databases to avoid locking.
+                    # For in‑memory databases, reuse a single connection so that schema persists across calls.
+                    if self.sqlite_path == ":memory:":
+                        db = await self._get_sqlite_conn()
+                        async with db.execute(mapped_sql, params or {}) as cursor:
+                            if cursor.description is None:
+                                await db.commit()
+                                return cursor.rowcount
+                            rows = await cursor.fetchall()
+                            await db.commit()
+                            results = [{key: row[key] for key in row.keys()} for row in rows]
+                            return results
+                    else:
+                        async with aiosqlite.connect(self.sqlite_path) as db:
+                            db.row_factory = aiosqlite.Row
+                            async with db.execute(mapped_sql, params or {}) as cursor:
+                                if cursor.description is None:
+                                    await db.commit()
+                                    return cursor.rowcount
+                                rows = await cursor.fetchall()
+                                await db.commit()
+                                results = [{key: row[key] for key in row.keys()} for row in rows]
+                                return results
+                else:
+                    pool = await self._get_pg_pool()
+                    async with pool.connection() as conn:
+                        async with conn.cursor(row_factory=dict_row) as cur:
+                            await cur.execute(mapped_sql, params or {})
+                            await conn.commit()
+                            if cur.description is None:
+                                return cur.rowcount
+                            return await cur.fetchall()
         except Exception as e:
             logger.error(f"SQL Error: {e}\nSQL: {mapped_sql}\nParams: {params}")
             raise
@@ -103,7 +127,9 @@ class DatabaseDriver:
             )
         """)
 
-        files = sorted([f for f in os.listdir(migrations_dir) if f.endswith(".sql")])
+        files = await asyncio.to_thread(
+            lambda: sorted(f for f in os.listdir(migrations_dir) if f.endswith(".sql"))
+        )
         for filename in files:
             # Check if migration already applied
             rows = await self.execute("SELECT id FROM _migrations WHERE id = :id", {"id": filename})
@@ -112,14 +138,20 @@ class DatabaseDriver:
 
             logger.info(f"Applying migration: {filename}")
             filepath = os.path.join(migrations_dir, filename)
-            with open(filepath, "r") as f:
-                sql = f.read()
+            sql = await asyncio.to_thread(lambda: open(filepath, "r").read())
 
             try:
                 if self.is_sqlite:
-                    db = await self._get_sqlite_conn()
-                    await db.executescript(sql)
-                    await db.commit()
+                    # Use a fresh connection for migration scripts to avoid locking issues
+                    if self.sqlite_path == ":memory:":
+                        db = await self._get_sqlite_conn()
+                        await db.executescript(sql)
+                        await db.commit()
+                    else:
+                        async with aiosqlite.connect(self.sqlite_path) as db:
+                            db.row_factory = aiosqlite.Row
+                            await db.executescript(sql)
+                            await db.commit()
                 else:
                     # Postgres psycopg execute can handle multiple statements if they are separated by semicolons
                     # but it's safer to execute as one script if psycopg supports it, 
@@ -136,6 +168,8 @@ class DatabaseDriver:
         """
         Closes database connections/pools.
         """
+        if self._lock is None:
+            self._lock = asyncio.Lock()
         async with self._lock:
             if self._sqlite_conn:
                 await self._sqlite_conn.close()
@@ -159,9 +193,10 @@ class DatabaseDriver:
         """
         try:
             if self.is_sqlite:
-                db = await self._get_sqlite_conn()
-                await db.executescript(sql)
-                await db.commit()
+                async with aiosqlite.connect(self.sqlite_path) as db:
+                    db.row_factory = aiosqlite.Row
+                    await db.executescript(sql)
+                    await db.commit()
             else:
                 pool = await self._get_pg_pool()
                 async with pool.connection() as conn:

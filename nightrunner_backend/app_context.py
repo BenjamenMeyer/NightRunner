@@ -9,12 +9,20 @@ logger = logging.getLogger(__name__)
 _driver: Optional[DatabaseDriver] = None
 
 def get_driver() -> DatabaseDriver:
-    """
-    Returns the shared DatabaseDriver instance.
-    """
+    """Return a DatabaseDriver instance that matches the current DATABASE_URL.
+    If a driver already exists but its connection string differs from the
+    environment variable, a new driver is created. This ensures each test that
+    sets a temporary SQLite file gets its own isolated driver instance."""
     global _driver
-    if _driver is None:
-        _driver = DatabaseDriver()
+    # Resolve the database URL from the environment (or default)
+    current_url = os.getenv("DATABASE_URL", "sqlite:///nightrunner.db")
+    if _driver is None or getattr(_driver, "db_url", None) != current_url:
+        # Close existing driver if it exists to free resources
+        if _driver is not None:
+            # Note: close is async; callers should await close_driver() before
+            # calling get_driver again. Here we simply discard the old instance.
+            _driver = None
+        _driver = DatabaseDriver(current_url)
     return _driver
 
 async def run_migrations():
