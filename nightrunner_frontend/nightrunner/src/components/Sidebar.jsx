@@ -12,7 +12,7 @@ function Sidebar({
 
                  }) {
 
-    const loggedIn = ApiService.isAuthenticated();
+    const loggedIn = ApiService.authService.isAuthenticated();
     const isAdmin = ApiService.userData.isAdmin();
 
     const links = loggedIn

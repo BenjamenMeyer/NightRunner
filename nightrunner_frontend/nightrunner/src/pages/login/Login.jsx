@@ -1,48 +1,28 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "react-oidc-context";
 
 import NOAImage from "../../../public/favicon.jpg";
 
 import "./Login.css";
-import ApiService from "@/api/ApiService.js";
 
 function Login() {
 
     const navigate = useNavigate();
+    const auth = useAuth();
 
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-
-    const [loading, setLoading] = useState(false);
-
-    const [error, setError] = useState("");
-
-    async function handleSubmit(event) {
-
-        event.preventDefault();
-
-        setError("");
-
-        setLoading(true);
+    async function handleLogin() {
 
         try {
 
-            await ApiService.login(
-                username,
-                password
+            await auth.signinRedirect();
+
+        }
+        catch (error) {
+
+            console.error(
+                "Failed to start authentication:",
+                error
             );
-
-            navigate("/dashboard");
-
-        }
-        catch (err) {
-
-            setError(err.message);
-
-        }
-        finally {
-
-            setLoading(false);
 
         }
 
@@ -66,52 +46,16 @@ function Login() {
                     Sign in to continue.
                 </p>
 
-                <form
-                    className="login-form"
-                    onSubmit={handleSubmit}
+                <button
+                    type="button"
+                    onClick={handleLogin}
+                    disabled={auth.isLoading}
                 >
-
-                    <input
-                        type="text"
-                        placeholder="Username"
-                        autoComplete="username"
-                        value={username}
-                        onChange={(e) =>
-                            setUsername(e.target.value)
-                        }
-                        required
-                    />
-
-                    <input
-                        type="password"
-                        autoComplete="current-password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) =>
-                            setPassword(e.target.value)
-                        }
-                        required
-                    />
-
-                    {
-                        error &&
-                        <div className="login-error">
-                            {error}
-                        </div>
+                    {auth.isLoading
+                        ? "Signing In..."
+                        : "Sign In"
                     }
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                    >
-                        {
-                            loading
-                                ? "Signing In..."
-                                : "Sign In"
-                        }
-                    </button>
-
-                </form>
+                </button>
 
                 <div className="login-divider"></div>
 

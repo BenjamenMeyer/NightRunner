@@ -7,9 +7,9 @@ import Sidebar from "./Sidebar";
 import ApiService from "@/api/ApiService.js";
 import Footer from "@/components/Footer.jsx";
 
-function Layout() {
+export default function Layout() {
 
-    const loggedIn = ApiService.isAuthenticated();
+    const loggedIn = ApiService.authService.isAuthenticated();
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -58,5 +58,3 @@ function Layout() {
     );
 
 }
-
-export default Layout;

@@ -5,6 +5,7 @@ import EventService from "./EventService";
 import PatrolService from "./PatrolService";
 import StationService from "./StationService";
 import ConfigurationService from "@/api/ConfigurationService.js";
+import AuthService from "@/api/AuthService.js";
 
 class ApiService {
 
@@ -49,8 +50,15 @@ class ApiService {
      */
     backendTransport;
 
+    /**
+     * Access to Auth actions
+     * @type {AuthService}
+     */
+    authService;
+
     constructor() {
         this.backendTransport = BackendTransport;
+        this.authService = new AuthService();
         this.userData = new UserService();
         this.eventData = new EventService(this.backendTransport, this.userData);
         this.patrolData = new PatrolService(this.backendTransport, this.userData);
@@ -104,41 +112,6 @@ class ApiService {
             "/users",
             user
         );
-
-    }
-
-    /**
-     * Log out the current user.
-     */
-    logout() {
-
-        BackendTransport.logout();
-
-    }
-
-    //
-    // Session
-    //
-
-    /**
-     * Get the current authentication token.
-     *
-     * @returns {string|null}
-     */
-    getToken() {
-
-        return BackendTransport.getToken();
-
-    }
-
-    /**
-     * Determine whether the current session is authenticated.
-     *
-     * @returns {boolean}
-     */
-    isAuthenticated() {
-
-        return BackendTransport.isAuthenticated();
 
     }
 

@@ -1,4 +1,4 @@
-import {Routes, Route, Navigate} from "react-router-dom";
+import {Routes, Route, Navigate, useLocation} from "react-router-dom";
 
 import Layout from "./components/Layout";
 
@@ -14,105 +14,111 @@ import ApiService from "@/api/ApiService.js";
 import LiveScoring from "@/pages/livescoring/LiveScoring.jsx";
 import AdminRoutes from "@/pages/admin/AdminRoutes.jsx";
 import Events from "@/pages/user/Events.jsx";
+import Callback from "@/pages/Callback.jsx";
 
-function RequireAuth({ children }) {
+import { useAuth } from 'react-oidc-context';
 
-    //return children;
+// 1. Protects pages meant ONLY for logged-in users
+function ProtectedRoute({ children }) {
+    const auth = useAuth();
+    const location = useLocation();
 
-    return ApiService.isAuthenticated()
-        ? children
-        : <Navigate to="/login" replace />;
+    if (auth.isLoading) {
+        return <div>Loading authentication...</div>;
+    }
 
+    if (!auth.isAuthenticated) {
+        // Save the current location to redirect back after login
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    return children;
 }
 
-function HomeRedirect() {
+// 2. Protects pages meant ONLY for logged-out users (Login/Register)
+function AnonymousRoute({ children }) {
+    const auth = useAuth();
 
-    //return <Navigate to="/dashboard" replace />;
+    if (auth.isLoading) {
+        return <div>Loading authentication...</div>;
+    }
 
-    return ApiService.isAuthenticated()
-        ? <Navigate to="/dashboard" replace />
-        : <Navigate to="/login" replace />;
+    if (auth.isAuthenticated) {
+        // If already logged in, kick them to the dashboard safely
+        return <Navigate to="/dashboard" replace />;
+    }
 
+    return children;
 }
 
-function LoginRoute() {
-    //return <Login />;
-
-    return ApiService.isAuthenticated()
-        ? <Navigate to="/dashboard" replace />
-        : <Login />;
-
-}
 
 function App() {
     return (
         <Routes>
-
             {/* All pages using the main application layout */}
             <Route element={<Layout />}>
 
-                <Route path="/" element={<HomeRedirect />} />
+                {/* Safe Index Redirection */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-                <Route path="/dashboard" element={
-                    <RequireAuth>
-                        <Dashboard />
-                    </RequireAuth>
+                {/* Public / Guest Only Routes */}
+                <Route path="/login" element={
+                    <AnonymousRoute>
+                        <Login />
+                    </AnonymousRoute>
                 } />
-
-                <Route path="/login" element={<LoginRoute />} />
-
-                <Route path="/me" element={
-                    <RequireAuth>
-                        <Me />
-                    </RequireAuth>
-                } />
-
-                <Route
-                    path="/events"
-                    element={<Events />}
-                />
-
-                <Route path="/patrols" element={
-                    <RequireAuth>
-                        <Patrols />
-                    </RequireAuth>
-                } />
-
                 <Route path="/register" element={
-                    <Register />
-                }/>
+                    <AnonymousRoute>
+                        <Register />
+                    </AnonymousRoute>
+                } />
+                <Route path="/callback" element={<Callback />} />
+                <Route path="/events" element={<Events />} />
 
+                {/* Protected Routes */}
+                <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                        <Dashboard />
+                    </ProtectedRoute>
+                } />
+                <Route path="/me" element={
+                    <ProtectedRoute>
+                        <Me />
+                    </ProtectedRoute>
+                } />
+                <Route path="/patrols" element={
+                    <ProtectedRoute>
+                        <Patrols />
+                    </ProtectedRoute>
+                } />
                 <Route path="/scoring" element={
-                    <RequireAuth>
+                    <ProtectedRoute>
                         <Scoring />
-                    </RequireAuth>
+                    </ProtectedRoute>
                 } />
-
                 <Route path="/stations" element={
-                    <RequireAuth>
+                    <ProtectedRoute>
                         <Stations />
-                    </RequireAuth>
-                }/>
-
-                <Route path="/admin/*" element={
-                    <RequireAuth>
-                        <AdminRoutes />
-                    </RequireAuth>
+                    </ProtectedRoute>
                 } />
-                
-                <Route path="/404" element={<NotFound />} />
+                <Route path="/admin/*" element={
+          <ProtectedRoute>
+            <AdminRoutes />
+          </ProtectedRoute>
+        } />
 
+        <Route path="/404" element={<NotFound />} />
             </Route>
 
+            {/* Standalone Protected Route */}
             <Route path="/live" element={
-                <RequireAuth>
-                    <LiveScoring/>
-                </RequireAuth>
+                <ProtectedRoute>
+                    <LiveScoring />
+                </ProtectedRoute>
             } />
 
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
-
         </Routes>
     );
 }

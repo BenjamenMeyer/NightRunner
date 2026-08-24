@@ -1,114 +1,23 @@
-import { jwtDecode } from "jwt-decode";
+import AuthService from "./AuthService";
 
-const API_BASE = __API_BACKEND_URL__ || "http://localhost:8000/api/v1";
-
-const TOKEN_KEY = "night-runner-token";
-const USER_KEY = "night-runner-user";
+const API_BASE =
+    import.meta.env.VITE_API_BACKEND_URL ||
+    "http://localhost:8000/v1";
 
 class BackendTransport {
-
-    //
-    // Session
-    //
-
-    saveSession(data) {
-
-        if (data.token) {
-
-            localStorage.setItem(
-                TOKEN_KEY,
-                data.token
-            );
-
-        }
-
-        if (data.user) {
-
-            localStorage.setItem(
-                USER_KEY,
-                JSON.stringify(data.user)
-            );
-
-        }
-
-    }
-
-    logout() {
-
-        localStorage.removeItem(
-            TOKEN_KEY
-        );
-
-        localStorage.removeItem(
-            USER_KEY
-        );
-
-    }
-
-    getToken() {
-
-        return localStorage.getItem(
-            TOKEN_KEY
-        );
-
-    }
-
-    getUser() {
-
-        const user =
-            JSON.parse(localStorage.getItem(USER_KEY));
-
-        if (user !== null) {
-            user.event = "019ffc2f-65b3-7fcc-bfd7-f3717a6068c4";
-
-            return user;
-        }
-        return null;
-
-        //return user
-        //    ? JSON.parse(user)
-        //    : null;
-
-    }
-
-    isAuthenticated() {
-
-        const token = this.getToken();
-
-        if (!token) {
-            return false;
-        }
-
-        try {
-
-            const decoded =
-                jwtDecode(token);
-
-            return (
-                decoded.exp * 1000 >
-                Date.now()
-            );
-
-        }
-        catch {
-
-            return false;
-
-        }
-
-    }
 
     //
     // Headers
     //
 
-    authHeaders() {
+    async authHeaders() {
 
         const headers = {
             "Content-Type": "application/json"
         };
 
-        const token = this.getToken();
+        const token =
+            await AuthService.getToken();
 
         if (token) {
 
@@ -121,6 +30,7 @@ class BackendTransport {
 
     }
 
+
     //
     // Generic Request
     //
@@ -131,20 +41,30 @@ class BackendTransport {
         body = null
     ) {
 
+        const headers =
+            await this.authHeaders();
+
         const response = await fetch(
             `${API_BASE}${url}`,
             {
                 method,
-                headers: this.authHeaders(),
-                body: body
-                    ? JSON.stringify(body)
-                    : undefined
+
+                headers,
+
+                body:
+                    body !== null
+                        ? JSON.stringify(body)
+                        : undefined
             }
         );
 
         if (response.status === 401) {
 
-            this.logout();
+            await AuthService.logout();
+
+            throw new Error(
+                "Authentication expired."
+            );
 
         }
 
@@ -170,6 +90,7 @@ class BackendTransport {
 
     }
 
+
     //
     // HTTP Methods
     //
@@ -183,6 +104,7 @@ class BackendTransport {
 
     }
 
+
     post(url, body) {
 
         return this.request(
@@ -193,6 +115,7 @@ class BackendTransport {
 
     }
 
+
     put(url, body) {
 
         return this.request(
@@ -202,6 +125,7 @@ class BackendTransport {
         );
 
     }
+
 
     delete(url) {
 
