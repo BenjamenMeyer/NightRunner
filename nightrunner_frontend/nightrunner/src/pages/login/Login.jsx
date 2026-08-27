@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 
 import NOAImage from "../../../public/favicon.jpg";
@@ -7,14 +7,24 @@ import "./Login.css";
 
 function Login() {
 
-    const navigate = useNavigate();
+    const location = useLocation();
+
     const auth = useAuth();
+
+    const [searchParams] = useSearchParams();
+
+    const loggedOut =
+        searchParams.get("loggedOut") === "true";
 
     async function handleLogin() {
 
         try {
 
-            await auth.signinRedirect();
+            await auth.signinRedirect({
+                state: {
+                    from: location.state?.from ?? "/dashboard"
+                }
+            });
 
         }
         catch (error) {
@@ -32,47 +42,143 @@ function Login() {
 
         <div className="login-page">
 
-            <img
-                className="login-logo"
-                src={NOAImage}
-                alt="Night Ops Adventures"
-            />
+            <div className="login-container">
 
-            <div className="login-card">
+                <img
+                    className="login-logo"
+                    src={NOAImage}
+                    alt="Night Ops Adventures"
+                />
 
-                <h1>Night Runner</h1>
+                {loggedOut && (
 
-                <p className="login-subtitle">
-                    Sign in to continue.
-                </p>
-
-                <button
-                    type="button"
-                    onClick={handleLogin}
-                    disabled={auth.isLoading}
-                >
-                    {auth.isLoading
-                        ? "Signing In..."
-                        : "Sign In"
-                    }
-                </button>
-
-                <div className="login-divider"></div>
-
-                <div className="register-section">
-
-                    <span>
-                        Don't have an account?
-                    </span>
-
-                    <Link
-                        to="/register"
-                        className="register-link"
+                    <div
+                        className="login-logout-message"
+                        role="status"
                     >
-                        Create Account
-                    </Link>
+
+                        <div className="login-logout-icon">
+
+                            <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                <polyline points="16 17 21 12 16 7" />
+                                <line x1="21" y1="12" x2="9" y2="12" />
+                            </svg>
+
+                        </div>
+
+                        <div className="login-logout-content">
+
+                            <strong>
+                                You have been signed out
+                            </strong>
+
+                            <span>
+                                Your Night Runner session has ended successfully.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                )}
+
+                <div className="login-card">
+
+                    <div className="login-header">
+
+                        <h1>
+                            Night Runner
+                        </h1>
+
+                        <p className="login-subtitle">
+                            Sign in to continue to Night Runner.
+                        </p>
+
+                    </div>
+
+                    <div className="login-provider">
+
+                        <div className="login-provider-icon">
+                            🔐
+                        </div>
+
+                        <div>
+                            <strong>
+                                Secure Sign In
+                            </strong>
+
+                            <p>
+                                You'll be redirected to the
+                                secure sign-in page.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    {auth.error && (
+
+                        <div className="login-error">
+                            <strong>
+                                Sign-in failed
+                            </strong>
+
+                            <span>
+                                {auth.error.message}
+                            </span>
+                        </div>
+
+                    )}
+
+                    <button
+                        type="button"
+                        className="login-button"
+                        onClick={handleLogin}
+                        disabled={auth.isLoading}
+                    >
+
+                        {auth.isLoading
+                            ? "Connecting..."
+                            : "Sign In"
+                        }
+
+                    </button>
+
+                    <div className="login-divider">
+                        <span>or</span>
+                    </div>
+
+                    <div className="register-section">
+
+                        <span>
+                            Don't have an account?
+                        </span>
+
+                        <Link
+                            to="/register"
+                            className="register-link"
+                        >
+                            Create Account
+                        </Link>
+
+                    </div>
 
                 </div>
+
+                <p className="login-footer">
+                    Authentication is securely handled by
+                    the Night Runner identity provider.
+                </p>
 
             </div>
 

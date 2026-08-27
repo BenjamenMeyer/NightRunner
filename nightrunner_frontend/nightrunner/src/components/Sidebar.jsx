@@ -1,18 +1,17 @@
 import { NavLink } from "react-router-dom";
+import { useAuth } from "react-oidc-context";
 
 import NOAImage from "../../public/favicon.jpg";
 import "./Sidebar.css";
 
 import ApiService from "@/api/ApiService.js";
 
-function Sidebar({
+function Sidebar({open, close}) {
 
-                     open,
-                     close
+    const auth = useAuth();
 
-                 }) {
+    const loggedIn = auth.isAuthenticated;
 
-    const loggedIn = ApiService.authService.isAuthenticated();
     const isAdmin = ApiService.userData.isAdmin();
 
     const links = loggedIn
@@ -50,12 +49,16 @@ function Sidebar({
                             path: "/admin/users"
                         },
 
-                        ...(ApiService.userData.isSystemAdmin() ? [
-                            {
-                                name: "Configuration Manager",
-                                path: "/admin/configurations"
-                            }
-                        ] : [])
+                        ...(ApiService.userData.isSystemAdmin()
+
+                            ? [
+                                {
+                                    name: "Configuration Manager",
+                                    path: "/admin/configurations"
+                                }
+                            ]
+
+                            : [])
 
                     ]
 
@@ -170,9 +173,13 @@ function Sidebar({
                                 aria-hidden="true"
                             >
 
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                <path
+                                    d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+                                />
 
-                                <polyline points="15 3 21 3 21 9" />
+                                <polyline
+                                    points="15 3 21 3 21 9"
+                                />
 
                                 <line
                                     x1="10"

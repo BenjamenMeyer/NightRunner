@@ -26,7 +26,7 @@ export default function Dashboard() {
             setLoading(true);
             setError(null);
 
-            const user = ApiService.userData.get();
+            const user = await ApiService.userData.get();
 
             if (!user) {
 

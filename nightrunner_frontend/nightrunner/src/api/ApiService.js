@@ -1,120 +1,144 @@
-import BackendTransport from "./BackendTransport";
+import BackendTransport from "./BackendTransport.js";
 
-import UserService from "./UserService";
-import EventService from "./EventService";
-import PatrolService from "./PatrolService";
-import StationService from "./StationService";
+import AuthService from "./AuthService.js";
+import UserService from "./UserService.js";
+import EventService from "./EventService.js";
+import PatrolService from "./PatrolService.js";
+import StationService from "./StationService.js";
 import ConfigurationService from "@/api/ConfigurationService.js";
-import AuthService from "@/api/AuthService.js";
+
 
 class ApiService {
 
     //
-    // Domain Services
+    // Services
     //
 
     /**
-     * Provides access to the currently authenticated user
-     * and user-related operations.
+     * Authentication operations.
+     *
+     * @type {AuthService}
+     */
+    auth;
+
+    /**
+     * User operations.
+     *
      * @type {UserService}
      */
     userData;
 
     /**
-     * Provides access to event-related operations.
+     * Event operations.
+     *
      * @type {EventService}
      */
     eventData;
 
     /**
-     * Provides access to patrol-related operations.
+     * Patrol operations.
+     *
      * @type {PatrolService}
      */
     patrolData;
 
     /**
-     * Provides access to station-related operations.
+     * Station operations.
+     *
      * @type {StationService}
      */
     stationData;
 
     /**
-     * Provides access to station-config related operations
+     * Configuration operations.
+     *
      * @type {ConfigurationService}
      */
     configurationData;
 
     /**
-     * Direct talk to Backend API
+     * Direct backend transport.
+     *
      * @type {BackendTransport}
      */
     backendTransport;
 
-    /**
-     * Access to Auth actions
-     * @type {AuthService}
-     */
-    authService;
 
     constructor() {
-        this.backendTransport = BackendTransport;
-        this.authService = new AuthService();
-        this.userData = new UserService();
-        this.eventData = new EventService(this.backendTransport, this.userData);
-        this.patrolData = new PatrolService(this.backendTransport, this.userData);
-        this.stationData = new StationService(this.backendTransport, this.userData);
-        this.configurationData = new ConfigurationService();
+
+        this.backendTransport =
+            BackendTransport;
+
+        this.auth =
+            AuthService;
+
+        this.userData =
+            new UserService();
+
+        this.eventData =
+            new EventService(
+                this.backendTransport,
+                this.userData
+            );
+
+        this.patrolData =
+            new PatrolService(
+                this.backendTransport,
+                this.userData
+            );
+
+        this.stationData =
+            new StationService(
+                this.backendTransport,
+                this.userData
+            );
+
+        this.configurationData =
+            new ConfigurationService();
+
     }
+
 
     //
     // Authentication
     //
 
     /**
-     * Authenticate a user.
+     * Begins the OIDC login flow.
      *
-     * Saves the returned session locally.
-     *
-     * @param {string} username
-     * @param {string} password
-     *
-     * @returns {Promise<Object>}
-     * The authentication response returned by the backend.
+     * @returns {Promise<void>}
      */
-    async login(username, password) {
+    async login() {
 
-        const data =
-            await BackendTransport.post(
-                "/auth/login",
-                {
-                    username,
-                    password
-                }
-            );
-
-        BackendTransport.saveSession(data);
-
-        return data;
+        return this.auth.login();
 
     }
 
-    /**
-     * Register a new user.
-     *
-     * @param {Object} user
-     *
-     * @returns {Promise<Object>}
-     * The newly created user returned by the backend.
-     */
-    async register(user) {
 
-        return await BackendTransport.post(
-            "/users",
-            user
-        );
+    /**
+     * Logs the current user out.
+     *
+     * @returns {Promise<void>}
+     */
+    async logout() {
+
+        return this.auth.logout();
+
+    }
+
+
+    /**
+     * Determines whether the current user is authenticated.
+     *
+     * @returns {boolean}
+     */
+    isAuthenticated() {
+
+        return this.auth.isAuthenticated();
 
     }
 
 }
+
 
 export default new ApiService();

@@ -7,27 +7,25 @@ import "./index.css";
 import "./App.css";
 
 import App from "./App.jsx";
+import BrandingProvider from "@/branding/BrandingProvider.jsx";
+import AuthServiceProvider from "@/api/AuthServiceProvider.jsx";
 
-import BrandingProvider
-    from "@/branding/BrandingProvider.jsx";
 
 const oidcConfig = {
 
     authority:
-        import.meta.env.VITE_OIDC_AUTHORITY ||
+        import.meta.env.VITE_OIDC_AUTHORITY ??
         "http://localhost:4000",
 
     client_id:
-        import.meta.env.VITE_OIDC_CLIENT_ID ||
+        import.meta.env.VITE_OIDC_CLIENT_ID ??
         "client-id",
 
     redirect_uri:
         `${window.location.origin}/callback`,
 
-    post_logout_redirect_uri:
-        `${window.location.origin}/login`,
-
-    response_type: "code",
+    response_type:
+        "code",
 
     scope:
         "openid profile email",
@@ -44,25 +42,30 @@ const oidcConfig = {
 
 };
 
+
 createRoot(
     document.getElementById("root")
 ).render(
 
     <StrictMode>
 
-        <AuthProvider {...oidcConfig}>
+        <BrowserRouter>
 
-            <BrowserRouter>
+            <AuthProvider {...oidcConfig}>
 
-                <BrandingProvider>
+                <AuthServiceProvider>
 
-                    <App />
+                    <BrandingProvider>
 
-                </BrandingProvider>
+                        <App />
 
-            </BrowserRouter>
+                    </BrandingProvider>
 
-        </AuthProvider>
+                </AuthServiceProvider>
+
+            </AuthProvider>
+
+        </BrowserRouter>
 
     </StrictMode>
 

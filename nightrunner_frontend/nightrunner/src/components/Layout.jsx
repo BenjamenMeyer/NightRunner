@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import { useAuth } from "react-oidc-context";
 
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
-import ApiService from "@/api/ApiService.js";
 import Footer from "@/components/Footer.jsx";
 
 export default function Layout() {
 
-    const loggedIn = ApiService.authService.isAuthenticated();
+    const auth = useAuth();
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const loggedIn =
+        auth.isAuthenticated;
 
     return (
 
@@ -35,7 +38,6 @@ export default function Layout() {
                 className="page-content"
                 onClick={() => {
 
-                    // Clicking the page closes the mobile sidebar.
                     if (sidebarOpen) {
                         setSidebarOpen(false);
                     }
