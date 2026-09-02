@@ -32,18 +32,18 @@ class MigrationMiddleware:
         await close_driver()
 
 # Add CORS MiddleWare
-cors_middleware = falcon.CORSMiddleware(
-    allow_origins= [
-        settings.front_end_url
-    ],  # Allow requests from the frontend URL
-    allow_credentials='*', # Required if your frontend sends cookies or auth headers
-)
+#cors_middleware = falcon.CORSMiddleware(
+#    allow_origins= [
+#        settings.front_end_url
+#    ],  # Allow requests from the frontend URL
+#    allow_credentials='*', # Required if your frontend sends cookies or auth headers
+#)
 
-print(f"CORS frontend URL: {settings.front_end_url}")
+#print(f"CORS frontend URL: {settings.front_end_url}")
 
-app = falcon.asgi.App(
+app = falcon.asgi.App(cors_enable=True,
     middleware=[
-        cors_middleware,
+        #cors_middleware,
         MigrationMiddleware(),
         AuthMiddleware()
     ]
