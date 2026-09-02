@@ -1,0 +1,494 @@
+/* ==========================================
+   Login Page
+   ========================================== */
+
+.login-page {
+
+    min-height: 100%;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    padding: 40px 20px;
+
+    box-sizing: border-box;
+
+}
+
+
+/* ==========================================
+   Login Container
+   ========================================== */
+
+.login-container {
+
+    width: 100%;
+    max-width: 460px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+}
+
+
+/* ==========================================
+   Logo
+   ========================================== */
+
+.login-logo {
+
+    width: 180px;
+    height: auto;
+
+    margin-bottom: 28px;
+
+    object-fit: contain;
+
+}
+
+/* ==========================================
+   Logout Message
+   ========================================== */
+
+.login-logout-message {
+
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    margin-bottom: 18px;
+
+    padding: 14px 16px;
+
+    box-sizing: border-box;
+
+    background: var(--input-bg);
+
+    border: 1px solid var(--border);
+
+    border-left: 4px solid var(--button-bg);
+
+    border-radius: 10px;
+
+    color: var(--text-primary, var(--text));
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+
+}
+
+
+.login-logout-icon {
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: var(--button-bg);
+
+    color: var(--button-text);
+
+}
+
+
+.login-logout-content {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
+
+    min-width: 0;
+
+}
+
+
+.login-logout-content strong {
+
+    font-size: .95rem;
+
+    font-weight: 600;
+
+}
+
+
+.login-logout-content span {
+
+    color: var(--text-secondary, var(--text));
+
+    font-size: .85rem;
+
+    line-height: 1.4;
+
+}
+
+/* ==========================================
+   Card
+   ========================================== */
+
+.login-card {
+
+    width: 100%;
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    padding: 32px;
+
+    box-shadow: var(--shadow);
+
+    box-sizing: border-box;
+
+}
+
+
+/* ==========================================
+   Header
+   ========================================== */
+
+.login-header {
+
+    text-align: center;
+
+    margin-bottom: 28px;
+
+}
+
+.login-header h1 {
+
+    margin: 0;
+
+    font-size: 2rem;
+
+}
+
+.login-subtitle {
+
+    margin: 8px 0 0;
+
+    color: var(--text-secondary, var(--text));
+
+    line-height: 1.5;
+
+}
+
+
+/* ==========================================
+   Identity Provider Notice
+   ========================================== */
+
+.login-provider {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 14px;
+
+    margin-bottom: 20px;
+
+    background: var(--input-bg);
+
+    border: 1px solid var(--border);
+
+    border-radius: 8px;
+
+}
+
+.login-provider-icon {
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: var(--button-bg);
+
+    font-size: 1rem;
+
+}
+
+.login-provider strong {
+
+    display: block;
+
+    margin-bottom: 3px;
+
+}
+
+.login-provider p {
+
+    margin: 0;
+
+    color: var(--text-secondary, var(--text));
+
+    font-size: .9rem;
+
+    line-height: 1.4;
+
+}
+
+
+/* ==========================================
+   Sign In Button
+   ========================================== */
+
+.login-button {
+
+    width: 100%;
+
+    padding: 13px 16px;
+
+    border: none;
+
+    border-radius: 7px;
+
+    background: var(--button-bg);
+
+    color: var(--button-text);
+
+    font-size: 1rem;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+            background-color .2s ease,
+            transform .1s ease,
+            opacity .2s ease;
+
+}
+
+.login-button:hover:not(:disabled) {
+
+    background: var(--button-hover);
+
+}
+
+.login-button:active:not(:disabled) {
+
+    transform: translateY(1px);
+
+}
+
+.login-button:disabled {
+
+    opacity: .6;
+
+    cursor: not-allowed;
+
+}
+
+
+/* ==========================================
+   Error
+   ========================================== */
+
+.login-error {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+
+    margin-bottom: 16px;
+
+    padding: 12px 14px;
+
+    border: 1px solid #d32f2f;
+
+    border-radius: 7px;
+
+    background: rgba(211, 47, 47, .08);
+
+    color: #d32f2f;
+
+    font-size: .9rem;
+
+}
+
+.login-error strong {
+
+    font-size: .95rem;
+
+}
+
+
+/* ==========================================
+   Divider
+   ========================================== */
+
+.login-divider {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin: 24px 0;
+
+    color: var(--text-secondary, var(--text));
+
+    font-size: .85rem;
+
+}
+
+.login-divider::before,
+.login-divider::after {
+
+    content: "";
+
+    flex: 1;
+
+    height: 1px;
+
+    background: var(--border);
+
+}
+
+.login-divider span {
+
+    flex-shrink: 0;
+
+}
+
+
+/* ==========================================
+   Registration
+   ========================================== */
+
+.register-section {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 7px;
+
+    text-align: center;
+
+    color: var(--text-secondary, var(--text));
+
+}
+
+.register-link {
+
+    color: var(--button-bg);
+
+    text-decoration: none;
+
+    font-weight: 600;
+
+    transition: color .2s ease;
+
+}
+
+.register-link:hover {
+
+    color: var(--button-hover);
+
+    text-decoration: underline;
+
+}
+
+
+/* ==========================================
+   Footer
+   ========================================== */
+
+.login-footer {
+
+    margin: 18px 0 0;
+
+    text-align: center;
+
+    color: var(--text-secondary, var(--text));
+
+    font-size: .8rem;
+
+    line-height: 1.4;
+
+}
+
+
+/* ==========================================
+   Mobile
+   ========================================== */
+
+@media (max-width: 600px) {
+
+    .login-page {
+
+        padding: 24px 16px;
+
+    }
+
+    .login-logo {
+
+        width: 150px;
+
+        margin-bottom: 22px;
+
+    }
+
+    .login-logout-message {
+
+        padding: 12px 14px;
+
+    }
+
+    .login-logout-icon {
+
+        width: 34px;
+        height: 34px;
+
+    }
+
+    .login-card {
+
+        padding: 24px 20px;
+
+        border-radius: 10px;
+
+    }
+
+    .login-header h1 {
+
+        font-size: 1.7rem;
+
+    }
+}

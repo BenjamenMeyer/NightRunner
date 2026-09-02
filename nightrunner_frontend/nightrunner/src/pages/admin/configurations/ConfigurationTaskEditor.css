@@ -1,0 +1,178 @@
+/* ==========================================
+   Task Editor
+   ========================================== */
+
+.configuration-task-editor {
+    padding: 20px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    background: var(--page-bg);
+}
+
+.task-editor-heading {
+    margin-bottom: 18px;
+}
+
+.task-editor-heading h3 {
+    margin: 0;
+
+    color: var(--text-primary);
+
+    font-size: 16px;
+}
+
+.task-editor-heading p {
+    margin: 4px 0 0;
+
+    color: var(--text-secondary);
+
+    font-size: 13px;
+}
+
+/* ==========================================
+   Error
+   ========================================== */
+
+.task-editor-error {
+    margin-bottom: 16px;
+
+    padding: 10px 12px;
+
+    border: 1px solid #f3b5b5;
+    border-radius: 7px;
+
+    background: #ffdcdc;
+    color: #8b0000;
+
+    font-size: 13px;
+}
+
+/* ==========================================
+   Form
+   ========================================== */
+
+.task-editor-form {
+    display: grid;
+
+    grid-template-columns:
+        minmax(200px, 2fr)
+        minmax(180px, 1fr);
+
+    gap: 14px;
+}
+
+.task-instructions {
+    grid-column: 1 / -1;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+.form-field > span {
+    color: var(--text-primary);
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 11px 12px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    background: var(--card-bg);
+    color: var(--text-primary);
+
+    outline: none;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    resize: vertical;
+
+    transition:
+            border-color .15s,
+            box-shadow .15s;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    border-color: var(--button-bg);
+
+    box-shadow:
+            0 0 0 3px
+            rgba(0, 0, 0, .06);
+}
+
+/* ==========================================
+   Input Suffix
+   ========================================== */
+
+.input-with-suffix {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.input-with-suffix input {
+    flex: 1;
+}
+
+.input-with-suffix > span {
+    color: var(--text-secondary);
+
+    font-size: 13px;
+
+    white-space: nowrap;
+}
+
+/* ==========================================
+   Task Note
+   ========================================== */
+
+.task-note {
+    grid-column: 1 / -1;
+
+    padding: 12px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background: var(--card-bg);
+    color: var(--text-secondary);
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* ==========================================
+   Responsive
+   ========================================== */
+
+@media (max-width: 700px) {
+
+    .task-editor-form {
+        grid-template-columns: 1fr;
+    }
+
+    .task-instructions,
+    .task-note {
+        grid-column: auto;
+    }
+
+}

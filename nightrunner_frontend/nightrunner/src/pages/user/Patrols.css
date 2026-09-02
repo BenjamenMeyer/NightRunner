@@ -1,0 +1,98 @@
+.patrols-page {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 1.5rem;
+
+}
+
+.patrol-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fill, minmax(280px, 1fr));
+
+    gap: 1rem;
+
+}
+
+.patrol-card {
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    box-shadow: var(--shadow, none);
+
+}
+
+.patrol-card-header {
+
+    padding: 1rem 1.25rem;
+
+    background: var(--header-bg);
+
+    color: var(--header-text);
+
+}
+
+.patrol-card-header h2 {
+
+    margin: 0;
+
+    font-size: 1.1rem;
+
+}
+
+.patrol-card-body {
+
+    padding: 1.25rem;
+
+}
+
+.patrol-member-count {
+
+    color: var(--text-secondary);
+
+    font-size: .9rem;
+
+    margin-bottom: 1rem;
+
+}
+
+.patrol-members {
+
+    margin: 0;
+
+    padding-left: 1.25rem;
+
+}
+
+.patrol-members li {
+
+    margin-bottom: .5rem;
+
+}
+
+.patrol-members li:last-child {
+
+    margin-bottom: 0;
+
+}
+
+@media (max-width: 768px) {
+
+    .patrol-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+}

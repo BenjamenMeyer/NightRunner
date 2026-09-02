@@ -1,0 +1,323 @@
+.live-scoring-container {
+
+    padding: 1rem;
+
+    max-width: 1800px;
+
+    margin: 0 auto;
+
+}
+
+.live-scoring-page {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 1.5rem;
+
+}
+
+/* ---------- Header ---------- */
+
+.page-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 1rem;
+
+    flex-wrap: wrap;
+
+}
+
+.view-buttons {
+
+    display: flex;
+
+    gap: .75rem;
+
+    flex-wrap: wrap;
+
+}
+
+.view-buttons .primary-button.active {
+
+    outline: 3px solid rgba(255,255,255,.35);
+
+}
+
+/* ---------- Table Wrapper ---------- */
+
+.live-table-wrapper {
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+
+    background: var(--card-bg);
+
+}
+
+/* ---------- Manual Scroll ---------- */
+
+.live-table-wrapper.manual {
+
+    overflow: auto;
+
+    max-height: calc(100vh - 220px);
+
+}
+
+/* ---------- Auto Scroll ---------- */
+
+.live-table-wrapper.auto {
+
+    overflow-y: auto;
+
+    max-height: calc(100vh - 220px);
+
+    scrollbar-width: none;
+
+}
+
+.live-table-wrapper.auto::-webkit-scrollbar {
+
+    display: none;
+
+}
+
+/* ---------- Fit ---------- */
+
+.live-table-wrapper.fit {
+
+    overflow: hidden;
+
+}
+
+/* ---------- Table ---------- */
+
+.live-table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    min-width: 800px;
+
+}
+
+.live-table th,
+.live-table td {
+
+    text-align: center;
+
+    padding: 1rem;
+
+    border: 1px solid var(--border);
+
+}
+
+.live-table th {
+
+    background: var(--header-bg);
+
+    color: var(--header-text);
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 3;
+
+}
+
+/* ---------- Sticky Patrol Column ---------- */
+
+.sticky-column {
+
+    position: sticky;
+
+    left: 0;
+
+    z-index: 2;
+
+    background: var(--card-bg);
+
+}
+
+.live-table th.sticky-column {
+
+    background: var(--header-bg);
+
+    z-index: 4;
+
+}
+
+.patrol-name {
+
+    text-align: left;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+}
+
+/* ---------- Normal Cell Size ---------- */
+
+.live-table td {
+
+    width: 80px;
+
+    height: 70px;
+
+    font-size: 1.2rem;
+
+}
+
+/* ---------- Fit View ---------- */
+
+.live-table.fit {
+
+    table-layout: fixed;
+
+}
+
+.live-table.fit th,
+.live-table.fit td {
+
+    padding: .35rem;
+
+    height: clamp(26px, 3vh, 46px);
+
+    font-size: clamp(.6rem, .9vw, 1rem);
+
+}
+
+.live-table.fit td {
+
+    width: auto;
+
+}
+
+.live-table.fit .patrol-name {
+
+    font-size: clamp(.6rem, .9vw, .95rem);
+
+}
+
+/* ---------- Status Cells ---------- */
+
+.completed {
+
+    background: #4CAF50;
+
+    color: white;
+
+    font-weight: bold;
+
+}
+
+.current {
+
+    background: #1976D2;
+
+    color: white;
+
+    font-weight: bold;
+
+}
+
+/* ---------- Legend ---------- */
+
+.legend {
+
+    display: flex;
+
+    gap: 2rem;
+
+    flex-wrap: wrap;
+
+}
+
+.legend-item {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: .5rem;
+
+}
+
+.legend-box {
+
+    width: 18px;
+
+    height: 18px;
+
+    border-radius: 4px;
+
+    border: 1px solid var(--border);
+
+}
+
+.legend-box.completed {
+
+    background: #4CAF50;
+
+}
+
+.legend-box.current {
+
+    background: #1976D2;
+
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 768px) {
+
+    .page-header {
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+    }
+
+    .view-buttons {
+
+        width: 100%;
+
+    }
+
+    .view-buttons .primary-button {
+
+        flex: 1;
+
+    }
+
+    .live-table {
+
+        font-size: .9rem;
+
+    }
+
+    .live-table td {
+
+        width: 60px;
+
+        height: 60px;
+
+    }
+
+}

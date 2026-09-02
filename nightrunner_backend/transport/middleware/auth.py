@@ -1,9 +1,9 @@
-import asyncio
 import logging
 import falcon
 import jwt
 from jwt import PyJWKClient
 from typing import Optional, List, Dict, Any
+import asyncio
 from nightrunner_backend.config.settings import settings
 from nightrunner_backend.app_context import get_driver
 
@@ -32,6 +32,10 @@ class AuthMiddleware:
         # Initialise context with safe defaults; overwritten below as appropriate.
         req.context.user = None
         req.context.roles = []
+
+        # CORS preflight requests are not authenticated.
+        if req.method == "OPTIONS":
+            return
 
         # Skip auth for health endpoint
         if req.path == "/health":

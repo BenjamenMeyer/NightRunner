@@ -19,6 +19,7 @@ services:
     ports:
       - "8000:8000"
     environment:
+      FRONT_END_URL: "http://localhost:3000"
       DATABASE_URL: postgresql://nightrunner:nightrunner_password@db:5432/nightrunner
       DEV_MODE: "false"
       OIDC_ISSUER: "http://localhost:4000"
@@ -44,6 +45,13 @@ services:
     environment:
       ASPNETCORE_URLS: "http://+:4000"
       ISSUER: "http://localhost:4000"
+      SERVER_OPTIONS_INLINE: |
+        {
+          "Authentication": {
+            "CookieSameSiteMode": "Lax",
+            "CheckSessionCookieSameSiteMode": "Lax"
+          }
+        }
       USERS_CONFIGURATION_INLINE: |
         [
           {
@@ -101,14 +109,22 @@ services:
         [
           {
             "ClientId": "client-id",
+            "Description": "Night Runner React Frontend",
             "ClientSecrets": ["secret"],
-            "AllowedGrantTypes": ["password", "client_credentials"],
+            "AllowedGrantTypes": ["password", "client_credentials", "authorization_code"],
             "AllowedScopes": ["openid", "profile", "email"],
             "AlwaysSendClientClaims": true,
             "ClientClaimsPrefix": "",
+            "RequireClientSecret": false,
             "Claims": [
               { "Type": "aud", "Value": "client-id" }
-            ]
+            ],
+            "RedirectUris": [
+                "http://localhost:3000/callback"
+            ],
+            "PostLogoutRedirectUris": [
+                "http://localhost:3000/login"
+            ],
           }
         ]
   seed:

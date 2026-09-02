@@ -1,0 +1,121 @@
+.not-found-page {
+
+    min-height: calc(100vh - 140px);
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 2rem;
+
+}
+
+.not-found-card {
+
+    width: 100%;
+
+    max-width: 600px;
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border);
+
+    border-radius: 16px;
+
+    padding: 3rem;
+
+    text-align: center;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+}
+
+.not-found-code {
+
+    font-size: 6rem;
+
+    font-weight: 800;
+
+    line-height: 1;
+
+    color: var(--button-bg);
+
+    margin-bottom: 1rem;
+
+}
+
+.not-found-card h1 {
+
+    margin: 0;
+
+    font-size: 2rem;
+
+    color: var(--text-primary);
+
+}
+
+.not-found-card p {
+
+    margin: 1rem auto 2rem;
+
+    max-width: 460px;
+
+    color: var(--text-secondary);
+
+    line-height: 1.6;
+
+}
+
+.not-found-actions {
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 1rem;
+
+    flex-wrap: wrap;
+
+}
+
+.not-found-actions button {
+
+    min-width: 180px;
+
+}
+
+@media (max-width: 600px) {
+
+    .not-found-card {
+
+        padding: 2rem;
+
+    }
+
+    .not-found-code {
+
+        font-size: 4.5rem;
+
+    }
+
+    .not-found-card h1 {
+
+        font-size: 1.6rem;
+
+    }
+
+    .not-found-actions {
+
+        flex-direction: column;
+
+    }
+
+    .not-found-actions button {
+
+        width: 100%;
+
+    }
+
+}

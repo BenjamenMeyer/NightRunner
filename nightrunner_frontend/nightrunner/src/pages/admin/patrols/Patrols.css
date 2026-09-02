@@ -1,0 +1,421 @@
+/* ==========================================
+   Page
+   ========================================== */
+
+.patrols-page {
+    width: 100%;
+}
+
+/* ==========================================
+   Page Header
+   ========================================== */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.page-eyebrow {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: var(--button-bg);
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.page-header h1 {
+    margin: 0;
+
+    color: var(--text-primary);
+}
+
+.page-header p {
+    margin: 6px 0 0;
+
+    color: var(--text-secondary);
+}
+
+/* ==========================================
+   Error
+   ========================================== */
+
+.error-banner {
+    margin-bottom: 20px;
+
+    padding: 14px 16px;
+
+    border: 1px solid #f3b5b5;
+    border-radius: 8px;
+
+    background: #ffdcdc;
+    color: #8b0000;
+}
+
+/* ==========================================
+   Toolbar
+   ========================================== */
+
+.patrol-toolbar {
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.search-wrapper {
+    position: relative;
+
+    flex: 1;
+}
+
+.search-icon {
+    position: absolute;
+
+    left: 14px;
+    top: 50%;
+
+    width: 18px;
+    height: 18px;
+
+    transform: translateY(-50%);
+
+    color: var(--text-secondary);
+
+    pointer-events: none;
+}
+
+.search-box {
+    width: 100%;
+
+    margin: 0;
+
+    padding: 12px 14px 12px 42px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    background: var(--card-bg);
+    color: var(--text-primary);
+
+    outline: none;
+
+    font-size: 14px;
+
+    transition:
+            border-color .15s,
+            box-shadow .15s;
+}
+
+.search-box:focus {
+    border-color: var(--button-bg);
+
+    box-shadow:
+            0 0 0 3px
+            rgba(0, 0, 0, .06);
+}
+
+.search-box::-webkit-search-cancel-button {
+    cursor: pointer;
+}
+
+.patrol-count {
+    flex-shrink: 0;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+}
+
+/* ==========================================
+   Panel
+   ========================================== */
+
+.patrol-panel {
+    overflow: hidden;
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.panel-header {
+    padding: 20px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.panel-header h2 {
+    margin: 0;
+
+    color: var(--text-primary);
+
+    font-size: 18px;
+}
+
+.panel-header p {
+    margin: 5px 0 0;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+}
+
+/* ==========================================
+   Table
+   ========================================== */
+
+.patrol-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+.patrol-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 14px;
+}
+
+.patrol-table th {
+    padding: 12px 16px;
+
+    background: var(--page-bg);
+
+    color: var(--text-secondary);
+
+    border-bottom: 1px solid var(--border);
+
+    font-size: 12px;
+    font-weight: 700;
+
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+
+    white-space: nowrap;
+}
+
+.patrol-table td {
+    padding: 14px 16px;
+
+    color: var(--text-primary);
+
+    border-bottom: 1px solid var(--border);
+
+    vertical-align: middle;
+}
+
+.patrol-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.patrol-table tbody tr {
+    transition:
+            background-color .15s;
+}
+
+.patrol-table tbody tr:hover {
+    background: var(--page-bg);
+}
+
+.patrol-name strong {
+    font-size: 15px;
+}
+
+.member-count {
+    font-weight: 600;
+}
+
+.actions-column {
+    width: 1%;
+}
+
+.row-actions {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 8px;
+}
+
+/* ==========================================
+   Buttons
+   ========================================== */
+
+.primary-button,
+.secondary-button,
+.danger {
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    transition:
+            background-color .15s,
+            border-color .15s,
+            opacity .15s;
+
+}
+
+.primary-button {
+    padding: 10px 18px;
+
+    background: var(--button-bg);
+    color: var(--button-text);
+
+    border: 1px solid var(--button-bg);
+
+    white-space: nowrap;
+}
+
+.primary-button:hover {
+    background: var(--button-hover);
+}
+
+.secondary-button {
+    padding: 10px 18px;
+
+    background: var(--card-bg);
+    color: var(--text-primary);
+
+    border: 1px solid var(--border);
+}
+
+.secondary-button:hover {
+    background: var(--page-bg);
+}
+
+.danger {
+    padding: 10px 18px;
+
+    background: #c62828;
+    color: #ffffff;
+
+    border: 1px solid #c62828;
+}
+
+.danger:hover {
+    background: #a51f1f;
+}
+
+.primary-button.small,
+.secondary-button.small,
+.danger.small {
+    padding: 7px 12px;
+
+    font-size: 13px;
+}
+
+/* ==========================================
+   Loading / Empty
+   ========================================== */
+
+.loading-panel,
+.empty-panel {
+    padding: 60px 20px;
+
+    color: var(--text-secondary);
+
+    text-align: center;
+}
+
+.loading-spinner {
+    display: inline-block;
+
+    width: 16px;
+    height: 16px;
+
+    margin-right: 8px;
+
+    border: 2px solid var(--border);
+    border-top-color: var(--button-bg);
+
+    border-radius: 50%;
+
+    vertical-align: -3px;
+
+    animation: patrol-spin .7s linear infinite;
+}
+
+@keyframes patrol-spin {
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+.empty-icon {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 16px;
+
+    border: 1px solid var(--border);
+    border-radius: 50%;
+
+    color: var(--button-bg);
+
+    font-size: 24px;
+}
+
+.empty-panel h3 {
+    margin: 0 0 6px;
+
+    color: var(--text-primary);
+}
+
+.empty-panel p {
+    margin: 0 0 20px;
+
+    color: var(--text-secondary);
+}
+
+/* ==========================================
+   Responsive
+   ========================================== */
+
+@media (max-width: 768px) {
+
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-header .primary-button {
+        width: 100%;
+    }
+
+    .patrol-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .patrol-count {
+        text-align: right;
+    }
+
+    .patrol-table {
+        min-width: 650px;
+    }
+
+}
