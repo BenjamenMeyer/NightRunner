@@ -119,8 +119,9 @@ jobs:
         working-directory: nightrunner_frontend
         run: npm run lint
 
-      - name: Start Docker Compose Environment (Backend + OIDC Server + Postgres)
-        run: docker compose up -d --build
+      - name: Start Backend Stack (App + OIDC Server + Postgres)
+        run: docker compose up -d app
+
 
       - name: Gate 2: Run Unit & Integration Tests (vitest against Docker Compose stack)
         working-directory: nightrunner_frontend
