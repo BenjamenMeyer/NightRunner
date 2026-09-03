@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import ApiService from "@/api/ApiService.js";
+import { useEventContext } from "@/api/helpers/EventContext";
 
 import StationDetails from "./StationDetails.jsx";
 
@@ -10,6 +11,11 @@ import "./Stations.css";
 export default function Stations() {
 
     const navigate = useNavigate();
+
+    const {
+        eventId,
+        loading: eventLoading
+    } = useEventContext();
 
     const [stations, setStations] = useState([]);
     const [selectedStation, setSelectedStation] = useState(null);
@@ -21,32 +27,59 @@ export default function Stations() {
 
     useEffect(() => {
 
-        loadStations();
+        if (eventLoading) {
+            return;
+        }
 
-    }, []);
+        if (!eventId) {
 
-    async function loadStations() {
+            setStations([]);
+            setSelectedStation(null);
+            setLoading(false);
+            setError(
+                "No event is currently selected."
+            );
+
+            return;
+
+        }
+
+        loadStations(eventId);
+
+    }, [eventId, eventLoading]);
+
+    async function loadStations(selectedEventId) {
 
         try {
 
             setLoading(true);
             setError(null);
 
-            const stations =
-                await ApiService.stationData.getStations();
-
-            setStations(stations);
-
-            if (selectedStation) {
-
-                const updated = stations.find(
-                    station =>
-                        station.id === selectedStation.id
+            const stationResponse =
+                await ApiService.stationData.getStations(
+                    selectedEventId
                 );
 
-                setSelectedStation(updated ?? null);
+            const loadedStations =
+                stationResponse ?? [];
 
-            }
+            setStations(loadedStations);
+
+            setSelectedStation(current => {
+
+                if (!current) {
+                    return null;
+                }
+
+                const updated =
+                    loadedStations.find(
+                        station =>
+                            station.id === current.id
+                    );
+
+                return updated ?? null;
+
+            });
 
         } catch (error) {
 
@@ -56,7 +89,7 @@ export default function Stations() {
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to load stations."
             );
 
@@ -73,7 +106,9 @@ export default function Stations() {
         if (!window.confirm(
             "Delete this station? This action cannot be undone."
         )) {
+
             return;
+
         }
 
         try {
@@ -86,7 +121,7 @@ export default function Stations() {
                 setSelectedStation(null);
             }
 
-            await loadStations();
+            await loadStations(eventId);
 
         } catch (error) {
 
@@ -96,7 +131,7 @@ export default function Stations() {
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to delete station."
             );
 
@@ -106,7 +141,8 @@ export default function Stations() {
 
     const filteredStations = useMemo(() => {
 
-        const query = search.trim().toLowerCase();
+        const query =
+            search.trim().toLowerCase();
 
         if (!query) {
             return stations;
@@ -120,11 +156,25 @@ export default function Stations() {
 
     }, [stations, search]);
 
+    if (eventLoading) {
+
+        return (
+
+            <div className="stations-page">
+
+                <div className="loading-panel">
+                    Loading event...
+                </div>
+
+            </div>
+
+        );
+
+    }
+
     return (
 
         <div className="stations-page">
-
-            {/* Page Header */}
 
             <header className="page-header">
 
@@ -151,25 +201,20 @@ export default function Stations() {
                     onClick={() =>
                         navigate("/admin/stations/create")
                     }
+                    disabled={!eventId}
                 >
                     + Create Station
                 </button>
 
             </header>
 
-            {/* Error */}
-
             {error && (
 
                 <div className="error-banner">
-
                     {error}
-
                 </div>
 
             )}
-
-            {/* Toolbar */}
 
             <div className="station-toolbar">
 
@@ -185,15 +230,8 @@ export default function Stations() {
                         strokeLinejoin="round"
                         aria-hidden="true"
                     >
-
-                        <circle
-                            cx="11"
-                            cy="11"
-                            r="7"
-                        />
-
+                        <circle cx="11" cy="11" r="7" />
                         <path d="m20 20-4-4" />
-
                     </svg>
 
                     <input
@@ -209,8 +247,7 @@ export default function Stations() {
 
                 <span className="station-count">
 
-                    {filteredStations.length}
-                    {" "}
+                    {filteredStations.length}{" "}
                     {filteredStations.length === 1
                         ? "station"
                         : "stations"
@@ -220,11 +257,7 @@ export default function Stations() {
 
             </div>
 
-            {/* Main Layout */}
-
             <div className="station-layout">
-
-                {/* Station List */}
 
                 <section className="station-list-panel">
 
@@ -265,12 +298,10 @@ export default function Stations() {
                                 </h3>
 
                                 <p>
-
                                     {search
                                         ? "Try a different search."
                                         : "Create a station to get started."
                                     }
-
                                 </p>
 
                             </div>
@@ -319,8 +350,6 @@ export default function Stations() {
                     </div>
 
                 </section>
-
-                {/* Details */}
 
                 <StationDetails
                     station={selectedStation}

@@ -1,13 +1,25 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+    useEffect,
+    useMemo,
+    useState
+} from "react";
+
 import { useNavigate } from "react-router-dom";
 
 import ApiService from "@/api/ApiService.js";
+import { useEventContext } from "@/api/helpers/EventContext";
 
 import "./Patrols.css";
 
 export default function Patrols() {
 
     const navigate = useNavigate();
+
+    const {
+        eventId,
+        loading: eventLoading,
+        error: eventError
+    } = useEventContext();
 
     const [patrols, setPatrols] = useState([]);
 
@@ -18,11 +30,15 @@ export default function Patrols() {
 
     useEffect(() => {
 
-        loadPatrols();
+        if (!eventId) {
+            return;
+        }
 
-    }, []);
+        loadPatrols(eventId);
 
-    async function loadPatrols() {
+    }, [eventId]);
+
+    async function loadPatrols(selectedEventId) {
 
         try {
 
@@ -30,9 +46,11 @@ export default function Patrols() {
             setError(null);
 
             const data =
-                await ApiService.patrolData.getPatrols();
+                await ApiService.patrolData.getPatrols(
+                    selectedEventId
+                );
 
-            setPatrols(data);
+            setPatrols(data ?? []);
 
         } catch (error) {
 
@@ -42,7 +60,7 @@ export default function Patrols() {
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to load patrols."
             );
 
@@ -93,7 +111,7 @@ export default function Patrols() {
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to delete patrol."
             );
 
@@ -103,9 +121,8 @@ export default function Patrols() {
 
     const filteredPatrols = useMemo(() => {
 
-        const query = search
-            .trim()
-            .toLowerCase();
+        const query =
+            search.trim().toLowerCase();
 
         if (!query) {
             return patrols;
@@ -118,6 +135,42 @@ export default function Patrols() {
         );
 
     }, [patrols, search]);
+
+    if (eventLoading) {
+
+        return (
+
+            <div className="patrols-page">
+
+                <div className="loading-panel">
+
+                    Loading event...
+
+                </div>
+
+            </div>
+
+        );
+
+    }
+
+    if (eventError) {
+
+        return (
+
+            <div className="patrols-page">
+
+                <div className="error-banner">
+
+                    {eventError}
+
+                </div>
+
+            </div>
+
+        );
+
+    }
 
     return (
 
@@ -202,9 +255,7 @@ export default function Patrols() {
                 <span className="patrol-count">
 
                     {filteredPatrols.length}
-
                     {" "}
-
                     {filteredPatrols.length === 1
                         ? "patrol"
                         : "patrols"
@@ -336,11 +387,11 @@ export default function Patrols() {
 
                                         <td>
 
-                                            <span className="member-count">
+                                                <span className="member-count">
 
-                                                {patrol.members?.length ?? 0}
+                                                    {patrol.members?.length ?? 0}
 
-                                            </span>
+                                                </span>
 
                                             {" "}
 

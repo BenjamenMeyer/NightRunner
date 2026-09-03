@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import ApiService from "@/api/ApiService";
+import EventSelector from "@/api/helpers/EventSelector";
 
 import "./Patrols.css";
 
@@ -9,8 +10,9 @@ export default function Patrols() {
     const [patrols, setPatrols] = useState([]);
 
     const [loading, setLoading] = useState(true);
-
     const [error, setError] = useState(null);
+
+    const [showEventSelector, setShowEventSelector] = useState(false);
 
     useEffect(() => {
 
@@ -18,21 +20,55 @@ export default function Patrols() {
 
     }, []);
 
-    async function loadPatrols() {
+    async function loadPatrols(eventId = null) {
 
         try {
 
             setLoading(true);
             setError(null);
 
-            const response = await ApiService.patrolData.getPatrols();
+            const resolvedEventId =
+                eventId ??
+                ApiService.userData.getEventId();
 
-            setPatrols(response);
+            /*
+             * System administrators may not have an event
+             * assigned to their account. Let them select one.
+             */
+            if (!resolvedEventId) {
+
+                if (ApiService.userData.isSystemAdmin()) {
+
+                    setShowEventSelector(true);
+                    setLoading(false);
+
+                    return;
+
+                }
+
+                throw new Error(
+                    "No event is currently assigned to your account."
+                );
+
+            }
+
+            const response =
+                await ApiService.patrolData.getPatrols(
+                    resolvedEventId
+                );
+
+            setPatrols(response ?? []);
 
         } catch (error) {
 
+            console.error(
+                "Failed to load patrols:",
+                error
+            );
+
             setError(
-                error?.message ?? "Unable to load patrols."
+                error?.message ??
+                "Unable to load patrols."
             );
 
         } finally {
@@ -40,6 +76,14 @@ export default function Patrols() {
             setLoading(false);
 
         }
+
+    }
+
+    async function handleEventSelected(eventId) {
+
+        setShowEventSelector(false);
+
+        await loadPatrols(eventId);
 
     }
 
@@ -64,6 +108,14 @@ export default function Patrols() {
     return (
 
         <div className="patrols-page">
+
+            {showEventSelector && (
+
+                <EventSelector
+                    onSelect={handleEventSelected}
+                />
+
+            )}
 
             <div className="page-header">
 
@@ -104,77 +156,82 @@ export default function Patrols() {
 
             )}
 
-            <div className="patrol-grid">
+            {!error && patrols.length > 0 && (
 
-                {patrols.map(patrol => (
+                <div className="patrol-grid">
 
-                    <div
-                        className="patrol-card"
-                        key={patrol.id}
-                    >
+                    {patrols.map(patrol => (
 
-                        <div className="patrol-card-header">
+                        <div
+                            className="patrol-card"
+                            key={patrol.id}
+                        >
 
-                            <h2>
-                                {patrol.programName}
-                            </h2>
+                            <div className="patrol-card-header">
 
-                        </div>
-
-                        <div className="patrol-card-body">
-
-                            <h4>
-                                Troop: {patrol.members?.[0].troop ?? "Unknown"}
-                            </h4>
-
-                            <div className="patrol-member-count">
-
-                                {patrol.members?.length ?? 0}
-
-                                {" "}
-
-                                {(patrol.members?.length ?? 0) === 1
-                                    ? "Member"
-                                    : "Members"}
+                                <h2>
+                                    {patrol.programName}
+                                </h2>
 
                             </div>
 
-                            {patrol.members?.length > 0 && (
+                            <div className="patrol-card-body">
 
-                                <ul className="patrol-members">
+                                <h4>
+                                    Troop:{" "}
+                                    {patrol.members?.[0]?.troop ?? "Unknown"}
+                                </h4>
 
-                                    {patrol.members.map(member => (
+                                <div className="patrol-member-count">
 
-                                        <li key={member.id}>
+                                    {patrol.members?.length ?? 0}
 
-                                            <strong>
-                                                {member.name}
-                                            </strong>
+                                    {" "}
 
-                                            {member.rank && (
+                                    {(patrol.members?.length ?? 0) === 1
+                                        ? "Member"
+                                        : "Members"}
 
-                                                <span>
-                                                    {" "}
-                                                    — {member.rank}
-                                                </span>
+                                </div>
 
-                                            )}
+                                {patrol.members?.length > 0 && (
 
-                                        </li>
+                                    <ul className="patrol-members">
 
-                                    ))}
+                                        {patrol.members.map(member => (
 
-                                </ul>
+                                            <li key={member.id}>
 
-                            )}
+                                                <strong>
+                                                    {member.name}
+                                                </strong>
+
+                                                {member.rank && (
+
+                                                    <span>
+                                                        {" "}
+                                                        — {member.rank}
+                                                    </span>
+
+                                                )}
+
+                                            </li>
+
+                                        ))}
+
+                                    </ul>
+
+                                )}
+
+                            </div>
 
                         </div>
 
-                    </div>
+                    ))}
 
-                ))}
+                </div>
 
-            </div>
+            )}
 
         </div>
 

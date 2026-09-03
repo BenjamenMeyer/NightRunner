@@ -1,23 +1,27 @@
-import { useEffect, useState } from "react";
+import {
+    useEffect,
+    useState
+} from "react";
+
+import ApiService from "@/api/ApiService.js";
+import { useEventContext } from "@/api/helpers/EventContext";
 
 import "./EventManager.css";
-import ApiService from "@/api/ApiService.js";
 
 export default function EventManager() {
 
-    const [loading, setLoading] = useState(true);
+    const {
+        event,
+        eventId,
+        loading: eventLoading,
+        error: eventError
+    } = useEventContext();
 
     const [saving, setSaving] = useState(false);
 
     const [error, setError] = useState(null);
 
     const [success, setSuccess] = useState(null);
-
-    const [event, setEvent] = useState(null);
-
-    const [events, setEvents] = useState([]);
-
-    const [selectedEventId, setSelectedEventId] = useState("");
 
     const [form, setForm] = useState({
         name: "",
@@ -26,178 +30,29 @@ export default function EventManager() {
         roundingPrecision: 1000
     });
 
-
-    /*
-     * Load the user's current event.
-     */
     useEffect(() => {
 
-        async function loadEvent() {
-
-            try {
-
-                setLoading(true);
-                setError(null);
-
-                const user = ApiService.userData.get();
-
-                if (!user) {
-
-                    throw new Error(
-                        "Unable to determine the current user."
-                    );
-
-                }
-
-                /*
-                 * Normal event-scoped user.
-                 *
-                 * Their event is fixed by user.event.
-                 */
-                if (user.event) {
-
-                    const response = await ApiService.eventData.getEvent(user.event);
-
-                    setEvent(response);
-
-                    setForm({
-                        name: response.name ?? "",
-                        date: response.date ?? "",
-                        description:
-                            response.description ?? "",
-                        roundingPrecision:
-                            response.roundingPrecision ?? 1000
-                    });
-
-                    return;
-
-                }
-
-
-                /*
-                 * A System Admin is allowed to have no event.
-                 *
-                 * Give them a list of events to select from.
-                 */
-                if (ApiService.userData.isSystemAdmin()) {
-
-                    const response =
-                        await ApiService.eventData.getEvents();
-
-                    setEvents(
-                        Array.isArray(response)
-                            ? response
-                            : response.events ?? []
-                    );
-
-                    return;
-
-                }
-
-
-                /*
-                 * Non-admin without an event.
-                 */
-                throw new Error(
-                    "No event is currently assigned to your account."
-                );
-
-            }
-            catch (error) {
-
-                console.error(
-                    "Failed to load event:",
-                    error
-                );
-
-                setError(
-                    error.message ??
-                    "Failed to load the event."
-                );
-
-            }
-            finally {
-
-                setLoading(false);
-
-            }
-
-        }
-
-        loadEvent();
-
-    }, []);
-
-
-    /*
-     * Load a selected event.
-     *
-     * This is only reachable for a System Admin who
-     * does not already have an event assigned.
-     */
-    async function handleEventSelect(eventId) {
-
-        setSelectedEventId(eventId);
-
-        setError(null);
-        setSuccess(null);
-
-        if (!eventId) {
-
-            setEvent(null);
-
+        if (!event) {
             return;
-
         }
 
-        try {
+        setForm({
+            name: event.name ?? "",
+            date: event.date ?? "",
+            description:
+                event.description ?? "",
+            roundingPrecision:
+                event.roundingPrecision ?? 1000
+        });
 
-            setLoading(true);
+    }, [event]);
 
-            const response = await ApiService.eventData.getEvent(eventId);
-
-            setEvent(response);
-
-            setForm({
-                name: response.name ?? "",
-                date: response.date ?? "",
-                description:
-                    response.description ?? "",
-                roundingPrecision:
-                    response.roundingPrecision ?? 1000
-            });
-
-        }
-        catch (error) {
-
-            console.error(
-                "Failed to load selected event:",
-                error
-            );
-
-            setError(
-                error.message ??
-                "Failed to load the selected event."
-            );
-
-            setEvent(null);
-
-        }
-        finally {
-
-            setLoading(false);
-
-        }
-
-    }
-
-
-    function handleChange(event) {
+    function handleChange(inputEvent) {
 
         const {
             name,
             value
-        } = event.target;
+        } = inputEvent.target;
 
         setForm(previous => ({
             ...previous,
@@ -212,7 +67,6 @@ export default function EventManager() {
 
     }
 
-
     async function handleSubmit(submitEvent) {
 
         submitEvent.preventDefault();
@@ -224,34 +78,59 @@ export default function EventManager() {
         try {
 
             if (!form.name.trim()) {
-                throw new Error("Event name is required.");
+
+                throw new Error(
+                    "Event name is required."
+                );
+
             }
 
             if (!form.date) {
-                throw new Error("Event date is required.");
+
+                throw new Error(
+                    "Event date is required."
+                );
+
             }
 
-            if (!event?.id) {
-                throw new Error("No event is currently selected.");
+            if (!eventId || !event?.id) {
+
+                throw new Error(
+                    "No event is currently selected."
+                );
+
             }
 
-            const updatedEvent = await ApiService.eventData.updateEvent(
-                event.id,
-                {
-                    ...event,
-                    name: form.name.trim(),
-                    date: form.date,
-                    description: form.description.trim(),
-                    roundingPrecision: form.roundingPrecision
-                }
-            );
+            const updatedEvent =
+                await ApiService.eventData.updateEvent(
+                    event.id,
+                    {
+                        ...event,
 
-            setEvent(updatedEvent);
+                        name:
+                            form.name.trim(),
+
+                        date:
+                        form.date,
+
+                        description:
+                            form.description.trim(),
+
+                        roundingPrecision:
+                        form.roundingPrecision
+                    }
+                );
 
             setForm({
-                name: updatedEvent.name ?? "",
-                date: updatedEvent.date ?? "",
-                description: updatedEvent.description ?? "",
+                name:
+                    updatedEvent.name ?? "",
+
+                date:
+                    updatedEvent.date ?? "",
+
+                description:
+                    updatedEvent.description ?? "",
+
                 roundingPrecision:
                     updatedEvent.roundingPrecision ?? 1000
             });
@@ -269,7 +148,7 @@ export default function EventManager() {
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to save event."
             );
 
@@ -282,8 +161,7 @@ export default function EventManager() {
 
     }
 
-
-    if (loading) {
+    if (eventLoading) {
 
         return (
 
@@ -303,12 +181,24 @@ export default function EventManager() {
 
     }
 
+    if (eventError) {
 
-    /*
-     * No event selected.
-     *
-     * Only a System Admin can get here.
-     */
+        return (
+
+            <div className="event-manager">
+
+                <div className="error-banner">
+
+                    {eventError}
+
+                </div>
+
+            </div>
+
+        );
+
+    }
+
     if (!event) {
 
         return (
@@ -319,99 +209,23 @@ export default function EventManager() {
 
                     <div>
 
-                        <h1>Event</h1>
+                        <h1>
+                            Event
+                        </h1>
 
                         <p>
-                            Select an event to manage.
+                            No event is currently selected.
                         </p>
 
                     </div>
 
                 </div>
 
-
-                {error && (
-
-                    <div className="error-banner">
-
-                        {error}
-
-                    </div>
-
-                )}
-
-
-                {ApiService.userData.isSystemAdmin() && !error && (
-
-                    <section className="admin-section">
-
-                        <div className="section-header">
-
-                            <div>
-
-                                <h2>
-                                    Select Event
-                                </h2>
-
-                                <p>
-                                    Select an event to access its
-                                    management tools.
-                                </p>
-
-                            </div>
-
-                        </div>
-
-
-                        <div className="form-group">
-
-                            <label htmlFor="event-select">
-
-                                Event
-
-                            </label>
-
-                            <select
-                                id="event-select"
-                                value={selectedEventId}
-                                onChange={event =>
-                                    handleEventSelect(
-                                        event.target.value
-                                    )
-                                }
-                            >
-
-                                <option value="">
-                                    Select an event...
-                                </option>
-
-                                {events.map(event => (
-
-                                    <option
-                                        key={event.id}
-                                        value={event.id}
-                                    >
-
-                                        {event.name}
-
-                                    </option>
-
-                                ))}
-
-                            </select>
-
-                        </div>
-
-                    </section>
-
-                )}
-
             </div>
 
         );
 
     }
-
 
     return (
 
@@ -434,7 +248,6 @@ export default function EventManager() {
 
             </div>
 
-
             {error && (
 
                 <div className="error-banner">
@@ -445,7 +258,6 @@ export default function EventManager() {
 
             )}
 
-
             {success && (
 
                 <div className="success-banner">
@@ -455,7 +267,6 @@ export default function EventManager() {
                 </div>
 
             )}
-
 
             <form
                 className="event-form"
@@ -480,7 +291,6 @@ export default function EventManager() {
 
                     </div>
 
-
                     <div className="form-grid">
 
                         <div className="form-group">
@@ -501,7 +311,6 @@ export default function EventManager() {
 
                         </div>
 
-
                         <div className="form-group">
 
                             <label htmlFor="event-date">
@@ -520,7 +329,6 @@ export default function EventManager() {
 
                         </div>
 
-
                         <div className="form-group form-group-full">
 
                             <label htmlFor="event-description">
@@ -537,7 +345,6 @@ export default function EventManager() {
                             />
 
                         </div>
-
 
                         <div className="form-group">
 
@@ -567,7 +374,6 @@ export default function EventManager() {
 
                 </section>
 
-
                 <section className="admin-section">
 
                     <div className="section-header">
@@ -586,7 +392,6 @@ export default function EventManager() {
 
                     </div>
 
-
                     <div className="event-information-grid">
 
                         <div>
@@ -601,7 +406,6 @@ export default function EventManager() {
 
                         </div>
 
-
                         <div>
 
                             <span className="information-label">
@@ -614,7 +418,6 @@ export default function EventManager() {
 
                         </div>
 
-
                         <div>
 
                             <span className="information-label">
@@ -626,7 +429,6 @@ export default function EventManager() {
                             </strong>
 
                         </div>
-
 
                         <div>
 
@@ -643,7 +445,6 @@ export default function EventManager() {
                     </div>
 
                 </section>
-
 
                 <div className="form-actions">
 

@@ -57,13 +57,13 @@ export default class StationService {
 
         }
 
-        return this.fakeStations.find(
-            station => station.id === stationId
-        );
-
-        //return await this.transport.get(
-        //    `/stations/${stationId}`
+        //return this.fakeStations.find(
+        //    station => station.id === stationId
         //);
+
+        return await this.transport.get(
+            `/stations/${stationId}`
+        );
 
     }
 
@@ -90,12 +90,12 @@ export default class StationService {
 
         }
 
-        return this.fakeStations
+        // this.fakeStations
 
 
-        //return await this.transport.get(
-        //    `/stations?event=${resolvedEventId}`
-        //);
+        return await this.transport.get(
+            `/stations?event=${resolvedEventId}`
+        );
 
     }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import ApiService from "@/api/ApiService";
+import EventSelector from "@/api/helpers/EventSelector";
 
 import QRScanner from "./QRScanner";
 import ScoreForm from "./ScoreForm";
@@ -8,10 +9,6 @@ import ScoreForm from "./ScoreForm";
 import "./Scoring.css";
 
 export default function Scoring() {
-
-    // TODO: Replace with the logged-in user's assigned station.
-    // If null, the user is assumed to be HQ and may choose a station.
-    const assignedStation = null;
 
     const [loading, setLoading] = useState(true);
 
@@ -23,11 +20,11 @@ export default function Scoring() {
 
     const [selectedPatrol, setSelectedPatrol] = useState(null);
 
-    const [selectedStation, setSelectedStation] = useState(
-        assignedStation
-    );
+    const [selectedStation, setSelectedStation] = useState(null);
 
     const [showScanner, setShowScanner] = useState(false);
+
+    const [showEventSelector, setShowEventSelector] = useState(false);
 
     const [scoringStarted, setScoringStarted] = useState(false);
 
@@ -37,28 +34,64 @@ export default function Scoring() {
 
     }, []);
 
-    async function loadData() {
+    async function loadData(eventId = null) {
 
         try {
 
             setLoading(true);
-
             setError(null);
 
+            const resolvedEventId =
+                eventId ??
+                ApiService.userData.getEventId();
+
+            /*
+             * System administrators may not have an event
+             * assigned to their account. Let them select one.
+             */
+            if (!resolvedEventId) {
+
+                if (ApiService.userData.isSystemAdmin()) {
+
+                    setShowEventSelector(true);
+                    setLoading(false);
+
+                    return;
+
+                }
+
+                throw new Error(
+                    "No event is currently assigned to your account."
+                );
+
+            }
+
             const [
-                patrols,
-                stations
+                patrolResponse,
+                stationResponse
             ] = await Promise.all([
-                ApiService.patrolData.getPatrols(),
-                ApiService.stationData.getStations()
+                ApiService.patrolData.getPatrols(
+                    resolvedEventId
+                ),
+                ApiService.stationData.getStations(
+                    resolvedEventId
+                )
             ]);
 
-            setPatrols(patrols);
-            setStations(stations);
+            setPatrols(patrolResponse ?? []);
+            setStations(stationResponse ?? []);
 
         } catch (error) {
 
-            setError(error.message);
+            console.error(
+                "Failed to load scoring data:",
+                error
+            );
+
+            setError(
+                error?.message ??
+                "Unable to load scoring data."
+            );
 
         } finally {
 
@@ -68,10 +101,22 @@ export default function Scoring() {
 
     }
 
+    async function handleEventSelected(eventId) {
+
+        setShowEventSelector(false);
+
+        setSelectedPatrol(null);
+        setSelectedStation(null);
+        setScoringStarted(false);
+
+        await loadData(eventId);
+
+    }
+
     function handleManualSelection(event) {
 
         const patrol = patrols.find(
-            patrol => patrol.id === event.target.value
+            patrol => String(patrol.id) === String(event.target.value)
         );
 
         setSelectedPatrol(patrol ?? null);
@@ -92,7 +137,7 @@ export default function Scoring() {
     function handleStationSelection(event) {
 
         const station = stations.find(
-            station => station.id === event.target.value
+            station => String(station.id) === String(event.target.value)
         );
 
         setSelectedStation(station ?? null);
@@ -102,8 +147,12 @@ export default function Scoring() {
 
     async function startScoring() {
 
+        if (!selectedPatrol || !selectedStation) {
+            return;
+        }
+
         // TODO:
-        // await ApiService.post("/scores/start", {
+        // await ApiService.scoreData.start({
         //     patrolId: selectedPatrol.id,
         //     stationId: selectedStation.id,
         //     timestamp: new Date().toISOString()
@@ -117,20 +166,24 @@ export default function Scoring() {
 
         <div className="scoring-page">
 
+            {showEventSelector && (
+
+                <EventSelector
+                    onSelect={handleEventSelected}
+                />
+
+            )}
+
             <div className="page-header">
 
                 <div>
 
                     <h1>
-
                         Scoring
-
                     </h1>
 
                     <p>
-
                         Record patrol scores for each station.
-
                     </p>
 
                 </div>
@@ -162,6 +215,7 @@ export default function Scoring() {
                     {!scoringStarted ? (
 
                         <>
+
                             <div className="score-selection-card">
 
                                 <h2>Select Patrol</h2>
@@ -177,7 +231,11 @@ export default function Scoring() {
                                         onClick={() => setShowScanner(true)}
                                     >
                                         <span className="scan-icon">📷</span>
-                                        <span>Scan QR Code</span>
+
+                                        <span>
+                                            Scan QR Code
+                                        </span>
+
                                     </button>
 
                                     <div className="selection-divider">
@@ -186,12 +244,15 @@ export default function Scoring() {
 
                                     <div className="manual-selection">
 
-                                        <label>Patrol</label>
+                                        <label>
+                                            Patrol
+                                        </label>
 
                                         <select
                                             value={selectedPatrol?.id ?? ""}
                                             onChange={handleManualSelection}
                                         >
+
                                             <option value="">
                                                 Select Patrol...
                                             </option>
@@ -221,9 +282,13 @@ export default function Scoring() {
 
                                         <div>
 
-                                            <small>Selected Patrol</small>
+                                            <small>
+                                                Selected Patrol
+                                            </small>
 
-                                            <div>{selectedPatrol.programName}</div>
+                                            <div>
+                                                {selectedPatrol.programName}
+                                            </div>
 
                                         </div>
 
@@ -233,37 +298,35 @@ export default function Scoring() {
 
                             </div>
 
-                            {!assignedStation && (
+                            <div className="score-selection-card">
 
-                                <div className="score-selection-card">
+                                <h2>
+                                    Select Station
+                                </h2>
 
-                                    <h2>Select Station</h2>
+                                <select
+                                    value={selectedStation?.id ?? ""}
+                                    onChange={handleStationSelection}
+                                >
 
-                                    <select
-                                        value={selectedStation?.id ?? ""}
-                                        onChange={handleStationSelection}
-                                    >
+                                    <option value="">
+                                        Select Station...
+                                    </option>
 
-                                        <option value="">
-                                            Select Station...
+                                    {stations.map(station => (
+
+                                        <option
+                                            key={station.id}
+                                            value={station.id}
+                                        >
+                                            {station.name}
                                         </option>
 
-                                        {stations.map(station => (
+                                    ))}
 
-                                            <option
-                                                key={station.id}
-                                                value={station.id}
-                                            >
-                                                {station.name}
-                                            </option>
+                                </select>
 
-                                        ))}
-
-                                    </select>
-
-                                </div>
-
-                            )}
+                            </div>
 
                         </>
 
@@ -271,7 +334,9 @@ export default function Scoring() {
 
                         <div className="score-selection-card">
 
-                            <h2>Currently Scoring</h2>
+                            <h2>
+                                Currently Scoring
+                            </h2>
 
                             <div className="selected-patrol">
 
@@ -279,9 +344,13 @@ export default function Scoring() {
 
                                 <div>
 
-                                    <small>Patrol</small>
+                                    <small>
+                                        Patrol
+                                    </small>
 
-                                    <div>{selectedPatrol.programName}</div>
+                                    <div>
+                                        {selectedPatrol.programName}
+                                    </div>
 
                                 </div>
 
@@ -293,9 +362,13 @@ export default function Scoring() {
 
                                 <div>
 
-                                    <small>Station</small>
+                                    <small>
+                                        Station
+                                    </small>
 
-                                    <div>{selectedStation.name}</div>
+                                    <div>
+                                        {selectedStation.name}
+                                    </div>
 
                                 </div>
 
@@ -324,11 +397,17 @@ export default function Scoring() {
 
                                 <p>
 
-                                    <strong>Patrol:</strong> {selectedPatrol.programName}
+                                    <strong>
+                                        Patrol:
+                                    </strong>{" "}
+                                    {selectedPatrol.programName}
 
                                     <br />
 
-                                    <strong>Station:</strong> {selectedStation.name}
+                                    <strong>
+                                        Station:
+                                    </strong>{" "}
+                                    {selectedStation.name}
 
                                 </p>
 
@@ -354,11 +433,7 @@ export default function Scoring() {
                             </h2>
 
                             <p>
-
-                                {assignedStation
-                                    ? "Select or scan a patrol to begin scoring."
-                                    : "Select a patrol and station to begin scoring."}
-
+                                Select a patrol and station to begin scoring.
                             </p>
 
                         </div>

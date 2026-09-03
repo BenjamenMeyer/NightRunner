@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import ApiService from "@/api/ApiService";
+import EventSelector from "@/api/helpers/EventSelector";
 
 import "./Events.css";
 
 export default function Events() {
-
-    const navigate = useNavigate();
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     const [events, setEvents] = useState([]);
     const [currentEvent, setCurrentEvent] = useState(null);
+
+    const [showEventSelector, setShowEventSelector] = useState(false);
 
     useEffect(() => {
 
@@ -28,7 +28,8 @@ export default function Events() {
             setLoading(true);
             setError(null);
 
-            const user = ApiService.userData.get();
+            const user =
+                await ApiService.userData.get();
 
             if (!user) {
 
@@ -49,13 +50,13 @@ export default function Events() {
             setEvents(knownEvents);
 
             /*
-             * Find the event currently assigned to the user.
+             * Use the user's assigned event when available.
              */
             if (user.event) {
 
                 const assignedEvent =
                     knownEvents.find(
-                        event => event.id === user.event
+                        event => String(event.id) === String(user.event)
                     );
 
                 if (assignedEvent) {
@@ -66,9 +67,8 @@ export default function Events() {
                 else {
 
                     /*
-                     * The current event may not be included in
-                     * the known-events response, so retrieve it
-                     * directly.
+                     * The assigned event may not be included in
+                     * the known-events response.
                      */
                     const eventResponse =
                         await ApiService.eventData.getEvent(
@@ -79,7 +79,25 @@ export default function Events() {
 
                 }
 
+                return;
+
             }
+
+            /*
+             * System administrators may not have an assigned event.
+             * Require them to select the event they are working with.
+             */
+            if (ApiService.userData.isSystemAdmin()) {
+
+                setShowEventSelector(true);
+
+                return;
+
+            }
+
+            throw new Error(
+                "No event is currently assigned to your account."
+            );
 
         }
         catch (error) {
@@ -90,8 +108,45 @@ export default function Events() {
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to load events."
+            );
+
+        }
+        finally {
+
+            setLoading(false);
+
+        }
+
+    }
+
+    async function handleEventSelected(eventId) {
+
+        try {
+
+            setError(null);
+            setLoading(true);
+
+            const eventResponse =
+                await ApiService.eventData.getEvent(
+                    eventId
+                );
+
+            setCurrentEvent(eventResponse);
+            setShowEventSelector(false);
+
+        }
+        catch (error) {
+
+            console.error(
+                "Failed to load selected event:",
+                error
+            );
+
+            setError(
+                error?.message ??
+                "Unable to load the selected event."
             );
 
         }
@@ -140,6 +195,14 @@ export default function Events() {
     return (
 
         <div className="events">
+
+            {showEventSelector && (
+
+                <EventSelector
+                    onSelect={handleEventSelected}
+                />
+
+            )}
 
             <div className="events-top">
 
@@ -191,7 +254,7 @@ export default function Events() {
 
                                         <p>
                                             This is the event currently
-                                            assigned to your account.
+                                            selected for your account.
                                         </p>
 
                                     </div>

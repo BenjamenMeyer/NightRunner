@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import ApiService from "@/api/ApiService";
+import EventSelector from "@/api/helpers/EventSelector";
 
 import "./Stations.css";
 
@@ -9,8 +10,10 @@ export default function Stations() {
     const [stations, setStations] = useState([]);
 
     const [loading, setLoading] = useState(true);
-
     const [error, setError] = useState(null);
+
+    const [showEventSelector, setShowEventSelector] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState(null);
 
     useEffect(() => {
 
@@ -18,21 +21,57 @@ export default function Stations() {
 
     }, []);
 
-    async function loadStations() {
+    async function loadStations(eventId = null) {
 
         try {
 
             setLoading(true);
             setError(null);
 
-            const response = await ApiService.stationData.getStations();
+            const resolvedEventId =
+                eventId ??
+                ApiService.userData.getEventId();
 
-            setStations(response);
+            /*
+             * System administrators may not have an event
+             * assigned to their account. In that case, let
+             * them select the event they want to manage.
+             */
+            if (!resolvedEventId) {
+
+                if (ApiService.userData.isSystemAdmin()) {
+
+                    setShowEventSelector(true);
+                    setLoading(false);
+
+                    return;
+
+                }
+
+                throw new Error(
+                    "No event is currently assigned to your account."
+                );
+
+            }
+
+            const response =
+                await ApiService.stationData.getStations(
+                    resolvedEventId
+                );
+
+            setStations(response ?? []);
+            setSelectedEvent(resolvedEventId);
 
         } catch (error) {
 
+            console.error(
+                "Failed to load stations:",
+                error
+            );
+
             setError(
-                error?.message ?? "Unable to load stations."
+                error?.message ??
+                "Unable to load stations."
             );
 
         } finally {
@@ -40,6 +79,14 @@ export default function Stations() {
             setLoading(false);
 
         }
+
+    }
+
+    async function handleEventSelected(eventId) {
+
+        setShowEventSelector(false);
+
+        await loadStations(eventId);
 
     }
 
@@ -64,6 +111,14 @@ export default function Stations() {
     return (
 
         <div className="stations-page">
+
+            {showEventSelector && (
+
+                <EventSelector
+                    onSelect={handleEventSelected}
+                />
+
+            )}
 
             <div className="page-header">
 
@@ -104,56 +159,58 @@ export default function Stations() {
 
             )}
 
-            <div className="station-grid">
+            {!error && stations.length > 0 && (
 
-                {stations.map(station => (
+                <div className="station-grid">
 
-                    <div
-                        className="station-card"
-                        key={station.id}
-                    >
+                    {stations.map(station => (
 
-                        <div className="station-card-header">
+                        <div
+                            className="station-card"
+                            key={station.id}
+                        >
 
-                            <h2>
-                                {station.name}
-                            </h2>
+                            <div className="station-card-header">
 
-                        </div>
+                                <h2>
+                                    {station.name}
+                                </h2>
 
-                        <div className="station-card-body">
+                            </div>
 
-                            {station.description ? (
+                            <div className="station-card-body">
 
-                                <p className="station-description">
+                                {station.description ? (
 
-                                    {station.description}
+                                    <p className="station-description">
 
-                                </p>
+                                        {station.description}
 
-                            ) : (
+                                    </p>
 
-                                <p className="station-description muted">
+                                ) : (
 
-                                    No description available.
+                                    <p className="station-description muted">
 
-                                </p>
+                                        No description available.
 
-                            )}
+                                    </p>
 
-                            <div className="station-info">
+                                )}
 
-                                <div>
+                                <div className="station-info">
 
-                                    <span>
-                                        Station Staff
-                                    </span>
+                                    <div>
 
-                                    <strong>
+                                        <span>
+                                            Station Staff
+                                        </span>
 
-                                        {station.members?.length ?? 0}
+                                        <strong>
+                                            {station.members?.length ?? 0}
+                                        </strong>
 
-                                    </strong>
+                                    </div>
 
                                 </div>
 
@@ -161,11 +218,11 @@ export default function Stations() {
 
                         </div>
 
-                    </div>
+                    ))}
 
-                ))}
+                </div>
 
-            </div>
+            )}
 
         </div>
 

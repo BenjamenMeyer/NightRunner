@@ -20,6 +20,7 @@ import LiveScoring from "@/pages/livescoring/LiveScoring.jsx";
 import AdminRoutes from "@/pages/admin/AdminRoutes.jsx";
 
 import Callback from "@/pages/Callback.jsx";
+import {EventProvider} from "@/api/helpers/EventContext.jsx";
 
 function ProtectedRoute({ children }) {
 
@@ -211,7 +212,9 @@ function App() {
                     path="/admin/*"
                     element={
                         <ProtectedRoute>
-                            <AdminRoutes />
+                            <EventProvider>
+                                <AdminRoutes />
+                            </EventProvider>
                         </ProtectedRoute>
                     }
                 />

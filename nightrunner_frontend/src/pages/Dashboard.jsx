@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 import ApiService from "@/api/ApiService";
 
+import EventSelector from "@/api/helpers/EventSelector";
+
 import "./Dashboard.css";
 
 export default function Dashboard() {
@@ -13,11 +15,16 @@ export default function Dashboard() {
     const [error, setError] = useState(null);
     const [event, setEvent] = useState(null);
 
+    const [showEventSelector, setShowEventSelector] =
+        useState(false);
+
+
     useEffect(() => {
 
         loadDashboard();
 
     }, []);
+
 
     async function loadDashboard() {
 
@@ -26,7 +33,8 @@ export default function Dashboard() {
             setLoading(true);
             setError(null);
 
-            const user = await ApiService.userData.get();
+            const user =
+                await ApiService.userData.get();
 
             if (!user) {
 
@@ -36,13 +44,24 @@ export default function Dashboard() {
 
             }
 
+
             /*
              * A normal user should have an event assigned.
              *
-             * System administrators are allowed to have no
-             * event, but they should be using /admin instead.
+             * System administrators may not have an event.
+             * In that case, allow them to select one.
              */
             if (!user.event) {
+
+                if (
+                    ApiService.userData.isSystemAdmin()
+                ) {
+
+                    setShowEventSelector(true);
+
+                    return;
+
+                }
 
                 throw new Error(
                     "No event is currently assigned to your account."
@@ -50,10 +69,8 @@ export default function Dashboard() {
 
             }
 
-            const eventResponse =
-                await ApiService.eventData.getEvent(user.event);
 
-            setEvent(eventResponse);
+            await loadEvent(user.event);
 
         }
         catch (error) {
@@ -76,6 +93,59 @@ export default function Dashboard() {
         }
 
     }
+
+
+    async function loadEvent(eventId) {
+
+        const eventResponse =
+            await ApiService.eventData.getEvent(
+                eventId
+            );
+
+        setEvent(eventResponse);
+
+    }
+
+
+    async function handleEventSelected(selectedEvent) {
+
+        try {
+
+            setError(null);
+            setLoading(true);
+
+            /*
+             * The selector returns the complete event object.
+             *
+             * Keep this local to the Dashboard. We are not
+             * changing the administrator's account assignment.
+             */
+            setEvent(selectedEvent);
+
+            setShowEventSelector(false);
+
+        }
+        catch (error) {
+
+            console.error(
+                "Failed to select event:",
+                error
+            );
+
+            setError(
+                error.message ??
+                "Failed to select event."
+            );
+
+        }
+        finally {
+
+            setLoading(false);
+
+        }
+
+    }
+
 
     if (loading) {
 
@@ -103,6 +173,7 @@ export default function Dashboard() {
 
     }
 
+
     return (
 
         <div className="dashboard">
@@ -121,6 +192,7 @@ export default function Dashboard() {
 
             </div>
 
+
             {error && (
 
                 <div className="error-banner">
@@ -130,6 +202,7 @@ export default function Dashboard() {
                 </div>
 
             )}
+
 
             {!error && event && (
 
@@ -156,6 +229,7 @@ export default function Dashboard() {
 
                             </div>
 
+
                             <div className="event-information">
 
                                 <div className="information-item">
@@ -170,6 +244,7 @@ export default function Dashboard() {
 
                                 </div>
 
+
                                 <div className="information-item">
 
                                     <span className="information-label">
@@ -181,6 +256,7 @@ export default function Dashboard() {
                                     </strong>
 
                                 </div>
+
 
                                 {event.location && (
 
@@ -197,6 +273,7 @@ export default function Dashboard() {
                                     </div>
 
                                 )}
+
 
                                 {event.description && (
 
@@ -241,6 +318,7 @@ export default function Dashboard() {
                                 </div>
 
                             </div>
+
 
                             <div className="dashboard-action-grid">
 
@@ -386,6 +464,15 @@ export default function Dashboard() {
                     </section>
 
                 </>
+
+            )}
+
+
+            {showEventSelector && (
+
+                <EventSelector
+                    onSelect={handleEventSelected}
+                />
 
             )}
 
