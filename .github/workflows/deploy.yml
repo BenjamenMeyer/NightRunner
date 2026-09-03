@@ -1,0 +1,79 @@
+name: Deploy to GCP
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-backend:
+    name: Build & Deploy Backend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud via OIDC
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+      - name: Build & Push Docker Image
+        run: |
+          IMAGE_TAG="${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ github.sha }}"
+          LATEST_TAG="${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:latest"
+          docker build -t $IMAGE_TAG -t $LATEST_TAG .
+          docker push $IMAGE_TAG
+          docker push $LATEST_TAG
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ secrets.GCP_CLOUD_RUN_SERVICE }} \
+            --image ${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ github.sha }} \
+            --region ${{ secrets.GCP_REGION }}
+
+  deploy-frontend:
+    name: Build & Deploy Frontend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud via OIDC
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install & Build Frontend
+        working-directory: nightrunner_frontend
+        run: |
+          npm ci
+          npx vite build
+
+      - name: Upload Static Assets to GCS Bucket
+        uses: google-github-actions/upload-cloud-storage@v2
+        with:
+          path: nightrunner_frontend/dist
+          destination: ${{ secrets.GCP_FRONTEND_BUCKET }}
+          parent: false
