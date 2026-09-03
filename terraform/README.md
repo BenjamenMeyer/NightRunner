@@ -182,11 +182,11 @@ Once `terraform apply` completes:
    - `GCP_ARTIFACT_REGISTRY_URL`
    - `GCP_CLOUD_RUN_SERVICE`
    - `GCP_FRONTEND_BUCKET`
-3. Pushing code to the `main` branch triggers `.github/workflows/deploy.yml` which automatically:
-   - Authenticates to GCP via OIDC.
-   - Builds & pushes the backend Docker image to Artifact Registry.
-   - Deploys the updated image to Cloud Run.
-   - Builds & uploads the frontend build to the GCS Bucket.
+3. Pushing code to the `main` branch triggers `.github/workflows/deploy.yml` which uses **smart path filtering** (`dorny/paths-filter`):
+   - **Backend Job (`deploy-backend`)**: Only runs if files in `nightrunner_backend/**`, `Dockerfile`, or `pyproject.toml` change. Builds & pushes the Docker image to Artifact Registry and updates Cloud Run.
+   - **Frontend Job (`deploy-frontend`)**: Only runs if files in `nightrunner_frontend/**` change. Builds the Vite React frontend and uploads `dist/` to the GCS bucket.
+   - If a push only modifies frontend code, the backend build & Cloud Run deployment are automatically skipped (and vice versa)!
+
 
 ---
 
