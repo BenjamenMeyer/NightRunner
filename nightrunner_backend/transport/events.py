@@ -29,8 +29,11 @@ class EventsResource:
                 raise falcon.HTTPBadRequest(description="'roundingPrecision' must be an integer.")
             try:
                 rounding_precision = int(rounding_precision_val)
+                if not (-9223372036854775808 <= rounding_precision <= 9223372036854775807):
+                    raise falcon.HTTPBadRequest(description="'roundingPrecision' is out of bounds.")
             except (ValueError, TypeError):
                 raise falcon.HTTPBadRequest(description="'roundingPrecision' must be an integer.")
+
         else:
             rounding_precision = 1000
 

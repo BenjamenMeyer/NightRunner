@@ -39,8 +39,8 @@ async def test_jit_user_auto_provisioning(client, rsa_keypair):
     result = await client.simulate_get('/me', headers=headers)
     assert result.status == falcon.HTTP_200
     data = result.json
-    assert data["user"]["email"] == "social_user@example.com"
-    assert data["user"]["display_name"] == "Social User"
+    assert data["email"] == "social_user@example.com"
+    assert data["displayName"] == "Social User"
 
     # Verify user was inserted into DB
     db = get_driver()
