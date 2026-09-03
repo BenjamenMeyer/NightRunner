@@ -33,6 +33,23 @@ services:
       oidc:
         condition: service_healthy
 
+  # VITE_ vars are baked into the JS bundle at build time
+  frontend:
+    build:
+      context: ./nightrunner_frontend
+      args:
+        VITE_API_BACKEND_URL: http://localhost:8000/v1
+        VITE_BACKEND_URL: http://localhost:8000
+        VITE_OIDC_AUTHORITY: http://localhost:4000
+        VITE_OIDC_CLIENT_ID: client-id
+    ports:
+      - "3000:80"
+    depends_on:
+      app:
+        condition: service_started
+      oidc:
+        condition: service_healthy
+
   oidc:
     image: ghcr.io/soluto/oidc-server-mock:0.8.0
     ports:
