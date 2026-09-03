@@ -31,22 +31,23 @@ class MigrationMiddleware:
     async def process_shutdown(self, scope, event):
         await close_driver()
 
-# Add CORS MiddleWare
-#cors_middleware = falcon.CORSMiddleware(
-#    allow_origins= [
-#        settings.front_end_url
-#    ],  # Allow requests from the frontend URL
-#    allow_credentials='*', # Required if your frontend sends cookies or auth headers
-#)
-
-#print(f"CORS frontend URL: {settings.front_end_url}")
-
-app = falcon.asgi.App(cors_enable=True,
-    middleware=[
-        #cors_middleware,
+def createMiddleware():
+    # Add CORS MiddleWare
+    cors_middleware = falcon.CORSMiddleware(
+        allow_origins= [
+            settings.front_end_url
+        ],  # Allow requests from the frontend URL
+        allow_credentials='*', # Required if your frontend sends cookies or auth headers
+    )
+    return [
+        cors_middleware,
         MigrationMiddleware(),
         AuthMiddleware()
     ]
+
+
+app = falcon.asgi.App(
+    middleware=createMiddleware(),
 )
 
 

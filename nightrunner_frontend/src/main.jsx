@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "react-oidc-context";
+import { WebStorageStateStore } from "oidc-client-ts";
 
 import "./index.css";
 import "./App.css";
@@ -29,6 +30,12 @@ const oidcConfig = {
 
     scope:
         "openid profile email",
+
+    // Store the session in localStorage so all tabs share the same OIDC session.
+    // The default (sessionStorage) is tab-isolated, which breaks pages opened
+    // in a new tab (e.g. /live) before the React auth context has initialised.
+    userStore:
+        new WebStorageStateStore({ store: window.localStorage }),
 
     onSigninCallback: () => {
 

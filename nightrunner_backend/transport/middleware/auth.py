@@ -14,12 +14,9 @@ class AuthMiddleware:
     Falcon middleware for JWT Authentication via OIDC/JWKS.
     """
     def __init__(self):
-        self.jwks_client: Optional[PyJWKClient] = None
-        if settings.jwks_url:
-            self.jwks_client = PyJWKClient(settings.jwks_url)
-        # We don't call get_driver() here to avoid early initialization at module load time if possible,
-        # but AuthMiddleware is instantiated in main.py. 
-        # Actually, it's better to get it when needed.
+        # Do NOT pre-construct PyJWKClient here; _verify_token builds it lazily
+        # so that test fixtures can monkeypatch jwt.PyJWKClient before it is called.
+        pass
 
     @property
     def db(self):
@@ -102,6 +99,8 @@ class AuthMiddleware:
         except jwt.PyJWTError as e:
             logger.warning(f"JWT validation failed: {e}")
             raise falcon.HTTPUnauthorized(title="Invalid token", description=str(e))
+        except falcon.HTTPError:
+            raise
         except Exception as e:
             logger.exception("Unexpected error in AuthMiddleware")
             raise falcon.HTTPInternalServerError(description="Internal authentication error.")
@@ -109,21 +108,25 @@ class AuthMiddleware:
     async def _verify_token(self, token: str) -> Dict[str, Any]:
         """
         Verifies the JWT signature and claims.
+        The JWKS client is constructed lazily on each call so that test fixtures
+        can monkeypatch jwt.PyJWKClient before it is ever instantiated.
         """
-        if not self.jwks_client:
+        if not settings.jwks_url:
             if settings.dev_mode:
                 logger.warning("JWKS not configured. Using UNVERIFIED token (DEV MODE ONLY).")
                 return jwt.decode(token, options={"verify_signature": False})
-            
+
             raise jwt.PyJWTError("OIDC configured but JWKS client missing and not in dev_mode.")
+
+        jwks_client = jwt.PyJWKClient(settings.jwks_url)
 
         # PyJWKClient.get_signing_key_from_jwt is synchronous and makes a network
         # request — run it in a thread pool to avoid blocking the event loop.
         loop = asyncio.get_event_loop()
         signing_key = await loop.run_in_executor(
-            None, self.jwks_client.get_signing_key_from_jwt, token
+            None, jwks_client.get_signing_key_from_jwt, token
         )
-        
+
         return jwt.decode(
             token,
             signing_key.key,
@@ -131,3 +134,4 @@ class AuthMiddleware:
             audience=settings.oidc_audience,
             issuer=settings.oidc_issuer
         )
+

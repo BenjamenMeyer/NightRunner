@@ -1,3 +1,5 @@
+import { User } from "oidc-client-ts";
+
 /**
  * Provides access to the application's OIDC authentication
  * state and operations.
@@ -131,7 +133,44 @@ class AuthService {
      */
     getToken() {
 
-        return this.auth?.user?.access_token ?? null;
+        // Fast path: React context is initialised (normal in-app navigation).
+        const inMemoryToken = this.auth?.user?.access_token;
+        if (inMemoryToken) {
+            return inMemoryToken;
+        }
+
+        // Fallback: read the token oidc-client-ts persisted to sessionStorage.
+        // This covers tabs that are opened directly (e.g. /live in a new tab)
+        // where AuthServiceProvider hasn't finished wiring up the React context yet.
+        try {
+
+            const authority =
+                import.meta.env.VITE_OIDC_AUTHORITY ?? "http://localhost:4000";
+
+            const clientId =
+                import.meta.env.VITE_OIDC_CLIENT_ID ?? "client-id";
+
+            const storageKey = `oidc.user:${authority}:${clientId}`;
+
+            const raw = localStorage.getItem(storageKey);
+
+            if (raw) {
+
+                const user = User.fromStorageString(raw);
+
+                if (user && !user.expired) {
+                    return user.access_token;
+                }
+
+            }
+
+        } catch {
+
+            // Malformed storage entry — fall through and return null.
+
+        }
+
+        return null;
 
     }
 

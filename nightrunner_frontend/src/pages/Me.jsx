@@ -12,7 +12,7 @@ export default function Me() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [loggingOut, setLoggingOut] = useState(false);
+
 
 
     //
@@ -91,51 +91,6 @@ export default function Me() {
         auth.isAuthenticated
     ]);
 
-
-    //
-    // Logout
-    //
-
-    async function logout() {
-
-        if (loggingOut) {
-
-            return;
-
-        }
-
-        setLoggingOut(true);
-
-        try {
-
-            /*
-             * This logs the user out of the OIDC provider.
-             *
-             * Do NOT call UserService.clear() as a replacement
-             * for OIDC logout. The local application user is
-             * only a cache.
-             */
-            await ApiService.logout();
-
-        }
-        catch (err) {
-
-            console.error(
-                "Logout failed:",
-                err
-            );
-
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : "Failed to log out."
-            );
-
-            setLoggingOut(false);
-
-        }
-
-    }
 
 
     //
@@ -372,22 +327,6 @@ export default function Me() {
                         </strong>
 
                     </div>
-
-                </div>
-
-
-                <div className="profile-actions">
-
-                    <button
-                        type="button"
-                        className="logout-button"
-                        onClick={logout}
-                        disabled={loggingOut}
-                    >
-                        {loggingOut
-                            ? "Signing out..."
-                            : "Sign out"}
-                    </button>
 
                 </div>
 

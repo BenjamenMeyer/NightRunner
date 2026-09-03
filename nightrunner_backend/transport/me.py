@@ -1,16 +1,25 @@
 import falcon
-class MeStore:
-    """Placeholder store for Me resource. In real app would handle user data."""
-    async def get_current_user(self):
-        return {"message": "Current user info placeholder"}
 
 
 class MeResource:
-    """GET /me
-    Returns information about the currently authenticated user.
-    For simplicity in this demo, it returns a static payload.
+    """GET /v1/me
+    Returns the currently authenticated user's profile and roles.
+    User data is resolved by AuthMiddleware and stored in req.context.
     """
+
     async def on_get(self, req: falcon.Request, resp: falcon.Response):
-        # In a real implementation, extract user info from token via middleware.
-        resp.media = {"message": "Current user info placeholder"}
+        user = req.context.user
+        if not user:
+            raise falcon.HTTPUnauthorized(
+                title="Not authenticated",
+                description="A valid authenticated session is required.",
+            )
+
+        resp.media = {
+            "id": user["id"],
+            "username": user["username"],
+            "email": user["email"],
+            "displayName": user["display_name"],
+            "roles": req.context.roles,
+        }
         resp.status = falcon.HTTP_200
