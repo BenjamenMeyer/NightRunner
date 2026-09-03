@@ -96,9 +96,9 @@ jobs:
             --image ${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ github.sha }} \
             --region ${{ secrets.GCP_REGION }}
 
-  # Verify frontend gates (lint, build, unit/integration tests) before deploying
+  # Verify frontend gates (lint, integration tests against docker-compose stack, build)
   test-frontend:
-    name: Run Frontend Gates (Lint, Build, Tests)
+    name: Run Frontend Gates (Lint, Live Integration Tests, Build)
     needs: changes
     if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
@@ -119,9 +119,15 @@ jobs:
         working-directory: nightrunner_frontend
         run: npm run lint
 
-      - name: Gate 2: Run Unit & Integration Tests (vitest)
+      - name: Start Docker Compose Environment (Backend + OIDC Server + Postgres)
+        run: docker compose up -d --build
+
+      - name: Gate 2: Run Unit & Integration Tests (vitest against Docker Compose stack)
         working-directory: nightrunner_frontend
         run: npm run test
+        env:
+          VITE_BACKEND_URL: "http://localhost:8000"
+          VITE_OIDC_AUTHORITY: "http://localhost:4000"
 
       - name: Gate 3: Verify Production Build (vite build)
         working-directory: nightrunner_frontend
