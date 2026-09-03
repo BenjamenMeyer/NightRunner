@@ -3,10 +3,9 @@ import {
     useState
 } from "react";
 
-import ApiService from "@/api/ApiService.js";
-import { useEventContext } from "@/api/helpers/EventContext";
-
 import "./EventManager.css";
+import {useEventContext} from "../../../api/helpers/EventContext.jsx";
+import ApiService from "../../../api/ApiService.js";
 
 export default function EventManager() {
 
@@ -166,15 +165,11 @@ export default function EventManager() {
         return (
 
             <div className="event-manager">
-
                 <div className="loading-panel">
-
                     <p>
                         Loading event...
                     </p>
-
                 </div>
-
             </div>
 
         );
@@ -182,59 +177,36 @@ export default function EventManager() {
     }
 
     if (eventError) {
-
         return (
-
             <div className="event-manager">
-
                 <div className="error-banner">
-
                     {eventError}
-
                 </div>
-
             </div>
-
         );
-
     }
 
     if (!event) {
-
         return (
-
             <div className="event-manager">
-
                 <div className="page-header">
-
                     <div>
-
                         <h1>
                             Event
                         </h1>
-
                         <p>
                             No event is currently selected.
                         </p>
-
                     </div>
-
                 </div>
-
             </div>
-
         );
-
     }
 
     return (
-
         <div className="event-manager">
-
             <div className="page-header">
-
                 <div>
-
                     <h1>
                         Event
                     </h1>
@@ -243,42 +215,29 @@ export default function EventManager() {
                         Manage the details and configuration
                         of the current event.
                     </p>
-
                 </div>
 
             </div>
 
             {error && (
-
                 <div className="error-banner">
-
                     {error}
-
                 </div>
-
             )}
 
             {success && (
-
                 <div className="success-banner">
-
                     {success}
-
                 </div>
-
             )}
 
             <form
                 className="event-form"
                 onSubmit={handleSubmit}
             >
-
                 <section className="admin-section">
-
                     <div className="section-header">
-
                         <div>
-
                             <h2>
                                 Event Details
                             </h2>
@@ -288,13 +247,10 @@ export default function EventManager() {
                             </p>
 
                         </div>
-
                     </div>
 
                     <div className="form-grid">
-
                         <div className="form-group">
-
                             <label htmlFor="event-name">
                                 Event Name
                             </label>
@@ -310,9 +266,7 @@ export default function EventManager() {
                             />
 
                         </div>
-
                         <div className="form-group">
-
                             <label htmlFor="event-date">
                                 Event Date
                             </label>
@@ -326,11 +280,9 @@ export default function EventManager() {
                                 disabled={saving}
                                 required
                             />
-
                         </div>
 
                         <div className="form-group form-group-full">
-
                             <label htmlFor="event-description">
                                 Description
                             </label>
@@ -343,11 +295,9 @@ export default function EventManager() {
                                 disabled={saving}
                                 rows={5}
                             />
-
                         </div>
 
                         <div className="form-group">
-
                             <label htmlFor="rounding-precision">
                                 Rounding Precision
                             </label>
@@ -367,35 +317,24 @@ export default function EventManager() {
                                 Used when calculating scoring
                                 precision.
                             </small>
-
                         </div>
-
                     </div>
-
                 </section>
 
                 <section className="admin-section">
-
                     <div className="section-header">
-
                         <div>
-
                             <h2>
                                 Event Information
                             </h2>
-
                             <p>
                                 Information managed by the system.
                             </p>
-
                         </div>
-
                     </div>
 
                     <div className="event-information-grid">
-
                         <div>
-
                             <span className="information-label">
                                 Event ID
                             </span>
@@ -403,11 +342,9 @@ export default function EventManager() {
                             <code>
                                 {event.id}
                             </code>
-
                         </div>
 
                         <div>
-
                             <span className="information-label">
                                 Patrols
                             </span>
@@ -415,11 +352,9 @@ export default function EventManager() {
                             <strong>
                                 {event.patrols?.length ?? 0}
                             </strong>
-
                         </div>
 
                         <div>
-
                             <span className="information-label">
                                 Stations
                             </span>
@@ -427,46 +362,32 @@ export default function EventManager() {
                             <strong>
                                 {event.stations?.length ?? 0}
                             </strong>
-
                         </div>
 
                         <div>
-
                             <span className="information-label">
                                 Organizers
                             </span>
-
                             <strong>
                                 {event.organizers?.length ?? 0}
                             </strong>
-
                         </div>
-
                     </div>
-
                 </section>
 
                 <div className="form-actions">
-
                     <button
                         type="submit"
                         className="primary-button"
                         disabled={saving}
                     >
-
                         {saving
                             ? "Saving..."
                             : "Save Changes"
                         }
-
                     </button>
-
                 </div>
-
             </form>
-
         </div>
-
     );
-
 }

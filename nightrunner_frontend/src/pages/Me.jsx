@@ -40,8 +40,7 @@ export default function Me() {
 
                 }
 
-                const backendUser =
-                    await ApiService.userData.get();
+                const backendUser = await ApiService.userData.get();
 
                 if (!backendUser) {
 

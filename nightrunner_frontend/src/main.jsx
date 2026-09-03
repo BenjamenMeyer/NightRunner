@@ -8,9 +8,8 @@ import "./index.css";
 import "./App.css";
 
 import App from "./App.jsx";
-import BrandingProvider from "@/branding/BrandingProvider.jsx";
-import AuthServiceProvider from "@/api/AuthServiceProvider.jsx";
-
+import AuthServiceProvider from "./api/AuthServiceProvider.jsx";
+import BrandingProvider from "./branding/BrandingProvider.jsx";
 
 const oidcConfig = {
 

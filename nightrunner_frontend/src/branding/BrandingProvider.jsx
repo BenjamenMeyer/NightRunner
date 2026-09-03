@@ -49,7 +49,6 @@ export default function BrandingProvider({ children }) {
     }
 
     return (
-
         <BrandingContext.Provider
             value={{
                 branding,
@@ -57,9 +56,7 @@ export default function BrandingProvider({ children }) {
                 changeBranding
             }}
         >
-
             {children}
-
         </BrandingContext.Provider>
 
     );

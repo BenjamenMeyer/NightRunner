@@ -5,8 +5,8 @@ import {
     useState
 } from "react";
 
-import ApiService from "@/api/ApiService";
-import EventSelector from "./EventSelector";
+import EventSelector from "./EventSelector.jsx";
+import ApiService from "../ApiService.js";
 
 const EventContext = createContext(null);
 

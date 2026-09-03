@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import ApiService from "@/api/ApiService";
-import EventSelector from "@/api/helpers/EventSelector";
-
 import "./AdminDashBoard.css";
+import ApiService from "../../api/ApiService.js";
+import EventSelector from "../../api/helpers/EventSelector.jsx";
 
 export default function AdminDashboard() {
 

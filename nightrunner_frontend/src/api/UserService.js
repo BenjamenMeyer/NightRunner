@@ -284,7 +284,7 @@ export default class UserService {
      */
     isSystemAdmin() {
 
-        return true;//this.getRole() === "admin";
+        return this.getRole() === "admin";
 
     }
 
