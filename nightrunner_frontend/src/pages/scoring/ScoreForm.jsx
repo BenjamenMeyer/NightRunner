@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import ApiService from "@/api/ApiService";
+import ApiService from "../../api/ApiService.js";
 import ScoreField from "./ScoreField";
 
 import "./Scoring.css";

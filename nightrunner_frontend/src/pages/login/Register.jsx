@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import NOAImage from "../../../public/favicon.jpg";
 
 import "./Register.css";
-import ApiService from "@/api/ApiService.js";
+import ApiService from "../../api/ApiService.js";
 
 function Register() {
 

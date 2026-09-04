@@ -1,24 +1,38 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import AuthService from "@/api/AuthService.js";
-import UserService from "@/api/UserService.js";
 import "./header.css";
 
-function Header({
+import ApiService from "../api/ApiService.js";
+import {useEventContext} from "../api/helpers/EventContext.jsx";
 
+function Header({
                     sidebarOpen,
                     setSidebarOpen
-
                 }) {
 
     const [open, setOpen] = useState(false);
     const menuRef = useRef(null);
     const navigate = useNavigate();
 
-    const profile = AuthService.getProfile();
+
+    //
+    // Event context
+    //
+
+    const {
+        event,
+        changeEvent,
+    } = useEventContext();
+
+
+    //
+    // User profile
+    //
+
+    const profile = ApiService.auth.getProfile();
     const username = profile?.name ?? profile?.preferred_username ?? "User";
 
-    const cachedUser = new UserService().getCached();
+    const cachedUser = ApiService.userData.getCached();
     const displayName = cachedUser?.displayName ?? username;
 
     // Close the dropdown when the user clicks outside of it
@@ -45,9 +59,27 @@ function Header({
         navigate("/me");
     }
 
+
+    //
+    // Change event
+    //
+
+    function handleChangeEvent() {
+
+        setOpen(false);
+
+        changeEvent();
+
+    }
+
+
+    //
+    // Sign out
+    //
+
     async function handleSignOut() {
         setOpen(false);
-        await AuthService.logout();
+        await ApiService.auth.logout();
     }
 
     return (
@@ -128,9 +160,11 @@ function Header({
                             strokeLinecap="round"
                             strokeLinejoin="round"
                         />
+
                     </svg>
 
                 </button>
+
 
                 {open && (
 
@@ -146,7 +180,31 @@ function Header({
                             {displayName}
                         </div>
 
+
+
+                        {/* If an event is available, display it */}
+                        {event && (
+
+                            <div
+                                className="header-dropdown-event"
+                                role="presentation"
+                            >
+                                {event.name}
+                            </div>
+
+                        )}
+
+
                         <hr className="header-dropdown-divider" />
+
+
+                        <button
+                            className="header-dropdown-item"
+                            role="menuitem"
+                            onClick={handleChangeEvent}
+                        >
+                            Change Event
+                        </button>
 
                         <button
                             className="header-dropdown-item"

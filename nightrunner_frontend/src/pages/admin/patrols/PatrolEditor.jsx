@@ -4,7 +4,7 @@ import {
     useSearchParams
 } from "react-router-dom";
 
-import ApiService from "@/api/ApiService.js";
+import ApiService from "../../../api/ApiService.js";
 
 import "./PatrolEditor.css";
 

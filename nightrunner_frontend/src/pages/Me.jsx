@@ -3,7 +3,7 @@ import { useAuth } from "react-oidc-context";
 
 import "./Me.css";
 
-import ApiService from "@/api/ApiService";
+import ApiService from "../api/ApiService";
 
 export default function Me() {
 
@@ -117,7 +117,6 @@ export default function Me() {
 
     }
 
-
     //
     // Authentication error
     //
@@ -143,7 +142,6 @@ export default function Me() {
         );
 
     }
-
 
     //
     // Backend user error
@@ -171,7 +169,6 @@ export default function Me() {
 
     }
 
-
     //
     // Safety check
     //
@@ -198,9 +195,8 @@ export default function Me() {
 
     }
 
-
     //
-    // Profile
+    // Profile information
     //
 
     const displayName =
@@ -213,6 +209,11 @@ export default function Me() {
             .charAt(0)
             .toUpperCase();
 
+    const roles =
+        user.roles ?? {};
+
+    const eventEntries =
+        Object.entries(roles);
 
     return (
         <div className="profile-container">
@@ -284,31 +285,24 @@ export default function Me() {
                     <div className="profile-field">
 
                         <span>
-                            Roles
+                            Account
                         </span>
 
                         <div className="roles">
 
-                            {user.roles?.length > 0
+                            {user.isAdmin === true ? (
 
-                                ? user.roles.map(role => (
+                                <span className="role">
+                                    System Administrator
+                                </span>
 
-                                    <span
-                                        key={role}
-                                        className="role"
-                                    >
-                                        {role}
-                                    </span>
+                            ) : (
 
-                                ))
+                                <span className="role">
+                                    Standard Account
+                                </span>
 
-                                : (
-
-                                    <span className="role">
-                                        No roles
-                                    </span>
-
-                                )}
+                            )}
 
                         </div>
 
@@ -318,20 +312,37 @@ export default function Me() {
                     <div className="profile-field">
 
                         <span>
-                            Event
+                            Event Roles
                         </span>
 
-                        <strong className="small-text">
-                            {user.event ?? "No event assigned"}
-                        </strong>
+                        <div className="roles">
 
+                            {eventEntries.length > 0 ? (
+
+                                eventEntries.map(
+                                    ([eventId, role]) => (
+
+                                        <span
+                                            key={eventId}
+                                            className="role"
+                                        >
+                                            {eventId}: {role}
+                                        </span>
+
+                                    )
+                                )
+
+                            ) : (
+
+                                <span className="role">
+                                    No event roles
+                                </span>
+
+                            )}
+                        </div>
                     </div>
-
                 </div>
-
             </div>
-
         </div>
     );
-
 }

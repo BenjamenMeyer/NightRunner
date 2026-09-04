@@ -78,7 +78,6 @@ class ApiService {
         this.eventData =
             new EventService(
                 this.backendTransport,
-                this.userData
             );
 
         this.patrolData =
@@ -113,19 +112,6 @@ class ApiService {
         return this.auth.login();
 
     }
-
-
-    /**
-     * Logs the current user out.
-     *
-     * @returns {Promise<void>}
-     */
-    async logout() {
-
-        return this.auth.logout();
-
-    }
-
 
     /**
      * Determines whether the current user is authenticated.

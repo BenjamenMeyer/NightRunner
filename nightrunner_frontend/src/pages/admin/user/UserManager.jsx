@@ -1,21 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 
-import ApiService from "@/api/ApiService.js";
+import ApiService from "../../../api/ApiService.js";
+import { useEventContext } from "../../../api/helpers/EventContext.jsx";
 
 import "./UserManager.css";
 
-const ROLES = [
-    "USER",
-    "EVENT_ADMIN",
-    "SYSTEM_ADMIN"
+const EVENT_ROLES = [
+    "user",
+    "event-admin"
 ];
 
 export default function UserManager() {
+    const {
+        eventId,
+        event,
+        loading: eventLoading,
+        error: eventError
+    } = useEventContext();
 
     const [users, setUsers] = useState([]);
-
     const [selectedUser, setSelectedUser] = useState(null);
-
     const [search, setSearch] = useState("");
 
     const [loading, setLoading] = useState(true);
@@ -25,87 +29,80 @@ export default function UserManager() {
     const [success, setSuccess] = useState(null);
 
     const currentUser =
-        ApiService.userData.get();
+        ApiService.userData.getCached();
 
-    const isSystemAdmin = ApiService.userData.isSystemAdmin();
+    const isSystemAdmin =
+        ApiService.userData.isSystemAdmin();
 
-    const isEventAdmin = ApiService.userData.isEventAdmin();
+    const isEventAdmin =
+        eventId
+            ? ApiService.userData.isEventAdmin(eventId)
+            : false;
 
     useEffect(() => {
+        if (eventLoading) {
+            return;
+        }
+
+        if (eventError) {
+            setError(eventError);
+            setLoading(false);
+            return;
+        }
+
+        if (!eventId) {
+            setError("No event is currently selected.");
+            setLoading(false);
+            return;
+        }
 
         loadUsers();
-
-    }, []);
+    }, [eventId, eventLoading, eventError]);
 
     async function loadUsers() {
-
         try {
-
             setLoading(true);
             setError(null);
 
             const response =
                 await ApiService.userData.getUsers();
 
-            setUsers(response);
-
-        }
-        catch (error) {
-
+            setUsers(response ?? []);
+        } catch (error) {
             console.error(
                 "Failed to load users:",
                 error
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to load users."
             );
-
-        }
-        finally {
-
+        } finally {
             setLoading(false);
-
         }
-
     }
 
-    /*
-     * Event admins should only see users associated
-     * with their event.
-     *
-     * System admins can see everyone.
-     *
-     * Ideally the backend ALSO enforces this restriction.
-     * This filtering is only the UI layer.
-     */
     const visibleUsers = useMemo(() => {
-
         if (isSystemAdmin) {
             return users;
         }
 
-        if (isEventAdmin) {
-
-            return users.filter(
-                user =>
-                    user.event === currentUser.event
-            );
-
+        if (!isEventAdmin || !eventId) {
+            return [];
         }
 
-        return [];
-
+        return users.filter(user =>
+            user.roles?.[eventId] != null
+        );
     }, [
         users,
         isSystemAdmin,
         isEventAdmin,
-        currentUser?.event
+        eventId
     ]);
 
     const filteredUsers = useMemo(() => {
-
         const query =
             search.trim().toLowerCase();
 
@@ -114,115 +111,98 @@ export default function UserManager() {
         }
 
         return visibleUsers.filter(user =>
-
             user.username
                 ?.toLowerCase()
-                .includes(query)
-
-            ||
-
+                .includes(query) ||
             user.name
                 ?.toLowerCase()
-                .includes(query)
-
-            ||
-
+                .includes(query) ||
             user.email
                 ?.toLowerCase()
                 .includes(query)
-
         );
-
     }, [
         visibleUsers,
         search
     ]);
 
     function selectUser(user) {
-
         setSelectedUser({
-            ...user
+            ...user,
+            roles: {
+                ...(user.roles ?? {})
+            }
         });
 
         setError(null);
         setSuccess(null);
-
     }
 
     function updateSelectedUser(field, value) {
-
         setSelectedUser(current => ({
-
             ...current,
-
             [field]: value
-
         }));
-
     }
 
-    function getAvailableRoles() {
-
-        if (isSystemAdmin) {
-            return ROLES;
+    function getEventRole(user) {
+        if (!eventId) {
+            return null;
         }
 
-        /*
-         * Event admins can manage users in their event,
-         * but cannot grant SYSTEM_ADMIN.
-         */
-        return ROLES.filter(
-            role => role !== "SYSTEM_ADMIN"
-        );
+        return user?.roles?.[eventId] ?? null;
+    }
 
+    function updateSelectedEventRole(role) {
+        if (!eventId) {
+            return;
+        }
+
+        setSelectedUser(current => ({
+            ...current,
+            roles: {
+                ...(current?.roles ?? {}),
+                [eventId]: role
+            }
+        }));
     }
 
     async function saveUser() {
-
-        if (!selectedUser) {
+        if (!selectedUser || !eventId) {
             return;
         }
 
         try {
-
             setSaving(true);
-
             setError(null);
             setSuccess(null);
 
-            /*
-             * Event admins cannot change the event assignment.
-             *
-             * System admins can.
-             */
-            const payload = {
+            const role =
+                getEventRole(selectedUser) ?? "user";
 
-                username:
-                selectedUser.username,
+            let updatedUser;
 
-                name:
-                selectedUser.name,
-
-                email:
-                selectedUser.email,
-
-                role:
-                selectedUser.role,
-
-                ...(isSystemAdmin
-                    ? {
-                        event:
-                        selectedUser.event
-                    }
-                    : {})
-
-            };
-
-            const updatedUser =
-                await ApiService.userData.updateUser(
-                    selectedUser.id,
-                    payload
-                );
+            if (isSystemAdmin) {
+                updatedUser =
+                    await ApiService.userData.updateUser(
+                        selectedUser.id,
+                        {
+                            eventId,
+                            role,
+                            isAdmin:
+                                selectedUser.isAdmin === true
+                        }
+                    );
+            } else {
+                updatedUser =
+                    await ApiService.userData.updateUser(
+                        selectedUser.id,
+                        {
+                            eventId,
+                            role
+                        }
+                    );
+            }
 
             setUsers(current =>
                 current.map(user =>
@@ -237,57 +217,40 @@ export default function UserManager() {
             setSuccess(
                 "User updated successfully."
             );
-
-        }
-        catch (error) {
-
+        } catch (error) {
             console.error(
                 "Failed to update user:",
                 error
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to update user."
             );
-
-        }
-        finally {
-
+        } finally {
             setSaving(false);
-
         }
-
     }
 
     async function deleteUser() {
-
         if (!selectedUser) {
             return;
         }
 
-        if (
-            selectedUser.id === currentUser.id
-        ) {
-
+        if (selectedUser.id === currentUser?.id) {
             setError(
                 "You cannot delete your own account."
             );
-
             return;
-
         }
 
-        if (
-            !window.confirm(
-                `Delete ${selectedUser.username}? This action cannot be undone.`
-            )
-        ) {
+        if (!window.confirm(
+            `Delete ${selectedUser.username}? This action cannot be undone.`
+        )) {
             return;
         }
 
         try {
-
             setError(null);
             setSuccess(null);
 
@@ -307,101 +270,72 @@ export default function UserManager() {
             setSuccess(
                 "User deleted successfully."
             );
-
-        }
-        catch (error) {
-
+        } catch (error) {
             console.error(
                 "Failed to delete user:",
                 error
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to delete user."
             );
-
         }
+    }
 
+    if (eventLoading) {
+        return (
+            <div className="user-manager-page">
+                <div className="loading-panel">
+                    Loading event...
+                </div>
+            </div>
+        );
     }
 
     if (!isSystemAdmin && !isEventAdmin) {
-
         return (
-
             <div className="user-manager-page">
-
                 <div className="user-manager-denied">
-
-                    <h1>
-                        Access Denied
-                    </h1>
-
+                    <h1>Access Denied</h1>
                     <p>
                         You do not have permission to manage users.
                     </p>
-
                 </div>
-
             </div>
-
         );
-
     }
 
     return (
-
         <div className="user-manager-page">
-
-            {/* Header */}
-
             <header className="page-header">
-
                 <div>
-
                     <span className="page-eyebrow">
                         Administration
                     </span>
 
-                    <h1>
-                        User Manager
-                    </h1>
+                    <h1>User Manager</h1>
 
                     <p>
-                        Manage user accounts, roles, and event
-                        assignments.
+                        Manage user accounts, roles, and event assignments.
                     </p>
-
                 </div>
-
             </header>
 
-
-            {/* Messages */}
-
             {error && (
-
                 <div className="error-banner">
                     {error}
                 </div>
-
             )}
 
             {success && (
-
                 <div className="success-banner">
                     {success}
                 </div>
-
             )}
 
-
-            {/* Toolbar */}
-
             <div className="user-toolbar">
-
                 <div className="search-wrapper">
-
                     <svg
                         className="search-icon"
                         viewBox="0 0 24 24"
@@ -410,17 +344,13 @@ export default function UserManager() {
                         strokeWidth="2"
                         aria-hidden="true"
                     >
-
                         <circle
                             cx="11"
                             cy="11"
                             r="7"
                         />
 
-                        <path
-                            d="m20 20-4-4"
-                        />
-
+                        <path d="m20 20-4-4" />
                     </svg>
 
                     <input
@@ -428,158 +358,113 @@ export default function UserManager() {
                         placeholder="Search users..."
                         value={search}
                         onChange={event =>
-                            setSearch(
-                                event.target.value
-                            )
+                            setSearch(event.target.value)
                         }
                     />
-
                 </div>
 
                 <span className="user-count">
-
-                    {filteredUsers.length}
-                    {" "}
+                    {filteredUsers.length}{" "}
                     {filteredUsers.length === 1
                         ? "user"
-                        : "users"
-                    }
-
+                        : "users"}
                 </span>
-
             </div>
 
-
-            {/* Main */}
-
             <div className="user-manager-layout">
-
-
-                {/* User List */}
-
                 <section className="user-list-panel">
-
                     <div className="panel-header">
-
                         <div>
-
-                            <h2>
-                                Users
-                            </h2>
+                            <h2>Users</h2>
 
                             <p>
                                 Select a user to manage their account.
                             </p>
-
                         </div>
-
                     </div>
 
                     <div className="user-list">
-
                         {loading ? (
-
                             <div className="loading-panel">
                                 Loading users...
                             </div>
-
                         ) : filteredUsers.length === 0 ? (
-
                             <div className="empty-list">
-
-                                <h3>
-                                    No users found
-                                </h3>
+                                <h3>No users found</h3>
 
                                 <p>
                                     Try changing your search.
                                 </p>
-
                             </div>
-
                         ) : (
+                            filteredUsers.map(user => {
+                                const role =
+                                    getEventRole(user);
 
-                            filteredUsers.map(user => (
-
-                                <button
-                                    type="button"
-                                    key={user.id}
-                                    className={
-                                        selectedUser?.id === user.id
-                                            ? "user-card selected"
-                                            : "user-card"
-                                    }
-                                    onClick={() =>
-                                        selectUser(user)
-                                    }
-                                >
-
-                                    <span className="user-card-avatar">
-
-                                        {(user.name ||
-                                            user.username ||
-                                            "?")
-                                            .charAt(0)
-                                            .toUpperCase()}
-
-                                    </span>
-
-                                    <span className="user-card-content">
-
-                                        <strong>
-                                            {user.name ||
-                                                user.username}
-                                        </strong>
-
-                                        <span>
-                                            @{user.username}
+                                return (
+                                    <button
+                                        type="button"
+                                        key={user.id}
+                                        className={
+                                            selectedUser?.id === user.id
+                                                ? "user-card selected"
+                                                : "user-card"
+                                        }
+                                        onClick={() =>
+                                            selectUser(user)
+                                        }
+                                    >
+                                        <span className="user-card-avatar">
+                                            {(user.name ||
+                                                user.username ||
+                                                "?")
+                                                .charAt(0)
+                                                .toUpperCase()}
                                         </span>
 
-                                    </span>
+                                        <span className="user-card-content">
+                                            <strong>
+                                                {user.name ||
+                                                    user.username}
+                                            </strong>
 
-                                    <span
-                                        className={`role-badge role-${user.role?.toLowerCase()}`}
-                                    >
-                                        {formatRole(
-                                            user.role
-                                        )}
-                                    </span>
+                                            <span>
+                                                @{user.username}
+                                            </span>
+                                        </span>
 
-                                </button>
-
-                            ))
-
+                                        <span
+                                            className={`role-badge role-${(
+                                                user.isAdmin
+                                                    ? "system-admin"
+                                                    : role
+                                            )?.toLowerCase()}`}
+                                        >
+                                            {user.isAdmin
+                                                ? "System Admin"
+                                                : formatRole(role)}
+                                        </span>
+                                    </button>
+                                );
+                            })
                         )}
-
                     </div>
-
                 </section>
 
-
-                {/* Details */}
-
                 <section className="user-details">
-
                     {selectedUser ? (
-
                         <>
-
                             <div className="details-header">
-
                                 <div className="user-profile-heading">
-
                                     <div className="large-avatar">
-
                                         {(selectedUser.name ||
                                             selectedUser.username ||
                                             "?")
                                             .charAt(0)
                                             .toUpperCase()}
-
                                     </div>
 
                                     <div>
-
                                         <span className="details-eyebrow">
                                             User Account
                                         </span>
@@ -592,24 +477,15 @@ export default function UserManager() {
                                         <p>
                                             @{selectedUser.username}
                                         </p>
-
                                     </div>
-
                                 </div>
-
                             </div>
-
 
                             <div className="details-divider" />
 
-
                             <div className="user-form">
-
                                 <label className="form-field">
-
-                                    <span>
-                                        Username
-                                    </span>
+                                    <span>Username</span>
 
                                     <input
                                         value={
@@ -623,15 +499,10 @@ export default function UserManager() {
                                             )
                                         }
                                     />
-
                                 </label>
 
-
                                 <label className="form-field">
-
-                                    <span>
-                                        Name
-                                    </span>
+                                    <span>Name</span>
 
                                     <input
                                         value={
@@ -645,15 +516,10 @@ export default function UserManager() {
                                             )
                                         }
                                     />
-
                                 </label>
 
-
                                 <label className="form-field">
-
-                                    <span>
-                                        Email
-                                    </span>
+                                    <span>Email</span>
 
                                     <input
                                         type="email"
@@ -668,106 +534,96 @@ export default function UserManager() {
                                             )
                                         }
                                     />
-
                                 </label>
 
-
                                 <label className="form-field">
-
                                     <span>
-                                        Role
+                                        Event Role
                                     </span>
 
                                     <select
                                         value={
-                                            selectedUser.role ??
-                                            "USER"
+                                            getEventRole(
+                                                selectedUser
+                                            ) ?? "user"
                                         }
                                         onChange={event =>
-                                            updateSelectedUser(
-                                                "role",
+                                            updateSelectedEventRole(
                                                 event.target.value
                                             )
                                         }
                                     >
-
-                                        {getAvailableRoles().map(
-                                            role => (
-
-                                                <option
-                                                    key={role}
-                                                    value={role}
-                                                >
-                                                    {formatRole(
-                                                        role
-                                                    )}
-                                                </option>
-
-                                            )
-                                        )}
-
+                                        {EVENT_ROLES.map(role => (
+                                            <option
+                                                key={role}
+                                                value={role}
+                                            >
+                                                {formatRole(role)}
+                                            </option>
+                                        ))}
                                     </select>
-
                                 </label>
 
+                                <div className="event-restriction">
+                                    <strong>Event</strong>
+
+                                    <span>
+                                        {event?.name ??
+                                            eventId}
+                                    </span>
+
+                                    <small>
+                                        Event roles are managed for
+                                        the currently selected event.
+                                    </small>
+                                </div>
 
                                 {isSystemAdmin && (
-
                                     <label className="form-field">
-
                                         <span>
-                                            Event
+                                            System Administrator
                                         </span>
 
-                                        <input
-                                            value={
-                                                selectedUser.event ??
-                                                ""
-                                            }
-                                            onChange={event =>
-                                                updateSelectedUser(
-                                                    "event",
-                                                    event.target.value
-                                                )
-                                            }
-                                            placeholder="Event ID"
-                                        />
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={
+                                                    selectedUser.isAdmin === true
+                                                }
+                                                onChange={event =>
+                                                    updateSelectedUser(
+                                                        "isAdmin",
+                                                        event.target.checked
+                                                    )
+                                                }
+                                            />
 
+                                            System administrator
+                                        </label>
                                     </label>
-
                                 )}
 
+                                {isEventAdmin &&
+                                    !isSystemAdmin && (
+                                        <div className="event-restriction">
+                                            <strong>
+                                                Access
+                                            </strong>
 
-                                {isEventAdmin && (
-
-                                    <div className="event-restriction">
-
-                                        <strong>
-                                            Event
-                                        </strong>
-
-                                        <span>
-                                            {currentUser.event}
-                                        </span>
-
-                                        <small>
-                                            Event administrators can only
-                                            manage users assigned to their
-                                            event.
-                                        </small>
-
-                                    </div>
-
-                                )}
-
+                                            <small>
+                                                Event administrators can
+                                                manage users assigned to
+                                                this event but cannot
+                                                grant system administrator
+                                                access.
+                                            </small>
+                                        </div>
+                                    )}
                             </div>
-
 
                             <div className="details-divider" />
 
-
                             <div className="detail-actions">
-
                                 <button
                                     type="button"
                                     className="danger"
@@ -782,65 +638,39 @@ export default function UserManager() {
                                     onClick={saveUser}
                                     disabled={saving}
                                 >
-
                                     {saving
                                         ? "Saving..."
-                                        : "Save Changes"
-                                    }
-
+                                        : "Save Changes"}
                                 </button>
-
                             </div>
-
                         </>
-
                     ) : (
-
                         <div className="empty-panel">
-
                             <div className="empty-icon">
                                 👤
                             </div>
 
-                            <h2>
-                                No User Selected
-                            </h2>
+                            <h2>No User Selected</h2>
 
                             <p>
                                 Select a user from the list to view
                                 and manage their account.
                             </p>
-
                         </div>
-
                     )}
-
                 </section>
-
             </div>
-
         </div>
-
     );
-
 }
 
 function formatRole(role) {
-
     switch (role) {
-
-        case "SYSTEM_ADMIN":
-            return "System Admin";
-
-        case "EVENT_ADMIN":
+        case "event-admin":
             return "Event Admin";
-
-        case "USER":
+        case "user":
             return "User";
-
         default:
-            return role ?? "Unknown";
-
+            return role ?? "No Role";
     }
-
 }

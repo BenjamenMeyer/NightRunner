@@ -15,7 +15,6 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Patrols from "./pages/user/Patrols.jsx";
 import Scoring from "./pages/scoring/Scoring.jsx";
 import Stations from "./pages/user/Stations.jsx";
-import {EventProvider} from "./api/helpers/EventContext.jsx";
 import AdminRoutes from "./pages/admin/AdminRoutes.jsx";
 
 function ProtectedRoute({ children }) {
@@ -197,9 +196,7 @@ function App() {
                     path="/admin/*"
                     element={
                         <ProtectedRoute>
-                            <EventProvider>
-                                <AdminRoutes />
-                            </EventProvider>
+                            <AdminRoutes />
                         </ProtectedRoute>
                     }
                 />

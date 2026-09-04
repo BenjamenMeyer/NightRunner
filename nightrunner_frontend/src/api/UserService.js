@@ -10,8 +10,8 @@ const USER_KEY = "night-runner-user";
  * @property {string} username
  * @property {string} email
  * @property {string} displayName
- * @property {string} role
- * @property {string|null} event
+ * @property {boolean} isAdmin
+ * @property {Object<string, string>} roles
  */
 
 export default class UserService {
@@ -64,7 +64,6 @@ export default class UserService {
 
     }
 
-
     /**
      * Refreshes the current Night Runner user
      * from the backend.
@@ -104,9 +103,7 @@ export default class UserService {
             );
 
         if (!value) {
-
             return null;
-
         }
 
         try {
@@ -124,7 +121,6 @@ export default class UserService {
 
     }
 
-
     /**
      * Determines whether a cached Night Runner
      * user exists.
@@ -139,7 +135,6 @@ export default class UserService {
         return this.getCached() !== null;
 
     }
-
 
     /**
      * Stores the Night Runner application user
@@ -165,7 +160,6 @@ export default class UserService {
         );
 
     }
-
 
     /**
      * Removes the cached Night Runner user.
@@ -196,7 +190,6 @@ export default class UserService {
 
     }
 
-
     /**
      * Gets the external OIDC identity ID
      * associated with the Night Runner user.
@@ -209,7 +202,6 @@ export default class UserService {
 
     }
 
-
     /**
      * Gets the Night Runner username.
      *
@@ -221,7 +213,6 @@ export default class UserService {
 
     }
 
-
     /**
      * Gets the Night Runner user's email.
      *
@@ -232,7 +223,6 @@ export default class UserService {
         return this.getCached()?.email ?? null;
 
     }
-
 
     /**
      * Gets the Night Runner user's display name.
@@ -246,100 +236,153 @@ export default class UserService {
     }
 
 
-    /**
-     * Gets the current user's role.
-     *
-     * Uses the cached Night Runner user.
-     *
-     * @returns {string|null}
-     */
-    getRole() {
-
-        return this.getCached()?.role ?? null;
-
-    }
-
-
-    /**
-     * Gets the UUID of the current user's event.
-     *
-     * @returns {string|null}
-     */
-    getEventId() {
-
-        return this.getCached()?.event ?? null;
-
-    }
-
-
     //
-    // Permissions
+    // Root/System Administration
     //
 
     /**
      * Determines whether the current user
-     * is a system administrator.
+     * is a root/system administrator.
      *
      * @returns {boolean}
      */
     isSystemAdmin() {
 
-        return this.getRole() === "admin";
+        return this.getCached()?.isAdmin === true;
 
     }
 
 
-    /**
-     * Determines whether the current user
-     * is an event administrator.
-     *
-     * @returns {boolean}
-     */
-    isEventAdmin() {
+    //
+    // Event Roles
+    //
 
-        return this.getRole() === "event-admin";
+    /**
+     * Gets the event role map.
+     *
+     * @returns {Object<string, string>}
+     */
+    getRoles() {
+
+        return this.getCached()?.roles ?? {};
 
     }
 
+    /**
+     * Gets the role for a specific event.
+     *
+     * @param {string} eventId
+     * @returns {string|null}
+     */
+    getEventRole(eventId) {
+
+        if (!eventId) {
+            return null;
+        }
+
+        return this.getRoles()[eventId] ?? null;
+
+    }
 
     /**
-     * Determines whether the current user
-     * has any administrator role.
+     * Gets all event IDs assigned to the user.
      *
-     * @returns {boolean}
+     * @returns {string[]}
      */
-    isAdmin() {
+    getEventIds() {
 
-        return (
-            this.isSystemAdmin() ||
-            this.isEventAdmin()
+        return Object.keys(
+            this.getRoles()
         );
 
     }
 
-
     /**
-     * Determines whether the current user
-     * is a normal user.
+     * Gets the number of events assigned
+     * to the current user.
      *
-     * @returns {boolean}
+     * @returns {number}
      */
-    isUser() {
+    getEventCount() {
 
-        return this.getRole() === "user";
+        return this.getEventIds().length;
 
     }
 
+    /**
+     * Determines whether the current user
+     * has a role for a specific event.
+     *
+     * Root administrators are considered to
+     * have access to every event.
+     *
+     * @param {string} eventId
+     * @returns {boolean}
+     */
+    hasEventAccess(eventId) {
+
+        if (!eventId) {
+            return false;
+        }
+
+        if (this.isSystemAdmin()) {
+            return true;
+        }
+
+        return this.getEventRole(eventId) !== null;
+
+    }
 
     /**
      * Determines whether the current user
-     * has an event assigned.
+     * is an event administrator for an event.
      *
+     * @param {string} eventId
      * @returns {boolean}
      */
-    hasEvent() {
+    isEventAdmin(eventId) {
 
-        return this.getEventId() !== null;
+        return (
+            this.isSystemAdmin() ||
+            this.getEventRole(eventId) === "event-admin"
+        );
+
+    }
+
+    /**
+     * Determines whether the current user
+     * has any administrative access to an event.
+     *
+     * @param {string} eventId
+     * @returns {boolean}
+     */
+    isAdmin(eventId = null) {
+
+        if (this.isSystemAdmin()) {
+            return true;
+        }
+
+        if (!eventId) {
+            return false;
+        }
+
+        return this.isEventAdmin(eventId);
+
+    }
+
+    /**
+     * Determines whether the current user
+     * is a normal event user.
+     *
+     * @param {string} eventId
+     * @returns {boolean}
+     */
+    isUser(eventId) {
+
+        return (
+            !this.isSystemAdmin() &&
+            this.getEventRole(eventId) === "user"
+        );
 
     }
 
@@ -348,11 +391,6 @@ export default class UserService {
     // User Management
     //
 
-    /**
-     * Gets all Night Runner users.
-     *
-     * @returns {Promise<User[]>}
-     */
     async getUsers() {
 
         return await BackendTransport.get(
@@ -361,13 +399,6 @@ export default class UserService {
 
     }
 
-
-    /**
-     * Gets a Night Runner user by ID.
-     *
-     * @param {string} userId
-     * @returns {Promise<User>}
-     */
     async getUser(userId) {
 
         return await BackendTransport.get(
@@ -376,13 +407,6 @@ export default class UserService {
 
     }
 
-
-    /**
-     * Creates a Night Runner user.
-     *
-     * @param {Object} user
-     * @returns {Promise<User>}
-     */
     async createUser(user) {
 
         return await BackendTransport.post(
@@ -392,14 +416,6 @@ export default class UserService {
 
     }
 
-
-    /**
-     * Updates a Night Runner user.
-     *
-     * @param {string} userId
-     * @param {Object} user
-     * @returns {Promise<User>}
-     */
     async updateUser(
         userId,
         user
@@ -412,13 +428,6 @@ export default class UserService {
 
     }
 
-
-    /**
-     * Deletes a Night Runner user.
-     *
-     * @param {string} userId
-     * @returns {Promise<void>}
-     */
     async deleteUser(userId) {
 
         return await BackendTransport.delete(
@@ -433,35 +442,58 @@ export default class UserService {
     //
 
     /**
-     * Changes a user's role.
+     * Changes a user's root administrator status.
      *
      * @param {string} userId
+     * @param {boolean} isAdmin
+     * @returns {Promise<User>}
+     */
+    async setSystemAdmin(
+        userId,
+        isAdmin
+    ) {
+
+        return await this.updateUser(
+            userId,
+            {
+                isAdmin
+            }
+        );
+
+    }
+
+    /**
+     * Assigns a role to a user for an event.
+     *
+     * @param {string} userId
+     * @param {string} eventId
      * @param {string} role
      * @returns {Promise<User>}
      */
-    async setRole(
+    async setEventRole(
         userId,
+        eventId,
         role
     ) {
 
         return await this.updateUser(
             userId,
             {
+                event: eventId,
                 role
             }
         );
 
     }
 
-
     /**
-     * Assigns a user to an event.
+     * Removes a user's role for an event.
      *
      * @param {string} userId
-     * @param {string|null} eventId
+     * @param {string} eventId
      * @returns {Promise<User>}
      */
-    async setEvent(
+    async removeEventRole(
         userId,
         eventId
     ) {
@@ -469,32 +501,33 @@ export default class UserService {
         return await this.updateUser(
             userId,
             {
-                event: eventId
+                event: eventId,
+                role: null
             }
         );
 
     }
 
-
     /**
-     * Updates both a user's role and event.
+     * Updates a user's root administrator status
+     * and event roles.
      *
      * @param {string} userId
-     * @param {string} role
-     * @param {string|null} eventId
+     * @param {boolean} isAdmin
+     * @param {Object<string, string>} roles
      * @returns {Promise<User>}
      */
     async updateUserAccess(
         userId,
-        role,
-        eventId
+        isAdmin,
+        roles
     ) {
 
         return await this.updateUser(
             userId,
             {
-                role,
-                event: eventId
+                isAdmin,
+                roles
             }
         );
 

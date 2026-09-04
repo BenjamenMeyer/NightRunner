@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import ApiService from "@/api/ApiService";
+import ApiService from "../../../api/ApiService.js";
 
 import "./EventCreator.css";
 

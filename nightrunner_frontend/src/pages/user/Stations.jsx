@@ -1,68 +1,95 @@
-import { useEffect, useState } from "react";
-
-import ApiService from "@/api/ApiService";
-import EventSelector from "@/api/helpers/EventSelector";
+import {
+    useEffect,
+    useState
+} from "react";
 
 import "./Stations.css";
 
+import ApiService from "../../api/ApiService.js";
+
+import {
+    useEventContext
+} from "../../api/helpers/EventContext.jsx";
+
 export default function Stations() {
 
-    const [stations, setStations] = useState([]);
+    const {
+        eventId,
+        event,
+        loading: eventLoading,
+        error: eventError
+    } = useEventContext();
 
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [stations, setStations] =
+        useState([]);
 
-    const [showEventSelector, setShowEventSelector] = useState(false);
-    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState(null);
+
 
     useEffect(() => {
 
-        loadStations();
+        /*
+         * Do not attempt to load stations until the
+         * EventContext has resolved the selected event.
+         */
+        if (eventLoading) {
+            return;
+        }
 
-    }, []);
+        if (eventError) {
 
-    async function loadStations(eventId = null) {
+            setError(eventError);
+            setStations([]);
+            setLoading(false);
+
+            return;
+
+        }
+
+        if (!eventId) {
+
+            setError(
+                "No event is currently selected."
+            );
+
+            setStations([]);
+            setLoading(false);
+
+            return;
+
+        }
+
+        loadStations(eventId);
+
+    }, [
+        eventId,
+        eventLoading,
+        eventError
+    ]);
+
+
+    async function loadStations(selectedEventId) {
 
         try {
 
             setLoading(true);
             setError(null);
 
-            const resolvedEventId =
-                eventId ??
-                ApiService.userData.getEventId();
-
-            /*
-             * System administrators may not have an event
-             * assigned to their account. In that case, let
-             * them select the event they want to manage.
-             */
-            if (!resolvedEventId) {
-
-                if (ApiService.userData.isSystemAdmin()) {
-
-                    setShowEventSelector(true);
-                    setLoading(false);
-
-                    return;
-
-                }
-
-                throw new Error(
-                    "No event is currently assigned to your account."
-                );
-
-            }
-
             const response =
                 await ApiService.stationData.getStations(
-                    resolvedEventId
+                    selectedEventId
                 );
 
-            setStations(response ?? []);
-            setSelectedEvent(resolvedEventId);
+            setStations(
+                response ?? []
+            );
 
-        } catch (error) {
+        }
+        catch (error) {
 
             console.error(
                 "Failed to load stations:",
@@ -74,7 +101,10 @@ export default function Stations() {
                 "Unable to load stations."
             );
 
-        } finally {
+            setStations([]);
+
+        }
+        finally {
 
             setLoading(false);
 
@@ -82,15 +112,11 @@ export default function Stations() {
 
     }
 
-    async function handleEventSelected(eventId) {
 
-        setShowEventSelector(false);
-
-        await loadStations(eventId);
-
-    }
-
-    if (loading) {
+    if (
+        eventLoading ||
+        loading
+    ) {
 
         return (
 
@@ -108,17 +134,10 @@ export default function Stations() {
 
     }
 
+
     return (
 
         <div className="stations-page">
-
-            {showEventSelector && (
-
-                <EventSelector
-                    onSelect={handleEventSelected}
-                />
-
-            )}
 
             <div className="page-header">
 
@@ -134,6 +153,7 @@ export default function Stations() {
 
             </div>
 
+
             {error && (
 
                 <div className="error-banner">
@@ -143,6 +163,20 @@ export default function Stations() {
                 </div>
 
             )}
+
+
+            {!error && event && (
+
+                <div className="event-context">
+
+                    <strong>
+                        {event.name}
+                    </strong>
+
+                </div>
+
+            )}
+
 
             {!error && stations.length === 0 && (
 
@@ -158,6 +192,7 @@ export default function Stations() {
                 </div>
 
             )}
+
 
             {!error && stations.length > 0 && (
 
@@ -177,6 +212,7 @@ export default function Stations() {
                                 </h2>
 
                             </div>
+
 
                             <div className="station-card-body">
 
@@ -199,7 +235,6 @@ export default function Stations() {
                                 )}
 
                                 <div className="station-info">
-
                                     <div>
 
                                         <span>
@@ -209,23 +244,13 @@ export default function Stations() {
                                         <strong>
                                             {station.members?.length ?? 0}
                                         </strong>
-
                                     </div>
-
                                 </div>
-
                             </div>
-
                         </div>
-
                     ))}
-
                 </div>
-
             )}
-
         </div>
-
     );
-
 }

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import ApiService from "@/api/ApiService";
-
-import EventSelector from "@/api/helpers/EventSelector";
+import ApiService from "../api/ApiService.js";
+import {
+    useEventContext
+} from "../api/helpers/EventContext.jsx";
 
 import "./Dashboard.css";
 
@@ -11,143 +12,69 @@ export default function Dashboard() {
 
     const navigate = useNavigate();
 
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [event, setEvent] = useState(null);
+    const {
+        event,
+        eventId,
+        loading: eventLoading,
+        error: eventError
+    } = useEventContext();
 
-    const [showEventSelector, setShowEventSelector] =
-        useState(false);
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState(null);
 
 
     useEffect(() => {
 
-        loadDashboard();
+        /*
+         * The EventContext is responsible for resolving
+         * the currently selected event.
+         *
+         * Once an event is available, the dashboard can
+         * use it directly.
+         */
+        if (eventLoading) {
+            return;
+        }
 
-    }, []);
+        if (eventError) {
 
+            setError(eventError);
+            setLoading(false);
 
-    async function loadDashboard() {
-
-        try {
-
-            setLoading(true);
-            setError(null);
-
-            const user =
-                await ApiService.userData.get();
-
-            if (!user) {
-
-                throw new Error(
-                    "Unable to determine the current user."
-                );
-
-            }
-
-
-            /*
-             * A normal user should have an event assigned.
-             *
-             * System administrators may not have an event.
-             * In that case, allow them to select one.
-             */
-            if (!user.event) {
-
-                if (
-                    ApiService.userData.isSystemAdmin()
-                ) {
-
-                    setShowEventSelector(true);
-
-                    return;
-
-                }
-
-                throw new Error(
-                    "No event is currently assigned to your account."
-                );
-
-            }
-
-
-            await loadEvent(user.event);
+            return;
 
         }
-        catch (error) {
 
-            console.error(
-                "Failed to load dashboard:",
-                error
-            );
+        if (!eventId || !event) {
 
             setError(
-                error.message ??
-                "Failed to load dashboard."
+                "No event is currently selected."
             );
-
-        }
-        finally {
 
             setLoading(false);
 
-        }
-
-    }
-
-
-    async function loadEvent(eventId) {
-
-        const eventResponse =
-            await ApiService.eventData.getEvent(
-                eventId
-            );
-
-        setEvent(eventResponse);
-
-    }
-
-
-    async function handleEventSelected(selectedEvent) {
-
-        try {
-
-            setError(null);
-            setLoading(true);
-
-            /*
-             * The selector returns the complete event object.
-             *
-             * Keep this local to the Dashboard. We are not
-             * changing the administrator's account assignment.
-             */
-            setEvent(selectedEvent);
-
-            setShowEventSelector(false);
-
-        }
-        catch (error) {
-
-            console.error(
-                "Failed to select event:",
-                error
-            );
-
-            setError(
-                error.message ??
-                "Failed to select event."
-            );
-
-        }
-        finally {
-
-            setLoading(false);
+            return;
 
         }
 
-    }
+        setError(null);
+        setLoading(false);
+
+    }, [
+        event,
+        eventId,
+        eventLoading,
+        eventError
+    ]);
 
 
-    if (loading) {
+    if (
+        loading ||
+        eventLoading
+    ) {
 
         return (
 
@@ -464,15 +391,6 @@ export default function Dashboard() {
                     </section>
 
                 </>
-
-            )}
-
-
-            {showEventSelector && (
-
-                <EventSelector
-                    onSelect={handleEventSelected}
-                />
 
             )}
 

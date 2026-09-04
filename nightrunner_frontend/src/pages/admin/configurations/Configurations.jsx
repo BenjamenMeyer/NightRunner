@@ -1,16 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+    useEffect,
+    useMemo,
+    useState
+} from "react";
+
+import {
+    useNavigate
+} from "react-router-dom";
 
 import ApiService from "@/api/ApiService.js";
+import ConfigurationGroupDialog from "./ConfigurationGroupDialog.jsx";
 
 import "./Configurations.css";
 
 export default function Configurations() {
-
     const navigate = useNavigate();
 
-    const [groups, setGroups] = useState([]);
-    const [configurations, setConfigurations] = useState([]);
+    const [groups, setGroups] =
+        useState([]);
+
+    const [configurations, setConfigurations] =
+        useState([]);
 
     const [selectedGroupId, setSelectedGroupId] =
         useState(null);
@@ -18,607 +28,849 @@ export default function Configurations() {
     const [selectedConfigurationId, setSelectedConfigurationId] =
         useState(null);
 
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] =
+        useState(true);
 
-    const [error, setError] = useState(null);
+    const [error, setError] =
+        useState(null);
 
-    const [search, setSearch] = useState("");
+    const [groupDialog, setGroupDialog] =
+        useState(null);
+
+    const [deletingGroup, setDeletingGroup] =
+        useState(false);
+
+    const [deletingConfiguration, setDeletingConfiguration] =
+        useState(false);
 
     useEffect(() => {
-
-        loadConfigurations();
-
+        load();
     }, []);
 
-    async function loadConfigurations() {
-
+    async function load() {
         try {
-
             setLoading(true);
             setError(null);
 
             const [
-                groupData,
-                configurationData
+                groupsResponse,
+                configurationsResponse
             ] = await Promise.all([
-
                 ApiService.configurationData.getGroups(),
-
                 ApiService.configurationData.getConfigurations()
-
             ]);
 
-            setGroups(groupData ?? []);
-            setConfigurations(configurationData ?? []);
+            const loadedGroups =
+                Array.isArray(groupsResponse)
+                    ? groupsResponse
+                    : groupsResponse?.groups ?? [];
 
-        } catch (error) {
+            const loadedConfigurations =
+                Array.isArray(configurationsResponse)
+                    ? configurationsResponse
+                    : configurationsResponse?.configurations ?? [];
 
+            setGroups(loadedGroups);
+            setConfigurations(loadedConfigurations);
+
+            if (
+                selectedGroupId &&
+                !loadedGroups.some(
+                    group =>
+                        String(group.id) ===
+                        String(selectedGroupId)
+                )
+            ) {
+                setSelectedGroupId(null);
+            }
+        }
+        catch (error) {
             console.error(
                 "Failed to load configurations:",
                 error
             );
 
             setError(
-                error.message ??
-                "Failed to load configurations."
+                error?.message ??
+                "Unable to load configurations."
+            );
+        }
+        finally {
+            setLoading(false);
+        }
+    }
+
+    async function loadGroups() {
+        const response =
+            await ApiService.configurationData.getGroups();
+
+        const loadedGroups =
+            Array.isArray(response)
+                ? response
+                : response?.groups ?? [];
+
+        setGroups(loadedGroups);
+
+        return loadedGroups;
+    }
+
+    async function loadConfigurations() {
+        const response =
+            await ApiService.configurationData
+                .getConfigurations();
+
+        const loadedConfigurations =
+            Array.isArray(response)
+                ? response
+                : response?.configurations ?? [];
+
+        setConfigurations(
+            loadedConfigurations
+        );
+
+        return loadedConfigurations;
+    }
+
+    async function handleCreateGroup(group) {
+        try {
+            const created =
+                await ApiService.configurationData
+                    .createGroup(group);
+
+            const createdGroup =
+                created?.group ??
+                created;
+
+            const loadedGroups =
+                await loadGroups();
+
+            await loadConfigurations();
+
+            if (createdGroup?.id) {
+                setSelectedGroupId(
+                    createdGroup.id
+                );
+            }
+
+            setGroupDialog(null);
+        }
+        catch (error) {
+            console.error(
+                "Failed to create station type:",
+                error
             );
 
-        } finally {
-
-            setLoading(false);
-
+            throw error;
         }
-
     }
 
-    const filteredConfigurations = useMemo(() => {
-
-        const value =
-            search.trim().toLowerCase();
-
-        if (!value) {
-            return configurations;
-        }
-
-        return configurations.filter(configuration =>
-
-            configuration.name
-                ?.toLowerCase()
-                .includes(value)
-
-        );
-
-    }, [configurations, search]);
-
-    const visibleConfigurations =
-        selectedGroupId
-
-            ? filteredConfigurations.filter(
-                configuration =>
-                    configuration.groupId === selectedGroupId ||
-                    configuration.group_id === selectedGroupId
-            )
-
-            : filteredConfigurations;
-
-    const selectedConfiguration =
-        configurations.find(
-            configuration =>
-                configuration.id ===
-                selectedConfigurationId
-        );
-
-    function getGroupName(configuration) {
-
-        const groupId =
-            configuration.groupId ??
-            configuration.group_id;
-
-        return groups.find(
-            group =>
-                group.id === groupId
-        )?.name ?? "Unknown Group";
-
-    }
-
-    function exportConfiguration(configuration) {
-
-        const exported = {
-            version: 1,
-
-            group: {
-                name: getGroupName(configuration),
-
-                description:
-                    groups.find(
-                        group =>
-                            group.id ===
-                            (configuration.groupId ??
-                                configuration.group_id)
-                    )?.description ?? null
-            },
-
-            configuration: {
-                name: configuration.name,
-
-                description:
-                    configuration.description ?? null,
-
-                tasks:
-                    configuration.tasks ?? []
-            }
-
-        };
-
-        const blob = new Blob(
-            [
-                JSON.stringify(
-                    exported,
-                    null,
-                    4
-                )
-            ],
-            {
-                type: "application/json"
-            }
-        );
-
-        const url =
-            URL.createObjectURL(blob);
-
-        const anchor =
-            document.createElement("a");
-
-        anchor.href = url;
-
-        anchor.download =
-            `${configuration.name
-                .replace(/[^a-z0-9]+/gi, "-")
-                .toLowerCase()}.json`;
-
-        anchor.click();
-
-        URL.revokeObjectURL(url);
-
-    }
-
-    async function deleteConfiguration() {
-
-        if (!selectedConfiguration) {
-            return;
-        }
-
-        if (!window.confirm(
-            `Delete "${selectedConfiguration.name}"?`
-        )) {
+    async function handleUpdateGroup(group) {
+        if (!groupDialog?.group?.id) {
             return;
         }
 
         try {
+            const updated =
+                await ApiService.configurationData
+                    .updateGroup(
+                        groupDialog.group.id,
+                        group
+                    );
 
+            const updatedGroup =
+                updated?.group ??
+                updated;
+
+            const loadedGroups =
+                await loadGroups();
+
+            await loadConfigurations();
+
+            if (updatedGroup?.id) {
+                setSelectedGroupId(
+                    updatedGroup.id
+                );
+            }
+
+            setGroupDialog(null);
+        }
+        catch (error) {
+            console.error(
+                "Failed to update station type:",
+                error
+            );
+
+            throw error;
+        }
+    }
+
+    async function handleDeleteGroup() {
+        const group =
+            groups.find(
+                group =>
+                    String(group.id) ===
+                    String(selectedGroupId)
+            );
+
+        if (!group) {
+            return;
+        }
+
+        const groupConfigurations =
+            configurations.filter(
+                configuration =>
+                    String(
+                        configuration.groupId ??
+                        configuration.group_id
+                    ) ===
+                    String(group.id)
+            );
+
+        if (groupConfigurations.length > 0) {
+            setError(
+                `Cannot delete "${group.name}" because it has ` +
+                `${groupConfigurations.length} configuration` +
+                `${groupConfigurations.length === 1 ? "" : "s"} assigned to it.`
+            );
+            return;
+        }
+
+        const confirmed =
+            window.confirm(
+                `Delete the station type "${group.name}"?`
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            setDeletingGroup(true);
             setError(null);
 
-            await ApiService.configurationData.deleteConfiguration(
-                selectedConfiguration.id
+            await ApiService.configurationData
+                .deleteGroup(group.id);
+
+            setSelectedGroupId(null);
+            setSelectedConfigurationId(null);
+
+            await loadGroups();
+            await loadConfigurations();
+        }
+        catch (error) {
+            console.error(
+                "Failed to delete station type:",
+                error
             );
+
+            setError(
+                error?.message ??
+                "Unable to delete the station type."
+            );
+        }
+        finally {
+            setDeletingGroup(false);
+        }
+    }
+
+    async function handleDeleteConfiguration() {
+        if (!selectedConfigurationId) {
+            return;
+        }
+
+        const configuration =
+            configurations.find(
+                configuration =>
+                    String(configuration.id) ===
+                    String(selectedConfigurationId)
+            );
+
+        if (!configuration) {
+            return;
+        }
+
+        const confirmed =
+            window.confirm(
+                `Delete the configuration "${configuration.name}"?`
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            setDeletingConfiguration(true);
+            setError(null);
+
+            await ApiService.configurationData
+                .deleteConfiguration(
+                    configuration.id
+                );
 
             setSelectedConfigurationId(null);
 
             await loadConfigurations();
-
-        } catch (error) {
-
+        }
+        catch (error) {
             console.error(
                 "Failed to delete configuration:",
                 error
             );
 
             setError(
-                error.message ??
-                "Failed to delete configuration."
+                error?.message ??
+                "Unable to delete the configuration."
             );
+        }
+        finally {
+            setDeletingConfiguration(false);
+        }
+    }
 
+    function getConfigurationGroupId(configuration) {
+        return (
+            configuration?.groupId ??
+            configuration?.group_id ??
+            null
+        );
+    }
+
+    const filteredConfigurations =
+        useMemo(() => {
+            if (!selectedGroupId) {
+                return configurations;
+            }
+
+            return configurations.filter(
+                configuration =>
+                    String(
+                        getConfigurationGroupId(
+                            configuration
+                        )
+                    ) ===
+                    String(selectedGroupId)
+            );
+        }, [
+            configurations,
+            selectedGroupId
+        ]);
+
+    const selectedGroup =
+        groups.find(
+            group =>
+                String(group.id) ===
+                String(selectedGroupId)
+        ) ?? null;
+
+    const selectedConfiguration =
+        configurations.find(
+            configuration =>
+                String(configuration.id) ===
+                String(selectedConfigurationId)
+        ) ?? null;
+
+    function getGroupConfigurationCount(groupId) {
+        return configurations.filter(
+            configuration =>
+                String(
+                    getConfigurationGroupId(
+                        configuration
+                    )
+                ) ===
+                String(groupId)
+        ).length;
+    }
+
+    function openCreateGroup() {
+        setGroupDialog({
+            mode: "create",
+            group: null
+        });
+    }
+
+    function openEditGroup() {
+        if (!selectedGroup) {
+            return;
         }
 
+        setGroupDialog({
+            mode: "edit",
+            group: selectedGroup
+        });
+    }
+
+    function handleCreateConfiguration() {
+        navigate(
+            "/admin/configurations/create"
+        );
+    }
+
+    function handleEditConfiguration() {
+        if (!selectedConfiguration) {
+            return;
+        }
+
+        navigate(
+            `/admin/configurations/edit?id=${selectedConfiguration.id}`
+        );
+    }
+
+    function exportConfiguration() {
+        if (!selectedConfiguration) {
+            return;
+        }
+
+        const group =
+            groups.find(
+                group =>
+                    String(group.id) ===
+                    String(
+                        getConfigurationGroupId(
+                            selectedConfiguration
+                        )
+                    )
+            );
+
+        const exportData = {
+            ...selectedConfiguration,
+            group: group
+                ? {
+                    id: group.id,
+                    name: group.name,
+                    description:
+                        group.description ?? null
+                }
+                : null
+        };
+
+        const blob =
+            new Blob(
+                [
+                    JSON.stringify(
+                        exportData,
+                        null,
+                        2
+                    )
+                ],
+                {
+                    type: "application/json"
+                }
+            );
+
+        const url =
+            URL.createObjectURL(blob);
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+
+        link.download =
+            `${selectedConfiguration.name || "configuration"}.json`;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(url);
     }
 
     if (loading) {
-
         return (
-
-            <div className="configurations-page">
-
+            <div className="configurations">
                 <div className="configurations-loading">
-
-                    <span className="loading-spinner" />
-
                     Loading configurations...
-
                 </div>
-
             </div>
-
         );
-
     }
 
     return (
-
-        <div className="configurations-page">
-
-            <header className="configurations-header">
-
+        <div className="configurations">
+            <div className="configurations-header">
                 <div>
-
-                    <span className="page-eyebrow">
-                        System Administration
-                    </span>
-
                     <h1>
-                        Configurations
+                        Station Configurations
                     </h1>
 
                     <p>
-                        Manage reusable station presets
-                        and the station types available
-                        to the system.
+                        Manage station types and their
+                        configurations.
                     </p>
-
                 </div>
 
-                <button
-                    type="button"
-                    className="primary-button"
-                    onClick={() =>
-                        navigate(
-                            "/admin/configurations/create"
-                        )
-                    }
-                >
-                    + Create Configuration
-                </button>
-
-            </header>
-
-            {error && (
-
-                <div className="error-banner">
-                    {error}
-                </div>
-
-            )}
-
-            <div className="configuration-toolbar">
-
-                <input
-                    className="configuration-search"
-                    placeholder="Search configurations..."
-                    value={search}
-                    onChange={event =>
-                        setSearch(
-                            event.target.value
-                        )
-                    }
-                />
-
-            </div>
-
-            <div className="configuration-layout">
-
-                <aside className="group-panel">
-
-                    <div className="group-panel-header">
-
-                        <div>
-
-                            <h2>
-                                Station Types
-                            </h2>
-
-                            <p>
-                                Configuration groups
-                            </p>
-
-                        </div>
-
-                        <span className="count-badge">
-                            {groups.length}
-                        </span>
-
-                    </div>
+                <div className="configurations-header-actions">
+                    <button
+                        type="button"
+                        onClick={openCreateGroup}
+                    >
+                        + Create Station Type
+                    </button>
 
                     <button
                         type="button"
-                        className={
-                            selectedGroupId === null
-                                ? "group-item selected"
-                                : "group-item"
-                        }
-                        onClick={() =>
-                            setSelectedGroupId(null)
-                        }
+                        onClick={handleCreateConfiguration}
+                        disabled={groups.length === 0}
                     >
-
-                        <span>
-                            All Configurations
-                        </span>
-
-                        <small>
-                            {configurations.length}
-                        </small>
-
+                        + Create Configuration
                     </button>
+                </div>
+            </div>
 
-                    {groups.map(group => {
+            {groups.length === 0 && (
+                <div className="configurations-notice">
+                    <strong>
+                        No station types exist.
+                    </strong>
 
-                        const count =
-                            configurations.filter(
-                                configuration =>
-                                    (
-                                        configuration.groupId ??
-                                        configuration.group_id
-                                    ) === group.id
-                            ).length;
+                    <span>
+                        Create a station type before creating
+                        a configuration.
+                    </span>
 
-                        return (
+                    <button
+                        type="button"
+                        onClick={openCreateGroup}
+                    >
+                        Create Station Type
+                    </button>
+                </div>
+            )}
+
+            {error && (
+                <div className="configurations-error">
+                    {error}
+                </div>
+            )}
+
+            <div className="configurations-layout">
+                <aside className="configurations-sidebar">
+                    <div className="configurations-sidebar-header">
+                        <div>
+                            <h2>
+                                Station Types
+                            </h2>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={openCreateGroup}
+                            title="Create station type"
+                        >
+                            +
+                        </button>
+                    </div>
+
+                    <nav className="configuration-groups">
+                        <button
+                            type="button"
+                            className={
+                                selectedGroupId === null
+                                    ? "configuration-group active"
+                                    : "configuration-group"
+                            }
+                            onClick={() => {
+                                setSelectedGroupId(null);
+                                setSelectedConfigurationId(null);
+                            }}
+                        >
+                            <span>
+                                All Configurations
+                            </span>
+
+                            <span className="configuration-group-count">
+                                {configurations.length}
+                            </span>
+                        </button>
+
+                        {groups.map(group => {
+                            const count =
+                                getGroupConfigurationCount(
+                                    group.id
+                                );
+
+                            const selected =
+                                String(
+                                    selectedGroupId
+                                ) ===
+                                String(group.id);
+
+                            return (
+                                <button
+                                    type="button"
+                                    key={group.id}
+                                    className={
+                                        selected
+                                            ? "configuration-group active"
+                                            : "configuration-group"
+                                    }
+                                    onClick={() => {
+                                        setSelectedGroupId(
+                                            group.id
+                                        );
+                                        setSelectedConfigurationId(
+                                            null
+                                        );
+                                    }}
+                                >
+                                    <span>
+                                        {group.name}
+                                    </span>
+
+                                    <span className="configuration-group-count">
+                                        {count}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </nav>
+                </aside>
+
+                <main className="configurations-main">
+                    {selectedGroup && (
+                        <div className="configuration-group-toolbar">
+                            <div>
+                                <h2>
+                                    {selectedGroup.name}
+                                </h2>
+
+                                {selectedGroup.description && (
+                                    <p>
+                                        {selectedGroup.description}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="configuration-group-toolbar-actions">
+                                <button
+                                    type="button"
+                                    onClick={openEditGroup}
+                                >
+                                    Edit Station Type
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={handleDeleteGroup}
+                                    disabled={
+                                        deletingGroup
+                                    }
+                                >
+                                    {deletingGroup
+                                        ? "Deleting..."
+                                        : "Delete Station Type"}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="configurations-list">
+                        <div className="configurations-list-header">
+                            <div>
+                                <h2>
+                                    {selectedGroup
+                                        ? `${selectedGroup.name} Configurations`
+                                        : "All Configurations"}
+                                </h2>
+
+                                <span>
+                                    {filteredConfigurations.length}{" "}
+                                    configuration
+                                    {filteredConfigurations.length === 1
+                                        ? ""
+                                        : "s"}
+                                </span>
+                            </div>
 
                             <button
                                 type="button"
-                                key={group.id}
-                                className={
-                                    selectedGroupId === group.id
-                                        ? "group-item selected"
-                                        : "group-item"
-                                }
-                                onClick={() =>
-                                    setSelectedGroupId(
-                                        group.id
-                                    )
+                                onClick={handleCreateConfiguration}
+                                disabled={
+                                    groups.length === 0
                                 }
                             >
-
-                                <span>
-                                    {group.name}
-                                </span>
-
-                                <small>
-                                    {count}
-                                </small>
-
+                                + Create Configuration
                             </button>
-
-                        );
-
-                    })}
-
-                </aside>
-
-                <main className="configuration-content">
-
-                    <div className="configuration-content-header">
-
-                        <div>
-
-                            <h2>
-
-                                {selectedGroupId
-
-                                    ? groups.find(
-                                        group =>
-                                            group.id ===
-                                            selectedGroupId
-                                    )?.name
-
-                                    : "All Configurations"
-
-                                }
-
-                            </h2>
-
-                            <p>
-                                Reusable station task presets.
-                            </p>
-
                         </div>
 
-                    </div>
+                        {filteredConfigurations.length === 0 ? (
+                            <div className="configurations-empty">
+                                <h3>
+                                    No configurations
+                                </h3>
 
-                    {visibleConfigurations.length === 0 ? (
+                                <p>
+                                    {selectedGroup
+                                        ? `No configurations have been created for ${selectedGroup.name} yet.`
+                                        : "No configurations have been created yet."}
+                                </p>
 
-                        <div className="empty-panel">
-
-                            <strong>
-                                No configurations found
-                            </strong>
-
-                            <span>
-                                Create a configuration preset
-                                to get started.
-                            </span>
-
-                        </div>
-
-                    ) : (
-
-                        <div className="configuration-list">
-
-                            {visibleConfigurations.map(
-                                configuration => (
-
+                                {groups.length === 0 ? (
                                     <button
                                         type="button"
-                                        key={
-                                            configuration.id
-                                        }
-                                        className={
-                                            selectedConfigurationId ===
-                                            configuration.id
-
-                                                ? "configuration-card selected"
-
-                                                : "configuration-card"
-                                        }
-                                        onClick={() =>
-                                            setSelectedConfigurationId(
-                                                configuration.id
-                                            )
-                                        }
+                                        onClick={openCreateGroup}
                                     >
-
-                                        <div className="configuration-card-main">
-
-                                            <div className="configuration-card-title">
-
-                                                <h3>
-                                                    {
-                                                        configuration.name
-                                                    }
-                                                </h3>
-
-                                                <span className="configuration-group">
-                                                    {
-                                                        getGroupName(
+                                        Create Station Type
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={handleCreateConfiguration}
+                                    >
+                                        Create Configuration
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="configurations-list-items">
+                                {filteredConfigurations.map(
+                                    configuration => {
+                                        const group =
+                                            groups.find(
+                                                group =>
+                                                    String(
+                                                        group.id
+                                                    ) ===
+                                                    String(
+                                                        getConfigurationGroupId(
                                                             configuration
                                                         )
-                                                    }
-                                                </span>
+                                                    )
+                                            );
 
-                                            </div>
+                                        const selected =
+                                            String(
+                                                selectedConfigurationId
+                                            ) ===
+                                            String(
+                                                configuration.id
+                                            );
 
-                                            <p>
-                                                {
-                                                    configuration.description ??
-                                                    "No description."
+                                        return (
+                                            <button
+                                                type="button"
+                                                key={configuration.id}
+                                                className={
+                                                    selected
+                                                        ? "configuration-list-item selected"
+                                                        : "configuration-list-item"
                                                 }
-                                            </p>
-
-                                        </div>
-
-                                        <div className="configuration-task-count">
-
-                                            <strong>
-                                                {
-                                                    configuration.tasks
-                                                        ?.length ?? 0
+                                                onClick={() =>
+                                                    setSelectedConfigurationId(
+                                                        configuration.id
+                                                    )
                                                 }
-                                            </strong>
+                                            >
+                                                <div>
+                                                    <strong>
+                                                        {
+                                                            configuration.name
+                                                        }
+                                                    </strong>
 
-                                            <span>
-                                                Tasks
-                                            </span>
+                                                    {configuration.description && (
+                                                        <p>
+                                                            {
+                                                                configuration.description
+                                                            }
+                                                        </p>
+                                                    )}
+                                                </div>
 
-                                        </div>
-
-                                    </button>
-
-                                )
-                            )}
-
-                        </div>
-
-                    )}
-
+                                                {!selectedGroup && group && (
+                                                    <span>
+                                                        {
+                                                            group.name
+                                                        }
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    }
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </main>
 
                 <aside className="configuration-details">
-
                     {selectedConfiguration ? (
-
                         <>
+                            <div className="configuration-details-header">
+                                <div>
+                                    <h2>
+                                        {
+                                            selectedConfiguration.name
+                                        }
+                                    </h2>
 
-                            <div className="details-header">
-
-                                <span className="configuration-group">
-                                    {
-                                        getGroupName(
-                                            selectedConfiguration
-                                        )
-                                    }
-                                </span>
-
-                                <h2>
-                                    {
-                                        selectedConfiguration.name
-                                    }
-                                </h2>
-
-                                <p>
-                                    {
-                                        selectedConfiguration.description ??
-                                        "No description."
-                                    }
-                                </p>
-
+                                    {selectedGroup ? (
+                                        <span>
+                                            {
+                                                selectedGroup.name
+                                            }
+                                        </span>
+                                    ) : null}
+                                </div>
                             </div>
 
-                            <div className="details-section">
+                            {selectedConfiguration.description && (
+                                <p className="configuration-details-description">
+                                    {
+                                        selectedConfiguration.description
+                                    }
+                                </p>
+                            )}
 
+                            <div className="configuration-details-section">
                                 <h3>
                                     Tasks
                                 </h3>
 
-                                {selectedConfiguration.tasks?.length ? (
-
-                                    <div className="details-task-list">
-
+                                {(
+                                    selectedConfiguration.tasks ??
+                                    []
+                                ).length === 0 ? (
+                                    <p>
+                                        No tasks configured.
+                                    </p>
+                                ) : (
+                                    <ol>
                                         {selectedConfiguration.tasks.map(
-                                            (task, index) => (
-
-                                                <div
-                                                    className="details-task"
+                                            (
+                                                task,
+                                                index
+                                            ) => (
+                                                <li
                                                     key={
-                                                        task.id ??
                                                         index
                                                     }
                                                 >
+                                                    <strong>
+                                                        {
+                                                            task.name
+                                                        }
+                                                    </strong>
 
-                                                    <span className="task-number">
-                                                        {index + 1}
-                                                    </span>
-
-                                                    <div>
-
-                                                        <strong>
+                                                    {task.description && (
+                                                        <p>
                                                             {
-                                                                task.name
+                                                                task.description
                                                             }
-                                                        </strong>
-
-                                                        <span>
-                                                            {
-                                                                task.type
-                                                            }
-                                                        </span>
-
-                                                    </div>
-
-                                                </div>
-
+                                                        </p>
+                                                    )}
+                                                </li>
                                             )
                                         )}
-
-                                    </div>
-
-                                ) : (
-
-                                    <p className="details-empty">
-                                        This configuration has
-                                        no tasks.
-                                    </p>
-
+                                    </ol>
                                 )}
-
                             </div>
 
-                            <div className="details-actions">
-
+                            <div className="configuration-details-actions">
                                 <button
                                     type="button"
-                                    className="primary-button"
-                                    onClick={() =>
-                                        navigate(
-                                            `/admin/configurations/edit?configurationId=${selectedConfiguration.id}`
-                                        )
+                                    onClick={
+                                        handleEditConfiguration
                                     }
                                 >
                                     Edit
@@ -626,11 +878,8 @@ export default function Configurations() {
 
                                 <button
                                     type="button"
-                                    className="secondary-button"
-                                    onClick={() =>
-                                        exportConfiguration(
-                                            selectedConfiguration
-                                        )
+                                    onClick={
+                                        exportConfiguration
                                     }
                                 >
                                     Export JSON
@@ -638,41 +887,51 @@ export default function Configurations() {
 
                                 <button
                                     type="button"
-                                    className="danger"
                                     onClick={
-                                        deleteConfiguration
+                                        handleDeleteConfiguration
+                                    }
+                                    disabled={
+                                        deletingConfiguration
                                     }
                                 >
-                                    Delete
+                                    {deletingConfiguration
+                                        ? "Deleting..."
+                                        : "Delete"}
                                 </button>
-
                             </div>
-
                         </>
-
                     ) : (
+                        <div className="configuration-details-empty">
+                            <h2>
+                                Select a Configuration
+                            </h2>
 
-                        <div className="details-placeholder">
-
-                            <strong>
-                                Select a configuration
-                            </strong>
-
-                            <span>
-                                Select a preset to view
-                                its tasks and actions.
-                            </span>
-
+                            <p>
+                                Select a configuration to
+                                view its details.
+                            </p>
                         </div>
-
                     )}
-
                 </aside>
-
             </div>
 
+            {groupDialog && (
+                <ConfigurationGroupDialog
+                    group={
+                        groupDialog.mode === "edit"
+                            ? groupDialog.group
+                            : null
+                    }
+                    onSave={
+                        groupDialog.mode === "edit"
+                            ? handleUpdateGroup
+                            : handleCreateGroup
+                    }
+                    onClose={() =>
+                        setGroupDialog(null)
+                    }
+                />
+            )}
         </div>
-
     );
-
 }

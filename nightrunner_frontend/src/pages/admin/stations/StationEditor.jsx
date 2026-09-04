@@ -1,21 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     useNavigate,
     useSearchParams
 } from "react-router-dom";
 
-import ApiService from "@/api/ApiService.js";
+import ApiService from "../../../api/ApiService.js";
 
 import TaskEditor from "./TaskEditor.jsx";
 
 import "./Stations.css";
-
-const STATION_TYPES = [
-    "Challenge",
-    "Checkpoint",
-    "Skill",
-    "Service"
-];
 
 const TASK_TYPES = [
     "Timed Challenge",
@@ -28,99 +21,105 @@ const TASK_TYPES = [
 ];
 
 function createTask() {
-
     return {
         id: crypto.randomUUID(),
-
         name: "",
-
         type: "Score Challenge",
-
         instructions: "",
-
         maxScore: 100,
-
         timeLimit: 0,
-
         correctAnswer: "",
-
         expectedAnswer: ""
     };
-
 }
 
 function createEmptyStation() {
-
     return {
         name: "",
-
-        type: STATION_TYPES[0],
-
+        description: "",
+        eventId: null,
+        activeConfigurationId: null,
+        members: [],
         tasks: []
     };
-
 }
 
 export default function StationEditor() {
-
     const navigate = useNavigate();
-
     const [searchParams] = useSearchParams();
 
-    const stationId =
-        searchParams.get("stationId");
+    const stationId = searchParams.get("stationId");
+    const isEditing = Boolean(stationId);
 
-    const isEditing =
-        Boolean(stationId);
+    const [station, setStation] = useState(
+        createEmptyStation
+    );
 
-    const [station, setStation] =
-        useState(createEmptyStation);
+    const [groups, setGroups] = useState([]);
+    const [configurations, setConfigurations] = useState([]);
 
-    const [loading, setLoading] =
-        useState(isEditing);
+    const [loading, setLoading] = useState(
+        isEditing
+    );
 
-    const [saving, setSaving] =
-        useState(false);
-
-    const [error, setError] =
-        useState(null);
-
-    const [editingTaskId, setEditingTaskId] =
-        useState(null);
-
-    /*
-     * Load existing station when editing.
-     */
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(null);
+    const [editingTaskId, setEditingTaskId] = useState(null);
 
     useEffect(() => {
+        const controller = new AbortController();
 
-        if (!isEditing) {
-            return;
-        }
+        loadData(controller.signal);
 
-        loadStation();
-
+        return () => controller.abort();
     }, [stationId]);
 
-    async function loadStation() {
-
+    async function loadData(signal) {
         try {
-
             setLoading(true);
             setError(null);
 
-            const existing =
-                await ApiService.stationData.getStation(
-                    stationId
+            const requests = [
+                ApiService.configurationData.getGroups(),
+                ApiService.configurationData.getConfigurations()
+            ];
+
+            if (isEditing) {
+                requests.push(
+                    ApiService.stationData.getStation(
+                        stationId
+                    )
                 );
+            }
 
-            setStation({
-                ...existing,
+            const [
+                groupData,
+                configurationData,
+                existing
+            ] = await Promise.all(requests);
 
-                tasks: existing.tasks ?? []
-            });
+            if (signal?.aborted) {
+                return;
+            }
 
+            setGroups(groupData ?? []);
+            setConfigurations(configurationData ?? []);
+
+            if (isEditing && existing) {
+                setStation({
+                    ...existing,
+                    eventId: existing.eventId ?? null,
+                    activeConfigurationId:
+                        existing.activeConfigurationId ??
+                        null,
+                    members: existing.members ?? [],
+                    tasks: existing.tasks ?? []
+                });
+            }
         } catch (error) {
+            if (signal?.aborted) {
+                return;
+            }
 
             console.error(
                 "Failed to load station:",
@@ -128,182 +127,199 @@ export default function StationEditor() {
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to load station."
             );
-
         } finally {
-
-            setLoading(false);
-
+            if (!signal?.aborted) {
+                setLoading(false);
+            }
         }
-
     }
 
-    function updateStation(field, value) {
+    const activeConfiguration = useMemo(() => {
+        if (!station.activeConfigurationId) {
+            return null;
+        }
 
+        return configurations.find(
+            configuration =>
+                String(configuration.id) ===
+                String(station.activeConfigurationId)
+        ) ?? null;
+    }, [
+        configurations,
+        station.activeConfigurationId
+    ]);
+
+    const selectedGroupId =
+        activeConfiguration?.group_id ??
+        activeConfiguration?.groupId ??
+        null;
+
+    const availableConfigurations = useMemo(() => {
+        if (!selectedGroupId) {
+            return [];
+        }
+
+        return configurations.filter(
+            configuration =>
+                String(
+                    configuration.group_id ??
+                    configuration.groupId
+                ) === String(selectedGroupId)
+        );
+    }, [
+        configurations,
+        selectedGroupId
+    ]);
+
+    function updateStation(field, value) {
         setStation(current => ({
             ...current,
             [field]: value
         }));
+    }
 
+    function handleGroupChange(groupId) {
+        if (!groupId) {
+            setStation(current => ({
+                ...current,
+                activeConfigurationId: null
+            }));
+            return;
+        }
+
+        const firstConfiguration =
+            configurations.find(
+                configuration =>
+                    String(
+                        configuration.group_id ??
+                        configuration.groupId
+                    ) === String(groupId)
+            );
+
+        setStation(current => ({
+            ...current,
+            activeConfigurationId:
+                firstConfiguration?.id ?? null
+        }));
+    }
+
+    function handleConfigurationChange(configurationId) {
+        updateStation(
+            "activeConfigurationId",
+            configurationId || null
+        );
     }
 
     function addTask() {
-
         const task = createTask();
 
         setStation(current => ({
-
             ...current,
-
             tasks: [
                 ...current.tasks,
                 task
             ]
-
         }));
 
         setEditingTaskId(task.id);
-
     }
 
     function updateTask(updatedTask) {
-
         setStation(current => ({
-
             ...current,
-
             tasks: current.tasks.map(task =>
                 task.id === updatedTask.id
                     ? updatedTask
                     : task
             )
-
         }));
-
     }
 
     function deleteTask(id) {
-
         setStation(current => ({
-
             ...current,
-
             tasks: current.tasks.filter(
                 task => task.id !== id
             )
-
         }));
 
         if (editingTaskId === id) {
-
             setEditingTaskId(null);
-
         }
-
     }
 
     async function saveStation() {
-
         if (!station.name.trim()) {
-
             setError(
                 "Station name is required."
             );
-
             return;
-
         }
 
-        if (station.tasks.length === 0) {
-
+        if (!station.activeConfigurationId) {
             setError(
-                "A station must have at least one task."
+                "A configuration must be selected."
             );
-
             return;
-
         }
 
         try {
-
             setSaving(true);
             setError(null);
 
             const data = {
-
                 ...station,
-
-                name: station.name.trim()
-
+                name: station.name.trim(),
+                description:
+                    station.description?.trim() ?? "",
+                activeConfigurationId:
+                station.activeConfigurationId
             };
 
             if (isEditing) {
-
                 await ApiService.stationData.updateStation(
                     stationId,
                     data
                 );
-
             } else {
-
                 await ApiService.stationData.createStation(
                     data
                 );
-
             }
 
-            navigate("/stations");
-
+            navigate("/admin/stations");
         } catch (error) {
-
             console.error(
                 "Failed to save station:",
                 error
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to save station."
             );
-
         } finally {
-
             setSaving(false);
-
         }
-
     }
 
     if (loading) {
-
         return (
-
             <div className="station-editor-page">
-
                 <div className="loading-panel large">
-
                     <span className="loading-spinner" />
-
                     Loading station...
-
                 </div>
-
             </div>
-
         );
-
     }
 
     return (
-
         <div className="station-editor-page">
-
-            {/* Header */}
-
             <header className="editor-header">
-
                 <button
                     type="button"
                     className="back-button"
@@ -311,15 +327,10 @@ export default function StationEditor() {
                         navigate("/admin/stations")
                     }
                 >
-
-                    ←
-                    {" "}
-                    Stations
-
+                    ← Stations
                 </button>
 
                 <div className="editor-title">
-
                     <span className="page-eyebrow">
                         Administration
                     </span>
@@ -327,39 +338,26 @@ export default function StationEditor() {
                     <h1>
                         {isEditing
                             ? "Edit Station"
-                            : "Create Station"
-                        }
+                            : "Create Station"}
                     </h1>
 
                     <p>
                         {isEditing
                             ? "Update the station configuration and scoring tasks."
-                            : "Configure a new scoring station and its tasks."
-                        }
+                            : "Configure a new scoring station and its tasks."}
                     </p>
-
                 </div>
-
             </header>
 
             {error && (
-
                 <div className="error-banner">
-
                     {error}
-
                 </div>
-
             )}
 
-            {/* Station Information */}
-
             <section className="editor-section">
-
                 <div className="section-heading">
-
                     <div>
-
                         <h2>
                             Station Information
                         </h2>
@@ -367,15 +365,11 @@ export default function StationEditor() {
                         <p>
                             Basic information about this station.
                         </p>
-
                     </div>
-
                 </div>
 
                 <div className="station-form-grid">
-
                     <label className="form-field">
-
                         <span>
                             Station Name
                         </span>
@@ -390,52 +384,117 @@ export default function StationEditor() {
                             }
                             placeholder="Enter station name"
                         />
-
                     </label>
 
                     <label className="form-field">
-
                         <span>
                             Station Type
                         </span>
 
                         <select
-                            value={station.type}
+                            value={
+                                selectedGroupId ?? ""
+                            }
                             onChange={event =>
-                                updateStation(
-                                    "type",
+                                handleGroupChange(
                                     event.target.value
                                 )
                             }
                         >
+                            <option value="">
+                                Select a station type...
+                            </option>
 
-                            {STATION_TYPES.map(type => (
-
+                            {groups.map(group => (
                                 <option
-                                    key={type}
-                                    value={type}
+                                    key={group.id}
+                                    value={group.id}
                                 >
-                                    {type}
+                                    {group.name}
                                 </option>
-
                             ))}
-
                         </select>
-
                     </label>
 
+                    <label className="form-field">
+                        <span>
+                            Configuration
+                        </span>
+
+                        <select
+                            value={
+                                station.activeConfigurationId ??
+                                ""
+                            }
+                            onChange={event =>
+                                handleConfigurationChange(
+                                    event.target.value
+                                )
+                            }
+                            disabled={
+                                !selectedGroupId ||
+                                availableConfigurations.length === 0
+                            }
+                        >
+                            <option value="">
+                                {selectedGroupId
+                                    ? "Select a configuration..."
+                                    : "Select a station type first"}
+                            </option>
+
+                            {availableConfigurations.map(
+                                configuration => (
+                                    <option
+                                        key={configuration.id}
+                                        value={configuration.id}
+                                    >
+                                        {configuration.name ??
+                                            configuration.key}
+                                    </option>
+                                )
+                            )}
+                        </select>
+                    </label>
+
+                    <label className="form-field">
+                        <span>
+                            Description
+                        </span>
+
+                        <textarea
+                            value={
+                                station.description ?? ""
+                            }
+                            onChange={event =>
+                                updateStation(
+                                    "description",
+                                    event.target.value
+                                )
+                            }
+                            placeholder="Describe this station"
+                            rows={3}
+                        />
+                    </label>
                 </div>
 
+                {selectedGroupId &&
+                    availableConfigurations.length === 0 && (
+                        <div className="empty-panel">
+                            <strong>
+                                No configurations available
+                            </strong>
+
+                            <span>
+                            This station type does not have
+                            any configurations yet.
+                        </span>
+                        </div>
+                    )}
             </section>
 
-            {/* Tasks */}
-
             <section className="editor-section">
-
                 <div className="section-heading">
-
                     <div>
-
                         <h2>
                             Tasks
                         </h2>
@@ -444,7 +503,6 @@ export default function StationEditor() {
                             Configure the tasks patrols will complete
                             at this station.
                         </p>
-
                     </div>
 
                     <button
@@ -454,13 +512,10 @@ export default function StationEditor() {
                     >
                         + Add Task
                     </button>
-
                 </div>
 
                 {station.tasks.length === 0 ? (
-
                     <div className="empty-tasks">
-
                         <div className="empty-icon">
                             +
                         </div>
@@ -481,16 +536,11 @@ export default function StationEditor() {
                         >
                             Add First Task
                         </button>
-
                     </div>
-
                 ) : (
-
                     <div className="task-list">
-
                         {station.tasks.map(
                             (task, index) => (
-
                                 <article
                                     key={task.id}
                                     className={
@@ -499,15 +549,12 @@ export default function StationEditor() {
                                             : "task-card"
                                     }
                                 >
-
                                     <div className="task-card-header">
-
                                         <div className="task-number">
                                             {index + 1}
                                         </div>
 
                                         <div className="task-summary">
-
                                             <h3>
                                                 {task.name ||
                                                     "Unnamed Task"}
@@ -516,28 +563,25 @@ export default function StationEditor() {
                                             <span>
                                                 {task.type}
                                             </span>
-
                                         </div>
 
                                         <div className="task-actions">
-
                                             <button
                                                 type="button"
                                                 className="secondary-button"
                                                 onClick={() =>
                                                     setEditingTaskId(
-                                                        editingTaskId === task.id
+                                                        editingTaskId ===
+                                                        task.id
                                                             ? null
                                                             : task.id
                                                     )
                                                 }
                                             >
-
-                                                {editingTaskId === task.id
+                                                {editingTaskId ===
+                                                task.id
                                                     ? "Close"
-                                                    : "Edit"
-                                                }
-
+                                                    : "Edit"}
                                             </button>
 
                                             <button
@@ -551,52 +595,36 @@ export default function StationEditor() {
                                             >
                                                 Delete
                                             </button>
-
                                         </div>
-
                                     </div>
 
                                     {task.instructions && (
-
                                         <p className="task-summary-description">
-
                                             {task.instructions}
-
                                         </p>
-
                                     )}
 
                                     {editingTaskId === task.id && (
-
                                         <div className="task-editor-container">
-
                                             <TaskEditor
                                                 task={task}
-                                                taskTypes={TASK_TYPES}
+                                                taskTypes={
+                                                    TASK_TYPES
+                                                }
                                                 onChange={
                                                     updateTask
                                                 }
                                             />
-
                                         </div>
-
                                     )}
-
                                 </article>
-
                             )
                         )}
-
                     </div>
-
                 )}
-
             </section>
 
-            {/* Footer */}
-
             <footer className="editor-footer">
-
                 <button
                     type="button"
                     className="secondary-button"
@@ -614,23 +642,17 @@ export default function StationEditor() {
                     onClick={saveStation}
                     disabled={
                         saving ||
-                        !station.name.trim()
+                        !station.name.trim() ||
+                        !station.activeConfigurationId
                     }
                 >
-
                     {saving
                         ? "Saving..."
                         : isEditing
                             ? "Save Changes"
-                            : "Create Station"
-                    }
-
+                            : "Create Station"}
                 </button>
-
             </footer>
-
         </div>
-
     );
-
 }

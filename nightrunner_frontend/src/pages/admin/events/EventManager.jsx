@@ -3,11 +3,14 @@ import {
     useState
 } from "react";
 
+import { useNavigate } from "react-router-dom";
+
 import "./EventManager.css";
-import {useEventContext} from "../../../api/helpers/EventContext.jsx";
+import { useEventContext } from "../../../api/helpers/EventContext.jsx";
 import ApiService from "../../../api/ApiService.js";
 
 export default function EventManager() {
+    const navigate = useNavigate();
 
     const {
         event,
@@ -17,9 +20,7 @@ export default function EventManager() {
     } = useEventContext();
 
     const [saving, setSaving] = useState(false);
-
     const [error, setError] = useState(null);
-
     const [success, setSuccess] = useState(null);
 
     const [form, setForm] = useState({
@@ -29,8 +30,10 @@ export default function EventManager() {
         roundingPrecision: 1000
     });
 
-    useEffect(() => {
+    const isSystemAdmin =
+        ApiService.userData.isSystemAdmin();
 
+    useEffect(() => {
         if (!event) {
             return;
         }
@@ -38,16 +41,16 @@ export default function EventManager() {
         setForm({
             name: event.name ?? "",
             date: event.date ?? "",
-            description:
-                event.description ?? "",
+            description: event.description ?? "",
             roundingPrecision:
                 event.roundingPrecision ?? 1000
         });
 
+        setError(null);
+        setSuccess(null);
     }, [event]);
 
     function handleChange(inputEvent) {
-
         const {
             name,
             value
@@ -55,7 +58,6 @@ export default function EventManager() {
 
         setForm(previous => ({
             ...previous,
-
             [name]:
                 name === "roundingPrecision"
                     ? Number(value)
@@ -63,11 +65,9 @@ export default function EventManager() {
         }));
 
         setSuccess(null);
-
     }
 
     async function handleSubmit(submitEvent) {
-
         submitEvent.preventDefault();
 
         setSaving(true);
@@ -75,46 +75,33 @@ export default function EventManager() {
         setSuccess(null);
 
         try {
-
             if (!form.name.trim()) {
-
                 throw new Error(
                     "Event name is required."
                 );
-
             }
 
             if (!form.date) {
-
                 throw new Error(
                     "Event date is required."
                 );
-
             }
 
-            if (!eventId || !event?.id) {
-
+            if (!eventId || !event) {
                 throw new Error(
                     "No event is currently selected."
                 );
-
             }
 
             const updatedEvent =
                 await ApiService.eventData.updateEvent(
-                    event.id,
+                    eventId,
                     {
                         ...event,
-
-                        name:
-                            form.name.trim(),
-
-                        date:
-                        form.date,
-
+                        name: form.name.trim(),
+                        date: form.date,
                         description:
                             form.description.trim(),
-
                         roundingPrecision:
                         form.roundingPrecision
                     }
@@ -137,10 +124,7 @@ export default function EventManager() {
             setSuccess(
                 "Event details saved successfully."
             );
-
-        }
-        catch (error) {
-
+        } catch (error) {
             console.error(
                 "Failed to update event:",
                 error
@@ -150,30 +134,19 @@ export default function EventManager() {
                 error?.message ??
                 "Failed to save event."
             );
-
-        }
-        finally {
-
+        } finally {
             setSaving(false);
-
         }
-
     }
 
     if (eventLoading) {
-
         return (
-
             <div className="event-manager">
                 <div className="loading-panel">
-                    <p>
-                        Loading event...
-                    </p>
+                    <p>Loading event...</p>
                 </div>
             </div>
-
         );
-
     }
 
     if (eventError) {
@@ -191,13 +164,26 @@ export default function EventManager() {
             <div className="event-manager">
                 <div className="page-header">
                     <div>
-                        <h1>
-                            Event
-                        </h1>
+                        <h1>Event</h1>
+
                         <p>
                             No event is currently selected.
                         </p>
                     </div>
+
+                    {isSystemAdmin && (
+                        <button
+                            type="button"
+                            className="primary-button"
+                            onClick={() =>
+                                navigate(
+                                    "/admin/events/create"
+                                )
+                            }
+                        >
+                            + Create Event
+                        </button>
+                    )}
                 </div>
             </div>
         );
@@ -207,9 +193,7 @@ export default function EventManager() {
         <div className="event-manager">
             <div className="page-header">
                 <div>
-                    <h1>
-                        Event
-                    </h1>
+                    <h1>Event</h1>
 
                     <p>
                         Manage the details and configuration
@@ -217,6 +201,19 @@ export default function EventManager() {
                     </p>
                 </div>
 
+                {isSystemAdmin && (
+                    <button
+                        type="button"
+                        className="primary-button"
+                        onClick={() =>
+                            navigate(
+                                "/admin/events/create"
+                            )
+                        }
+                    >
+                        + Create Event
+                    </button>
+                )}
             </div>
 
             {error && (
@@ -238,14 +235,11 @@ export default function EventManager() {
                 <section className="admin-section">
                     <div className="section-header">
                         <div>
-                            <h2>
-                                Event Details
-                            </h2>
+                            <h2>Event Details</h2>
 
                             <p>
                                 Basic information about the event.
                             </p>
-
                         </div>
                     </div>
 
@@ -264,8 +258,8 @@ export default function EventManager() {
                                 disabled={saving}
                                 required
                             />
-
                         </div>
+
                         <div className="form-group">
                             <label htmlFor="event-date">
                                 Event Date
@@ -324,9 +318,8 @@ export default function EventManager() {
                 <section className="admin-section">
                     <div className="section-header">
                         <div>
-                            <h2>
-                                Event Information
-                            </h2>
+                            <h2>Event Information</h2>
+
                             <p>
                                 Information managed by the system.
                             </p>
@@ -368,6 +361,7 @@ export default function EventManager() {
                             <span className="information-label">
                                 Organizers
                             </span>
+
                             <strong>
                                 {event.organizers?.length ?? 0}
                             </strong>
@@ -383,8 +377,7 @@ export default function EventManager() {
                     >
                         {saving
                             ? "Saving..."
-                            : "Save Changes"
-                        }
+                            : "Save Changes"}
                     </button>
                 </div>
             </form>

@@ -12,24 +12,29 @@ const EventContext = createContext(null);
 
 export function EventProvider({ children }) {
 
-    const [event, setEvent] = useState(null);
+    const [event, setEvent] = useState(null)
     const [eventId, setEventId] = useState(null);
 
     const [loading, setLoading] = useState(true);
+
     const [error, setError] = useState(null);
 
     const [showEventSelector, setShowEventSelector] = useState(false);
 
+    const [selectableEvents, setSelectableEvents] = useState([]);
+
+
+    //
+    // Determine the initial event
+    //
+
     useEffect(() => {
-
-        loadEvent();
-
+        initializeEvent();
     }, []);
 
-    async function loadEvent() {
 
+    async function initializeEvent() {
         try {
-
             setLoading(true);
             setError(null);
 
@@ -37,44 +42,68 @@ export function EventProvider({ children }) {
                 await ApiService.userData.get();
 
             if (!user) {
-
                 throw new Error(
                     "Unable to determine the current user."
                 );
-
             }
 
-            /*
-             * Normal users and event administrators use
-             * their assigned event.
-             */
-            if (user.event) {
+            const isSystemAdmin = user.isAdmin === true;
 
-                await selectEvent(user.event);
+            const roles = user.roles ?? {};
 
-                return;
+            const eventIds = Object.keys(roles);
 
-            }
 
-            /*
-             * System administrators may choose an event.
-             */
-            if (ApiService.userData.isSystemAdmin()) {
+            //
+            // Root administrators may select any event.
+            //
+
+            if (isSystemAdmin) {
+                await loadSelectableEvents();
 
                 setShowEventSelector(true);
 
                 return;
-
             }
 
-            throw new Error(
-                "No event is currently assigned to your account."
+
+            //
+            // User has no event assignments.
+            //
+
+            if (eventIds.length === 0) {
+                throw new Error(
+                    "No event is currently assigned to your account."
+                );
+            }
+
+            //
+            // User has exactly one event.
+            //
+
+            if (eventIds.length === 1) {
+                await selectEvent(
+                    eventIds[0]
+                );
+
+                return;
+            }
+
+
+            //
+            // User has multiple events.
+            //
+
+            await loadSelectableEvents(
+                eventIds
             );
 
-        } catch (error) {
+            setShowEventSelector(true);
 
+        }
+        catch (error) {
             console.error(
-                "Failed to load event context:",
+                "Failed to initialize event context:",
                 error
             );
 
@@ -82,27 +111,147 @@ export function EventProvider({ children }) {
                 error?.message ??
                 "Unable to determine the current event."
             );
-
-        } finally {
-
+        }
+        finally {
             setLoading(false);
+        }
+    }
+
+    //
+    // Load selectable events
+    //
+
+    async function loadSelectableEvents(
+        allowedEventIds = null
+    ) {
+
+        const response =
+            await ApiService.eventData.getEvents();
+
+        const events =
+            Array.isArray(response)
+                ? response
+                : response?.events ?? [];
+
+
+        /*
+         * Root administrators can select any event.
+         */
+        if (!allowedEventIds) {
+
+            setSelectableEvents(
+                events
+            );
+
+            return events;
 
         }
 
+
+        /*
+         * Non-root users may only select events that
+         * appear in their roles map.
+         */
+        const allowedIds =
+            new Set(
+                allowedEventIds.map(
+                    id => String(id)
+                )
+            );
+
+        const filteredEvents =
+            events.filter(
+                event =>
+                    allowedIds.has(
+                        String(event.id)
+                    )
+            );
+
+        setSelectableEvents(
+            filteredEvents
+        );
+
+        return filteredEvents;
+
     }
 
-    async function selectEvent(selectedEvent) {
 
+    //
+    // Get the currently selected event
+    //
+
+    function getCurrentEvent() {
+
+        /*
+         * Event is already selected.
+         */
+        if (event) {
+
+            return event;
+
+        }
+
+
+        /*
+         * No event is selected.
+         *
+         * Open the selector so the user can choose one.
+         */
+        openEventSelector();
+
+        return null;
+
+    }
+
+
+    //
+    // Select an event
+    //
+
+    async function selectEvent(
+        selectedEvent
+    ) {
+
+        /*
+         * Accept either an event ID or an event object.
+         */
         const selectedEventId =
             typeof selectedEvent === "object"
                 ? selectedEvent?.id
                 : selectedEvent;
 
+
         if (!selectedEventId) {
-            setEvent(null);
-            setEventId(null);
-            return;
+
+            return null;
+
         }
+
+
+        /*
+         * Non-root users can only select events
+         * assigned to them.
+         */
+        if (
+            !ApiService.userData.isSystemAdmin() &&
+            !ApiService.userData.hasEventAccess(
+                selectedEventId
+            )
+        ) {
+
+            const accessError =
+                new Error(
+                    "You do not have access to the selected event."
+                );
+
+            setError(
+                accessError.message
+            );
+
+            throw accessError;
+
+        }
+
 
         try {
 
@@ -114,14 +263,22 @@ export function EventProvider({ children }) {
                     selectedEventId
                 );
 
-            setEvent(selectedEventData);
-            setEventId(selectedEventData.id);
+            setEvent(
+                selectedEventData
+            );
 
-            setShowEventSelector(false);
+            setEventId(
+                selectedEventData.id
+            );
+
+            setShowEventSelector(
+                false
+            );
 
             return selectedEventData;
 
-        } catch (error) {
+        }
+        catch (error) {
 
             console.error(
                 "Failed to select event:",
@@ -135,7 +292,8 @@ export function EventProvider({ children }) {
 
             throw error;
 
-        } finally {
+        }
+        finally {
 
             setLoading(false);
 
@@ -143,28 +301,178 @@ export function EventProvider({ children }) {
 
     }
 
-    function changeEvent() {
 
-        if (!ApiService.userData.isSystemAdmin()) {
+    //
+    // Open event selector
+    //
+
+    async function openEventSelector() {
+
+        const user =
+            ApiService.userData.getCached();
+
+        if (!user) {
             return;
         }
 
-        setShowEventSelector(true);
+        const isSystemAdmin =
+            user.isAdmin === true;
+
+        const eventIds =
+            Object.keys(
+                user.roles ?? {}
+            );
+
+
+        /*
+         * A non-root user with zero or one event
+         * has nothing to select.
+         */
+        if (
+            !isSystemAdmin &&
+            eventIds.length <= 1
+        ) {
+
+            return;
+
+        }
+
+
+        try {
+
+            setError(null);
+
+            if (isSystemAdmin) {
+
+                await loadSelectableEvents();
+
+            }
+            else {
+
+                await loadSelectableEvents(
+                    eventIds
+                );
+
+            }
+
+            setShowEventSelector(
+                true
+            );
+
+        }
+        catch (error) {
+
+            console.error(
+                "Failed to load selectable events:",
+                error
+            );
+
+            setError(
+                error?.message ??
+                "Unable to load available events."
+            );
+
+        }
 
     }
 
+
+    //
+    // Change event
+    //
+    // Public alias for opening the selector.
+    //
+
+    function changeEvent() {
+
+        return openEventSelector();
+
+    }
+
+
+    //
+    // Close selector
+    //
+
+    function closeEventSelector() {
+
+        /*
+         * Do not allow the selector to be closed when
+         * there is no current event.
+         */
+        if (!eventId) {
+
+            return;
+
+        }
+
+        setShowEventSelector(
+            false
+        );
+
+    }
+
+
+    //
+    // Determine whether the user can change events
+    //
+
+    const user =
+        ApiService.userData.getCached();
+
+    const isSystemAdmin =
+        user?.isAdmin === true;
+
+    const eventCount =
+        Object.keys(
+            user?.roles ?? {}
+        ).length;
+
+    const canChangeEvent =
+        isSystemAdmin ||
+        eventCount > 1;
+
+
+    //
+    // Context value
+    //
+
     const value = {
+
+        /*
+         * Current event
+         */
         event,
         eventId,
 
+        /*
+         * Event state
+         */
         loading,
         error,
+        isSelected:
+            eventId !== null,
 
+        /*
+         * Event operations
+         */
+        getCurrentEvent,
         selectEvent,
         changeEvent,
 
-        isSelected: eventId !== null
+        /*
+         * Selector operations
+         */
+        openEventSelector,
+        closeEventSelector,
+
+        /*
+         * Permissions
+         */
+        canChangeEvent
+
     };
+
 
     return (
 
@@ -175,7 +483,10 @@ export function EventProvider({ children }) {
             {showEventSelector && (
 
                 <EventSelector
+                    events={selectableEvents}
+                    selectedEventId={eventId}
                     onSelect={selectEvent}
+                    onClose={closeEventSelector}
                 />
 
             )}
