@@ -51,18 +51,25 @@ cd terraform
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-### 3. Generate GitHub Token & Run Terraform Locally
-Export your GitHub PAT token locally and execute Terraform:
-```bash
-export GITHUB_TOKEN="github_pat_11AAAAAAA_..."
+### 3. Multi-Environment Execution & GitHub Secrets Setup
+Run Terraform via the `./run-terraform` helper script from the root directory:
 
-terraform init
-terraform apply
+```bash
+# Execute for Dev environment (Default):
+./run-terraform dev plan
+./run-terraform dev apply
+
+# Execute for Prod environment:
+./run-terraform prod plan
+./run-terraform prod apply
 ```
-> **What `terraform apply` does automatically**:
-> - Enables GCP APIs & provisions Cloud SQL, GCS Bucket, and Artifact Registry.
+
+> **Detailed Multi-Environment Documentation**: See [environments/README.md](file:///home/bmeyer/Devel/nightops/NightRunner/terraform/environments/README.md) for full instructions on setting up `dev`, `prod`, or adding new environments (e.g. `staging`).
+
+> **What `apply` does automatically**:
+> - Enables GCP APIs & provisions Cloud SQL, GCS Buckets, and Artifact Registry.
 > - Configures GCP Workload Identity Federation OIDC provider.
-> - **Auto-populates GitHub Organization Secrets** (`GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, etc.) directly into GitHub!
+> - **Auto-populates GitHub Secrets** (`GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, etc.) directly into GitHub!
 
 ### 4. Push Code to GitHub
 Now push your repo code to `main` to trigger the automated CI/CD pipeline:
@@ -144,6 +151,22 @@ Export the token in your terminal before running Terraform:
 ```bash
 export GITHUB_TOKEN="github_pat_11AAAAAAA_xxxxxxxxxxxxxxxxxxxxxxxx"
 ```
+
+#### using `run-terraform`
+
+The `run-terraform` script is provided for convenience and can enable supporting
+multiple environments easily. See the README in the terraform/environments file for
+details about configuring multiple environments.
+
+When using `run-terraform` store the Github PAT token in the file `.github-pat` at
+the project root where you'll run `./run-terraform <env> <terraform command + options> from.
+Then just switch out the `terraform` for `./run-terraform <env>` for the terraform
+commands below.
+
+#### Terraform vs OpenTofu
+
+This repository should support both Hashicorp's Terraform and the Linux Foundation's OpenTofu
+implementation.
 
 ### Step 3: Initialize & Apply Terraform
 
