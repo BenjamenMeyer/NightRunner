@@ -24,11 +24,8 @@ terraform {
     }
   }
 
-  # Uncomment and configure after creating the initial GCS state bucket:
-  backend "gcs" {
-    bucket = "tlnightops-nightrunner-dev-tf-state-f2ed11c3"
-    prefix = "nightrunner/state"
-  }
+  # Dynamic GCS remote state backend (configured via -backend-config)
+  backend "gcs" {}
 }
 
 provider "google" {
