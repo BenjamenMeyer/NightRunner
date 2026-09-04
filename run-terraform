@@ -1,0 +1,39 @@
+#!/bin/bash
+set -e
+
+ENV="dev"
+if [[ "$1" == "dev" || "$1" == "prod" ]]; then
+  ENV="$1"
+  shift
+fi
+
+export GITHUB_TOKEN="$(cat .github-pat)"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}/terraform"
+
+BACKEND_CONFIG="environments/${ENV}/backend.tfvars"
+TFVARS_FILE="environments/${ENV}/terraform.tfvars"
+
+echo "========================================================"
+echo "==> Running OpenTofu [Environment: ${ENV}]"
+echo "==> Variable file  : ${TFVARS_FILE}"
+echo "========================================================"
+
+# Auto-reconfigure GCS remote backend if bucket is defined in backend.tfvars
+if [ -f "$BACKEND_CONFIG" ] && grep -E -q '^\s*bucket\s*=\s*"[^"]+' "$BACKEND_CONFIG"; then
+  echo "==> Remote GCS Backend: Configured via ${BACKEND_CONFIG}"
+  tofu init -backend-config="${BACKEND_CONFIG}" -reconfigure -input=false > /dev/null
+else
+  echo "==> Local State Mode: Bootstrapping initial project infrastructure"
+  tofu init -input=false > /dev/null
+fi
+
+if [[ "$1" == "init" ]]; then
+  shift
+  echo "==> Initializing backend for environment '${ENV}'..."
+  tofu init -backend-config="${BACKEND_CONFIG}" "${@}"
+  exit 0
+fi
+
+tofu "${@}" -var-file="${TFVARS_FILE}"

@@ -8,7 +8,9 @@ on:
       - "tests/**"
       - "api/openapi.yaml"
       - "pyproject.toml"
-      - ".github/workflows/backend-ci-workflow.yml"
+      - "Dockerfile"
+      - "docker-compose.yaml"
+      - ".github/workflows/**"
   pull_request:
     branches: ["**"]
     paths:
@@ -16,7 +18,10 @@ on:
       - "tests/**"
       - "api/openapi.yaml"
       - "pyproject.toml"
-      - ".github/workflows/backend-ci-workflow.yml"
+      - "Dockerfile"
+      - "docker-compose.yaml"
+      - ".github/workflows/**"
+  workflow_dispatch:
 
 jobs:
   # ─────────────────────────────────────────────

@@ -1,8 +1,11 @@
 import falcon
 import pytest
+import time
+import jwt
 from falcon import testing
 from nightrunner_backend.transport.middleware.auth import AuthMiddleware
 from nightrunner_backend.transport.me import MeResource
+from nightrunner_backend.app_context import get_driver
 
 @pytest.fixture
 async def client(monkeypatch):
@@ -17,3 +20,33 @@ async def client(monkeypatch):
 async def test_missing_token(client):
     result = await client.simulate_get('/me')
     assert result.status == falcon.HTTP_401
+
+@pytest.mark.asyncio
+async def test_jit_user_auto_provisioning(client, rsa_keypair):
+    private_pem, _ = rsa_keypair
+    payload = {
+        "sub": "firebase-new-user-123",
+        "iss": "http://test-issuer",
+        "aud": "test-audience",
+        "exp": int(time.time() + 3600),
+        "email": "social_user@example.com",
+        "name": "Social User",
+    }
+    token = jwt.encode(payload, private_pem, algorithm="RS256")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # First request: User does not exist in DB yet
+    result = await client.simulate_get('/me', headers=headers)
+    assert result.status == falcon.HTTP_200
+    data = result.json
+    assert data["email"] == "social_user@example.com"
+    assert data["displayName"] == "Social User"
+
+    # Verify user was inserted into DB
+    db = get_driver()
+    rows = await db.execute(
+        "SELECT * FROM users WHERE external_id = :ext_id",
+        {"ext_id": "firebase-new-user-123"}
+    )
+    assert len(rows) == 1
+    assert rows[0]["email"] == "social_user@example.com"

@@ -49,3 +49,28 @@ dist-ssr
 
 *.db-shm
 *.db
+
+#----
+# TERRAFORM
+#----
+
+# Local terraform variable files (contains sensitive passwords & API tokens)
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local Terraform Working Directory & Crash Logs
+.terraform/
+crash.log
+crash.*.log
+
+# Terraform State Files
+*.tfstate
+*.tfstate.*
+
+# Secret backup files
+*.pem
+.github-pat
