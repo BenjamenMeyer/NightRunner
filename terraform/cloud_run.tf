@@ -14,7 +14,7 @@ resource "google_service_account" "cloud_run_sa" {
 resource "google_project_iam_member" "cloudsql_client" {
   project = var.project_id
   role    = "roles/cloudsql.client"
-  member  = "serviceAccount:${google_service_account.cloud_run_sa}.email"
+  member  = "serviceAccount:${google_service_account.cloud_run_sa.email}"
 }
 
 # Cloud Run v2 Service with Strict Scaling Caps
@@ -40,7 +40,7 @@ resource "google_cloud_run_v2_service" "backend" {
     timeout = "15s"
 
     containers {
-      image = var.backend_image
+      image = var.backend_image != "" ? var.backend_image : "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.backend_repo.repository_id}/backend:latest"
 
       env {
         name  = "DATABASE_URL"

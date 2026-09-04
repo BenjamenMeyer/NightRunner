@@ -9,7 +9,7 @@ resource "google_billing_budget" "project_budget" {
   count           = var.billing_account_id != "" ? 1 : 0
   depends_on      = [google_project_service.billingbudgets]
   billing_account = var.billing_account_id
-  display_name    = "NightRunner GCP Monthly Budget ($${var.monthly_budget_amount})"
+  display_name    = "NightRunner Budget ($${var.monthly_budget_amount})"
 
   budget_filter {
     projects = ["projects/${var.project_id}"]

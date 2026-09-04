@@ -59,6 +59,7 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
     "attribute.repository"       = "assertion.repository"
     "attribute.repository_owner" = "assertion.repository_owner"
   }
+  attribute_condition = var.github_org != "" ? "assertion.repository_owner == '${var.github_org}'" : null
   oidc {
     issuer_uri = "https://token.actions.githubusercontent.com"
   }
@@ -124,3 +125,4 @@ resource "github_actions_organization_secret" "gcp_frontend_bucket" {
   visibility      = "all"
   plaintext_value = google_storage_bucket.frontend.name
 }
+

@@ -3,8 +3,8 @@ region        = "us-central1"
 environment   = "dev"
 db_password   = "SuperSecretPassword123!"
 db_name       = "nightrunner"
-db_user       = "nightrunner_user"
-backend_image = "us-central1-docker.pkg.dev/your-gcp-project-id/nightrunner/backend:latest"
+# Optional: Override backend Docker image (defaults dynamically to Artifact Registry)
+# backend_image = "us-central1-docker.pkg.dev/your-gcp-project-id/nightrunner/backend:latest"
 
 # ------------------------------------------------------------------------------
 # CDN Selection: 'none' (dev), 'cloudflare' (Free CDN & DDoS), or 'gcp' ($18/mo)
@@ -25,6 +25,12 @@ google_client_id     = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
 google_client_secret = "YOUR_GOOGLE_CLIENT_SECRET"
 github_client_id     = "YOUR_GITHUB_CLIENT_ID"
 github_client_secret = "YOUR_GITHUB_CLIENT_SECRET"
+facebook_client_id   = "YOUR_FACEBOOK_APP_ID"
+facebook_client_secret = "YOUR_FACEBOOK_APP_SECRET"
+twitter_client_id    = "YOUR_TWITTER_API_KEY"
+twitter_client_secret = "YOUR_TWITTER_API_SECRET"
+apple_client_id      = "YOUR_APPLE_SERVICES_ID"
+apple_client_secret  = "YOUR_APPLE_SECRET_KEY"
 
 # Optional: GitHub Organization Configuration (for automated secret management)
 github_org       = "YOUR_GITHUB_ORG"

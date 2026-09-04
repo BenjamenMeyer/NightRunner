@@ -25,20 +25,24 @@ terraform {
   }
 
   # Uncomment and configure after creating the initial GCS state bucket:
-  # backend "gcs" {
-  #   bucket = "YOUR_TF_STATE_BUCKET_NAME"
-  #   prefix = "nightrunner/state"
-  # }
+  backend "gcs" {
+    bucket = "tlnightops-nightrunner-dev-tf-state-f2ed11c3"
+    prefix = "nightrunner/state"
+  }
 }
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
+  project               = var.project_id
+  region                = var.region
+  user_project_override = true
+  billing_project       = var.project_id
 }
 
 provider "google-beta" {
-  project = var.project_id
-  region  = var.region
+  project               = var.project_id
+  region                = var.region
+  user_project_override = true
+  billing_project       = var.project_id
 }
 
 provider "github" {
@@ -46,7 +50,19 @@ provider "github" {
 }
 
 provider "cloudflare" {
-  api_token = var.cloudflare_api_token
+  api_token = var.cloudflare_api_token != "" ? var.cloudflare_api_token : "1234567890123456789012345678901234567890"
 }
+
+# Enable Cloud Resource Manager & IAM APIs
+resource "google_project_service" "cloudresourcemanager" {
+  service            = "cloudresourcemanager.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "iam" {
+  service            = "iam.googleapis.com"
+  disable_on_destroy = false
+}
+
 
 

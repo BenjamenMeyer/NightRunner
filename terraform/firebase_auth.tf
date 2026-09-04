@@ -55,3 +55,36 @@ resource "google_identity_platform_oauth_idp_config" "github" {
   enabled       = true
   issuer        = "https://github.com"
 }
+
+# Facebook Social Auth Identity Provider Configuration
+resource "google_identity_platform_default_supported_idp_config" "facebook" {
+  count         = var.facebook_client_id != "" ? 1 : 0
+  provider      = google-beta
+  depends_on    = [google_identity_platform_config.default]
+  idp_id        = "facebook.com"
+  client_id     = var.facebook_client_id
+  client_secret = var.facebook_client_secret
+  enabled       = true
+}
+
+# Twitter / X Social Auth Identity Provider Configuration
+resource "google_identity_platform_default_supported_idp_config" "twitter" {
+  count         = var.twitter_client_id != "" ? 1 : 0
+  provider      = google-beta
+  depends_on    = [google_identity_platform_config.default]
+  idp_id        = "twitter.com"
+  client_id     = var.twitter_client_id
+  client_secret = var.twitter_client_secret
+  enabled       = true
+}
+
+# Apple Social Auth Identity Provider Configuration
+resource "google_identity_platform_default_supported_idp_config" "apple" {
+  count         = var.apple_client_id != "" ? 1 : 0
+  provider      = google-beta
+  depends_on    = [google_identity_platform_config.default]
+  idp_id        = "apple.com"
+  client_id     = var.apple_client_id
+  client_secret = var.apple_client_secret
+  enabled       = true
+}

@@ -37,8 +37,6 @@ resource "cloudflare_page_rule" "static_assets" {
 
   actions {
     cache_level = "cache_everything"
-    edge_cache_ttl {
-      ttl = 86400 # 24 hours edge cache
-    }
+    edge_cache_ttl = 86400 # 24 hours edge cache
   }
 }

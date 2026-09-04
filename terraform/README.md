@@ -99,6 +99,15 @@ Here is the complete list of settings for `terraform.tfvars` and local environme
 | `google_client_secret` | `terraform.tfvars` | Optional | Google OAuth Client Secret for Firebase Social Login |
 | `github_client_id` | `terraform.tfvars` | Optional | GitHub OAuth Client ID for Firebase Social Login |
 | `github_client_secret` | `terraform.tfvars` | Optional | GitHub OAuth Client Secret for Firebase Social Login |
+| `facebook_client_id` | `terraform.tfvars` | Optional | Facebook App ID for Firebase Social Login |
+| `facebook_client_secret` | `terraform.tfvars` | Optional | Facebook App Secret for Firebase Social Login |
+| `twitter_client_id` | `terraform.tfvars` | Optional | Twitter / X API Key for Firebase Social Login |
+| `twitter_client_secret` | `terraform.tfvars` | Optional | Twitter / X API Secret for Firebase Social Login |
+| `apple_client_id` | `terraform.tfvars` | Optional | Apple Services ID for Firebase Social Login |
+| `apple_client_secret` | `terraform.tfvars` | Optional | Apple Secret Key for Firebase Social Login |
+
+> **Detailed Social Auth Instructions**: See [README.Social.md](file:///home/bmeyer/Devel/nightops/NightRunner/terraform/README.Social.md) for step-by-step guides on obtaining OAuth credentials for all 5 social providers.
+
 
 ---
 

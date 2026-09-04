@@ -37,8 +37,8 @@ variable "db_user" {
 
 variable "backend_image" {
   type        = string
-  description = "Docker image tag for the backend Cloud Run service."
-  default     = "us-central1-docker.pkg.dev/YOUR_GCP_PROJECT_ID/nightrunner/backend:latest"
+  description = "Optional Docker image override for backend Cloud Run service. If omitted, defaults dynamically to project Artifact Registry."
+  default     = ""
 }
 
 # ------------------------------------------------------------------------------
@@ -67,6 +67,45 @@ variable "github_client_id" {
 variable "github_client_secret" {
   type        = string
   description = "GitHub OAuth Client Secret for Firebase Social Sign-In."
+  sensitive   = true
+  default     = ""
+}
+
+variable "facebook_client_id" {
+  type        = string
+  description = "Facebook App ID for Firebase Social Sign-In."
+  default     = ""
+}
+
+variable "facebook_client_secret" {
+  type        = string
+  description = "Facebook App Secret for Firebase Social Sign-In."
+  sensitive   = true
+  default     = ""
+}
+
+variable "twitter_client_id" {
+  type        = string
+  description = "Twitter / X API Key for Firebase Social Sign-In."
+  default     = ""
+}
+
+variable "twitter_client_secret" {
+  type        = string
+  description = "Twitter / X API Secret for Firebase Social Sign-In."
+  sensitive   = true
+  default     = ""
+}
+
+variable "apple_client_id" {
+  type        = string
+  description = "Apple Services ID for Firebase Social Sign-In."
+  default     = ""
+}
+
+variable "apple_client_secret" {
+  type        = string
+  description = "Apple Secret Key for Firebase Social Sign-In."
   sensitive   = true
   default     = ""
 }
