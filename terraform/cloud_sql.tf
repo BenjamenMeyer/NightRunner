@@ -13,16 +13,16 @@ resource "google_sql_database_instance" "main" {
   deletion_protection = false
 
   settings {
-    tier              = "db-f1-micro"
-    availability_type = "ZONAL"
-    disk_size            = 10
-    disk_type            = "PD_HDD"
-    disk_autoresize      = true
+    tier                  = "db-f1-micro"
+    availability_type     = "ZONAL"
+    disk_size             = 10
+    disk_type             = "PD_HDD"
+    disk_autoresize       = true
     disk_autoresize_limit = 20 # Prevents database disk from auto-expanding beyond 20 GB
 
 
     ip_configuration {
-      ipv4_enabled    = true
+      ipv4_enabled = true
       # Restrict IP ranges in production as appropriate
       authorized_networks {
         name  = "allow-all-temporary"

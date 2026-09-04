@@ -49,6 +49,6 @@ resource "google_billing_budget" "project_budget" {
 
   all_updates_rule {
     monitoring_notification_channels = []
-    disable_default_iam_recipients  = false # Sends email to Billing Account Admins & Project Owners
+    disable_default_iam_recipients   = false # Sends email to Billing Account Admins & Project Owners
   }
 }
