@@ -34,13 +34,13 @@ resource "google_identity_platform_config" "default" {
 
 # Google Social Auth Identity Provider Configuration
 resource "google_identity_platform_default_supported_idp_config" "google" {
-  count        = var.google_client_id != "" ? 1 : 0
-  provider     = google-beta
-  depends_on   = [google_identity_platform_config.default]
-  idp_id       = "google.com"
-  client_id    = var.google_client_id
+  count         = var.google_client_id != "" ? 1 : 0
+  provider      = google-beta
+  depends_on    = [google_identity_platform_config.default]
+  idp_id        = "google.com"
+  client_id     = var.google_client_id
   client_secret = var.google_client_secret
-  enabled      = true
+  enabled       = true
 }
 
 # GitHub Social Auth Identity Provider Configuration
