@@ -24,7 +24,7 @@ resource "google_identity_platform_config" "default" {
   }
 
   authorized_domains = compact(concat(
-    ["localhost"],
+    ["localhost", "storage.googleapis.com"],
     var.domain_name != "" ? [var.domain_name] : [],
     length(google_compute_global_forwarding_rule.frontend_forwarding_rule) > 0 ? [google_compute_global_forwarding_rule.frontend_forwarding_rule[0].ip_address] : []
   ))
