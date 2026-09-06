@@ -14,20 +14,27 @@ resource "google_storage_bucket" "tf_state" {
   }
 }
 
-# GCS Bucket for Frontend Static Files (PRIVATE - Public access blocked)
+# GCS Bucket for Frontend Static Files (Public access enabled for Cloudflare CDN origin)
 resource "google_storage_bucket" "frontend" {
   name                        = "${var.project_id}-frontend-${random_id.bucket_suffix.hex}"
   location                    = var.region
   force_destroy               = true
   uniform_bucket_level_access = true
 
-  # Block public access at bucket level
-  public_access_prevention = "enforced"
+  # Allow public read access for Cloudflare CDN origin fetching
+  public_access_prevention = "inherited"
 
   website {
     main_page_suffix = "index.html"
     not_found_page   = "index.html"
   }
+}
+
+# Grant public read access to allUsers for static website hosting / Cloudflare origin
+resource "google_storage_bucket_iam_member" "frontend_public_read" {
+  bucket = google_storage_bucket.frontend.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
 }
 
 # Service Account for Cloud CDN to access Private GCS Bucket
