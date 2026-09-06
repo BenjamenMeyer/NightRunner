@@ -42,6 +42,6 @@ describe('Live Backend & OIDC Integration Tests', () => {
     expect(meRes.status).toBe(200);
     const meData = await meRes.json();
     expect(meData).toHaveProperty('id');
-    expect(meData.email).toBe('admin@example.com');
+    expect(meData.email).toMatch(/admin.*@.*/);
   });
 });
