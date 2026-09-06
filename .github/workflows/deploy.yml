@@ -131,6 +131,8 @@ jobs:
             echo "Waiting... ($i/20)"
             sleep 2
           done
+          echo "Waiting for database seed completion..."
+          docker compose run --rm seed
 
 
       - name: "Gate 2: Run Unit & Integration Tests (vitest against Docker Compose stack)"

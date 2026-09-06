@@ -69,6 +69,8 @@ jobs:
             echo "Waiting... ($i/20)"
             sleep 2
           done
+          echo "Waiting for database seed completion..."
+          docker compose run --rm seed
 
       - name: Run Vitest Unit & Integration Tests
         working-directory: nightrunner_frontend
