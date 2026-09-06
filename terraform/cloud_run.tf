@@ -52,6 +52,21 @@ resource "google_cloud_run_v2_service" "backend" {
         value = "false"
       }
 
+      env {
+        name  = "OIDC_ISSUER"
+        value = "https://securetoken.google.com/${var.project_id}"
+      }
+
+      env {
+        name  = "OIDC_AUDIENCE"
+        value = var.project_id
+      }
+
+      env {
+        name  = "JWKS_URL"
+        value = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
+      }
+
       ports {
         container_port = 8000
       }
