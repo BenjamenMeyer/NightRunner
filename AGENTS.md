@@ -183,3 +183,11 @@ async def test_my_endpoint(test_client):
 - **`asyncio_mode = "auto"`** means you don't need to explicitly mark tests with `@pytest.mark.asyncio`, but having it doesn't hurt.
 - **Pydantic settings are a singleton.** Mutations (e.g., `settings.dev_mode = True`) persist across tests unless you use `monkeypatch`. Always use the `dev_mode_enabled` fixture rather than mutating `settings` directly.
 - **`req.context.roles` is a list, not a dict.** The token carries roles as a dict, but the middleware may transform them. Check the middleware if you add role-based access control.
+
+---
+
+## Git Branching & PR Workflow
+
+- **Branch creation**: Always fetch the latest version of `upstream/main` (`git fetch upstream main`) and rebase `main` (`git checkout main && git rebase upstream/main`) BEFORE creating any new feature or fix branch from `main`.
+- **Pre-PR rebase**: Always fetch and rebase on `upstream/main` again BEFORE opening a PR or pushing commits for review to guarantee branches are never outdated against base `main`.
+- **Fork-only pushes**: Always push branches to the personal fork (`origin`), and open cross-fork PRs targeting `TLNightOps/NightRunner:main`. Do NOT push directly to `upstream` or auto-merge PRs.
