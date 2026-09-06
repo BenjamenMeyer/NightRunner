@@ -147,8 +147,8 @@ services:
   seed:
     image: postgres:16-alpine
     depends_on:
-      db:
-        condition: service_healthy
+      app:
+        condition: service_started
     entrypoint: ["sh", "-c"]
     command:
       - |
