@@ -14,6 +14,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      terraform: ${{ steps.filter.outputs.terraform }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -30,6 +31,8 @@ jobs:
               - 'Makefile'
             frontend:
               - 'nightrunner_frontend/**'
+            terraform:
+              - 'terraform/**'
 
   # Verify backend unit tests before deploying
   test-backend:
@@ -182,3 +185,34 @@ jobs:
           path: nightrunner_frontend/dist
           destination: ${{ secrets.GCP_FRONTEND_BUCKET }}
           parent: false
+
+  deploy-terraform:
+    name: Apply OpenTofu / Terraform Changes
+    needs: changes
+    if: ${{ needs.changes.outputs.terraform == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud via OIDC
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up OpenTofu
+        uses: opentofu/setup-opentofu@v1
+
+      - name: OpenTofu Init & Apply
+        working-directory: terraform
+        run: |
+          tofu init
+          tofu apply -auto-approve
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_region: ${{ secrets.GCP_REGION }}
