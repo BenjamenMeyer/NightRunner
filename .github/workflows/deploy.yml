@@ -109,11 +109,11 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install Dependencies
         working-directory: nightrunner_frontend
-        run: npm ci
+        run: npm ci || npm install
 
       - name: "Gate 1: Run Linter (oxlint)"
         working-directory: nightrunner_frontend
@@ -156,7 +156,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install & Build Frontend
         working-directory: nightrunner_frontend
