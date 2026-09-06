@@ -111,7 +111,7 @@ class AuthMiddleware:
                         "role": None
                     }]
                 except Exception as ex:
-                    logger.error(f"Failed to auto-provision user {external_id}: {ex}")
+                    logger.exception(f"Failed to auto-provision user {external_id}: {ex}")
                     raise falcon.HTTPUnauthorized(title="User not found", description="No local account for this identity.")
 
             # First row has user info (same for all rows)

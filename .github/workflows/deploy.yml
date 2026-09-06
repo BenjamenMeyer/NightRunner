@@ -140,7 +140,7 @@ jobs:
         run: npm run test
         env:
           VITE_BACKEND_URL: "http://127.0.0.1:8000"
-          VITE_OIDC_AUTHORITY: "http://127.0.0.1:4000"
+          VITE_OIDC_AUTHORITY: "http://localhost:4000"
 
       - name: "Gate 3: Verify Production Build (vite build)"
         working-directory: nightrunner_frontend
