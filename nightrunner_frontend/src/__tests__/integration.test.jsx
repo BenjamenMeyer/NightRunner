@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 describe('Live Backend & OIDC Integration Tests', () => {
   const backendUrl = process.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000';
-  const oidcUrl = process.env.VITE_OIDC_AUTHORITY || 'http://127.0.0.1:4000';
+  const oidcUrl = process.env.VITE_OIDC_AUTHORITY || 'http://localhost:4000';
 
   it('connects to live backend /health endpoint', async () => {
     const res = await fetch(`${backendUrl}/health`);
@@ -24,7 +24,10 @@ describe('Live Backend & OIDC Integration Tests', () => {
 
     const tokenRes = await fetch(`${oidcUrl}/connect/token`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: { 
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Host': 'localhost:4000'
+      },
       body: body.toString()
     });
 
