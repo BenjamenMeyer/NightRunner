@@ -44,7 +44,7 @@ resource "google_cloud_run_v2_service" "backend" {
 
       env {
         name  = "DATABASE_URL"
-        value = "postgresql+psycopg://${var.db_user}:${var.db_password}@/${var.db_name}?host=/cloudsql/${google_sql_database_instance.main.connection_name}"
+        value = "postgresql://${var.db_user}:${var.db_password}@/${var.db_name}?host=/cloudsql/${google_sql_database_instance.main.connection_name}"
       }
 
       env {
