@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
 describe('Live Backend & OIDC Integration Tests', () => {
-  const backendUrl = process.env.VITE_BACKEND_URL || 'http://localhost:8000';
-  const oidcUrl = process.env.VITE_OIDC_AUTHORITY || 'http://localhost:4000';
+  const backendUrl = process.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000';
+  const oidcUrl = process.env.VITE_OIDC_AUTHORITY || 'http://127.0.0.1:4000';
 
   it('connects to live backend /health endpoint', async () => {
     const res = await fetch(`${backendUrl}/health`);
