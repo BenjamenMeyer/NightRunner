@@ -1,6 +1,8 @@
 name: PR Quality Gates
 
 on:
+  push:
+    branches: ["**"]
   pull_request:
     branches: ["**"]
   workflow_dispatch:
@@ -57,7 +59,7 @@ jobs:
 
       - name: Start Backend Docker Stack
         run: |
-          docker compose up -d app
+          docker compose up -d
           echo "Waiting for API server health check..."
           for i in {1..20}; do
             if curl -s -f http://127.0.0.1:8000/health > /dev/null; then
@@ -67,6 +69,8 @@ jobs:
             echo "Waiting... ($i/20)"
             sleep 2
           done
+          echo "Waiting for database seed completion..."
+          docker compose run --rm seed
 
       - name: Run Vitest Unit & Integration Tests
         working-directory: nightrunner_frontend

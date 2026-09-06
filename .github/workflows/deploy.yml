@@ -119,9 +119,9 @@ jobs:
         working-directory: nightrunner_frontend
         run: npm run lint
 
-      - name: Start Backend Stack (App + OIDC Server + Postgres)
+      - name: Start Backend Stack (App + OIDC Server + Postgres + Seed)
         run: |
-          docker compose up -d app
+          docker compose up -d
           echo "Waiting for API server health check..."
           for i in {1..20}; do
             if curl -s -f http://127.0.0.1:8000/health > /dev/null; then
@@ -131,6 +131,8 @@ jobs:
             echo "Waiting... ($i/20)"
             sleep 2
           done
+          echo "Waiting for database seed completion..."
+          docker compose run --rm seed
 
 
       - name: "Gate 2: Run Unit & Integration Tests (vitest against Docker Compose stack)"
