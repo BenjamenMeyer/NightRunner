@@ -30,6 +30,19 @@ resource "google_identity_platform_config" "default" {
   ))
 }
 
+# Firebase / Identity Platform Web API Key
+resource "google_apikeys_key" "firebase_api_key" {
+  name         = "firebase-web-api-key"
+  display_name = "Firebase Web Auth API Key"
+  project      = var.project_id
+
+  restrictions {
+    api_targets {
+      service = "identitytoolkit.googleapis.com"
+    }
+  }
+}
+
 
 
 # Google Social Auth Identity Provider Configuration

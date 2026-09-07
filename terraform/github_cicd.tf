@@ -133,3 +133,10 @@ resource "github_actions_secret" "gcp_google_client_id" {
   plaintext_value = var.google_client_id
 }
 
+resource "github_actions_secret" "gcp_firebase_api_key" {
+  count           = var.github_repo_name != "" ? 1 : 0
+  repository      = var.github_repo_name
+  secret_name     = "GCP_FIREBASE_API_KEY"
+  plaintext_value = google_apikeys_key.firebase_api_key.key_string
+}
+

@@ -179,6 +179,7 @@ jobs:
           VITE_BACKEND_URL: "https://nightrunner-backend-550013958206.us-east1.run.app"
           VITE_OIDC_AUTHORITY: "https://securetoken.google.com/${{ secrets.GCP_PROJECT_ID }}"
           VITE_OIDC_CLIENT_ID: "${{ secrets.GCP_GOOGLE_CLIENT_ID || secrets.GCP_PROJECT_ID }}"
+          VITE_FIREBASE_API_KEY: "${{ secrets.GCP_FIREBASE_API_KEY }}"
 
       - name: Upload Static Assets to GCS Bucket
         uses: google-github-actions/upload-cloud-storage@v2
