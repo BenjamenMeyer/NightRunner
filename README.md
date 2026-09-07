@@ -197,7 +197,7 @@ having to figure out how to run it on their own.
 
 For a full-stack local development environment containing the Python ASGI app, PostgreSQL database, and a mock OIDC server, you can use Docker Compose (or Podman Compose):
 
-1. **Start the environment:**
+1. **Start the environment (Default Mock OIDC):**
    ```bash
    docker compose up --build
    ```
@@ -209,7 +209,10 @@ For a full-stack local development environment containing the Python ASGI app, P
    - **Mock OIDC Server** on `http://localhost:4000`
    - **Seed Service** (automatically populates local database with default events and testing OIDC users)
 
-2. **Stop the environment:**
+2. **Testing Against Live Firebase OIDC Locally**:
+   You can easily toggle Docker Compose between the local Mock OIDC server and live Firebase Auth. See [README.Firebase.md](README.Firebase.md) for step-by-step instructions on setting up `.env.local` and configuring authorized callback URIs.
+
+3. **Stop the environment:**
    ```bash
    docker compose down
    ```

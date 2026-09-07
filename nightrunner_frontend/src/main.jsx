@@ -17,6 +17,7 @@ const authority =
     "http://localhost:4000";
 
 const isGoogleSecureToken = authority.includes("securetoken.google.com");
+const projectId = isGoogleSecureToken ? authority.split("/").pop() : "";
 
 const oidcConfig = {
 
@@ -35,15 +36,14 @@ const oidcConfig = {
     scope:
         "openid profile email",
 
-    // Google OAuth public SPA client flow (PKCE authorization code flow)
+    // GCP Identity Platform / Firebase OIDC public SPA client flow (PKCE authorization code flow)
     ...(isGoogleSecureToken ? {
         response_mode: "query",
         metadata: {
             issuer: authority,
-            authorization_endpoint: "https://accounts.google.com/o/oauth2/v2/auth",
-            token_endpoint: "https://oauth2.googleapis.com/token",
+            authorization_endpoint: `https://identitytoolkit.googleapis.com/v2/projects/${projectId}/oauth/authorize`,
+            token_endpoint: `https://identitytoolkit.googleapis.com/v2/projects/${projectId}/oauth/token`,
             jwks_uri: "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
-            userinfo_endpoint: "https://openidconnect.googleapis.com/v1/userinfo",
             code_challenge_methods_supported: ["S256"],
         }
     } : {}),
