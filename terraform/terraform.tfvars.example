@@ -12,9 +12,11 @@ db_name       = "nightrunner"
 cdn_provider = "none" # Options: "none", "cloudflare", "gcp"
 
 # Optional Cloudflare Configuration (when cdn_provider = "cloudflare")
-cloudflare_api_token = "YOUR_CLOUDFLARE_API_TOKEN"
-cloudflare_zone_id   = "YOUR_CLOUDFLARE_ZONE_ID"
-domain_name          = "nightrunner.example.com"
+# Note: API Token requires permissions: Zone:Edit, DNS:Edit, Page Rules:Edit, Workers Scripts:Edit
+cloudflare_api_token  = "YOUR_CLOUDFLARE_API_TOKEN"
+cloudflare_zone_id    = "YOUR_CLOUDFLARE_ZONE_ID"
+cloudflare_account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+domain_name           = "nightrunner.example.com"
 
 # GCP Billing Budget & Safeguards
 billing_account_id    = "012345-6789AB-CDEF01" # Format: XXXXXX-XXXXXX-XXXXXX
