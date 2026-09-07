@@ -19,12 +19,12 @@ services:
     ports:
       - "8000:8000"
     environment:
-      FRONT_END_URL: "http://localhost:3000"
+      FRONT_END_URL: "${FRONT_END_URL:-http://localhost:3000}"
       DATABASE_URL: postgresql://nightrunner:nightrunner_password@db:5432/nightrunner
-      DEV_MODE: "false"
-      OIDC_ISSUER: "http://localhost:4000"
-      OIDC_AUDIENCE: "client-id"
-      JWKS_URL: "http://localhost:4000/.well-known/openid-configuration/jwks"
+      DEV_MODE: "${DEV_MODE:-false}"
+      OIDC_ISSUER: "${OIDC_ISSUER:-http://localhost:4000}"
+      OIDC_AUDIENCE: "${OIDC_AUDIENCE:-client-id}"
+      JWKS_URL: "${JWKS_URL:-http://localhost:4000/.well-known/openid-configuration/jwks}"
     extra_hosts:
       - "localhost:host-gateway"
     depends_on:
@@ -38,10 +38,10 @@ services:
     build:
       context: ./nightrunner_frontend
       args:
-        VITE_API_BACKEND_URL: http://localhost:8000/v1
-        VITE_BACKEND_URL: http://localhost:8000
-        VITE_OIDC_AUTHORITY: http://localhost:4000
-        VITE_OIDC_CLIENT_ID: client-id
+        VITE_API_BACKEND_URL: "${VITE_API_BACKEND_URL:-http://localhost:8000/v1}"
+        VITE_BACKEND_URL: "${VITE_BACKEND_URL:-http://localhost:8000}"
+        VITE_OIDC_AUTHORITY: "${VITE_OIDC_AUTHORITY:-http://localhost:4000}"
+        VITE_OIDC_CLIENT_ID: "${VITE_OIDC_CLIENT_ID:-client-id}"
     ports:
       - "3000:80"
     depends_on:
