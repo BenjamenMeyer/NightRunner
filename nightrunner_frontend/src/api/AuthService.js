@@ -62,7 +62,11 @@ class AuthService {
      */
     isAuthenticated() {
 
-        return this.auth?.isAuthenticated ?? false;
+        if (this.auth?.isAuthenticated) {
+            return true;
+        }
+
+        return Boolean(localStorage.getItem("firebase_id_token"));
 
     }
 
@@ -216,6 +220,19 @@ class AuthService {
      * @returns {Promise<void>}
      */
     async logout() {
+
+        localStorage.removeItem("firebase_id_token");
+
+        try {
+            const { isFirebaseMode, firebaseLogout } = await import("@/api/firebaseAuth.js");
+            if (isFirebaseMode) {
+                await firebaseLogout();
+                window.location.href = "/login?loggedOut=true";
+                return;
+            }
+        } catch {
+            // Ignore error if firebase module fail
+        }
 
         if (!this.auth) {
 
