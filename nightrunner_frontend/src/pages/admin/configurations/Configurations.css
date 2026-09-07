@@ -2,10 +2,9 @@
    Page
    ========================================== */
 
-.configurations-page {
+.configurations {
     width: 100%;
     max-width: 1400px;
-
     margin: 0 auto;
 }
 
@@ -17,33 +16,31 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-
     gap: 24px;
-
     margin-bottom: 28px;
 }
 
 .configurations-header h1 {
     margin: 0;
-
     color: var(--text-primary);
 }
 
 .configurations-header p {
     margin: 6px 0 0;
-
     max-width: 650px;
-
     color: var(--text-secondary);
+}
+
+.configurations-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .page-eyebrow {
     display: block;
-
     margin-bottom: 6px;
-
     color: var(--button-bg);
-
     font-size: 12px;
     font-weight: 700;
     letter-spacing: .08em;
@@ -54,328 +51,335 @@
    Error
    ========================================== */
 
-.error-banner {
+.configurations-error {
     margin-bottom: 20px;
-
     padding: 12px 14px;
-
-    border: 1px solid #f3b5b5;
+    border: 1px solid var(--error);
     border-radius: 8px;
-
-    background: #ffdcdc;
-    color: #8b0000;
-
+    background: var(--card-bg);
+    color: var(--error);
     font-size: 14px;
 }
 
 /* ==========================================
-   Toolbar
+   Notice
    ========================================== */
 
-.configuration-toolbar {
-    margin-bottom: 18px;
-}
-
-.configuration-search {
-    width: 100%;
-
-    padding: 12px 14px;
-
-    border: 1px solid var(--border);
+.configurations-notice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    border: 1px solid var(--info);
     border-radius: 8px;
-
     background: var(--card-bg);
-    color: var(--text-primary);
-
-    outline: none;
-
-    font-size: 14px;
-
-    box-sizing: border-box;
+    color: var(--text-secondary);
+    font-size: 13px;
 }
 
-.configuration-search:focus {
-    border-color: var(--button-bg);
+.configurations-notice strong {
+    color: var(--text-primary);
+}
 
-    box-shadow:
-            0 0 0 3px rgba(0, 0, 0, .06);
+.configurations-notice span {
+    flex: 1;
+}
+
+.configurations-notice button {
+    margin-left: auto;
 }
 
 /* ==========================================
    Layout
    ========================================== */
 
-.configuration-layout {
+.configurations-layout {
     display: grid;
-
     grid-template-columns:
         220px
         minmax(350px, 1fr)
         320px;
-
     min-height: 550px;
-
     overflow: hidden;
-
     border: 1px solid var(--border);
     border-radius: 12px;
-
     background: var(--card-bg);
+    box-shadow: var(--shadow);
 }
 
 /* ==========================================
-   Group Panel
+   Sidebar
    ========================================== */
 
-.group-panel {
+.configurations-sidebar {
     border-right: 1px solid var(--border);
-
     background: var(--page-bg);
 }
 
-.group-panel-header {
+.configurations-sidebar-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
+    gap: 12px;
     padding: 18px;
-
     border-bottom: 1px solid var(--border);
 }
 
-.group-panel-header h2 {
+.configurations-sidebar-header h2 {
     margin: 0;
-
     color: var(--text-primary);
-
     font-size: 15px;
 }
 
-.group-panel-header p {
-    margin: 4px 0 0;
-
-    color: var(--text-secondary);
-
-    font-size: 12px;
-}
-
-.count-badge {
+.configurations-sidebar-header button {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--button-bg);
+    border-radius: 7px;
+    background: var(--button-bg);
+    color: var(--button-text);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color .15s, opacity .15s;
+}
 
+.configurations-sidebar-header button:hover {
+    background: var(--button-hover);
+}
+
+/* ==========================================
+   Configuration Groups
+   ========================================== */
+
+.configuration-groups {
+    display: flex;
+    flex-direction: column;
+}
+
+.configuration-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-primary);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color .15s;
+}
+
+.configuration-group:hover {
+    background: var(--card-bg);
+}
+
+.configuration-group.active {
+    background: var(--card-bg);
+    box-shadow: inset 3px 0 0 var(--button-bg);
+}
+
+.configuration-group > span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+}
+
+.configuration-group-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
     min-width: 26px;
     height: 26px;
-
     padding: 0 7px;
-
+    box-sizing: border-box;
     border-radius: 50%;
-
     background: var(--card-bg);
     color: var(--text-secondary);
-
     font-size: 12px;
     font-weight: 700;
 }
 
 /* ==========================================
-   Groups
+   Main Content
    ========================================== */
 
-.group-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    width: 100%;
-
-    padding: 12px 16px;
-
-    border: none;
-    border-bottom: 1px solid var(--border);
-
-    background: transparent;
-    color: var(--text-primary);
-
-    text-align: left;
-
-    cursor: pointer;
-
-    transition:
-            background-color .15s;
-}
-
-.group-item:hover {
+.configurations-main {
+    min-width: 0;
     background: var(--card-bg);
-}
-
-.group-item.selected {
-    background: var(--card-bg);
-
-    box-shadow:
-            inset 3px 0 0 var(--button-bg);
-}
-
-.group-item span {
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    font-size: 14px;
-}
-
-.group-item small {
-    color: var(--text-secondary);
-
-    font-size: 12px;
 }
 
 /* ==========================================
-   Configuration Content
+   Group Toolbar
    ========================================== */
 
-.configuration-content {
-    min-width: 0;
-}
-
-.configuration-content-header {
-    padding: 20px;
-
+.configuration-group-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 20px;
     border-bottom: 1px solid var(--border);
+    background: var(--card-bg);
 }
 
-.configuration-content-header h2 {
+.configuration-group-toolbar h2 {
     margin: 0;
-
     color: var(--text-primary);
-
     font-size: 18px;
 }
 
-.configuration-content-header p {
+.configuration-group-toolbar p {
     margin: 5px 0 0;
-
     color: var(--text-secondary);
-
     font-size: 13px;
+}
+
+.configuration-group-toolbar-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.configuration-group-toolbar-actions button {
+    white-space: nowrap;
 }
 
 /* ==========================================
    Configuration List
    ========================================== */
 
-.configuration-list {
+.configurations-list {
     display: flex;
     flex-direction: column;
 }
 
-.configuration-card {
+.configurations-list-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     gap: 20px;
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+}
 
+.configurations-list-header h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 18px;
+}
+
+.configurations-list-header span {
+    display: block;
+    margin-top: 5px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.configurations-list-header button {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.configurations-list-items {
+    display: flex;
+    flex-direction: column;
+}
+
+.configuration-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
     width: 100%;
-
     padding: 18px 20px;
-
     border: none;
     border-bottom: 1px solid var(--border);
-
     background: var(--card-bg);
     color: var(--text-primary);
-
     text-align: left;
-
     cursor: pointer;
-
-    transition:
-            background-color .15s;
+    transition: background-color .15s;
 }
 
-.configuration-card:hover {
+.configuration-list-item:hover {
     background: var(--page-bg);
 }
 
-.configuration-card.selected {
+.configuration-list-item.selected {
     background: var(--page-bg);
-
-    box-shadow:
-            inset 3px 0 0 var(--button-bg);
+    box-shadow: inset 3px 0 0 var(--button-bg);
 }
 
-.configuration-card-main {
+.configuration-list-item > div {
     min-width: 0;
 }
 
-.configuration-card-title {
-    display: flex;
-    align-items: center;
-
-    gap: 10px;
-
-    margin-bottom: 5px;
-}
-
-.configuration-card h3 {
-    margin: 0;
-
-    color: var(--text-primary);
-
-    font-size: 15px;
-}
-
-.configuration-card p {
-    margin: 0;
-
+.configuration-list-item strong {
+    display: block;
     overflow: hidden;
-
-    color: var(--text-secondary);
-
-    font-size: 13px;
-
+    color: var(--text-primary);
+    font-size: 15px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.configuration-group {
-    display: inline-block;
+.configuration-list-item p {
+    margin: 5px 0 0;
+    overflow: hidden;
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
+.configuration-list-item > span {
+    flex-shrink: 0;
     padding: 3px 7px;
-
     border-radius: 5px;
-
     background: var(--page-bg);
     color: var(--text-secondary);
-
     font-size: 11px;
     font-weight: 600;
 }
 
-.configuration-task-count {
-    flex-shrink: 0;
+/* ==========================================
+   Empty Configuration List
+   ========================================== */
 
+.configurations-empty {
     display: flex;
     flex-direction: column;
-
     align-items: center;
-
-    min-width: 45px;
-}
-
-.configuration-task-count strong {
-    color: var(--text-primary);
-
-    font-size: 18px;
-}
-
-.configuration-task-count span {
+    justify-content: center;
+    min-height: 260px;
+    padding: 30px;
     color: var(--text-secondary);
+    text-align: center;
+}
 
-    font-size: 10px;
-    text-transform: uppercase;
+.configurations-empty h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 16px;
+}
+
+.configurations-empty p {
+    margin: 6px 0 18px;
+    color: var(--text-secondary);
+    font-size: 13px;
 }
 
 /* ==========================================
@@ -385,166 +389,131 @@
 .configuration-details {
     display: flex;
     flex-direction: column;
-
     min-width: 0;
-
     border-left: 1px solid var(--border);
+    background: var(--card-bg);
 }
 
-.details-header {
+.configuration-details-header {
     padding: 24px;
-
     border-bottom: 1px solid var(--border);
 }
 
-.details-header h2 {
-    margin: 8px 0 0;
-
+.configuration-details-header h2 {
+    margin: 0;
     color: var(--text-primary);
-
     font-size: 20px;
 }
 
-.details-header p {
-    margin: 7px 0 0;
-
+.configuration-details-header span {
+    display: inline-block;
+    margin-top: 7px;
+    padding: 3px 7px;
+    border-radius: 5px;
+    background: var(--page-bg);
     color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+}
 
+.configuration-details-description {
+    margin: 0;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
     font-size: 13px;
     line-height: 1.5;
 }
 
-.details-section {
+/* ==========================================
+   Details Section
+   ========================================== */
+
+.configuration-details-section {
     padding: 20px 24px;
 }
 
-.details-section h3 {
+.configuration-details-section h3 {
     margin: 0 0 14px;
-
     color: var(--text-primary);
-
     font-size: 14px;
 }
 
-.details-task-list {
-    display: flex;
-    flex-direction: column;
-
-    gap: 8px;
+.configuration-details-section > p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
 }
 
-.details-task {
+.configuration-details-section ol {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding-left: 24px;
+}
 
-    gap: 10px;
-
+.configuration-details-section li {
     padding: 10px;
-
     border: 1px solid var(--border);
     border-radius: 7px;
-}
-
-.details-task > div {
-    display: flex;
-    flex-direction: column;
-
-    min-width: 0;
-}
-
-.details-task strong {
-    overflow: hidden;
-
+    background: var(--card-bg);
     color: var(--text-primary);
-
-    font-size: 13px;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
-.details-task span:not(.task-number) {
-    margin-top: 2px;
-
-    color: var(--text-secondary);
-
-    font-size: 11px;
-}
-
-.task-number {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    width: 24px;
-    height: 24px;
-
-    border-radius: 5px;
-
-    background: var(--page-bg);
-    color: var(--text-secondary);
-
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.details-empty {
-    margin: 0;
-
-    color: var(--text-secondary);
-
+.configuration-details-section li strong {
+    color: var(--text-primary);
     font-size: 13px;
 }
 
-.details-actions {
+.configuration-details-section li p {
+    margin: 3px 0 0;
+    color: var(--text-secondary);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+/* ==========================================
+   Details Actions
+   ========================================== */
+
+.configuration-details-actions {
     display: flex;
     flex-direction: column;
-
     gap: 8px;
-
     margin-top: auto;
-
     padding: 20px 24px;
-
     border-top: 1px solid var(--border);
 }
 
-.details-actions button {
+.configuration-details-actions button {
     width: 100%;
 }
 
 /* ==========================================
-   Placeholder / Empty
+   Details Empty State
    ========================================== */
 
-.details-placeholder,
-.empty-panel {
+.configuration-details-empty {
     display: flex;
     flex-direction: column;
-
     align-items: center;
     justify-content: center;
-
     min-height: 220px;
-
     padding: 30px;
-
     color: var(--text-secondary);
-
     text-align: center;
 }
 
-.details-placeholder strong,
-.empty-panel strong {
+.configuration-details-empty h2 {
+    margin: 0;
     color: var(--text-primary);
+    font-size: 17px;
 }
 
-.details-placeholder span,
-.empty-panel span {
-    margin-top: 5px;
-
+.configuration-details-empty p {
+    margin: 6px 0 0;
+    color: var(--text-secondary);
     font-size: 13px;
 }
 
@@ -556,94 +525,99 @@
     display: flex;
     align-items: center;
     justify-content: center;
-
     min-height: 400px;
-
     color: var(--text-secondary);
-}
-
-.loading-spinner {
-    display: inline-block;
-
-    width: 16px;
-    height: 16px;
-
-    margin-right: 8px;
-
-    border: 2px solid var(--border);
-    border-top-color: var(--button-bg);
-
-    border-radius: 50%;
-
-    animation: configuration-spin .7s linear infinite;
-}
-
-@keyframes configuration-spin {
-
-    to {
-        transform: rotate(360deg);
-    }
-
 }
 
 /* ==========================================
    Buttons
    ========================================== */
 
-.primary-button,
-.secondary-button,
-.danger {
+.configurations button {
+    font: inherit;
+}
+
+.configurations-header-actions button,
+.configurations-notice button,
+.configurations-list-header button,
+.configuration-group-toolbar-actions button,
+.configurations-empty button {
+    min-height: 38px;
+    padding: 9px 16px;
+    border: 1px solid var(--button-bg);
     border-radius: 8px;
-
+    background: var(--button-bg);
+    color: var(--button-text);
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
-
-    font-size: 14px;
-
     transition:
             background-color .15s,
             border-color .15s,
             opacity .15s;
 }
 
-.primary-button {
-    padding: 10px 18px;
-
-    border: 1px solid var(--button-bg);
-
-    background: var(--button-bg);
-    color: var(--button-text);
-
-    white-space: nowrap;
+.configurations-header-actions button:hover:not(:disabled),
+.configurations-notice button:hover:not(:disabled),
+.configurations-list-header button:hover:not(:disabled),
+.configuration-group-toolbar-actions button:hover:not(:disabled),
+.configurations-empty button:hover:not(:disabled) {
+    background: var(--button-hover);
+    border-color: var(--button-hover);
 }
 
-.primary-button:hover {
+.configurations-header-actions button:disabled,
+.configurations-list-header button:disabled,
+.configuration-group-toolbar-actions button:disabled,
+.configurations-empty button:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.configuration-group-toolbar-actions button:last-child {
+    border-color: var(--error);
+    background: var(--error);
+}
+
+.configuration-group-toolbar-actions button:last-child:hover:not(:disabled) {
+    border-color: var(--button-hover);
     background: var(--button-hover);
 }
 
-.secondary-button {
-    padding: 10px 18px;
-
+.configuration-details-actions button {
+    min-height: 38px;
+    padding: 9px 16px;
     border: 1px solid var(--border);
-
+    border-radius: 8px;
     background: var(--card-bg);
     color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+            background-color .15s,
+            border-color .15s,
+            opacity .15s;
 }
 
-.secondary-button:hover {
+.configuration-details-actions button:hover:not(:disabled) {
     background: var(--page-bg);
 }
 
-.danger {
-    padding: 10px 18px;
-
-    border: 1px solid #c62828;
-
-    background: #c62828;
-    color: #ffffff;
+.configuration-details-actions button:last-child {
+    border-color: var(--error);
+    background: var(--error);
+    color: var(--button-text);
 }
 
-.danger:hover {
-    background: #a51f1f;
+.configuration-details-actions button:last-child:hover:not(:disabled) {
+    background: var(--button-hover);
+    border-color: var(--button-hover);
+}
+
+.configuration-details-actions button:disabled {
+    opacity: .55;
+    cursor: not-allowed;
 }
 
 /* ==========================================
@@ -651,19 +625,16 @@
    ========================================== */
 
 @media (max-width: 1100px) {
-
-    .configuration-layout {
+    .configurations-layout {
         grid-template-columns:
             190px
             minmax(300px, 1fr)
             280px;
     }
-
 }
 
 @media (max-width: 900px) {
-
-    .configuration-layout {
+    .configurations-layout {
         grid-template-columns:
             190px
             minmax(300px, 1fr);
@@ -672,23 +643,64 @@
     .configuration-details {
         display: none;
     }
-
 }
 
 @media (max-width: 700px) {
-
     .configurations-header {
         align-items: stretch;
         flex-direction: column;
     }
 
-    .configuration-layout {
+    .configurations-header-actions {
+        width: 100%;
+    }
+
+    .configurations-header-actions button {
+        flex: 1;
+    }
+
+    .configurations-layout {
         grid-template-columns: 1fr;
     }
 
-    .group-panel {
+    .configurations-sidebar {
         border-right: none;
         border-bottom: 1px solid var(--border);
     }
 
+    .configuration-group-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .configuration-group-toolbar-actions {
+        width: 100%;
+    }
+
+    .configuration-group-toolbar-actions button {
+        flex: 1;
+    }
+
+    .configurations-list-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .configurations-list-header button {
+        width: 100%;
+    }
+
+    .configurations-notice {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .configurations-notice button {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .configuration-list-item {
+        align-items: flex-start;
+    }
 }

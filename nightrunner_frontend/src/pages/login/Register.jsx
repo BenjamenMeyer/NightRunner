@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import NOAImage from "../../../public/favicon.jpg";
-
 import "./Register.css";
-import ApiService from "@/api/ApiService.js";
+import ApiService from "../../api/ApiService.js";
 
 function Register() {
 
@@ -92,7 +90,7 @@ function Register() {
 
             <img
                 className="login-logo"
-                src={NOAImage}
+                src="/favicon.jpg"
                 alt="Night Ops Adventures"
             />
 

@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import ApiService from "@/api/ApiService";
+import ApiService from "../api/ApiService.js";
+import {
+    useEventContext
+} from "../api/helpers/EventContext.jsx";
 
 import "./Dashboard.css";
 
@@ -9,75 +12,69 @@ export default function Dashboard() {
 
     const navigate = useNavigate();
 
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [event, setEvent] = useState(null);
+    const {
+        event,
+        eventId,
+        loading: eventLoading,
+        error: eventError
+    } = useEventContext();
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState(null);
+
 
     useEffect(() => {
 
-        loadDashboard();
+        /*
+         * The EventContext is responsible for resolving
+         * the currently selected event.
+         *
+         * Once an event is available, the dashboard can
+         * use it directly.
+         */
+        if (eventLoading) {
+            return;
+        }
 
-    }, []);
+        if (eventError) {
 
-    async function loadDashboard() {
+            setError(eventError);
+            setLoading(false);
 
-        try {
-
-            setLoading(true);
-            setError(null);
-
-            const user = await ApiService.userData.get();
-
-            if (!user) {
-
-                throw new Error(
-                    "Unable to determine the current user."
-                );
-
-            }
-
-            /*
-             * A normal user should have an event assigned.
-             *
-             * System administrators are allowed to have no
-             * event, but they should be using /admin instead.
-             */
-            if (!user.event) {
-
-                throw new Error(
-                    "No event is currently assigned to your account."
-                );
-
-            }
-
-            const eventResponse =
-                await ApiService.eventData.getEvent(user.event);
-
-            setEvent(eventResponse);
+            return;
 
         }
-        catch (error) {
 
-            console.error(
-                "Failed to load dashboard:",
-                error
-            );
+        if (!eventId || !event) {
 
             setError(
-                error.message ??
-                "Failed to load dashboard."
+                "No event is currently selected."
             );
-
-        }
-        finally {
 
             setLoading(false);
 
+            return;
+
         }
 
-    }
+        setError(null);
+        setLoading(false);
 
-    if (loading) {
+    }, [
+        event,
+        eventId,
+        eventLoading,
+        eventError
+    ]);
+
+
+    if (
+        loading ||
+        eventLoading
+    ) {
 
         return (
 
@@ -103,6 +100,7 @@ export default function Dashboard() {
 
     }
 
+
     return (
 
         <div className="dashboard">
@@ -121,6 +119,7 @@ export default function Dashboard() {
 
             </div>
 
+
             {error && (
 
                 <div className="error-banner">
@@ -130,6 +129,7 @@ export default function Dashboard() {
                 </div>
 
             )}
+
 
             {!error && event && (
 
@@ -156,6 +156,7 @@ export default function Dashboard() {
 
                             </div>
 
+
                             <div className="event-information">
 
                                 <div className="information-item">
@@ -170,6 +171,7 @@ export default function Dashboard() {
 
                                 </div>
 
+
                                 <div className="information-item">
 
                                     <span className="information-label">
@@ -181,6 +183,7 @@ export default function Dashboard() {
                                     </strong>
 
                                 </div>
+
 
                                 {event.location && (
 
@@ -197,6 +200,7 @@ export default function Dashboard() {
                                     </div>
 
                                 )}
+
 
                                 {event.description && (
 
@@ -241,6 +245,7 @@ export default function Dashboard() {
                                 </div>
 
                             </div>
+
 
                             <div className="dashboard-action-grid">
 

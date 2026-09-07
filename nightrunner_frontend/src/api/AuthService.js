@@ -28,7 +28,7 @@ class AuthService {
      *
      * This is called by AuthServiceProvider.
      *
-     * @param {Object} auth
+     * @param {import('react-oidc-context').AuthContextProps} auth
      * Authentication context returned by useAuth().
      */
     initialize(auth) {
@@ -98,7 +98,7 @@ class AuthService {
     /**
      * Gets the current OIDC user session.
      *
-     * @returns {Object|null}
+     * @returns {import('react-oidc-context').User|null}
      */
     getUser() {
 
@@ -110,7 +110,7 @@ class AuthService {
     /**
      * Gets the current OIDC user profile.
      *
-     * @returns {Object|null}
+     * @returns {import('react-oidc-context').User['profile']|null}
      */
     getProfile() {
 

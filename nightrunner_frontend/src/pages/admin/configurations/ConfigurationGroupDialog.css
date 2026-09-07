@@ -1,0 +1,295 @@
+/* ==========================================
+   Overlay
+   ========================================== */
+
+.configuration-group-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    background: rgba(47, 52, 58, .65);
+}
+
+/* ==========================================
+   Dialog
+   ========================================== */
+
+.configuration-group-dialog {
+    width: 100%;
+    max-width: 520px;
+
+    overflow: hidden;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    background: var(--card-bg);
+    color: var(--text-primary);
+
+    box-shadow: var(--shadow);
+}
+
+/* ==========================================
+   Header
+   ========================================== */
+
+.configuration-group-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 20px 24px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.configuration-group-dialog-header h2 {
+    margin: 0;
+
+    color: var(--text-primary);
+
+    font-size: 20px;
+}
+
+.configuration-group-dialog-header p {
+    margin: 6px 0 0;
+
+    color: var(--text-secondary);
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* ==========================================
+   Close Button
+   ========================================== */
+
+.configuration-group-dialog-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 32px;
+    height: 32px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 6px;
+
+    background: transparent;
+    color: var(--text-secondary);
+
+    font-size: 22px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.configuration-group-dialog-close:hover:not(:disabled) {
+    background: var(--page-bg);
+    color: var(--text-primary);
+}
+
+.configuration-group-dialog-close:disabled {
+    opacity: .5;
+
+    cursor: not-allowed;
+}
+
+/* ==========================================
+   Error
+   ========================================== */
+
+.configuration-group-dialog-error {
+    margin: 18px 24px 0;
+
+    padding: 11px 13px;
+
+    border: 1px solid var(--error);
+    border-radius: 7px;
+
+    background: var(--card-bg);
+    color: var(--error);
+
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* ==========================================
+   Form
+   ========================================== */
+
+.configuration-group-dialog form {
+    padding: 24px;
+}
+
+.configuration-group-dialog-field {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    margin-bottom: 18px;
+}
+
+.configuration-group-dialog-field label {
+    color: var(--text-primary);
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.configuration-group-dialog-field input,
+.configuration-group-dialog-field textarea {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 10px 12px;
+
+    border: 1px solid var(--input-border);
+    border-radius: 7px;
+
+    background: var(--input-bg);
+    color: var(--input-text);
+
+    outline: none;
+
+    font: inherit;
+    font-size: 14px;
+
+    transition:
+            border-color .15s,
+            box-shadow .15s;
+}
+
+.configuration-group-dialog-field input::placeholder,
+.configuration-group-dialog-field textarea::placeholder {
+    color: var(--text-secondary);
+}
+
+.configuration-group-dialog-field input:focus,
+.configuration-group-dialog-field textarea:focus {
+    border-color: var(--input-focus);
+
+    box-shadow:
+            0 0 0 3px rgba(139, 30, 35, .12);
+}
+
+.configuration-group-dialog-field input:disabled,
+.configuration-group-dialog-field textarea:disabled {
+    opacity: .6;
+
+    cursor: not-allowed;
+}
+
+.configuration-group-dialog-field textarea {
+    min-height: 90px;
+
+    resize: vertical;
+}
+
+/* ==========================================
+   Actions
+   ========================================== */
+
+.configuration-group-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 24px;
+    padding-top: 18px;
+
+    border-top: 1px solid var(--border);
+}
+
+.configuration-group-dialog-actions button {
+    min-height: 38px;
+
+    padding: 8px 16px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background: var(--card-bg);
+    color: var(--text-primary);
+
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+            background-color .15s,
+            border-color .15s,
+            opacity .15s;
+}
+
+.configuration-group-dialog-actions button:hover:not(:disabled) {
+    background: var(--page-bg);
+}
+
+.configuration-group-dialog-actions button:disabled {
+    opacity: .55;
+
+    cursor: not-allowed;
+}
+
+.configuration-group-dialog-actions button[type="submit"] {
+    border-color: var(--button-bg);
+
+    background: var(--button-bg);
+    color: var(--button-text);
+}
+
+.configuration-group-dialog-actions button[type="submit"]:hover:not(:disabled) {
+    background: var(--button-hover);
+}
+
+/* ==========================================
+   Responsive
+   ========================================== */
+
+@media (max-width: 600px) {
+
+    .configuration-group-dialog-overlay {
+        align-items: flex-start;
+
+        padding: 16px;
+    }
+
+    .configuration-group-dialog {
+        margin-top: 40px;
+    }
+
+    .configuration-group-dialog-header {
+        padding: 18px;
+    }
+
+    .configuration-group-dialog form {
+        padding: 18px;
+    }
+
+    .configuration-group-dialog-actions {
+        flex-direction: column-reverse;
+    }
+
+    .configuration-group-dialog-actions button {
+        width: 100%;
+    }
+
+}

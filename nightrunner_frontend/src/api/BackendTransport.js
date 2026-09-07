@@ -58,14 +58,22 @@ class BackendTransport {
             }
         );
 
+        // 2. Only redirect if the user is NOT already on the login or register pages
         if (response.status === 401) {
+            // 1. Get the current URL path
+            const currentPath = window.location.pathname;
 
-            await AuthService.logout();
+            // 2. Only redirect if the user is NOT already on the login or register pages
+            if (
+                currentPath !== "/login" &&
+                currentPath !== "/register" &&
+                !AuthService.isLoading() &&
+                !AuthService.isAuthenticated()
+            ) {
+                window.location.replace("/login?expired=true");
+            }
 
-            throw new Error(
-                "Authentication expired."
-            );
-
+            throw new Error("Authentication expired.");
         }
 
         if (response.status === 204) {

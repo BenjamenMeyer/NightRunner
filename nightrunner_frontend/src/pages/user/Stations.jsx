@@ -1,41 +1,110 @@
-import { useEffect, useState } from "react";
-
-import ApiService from "@/api/ApiService";
+import {
+    useEffect,
+    useState
+} from "react";
 
 import "./Stations.css";
 
+import ApiService from "../../api/ApiService.js";
+
+import {
+    useEventContext
+} from "../../api/helpers/EventContext.jsx";
+
 export default function Stations() {
 
-    const [stations, setStations] = useState([]);
+    const {
+        eventId,
+        event,
+        loading: eventLoading,
+        error: eventError
+    } = useEventContext();
 
-    const [loading, setLoading] = useState(true);
+    const [stations, setStations] =
+        useState([]);
 
-    const [error, setError] = useState(null);
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState(null);
+
 
     useEffect(() => {
 
-        loadStations();
+        /*
+         * Do not attempt to load stations until the
+         * EventContext has resolved the selected event.
+         */
+        if (eventLoading) {
+            return;
+        }
 
-    }, []);
+        if (eventError) {
 
-    async function loadStations() {
+            setError(eventError);
+            setStations([]);
+            setLoading(false);
+
+            return;
+
+        }
+
+        if (!eventId) {
+
+            setError(
+                "No event is currently selected."
+            );
+
+            setStations([]);
+            setLoading(false);
+
+            return;
+
+        }
+
+        loadStations(eventId);
+
+    }, [
+        eventId,
+        eventLoading,
+        eventError
+    ]);
+
+
+    async function loadStations(selectedEventId) {
 
         try {
 
             setLoading(true);
             setError(null);
 
-            const response = await ApiService.stationData.getStations();
+            const response =
+                await ApiService.stationData.getStations(
+                    selectedEventId
+                );
 
-            setStations(response);
-
-        } catch (error) {
-
-            setError(
-                error?.message ?? "Unable to load stations."
+            setStations(
+                response ?? []
             );
 
-        } finally {
+        }
+        catch (error) {
+
+            console.error(
+                "Failed to load stations:",
+                error
+            );
+
+            setError(
+                error?.message ??
+                "Unable to load stations."
+            );
+
+            setStations([]);
+
+        }
+        finally {
 
             setLoading(false);
 
@@ -43,7 +112,11 @@ export default function Stations() {
 
     }
 
-    if (loading) {
+
+    if (
+        eventLoading ||
+        loading
+    ) {
 
         return (
 
@@ -60,6 +133,7 @@ export default function Stations() {
         );
 
     }
+
 
     return (
 
@@ -79,6 +153,7 @@ export default function Stations() {
 
             </div>
 
+
             {error && (
 
                 <div className="error-banner">
@@ -88,6 +163,20 @@ export default function Stations() {
                 </div>
 
             )}
+
+
+            {!error && event && (
+
+                <div className="event-context">
+
+                    <strong>
+                        {event.name}
+                    </strong>
+
+                </div>
+
+            )}
+
 
             {!error && stations.length === 0 && (
 
@@ -104,71 +193,64 @@ export default function Stations() {
 
             )}
 
-            <div className="station-grid">
 
-                {stations.map(station => (
+            {!error && stations.length > 0 && (
 
-                    <div
-                        className="station-card"
-                        key={station.id}
-                    >
+                <div className="station-grid">
 
-                        <div className="station-card-header">
+                    {stations.map(station => (
 
-                            <h2>
-                                {station.name}
-                            </h2>
+                        <div
+                            className="station-card"
+                            key={station.id}
+                        >
 
-                        </div>
+                            <div className="station-card-header">
 
-                        <div className="station-card-body">
-
-                            {station.description ? (
-
-                                <p className="station-description">
-
-                                    {station.description}
-
-                                </p>
-
-                            ) : (
-
-                                <p className="station-description muted">
-
-                                    No description available.
-
-                                </p>
-
-                            )}
-
-                            <div className="station-info">
-
-                                <div>
-
-                                    <span>
-                                        Station Staff
-                                    </span>
-
-                                    <strong>
-
-                                        {station.members?.length ?? 0}
-
-                                    </strong>
-
-                                </div>
+                                <h2>
+                                    {station.name}
+                                </h2>
 
                             </div>
 
+
+                            <div className="station-card-body">
+
+                                {station.description ? (
+
+                                    <p className="station-description">
+
+                                        {station.description}
+
+                                    </p>
+
+                                ) : (
+
+                                    <p className="station-description muted">
+
+                                        No description available.
+
+                                    </p>
+
+                                )}
+
+                                <div className="station-info">
+                                    <div>
+
+                                        <span>
+                                            Station Staff
+                                        </span>
+
+                                        <strong>
+                                            {station.members?.length ?? 0}
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-
-                    </div>
-
-                ))}
-
-            </div>
-
+                    ))}
+                </div>
+            )}
         </div>
-
     );
-
 }

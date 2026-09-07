@@ -8,18 +8,14 @@ import Me from "./pages/Me";
 import Login from "./pages/login/Login";
 import Register from "./pages/login/Register.jsx";
 import NotFound from "./pages/NotFound";
-
-import Dashboard from "@/pages/Dashboard.jsx";
-import Patrols from "@/pages/user/Patrols.jsx";
-import Stations from "@/pages/user/Stations.jsx";
-import Events from "@/pages/user/Events.jsx";
-
-import Scoring from "@/pages/scoring/Scoring.jsx";
-import LiveScoring from "@/pages/livescoring/LiveScoring.jsx";
-
-import AdminRoutes from "@/pages/admin/AdminRoutes.jsx";
-
-import Callback from "@/pages/Callback.jsx";
+import LiveScoring from "./pages/livescoring/LiveScoring.jsx";
+import Callback from "./pages/Callback.jsx";
+import Events from "./pages/user/Events.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Patrols from "./pages/user/Patrols.jsx";
+import Scoring from "./pages/scoring/Scoring.jsx";
+import Stations from "./pages/user/Stations.jsx";
+import AdminRoutes from "./pages/admin/AdminRoutes.jsx";
 
 function ProtectedRoute({ children }) {
 
@@ -55,7 +51,6 @@ function ProtectedRoute({ children }) {
 
 
     if (!auth.isAuthenticated) {
-
         return (
             <Navigate
                 to="/login"
@@ -65,43 +60,33 @@ function ProtectedRoute({ children }) {
                 replace
             />
         );
-
     }
 
-
     return children;
-
 }
 
 
 function AnonymousRoute({ children }) {
 
-    const auth =
-        useAuth();
-
+    const auth = useAuth();
 
     if (auth.isLoading) {
-
         return (
             <div>
                 Loading authentication...
             </div>
         );
-
     }
 
 
     if (auth.isAuthenticated) {
-
         return (
             <Navigate
                 to="/dashboard"
                 replace
             />
         );
-
     }
-
 
     return children;
 

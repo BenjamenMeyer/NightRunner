@@ -8,9 +8,9 @@ import "./index.css";
 import "./App.css";
 
 import App from "./App.jsx";
-import BrandingProvider from "@/branding/BrandingProvider.jsx";
-import AuthServiceProvider from "@/api/AuthServiceProvider.jsx";
-
+import AuthServiceProvider from "./api/AuthServiceProvider.jsx";
+import BrandingProvider from "./branding/BrandingProvider.jsx";
+import {EventProvider} from "./api/helpers/EventContext.jsx";
 
 const authority =
     import.meta.env.VITE_OIDC_AUTHORITY ??
@@ -30,11 +30,9 @@ const oidcConfig = {
     redirect_uri:
         `${window.location.origin}/callback`,
 
-    response_type:
-        "code",
+    response_type: "code",
 
-    scope:
-        "openid profile email",
+    scope: "openid profile email",
 
     // GCP Identity Platform / Firebase OIDC public SPA client flow (PKCE authorization code flow)
     ...(isGoogleSecureToken ? {
@@ -55,42 +53,33 @@ const oidcConfig = {
         new WebStorageStateStore({ store: window.localStorage }),
 
     onSigninCallback: () => {
-
         window.history.replaceState(
             {},
             document.title,
             window.location.pathname
         );
-
     }
-
 };
 
 
 createRoot(
     document.getElementById("root")
 ).render(
-
-    <StrictMode>
-
+    //<StrictMode>
         <BrowserRouter>
 
             <AuthProvider {...oidcConfig}>
-
                 <AuthServiceProvider>
 
-                    <BrandingProvider>
-
-                        <App />
-
-                    </BrandingProvider>
+                    <EventProvider>
+                        <BrandingProvider>
+                            <App />
+                        </BrandingProvider>
+                    </EventProvider>
 
                 </AuthServiceProvider>
-
             </AuthProvider>
 
         </BrowserRouter>
-
-    </StrictMode>
-
+    //</StrictMode>
 );

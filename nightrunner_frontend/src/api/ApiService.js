@@ -78,7 +78,6 @@ class ApiService {
         this.eventData =
             new EventService(
                 this.backendTransport,
-                this.userData
             );
 
         this.patrolData =
@@ -102,42 +101,6 @@ class ApiService {
     //
     // Authentication
     //
-
-    /**
-     * Begins the OIDC login flow.
-     *
-     * @returns {Promise<void>}
-     */
-    async login() {
-
-        return this.auth.login();
-
-    }
-
-
-    /**
-     * Logs the current user out.
-     *
-     * @returns {Promise<void>}
-     */
-    async logout() {
-
-        return this.auth.logout();
-
-    }
-
-
-    /**
-     * Determines whether the current user is authenticated.
-     *
-     * @returns {boolean}
-     */
-    isAuthenticated() {
-
-        return this.auth.isAuthenticated();
-
-    }
-
 
     /**
      * Registers a new user.

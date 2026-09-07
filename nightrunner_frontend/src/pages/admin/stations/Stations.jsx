@@ -1,15 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import ApiService from "@/api/ApiService.js";
+import ApiService from "../../../api/ApiService.js";
+import { useEventContext } from "../../../api/helpers/EventContext.jsx";
 
 import StationDetails from "./StationDetails.jsx";
 
 import "./Stations.css";
 
 export default function Stations() {
-
     const navigate = useNavigate();
+
+    const {
+        eventId,
+        event,
+        loading: eventLoading,
+        error: eventError
+    } = useEventContext();
 
     const [stations, setStations] = useState([]);
     const [selectedStation, setSelectedStation] = useState(null);
@@ -20,56 +27,88 @@ export default function Stations() {
     const [search, setSearch] = useState("");
 
     useEffect(() => {
-
-        loadStations();
-
-    }, []);
-
-    async function loadStations() {
-
-        try {
-
-            setLoading(true);
-            setError(null);
-
-            const stations =
-                await ApiService.stationData.getStations();
-
-            setStations(stations);
-
-            if (selectedStation) {
-
-                const updated = stations.find(
-                    station =>
-                        station.id === selectedStation.id
-                );
-
-                setSelectedStation(updated ?? null);
-
-            }
-
-        } catch (error) {
-
-            console.error(
-                "Failed to load stations:",
-                error
-            );
-
-            setError(
-                error.message ??
-                "Failed to load stations."
-            );
-
-        } finally {
-
-            setLoading(false);
-
+        if (eventLoading) {
+            return;
         }
 
-    }
+        if (eventError) {
+            setStations([]);
+            setSelectedStation(null);
+            setError(eventError);
+            setLoading(false);
+            return;
+        }
+
+        if (!eventId) {
+            setStations([]);
+            setSelectedStation(null);
+            setLoading(false);
+            setError("No event is currently selected.");
+            return;
+        }
+
+        let cancelled = false;
+
+        async function load() {
+            try {
+                setLoading(true);
+                setError(null);
+
+                const stationResponse =
+                    await ApiService.stationData.getStations(
+                        eventId
+                    );
+
+                if (cancelled) {
+                    return;
+                }
+
+                const loadedStations =
+                    stationResponse ?? [];
+
+                setStations(loadedStations);
+
+                setSelectedStation(current => {
+                    if (!current) {
+                        return null;
+                    }
+
+                    return (
+                        loadedStations.find(
+                            station =>
+                                station.id === current.id
+                        ) ?? null
+                    );
+                });
+            } catch (error) {
+                if (cancelled) {
+                    return;
+                }
+
+                console.error(
+                    "Failed to load stations:",
+                    error
+                );
+
+                setError(
+                    error?.message ??
+                    "Failed to load stations."
+                );
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        }
+
+        load();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [eventId, eventLoading, eventError]);
 
     async function deleteStation(id) {
-
         if (!window.confirm(
             "Delete this station? This action cannot be undone."
         )) {
@@ -77,7 +116,6 @@ export default function Stations() {
         }
 
         try {
-
             setError(null);
 
             await ApiService.stationData.deleteStation(id);
@@ -86,27 +124,69 @@ export default function Stations() {
                 setSelectedStation(null);
             }
 
-            await loadStations();
-
+            await reloadStations();
         } catch (error) {
-
             console.error(
                 "Failed to delete station:",
                 error
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to delete station."
             );
+        }
+    }
 
+    async function reloadStations() {
+        if (!eventId) {
+            return;
         }
 
+        try {
+            setLoading(true);
+            setError(null);
+
+            const stationResponse =
+                await ApiService.stationData.getStations(
+                    eventId
+                );
+
+            const loadedStations =
+                stationResponse ?? [];
+
+            setStations(loadedStations);
+
+            setSelectedStation(current => {
+                if (!current) {
+                    return null;
+                }
+
+                return (
+                    loadedStations.find(
+                        station =>
+                            station.id === current.id
+                    ) ?? null
+                );
+            });
+        } catch (error) {
+            console.error(
+                "Failed to reload stations:",
+                error
+            );
+
+            setError(
+                error?.message ??
+                "Failed to load stations."
+            );
+        } finally {
+            setLoading(false);
+        }
     }
 
     const filteredStations = useMemo(() => {
-
-        const query = search.trim().toLowerCase();
+        const query =
+            search.trim().toLowerCase();
 
         if (!query) {
             return stations;
@@ -117,32 +197,42 @@ export default function Stations() {
                 ?.toLowerCase()
                 .includes(query)
         );
-
     }, [stations, search]);
 
+    if (eventLoading) {
+        return (
+            <div className="stations-page">
+                <div className="loading-panel">
+                    Loading event...
+                </div>
+            </div>
+        );
+    }
+
+    if (eventError) {
+        return (
+            <div className="stations-page">
+                <div className="error-banner">
+                    {eventError}
+                </div>
+            </div>
+        );
+    }
+
     return (
-
         <div className="stations-page">
-
-            {/* Page Header */}
-
             <header className="page-header">
-
                 <div>
-
                     <span className="page-eyebrow">
                         Administration
                     </span>
 
-                    <h1>
-                        Station Manager
-                    </h1>
+                    <h1>Station Manager</h1>
 
                     <p>
                         Configure scoring stations and their tasks
-                        for the current event.
+                        for {event?.name ?? "the current event"}.
                     </p>
-
                 </div>
 
                 <button
@@ -151,30 +241,20 @@ export default function Stations() {
                     onClick={() =>
                         navigate("/admin/stations/create")
                     }
+                    disabled={!eventId}
                 >
                     + Create Station
                 </button>
-
             </header>
 
-            {/* Error */}
-
             {error && (
-
                 <div className="error-banner">
-
                     {error}
-
                 </div>
-
             )}
 
-            {/* Toolbar */}
-
             <div className="station-toolbar">
-
                 <div className="search-wrapper">
-
                     <svg
                         className="search-icon"
                         viewBox="0 0 24 24"
@@ -185,7 +265,6 @@ export default function Stations() {
                         strokeLinejoin="round"
                         aria-hidden="true"
                     >
-
                         <circle
                             cx="11"
                             cy="11"
@@ -193,7 +272,6 @@ export default function Stations() {
                         />
 
                         <path d="m20 20-4-4" />
-
                     </svg>
 
                     <input
@@ -204,81 +282,46 @@ export default function Stations() {
                             setSearch(event.target.value)
                         }
                     />
-
                 </div>
 
                 <span className="station-count">
-
-                    {filteredStations.length}
-                    {" "}
+                    {filteredStations.length}{" "}
                     {filteredStations.length === 1
                         ? "station"
-                        : "stations"
-                    }
-
+                        : "stations"}
                 </span>
-
             </div>
 
-            {/* Main Layout */}
-
             <div className="station-layout">
-
-                {/* Station List */}
-
                 <section className="station-list-panel">
-
                     <div className="panel-header">
-
                         <div>
-
-                            <h2>
-                                Stations
-                            </h2>
+                            <h2>Stations</h2>
 
                             <p>
                                 Select a station to view its configuration.
                             </p>
-
                         </div>
-
                     </div>
 
                     <div className="station-list">
-
                         {loading ? (
-
                             <div className="loading-panel">
-
                                 <span className="loading-spinner" />
-
                                 Loading stations...
-
                             </div>
-
                         ) : filteredStations.length === 0 ? (
-
                             <div className="empty-list">
-
-                                <h3>
-                                    No stations found
-                                </h3>
+                                <h3>No stations found</h3>
 
                                 <p>
-
                                     {search
                                         ? "Try a different search."
-                                        : "Create a station to get started."
-                                    }
-
+                                        : "Create a station to get started."}
                                 </p>
-
                             </div>
-
                         ) : (
-
                             filteredStations.map(station => (
-
                                 <button
                                     type="button"
                                     key={station.id}
@@ -291,9 +334,7 @@ export default function Stations() {
                                         setSelectedStation(station)
                                     }
                                 >
-
                                     <span className="station-card-content">
-
                                         <strong>
                                             {station.name}
                                         </strong>
@@ -303,30 +344,21 @@ export default function Stations() {
                                                 station.type ??
                                                 "No configuration"}
                                         </span>
-
                                     </span>
 
                                     <span className="station-card-arrow">
                                         →
                                     </span>
-
                                 </button>
-
                             ))
-
                         )}
-
                     </div>
-
                 </section>
-
-                {/* Details */}
 
                 <StationDetails
                     station={selectedStation}
                     onDelete={deleteStation}
                     onEdit={() => {
-
                         if (!selectedStation) {
                             return;
                         }
@@ -336,14 +368,9 @@ export default function Stations() {
                                 selectedStation.id
                             )}`
                         );
-
                     }}
                 />
-
             </div>
-
         </div>
-
     );
-
 }

@@ -1,24 +1,38 @@
-import { useRef, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import AuthService from "@/api/AuthService.js";
-import UserService from "@/api/UserService.js";
+import {useRef, useState, useEffect} from "react";
+import {useNavigate} from "react-router-dom";
 import "./header.css";
 
-function Header({
+import ApiService from "../api/ApiService.js";
+import {useEventContext} from "../api/helpers/EventContext.jsx";
 
+function Header({
                     sidebarOpen,
                     setSidebarOpen
-
                 }) {
 
     const [open, setOpen] = useState(false);
     const menuRef = useRef(null);
     const navigate = useNavigate();
 
-    const profile = AuthService.getProfile();
+
+    //
+    // Event context
+    //
+
+    const {
+        event,
+        changeEvent,
+    } = useEventContext();
+
+
+    //
+    // User profile
+    //
+
+    const profile = ApiService.auth.getProfile();
     const username = profile?.name ?? profile?.preferred_username ?? "User";
 
-    const cachedUser = new UserService().getCached();
+    const cachedUser = ApiService.userData.getCached();
     const displayName = cachedUser?.displayName ?? username;
 
     // Close the dropdown when the user clicks outside of it
@@ -45,9 +59,27 @@ function Header({
         navigate("/me");
     }
 
+
+    //
+    // Change event
+    //
+
+    function handleChangeEvent() {
+
+        setOpen(false);
+
+        changeEvent();
+
+    }
+
+
+    //
+    // Sign out
+    //
+
     async function handleSignOut() {
         setOpen(false);
-        await AuthService.logout();
+        await ApiService.auth.logout();
     }
 
     return (
@@ -72,105 +104,131 @@ function Header({
 
             </div>
 
-            <div
-                className="header-user-menu"
-                ref={menuRef}
-            >
-
-                <button
-                    className={`header-user${open ? " active" : ""}`}
-                    onClick={() => setOpen(o => !o)}
-                    aria-haspopup="true"
-                    aria-expanded={open}
-                    aria-label="User menu"
+            {ApiService.auth.isAuthenticated() && (
+                <div
+                    className="header-user-menu"
+                    ref={menuRef}
                 >
-
-                    <svg
-                        className="header-user-icon"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
+                    <button
+                        className={`header-user${open ? " active" : ""}`}
+                        onClick={() => setOpen(o => !o)}
+                        aria-haspopup="true"
+                        aria-expanded={open}
+                        aria-label="User menu"
                     >
 
-                        <circle
-                            cx="12"
-                            cy="8"
-                            r="4"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                        />
+                        <svg
+                            className="header-user-icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                        >
 
-                        <path
-                            d="M4 21C4 16.5817 7.58172 13 12 13C16.4183 13 20 16.5817 20 21"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                        />
+                            <circle
+                                cx="12"
+                                cy="8"
+                                r="4"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                            />
 
-                    </svg>
+                            <path
+                                d="M4 21C4 16.5817 7.58172 13 12 13C16.4183 13 20 16.5817 20 21"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                            />
 
-                    <span className="header-user-name">
+                        </svg>
+
+                        <span className="header-user-name">
                         {username}
                     </span>
 
-                    <svg
-                        className={`header-user-caret${open ? " open" : ""}`}
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                    >
-                        <path
-                            d="M6 9L12 15L18 9"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </svg>
+                        <svg
+                            className={`header-user-caret${open ? " open" : ""}`}
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M6 9L12 15L18 9"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
 
-                </button>
+                        </svg>
 
-                {open && (
+                    </button>
 
-                    <div
-                        className="header-user-dropdown"
-                        role="menu"
-                    >
+
+                    {open && (
 
                         <div
-                            className="header-dropdown-display-name"
-                            role="presentation"
+                            className="header-user-dropdown"
+                            role="menu"
                         >
-                            {displayName}
+
+                            <div
+                                className="header-dropdown-display-name"
+                                role="presentation"
+                            >
+                                {displayName}
+                            </div>
+
+
+                            {/* If an event is available, display it */}
+                            {event && (
+
+                                <div
+                                    className="header-dropdown-event"
+                                    role="presentation"
+                                >
+                                    {event.name}
+                                </div>
+
+                            )}
+
+
+                            <hr className="header-dropdown-divider"/>
+
+
+                            <button
+                                className="header-dropdown-item"
+                                role="menuitem"
+                                onClick={handleChangeEvent}
+                            >
+                                Change Event
+                            </button>
+
+                            <button
+                                className="header-dropdown-item"
+                                role="menuitem"
+                                onClick={handleProfile}
+                            >
+                                My Profile
+                            </button>
+
+                            <hr className="header-dropdown-divider"/>
+
+                            <button
+                                className="header-dropdown-item header-dropdown-item--danger"
+                                role="menuitem"
+                                onClick={handleSignOut}
+                            >
+                                Sign Out
+                            </button>
+
                         </div>
 
-                        <hr className="header-dropdown-divider" />
+                    )}
 
-                        <button
-                            className="header-dropdown-item"
-                            role="menuitem"
-                            onClick={handleProfile}
-                        >
-                            My Profile
-                        </button>
-
-                        <hr className="header-dropdown-divider" />
-
-                        <button
-                            className="header-dropdown-item header-dropdown-item--danger"
-                            role="menuitem"
-                            onClick={handleSignOut}
-                        >
-                            Sign Out
-                        </button>
-
-                    </div>
-
-                )}
-
-            </div>
+                </div>
+            )}
 
         </header>
 

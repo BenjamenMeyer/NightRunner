@@ -1,15 +1,15 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import AdminDashboard from "./AdminDashboard.jsx";
-import Patrols from "@/pages/admin/patrols/Patrols.jsx";
-import Stations from "@/pages/admin/stations/Stations.jsx";
-import EventManager from "@/pages/admin/events/EventManager.jsx";
-import EventCreator from "@/pages/admin/events/EventCreator.jsx";
-import UserManager from "@/pages/admin/user/UserManager.jsx";
-import StationEditor from "@/pages/admin/stations/StationEditor.jsx";
-import PatrolEditor from "@/pages/admin/patrols/PatrolEditor.jsx";
-import Configurations from "@/pages/admin/configurations/Configurations.jsx";
-import ConfigurationEditor from "@/pages/admin/configurations/ConfigurationEditor.jsx";
+import Patrols from "./patrols/Patrols.jsx";
+import PatrolEditor from "./patrols/PatrolEditor.jsx";
+import Stations from "./stations/Stations.jsx";
+import StationEditor from "./stations/StationEditor.jsx";
+import Configurations from "./configurations/Configurations.jsx";
+import ConfigurationEditor from "./configurations/ConfigurationEditor.jsx";
+import EventManager from "./events/EventManager.jsx";
+import EventCreator from "./events/EventCreator.jsx";
+import UserManager from "./user/UserManager.jsx";
 
 export default function AdminRoutes() {
 

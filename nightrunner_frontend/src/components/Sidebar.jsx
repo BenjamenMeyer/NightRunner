@@ -1,10 +1,8 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 
-import NOAImage from "../../public/favicon.jpg";
 import "./Sidebar.css";
-
-import ApiService from "@/api/ApiService.js";
+import ApiService from "../api/ApiService.js";
 
 function Sidebar({open, close}) {
 
@@ -15,18 +13,14 @@ function Sidebar({open, close}) {
     const isAdmin = ApiService.userData.isAdmin();
 
     const links = loggedIn
-
         ? [
-
             {
                 name: "Dashboard",
                 path: "/dashboard"
             },
 
             ...(isAdmin
-
                     ? [
-
                         {
                             name: "Admin Dashboard",
                             path: "/admin",
@@ -48,22 +42,16 @@ function Sidebar({open, close}) {
                             name: "User Manager",
                             path: "/admin/users"
                         },
-
                         ...(ApiService.userData.isSystemAdmin()
-
                             ? [
                                 {
                                     name: "Configuration Manager",
                                     path: "/admin/configurations"
                                 }
                             ]
-
                             : [])
-
                     ]
-
                     : [
-
                         {
                             name: "Events",
                             path: "/events"
@@ -76,52 +64,38 @@ function Sidebar({open, close}) {
                             name: "Stations",
                             path: "/stations"
                         }
-
                     ]
-
             ),
-
             {
                 name: "Scoring",
                 path: "/scoring"
             }
-
         ]
-
         : [
-
             {
                 name: "Login",
                 path: "/login"
             }
-
         ];
 
     return (
-
         <>
-
             {open && (
-
                 <div
                     className="sidebar-backdrop"
                     onClick={close}
                 />
-
             )}
 
             <aside
                 className={`sidebar ${open ? "open" : ""}`}
             >
-
                 <div className="sidebar-header">
-
                     <img
-                        src={NOAImage}
+                        src="/favicon.jpg"
                         alt="Night Runner"
                         className="sidebar-logo"
                     />
-
                     <h2>
                         Night Runner
                     </h2>
