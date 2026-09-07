@@ -11,7 +11,7 @@ resource "cloudflare_record" "app" {
   zone_id = var.cloudflare_zone_id
   name    = var.domain_name
   type    = "CNAME"
-  value   = replace(replace(google_cloud_run_v2_service.backend.uri, "https://", ""), "/", "")
+  content = replace(replace(google_cloud_run_v2_service.backend.uri, "https://", ""), "/", "")
   proxied = true # Enables Cloudflare Free CDN, SSL, and DDoS Protection
   ttl     = 1    # Auto TTL when proxied
 }
@@ -39,4 +39,77 @@ resource "cloudflare_page_rule" "static_assets" {
     cache_level    = "cache_everything"
     edge_cache_ttl = 86400 # 24 hours edge cache
   }
+}
+
+# Cloudflare Worker: Sign requests to Private GCS bucket using HMAC Key
+resource "cloudflare_workers_script" "gcs_signer" {
+  count      = local.enable_cloudflare ? 1 : 0
+  account_id = var.cloudflare_account_id
+  name       = "nightrunner-gcs-signer"
+  content    = <<EOF
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  const url = new URL(request.url)
+
+  // Pass API requests directly to Cloud Run backend
+  if (url.pathname.startsWith('/v1/') || url.pathname === '/health') {
+    return fetch(request)
+  }
+
+  // Construct GCS Origin URL
+  const gcsHost = "${google_storage_bucket.frontend.name}.storage.googleapis.com"
+  const pathname = url.pathname === '/' ? '/index.html' : url.pathname
+  const gcsUrl = "https://" + gcsHost + pathname
+
+  // Compute HMAC Authorization header using GCS HMAC Access Key & Secret
+  const accessKey = "${google_storage_hmac_key.cdn_hmac.access_id}"
+  const secretKey = GCS_HMAC_SECRET
+
+  // Date headers
+  const now = new Date()
+  const dateStr = now.toUTCString()
+
+  // Canonical String for GCS HMAC V2 / Interoperability Auth: GET\n\n\n<date>\n/<bucket>/<path>
+  const canonicalString = "GET\n\n\n" + dateStr + "\n/${google_storage_bucket.frontend.name}" + pathname
+
+  // Compute HMAC-SHA1 signature
+  const encoder = new TextEncoder()
+  const keyData = encoder.encode(secretKey)
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw', keyData, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+  )
+  const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(canonicalString))
+  const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)))
+
+  const authorizationHeader = "AWS " + accessKey + ":" + signatureBase64
+
+  const modifiedRequest = new Request(gcsUrl, {
+    method: 'GET',
+    headers: new Headers({
+      'Host': gcsHost,
+      'Date': dateStr,
+      'Authorization': authorizationHeader,
+      'User-Agent': 'Cloudflare-Worker-GCS-Signer'
+    })
+  })
+
+  return fetch(modifiedRequest)
+}
+EOF
+
+  secret_text_binding {
+    name = "GCS_HMAC_SECRET"
+    text = google_storage_hmac_key.cdn_hmac.secret
+  }
+}
+
+# Cloudflare Worker Route: Map frontend domain to GCS Worker Signer
+resource "cloudflare_workers_route" "gcs_signer_route" {
+  count       = local.enable_cloudflare ? 1 : 0
+  zone_id     = var.cloudflare_zone_id
+  pattern     = "${var.domain_name}/*"
+  script_name = cloudflare_workers_script.gcs_signer[0].name
 }

@@ -181,6 +181,12 @@ variable "cloudflare_zone_id" {
   default     = ""
 }
 
+variable "cloudflare_account_id" {
+  type        = string
+  description = "Cloudflare Account ID required for deploying Worker scripts."
+  default     = ""
+}
+
 variable "domain_name" {
   type        = string
   description = "Custom domain name (e.g. nightrunner.example.com)."

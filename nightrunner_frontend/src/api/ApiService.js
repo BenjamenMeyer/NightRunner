@@ -138,6 +138,19 @@ class ApiService {
 
     }
 
+
+    /**
+     * Registers a new user.
+     *
+     * @param {Object} user
+     * @returns {Promise<User>}
+     */
+    async register(user) {
+
+        return this.userData.createUser(user);
+
+    }
+
 }
 
 

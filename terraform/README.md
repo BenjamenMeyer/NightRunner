@@ -99,8 +99,9 @@ Here is the complete list of settings for `terraform.tfvars` and local environme
 | `billing_account_id` | `terraform.tfvars` | Optional | GCP Billing Account ID (`XXXXXX-XXXXXX-XXXXXX`) for budget alerts |
 | `monthly_budget_amount` | `terraform.tfvars` | Optional | Spend cap in USD (default: `20.00`) |
 | `cdn_provider` | `terraform.tfvars` | Optional | CDN choice: `"none"` (dev), `"cloudflare"` (Free), or `"gcp"` ($18/mo) |
-| `cloudflare_api_token` | `terraform.tfvars` | Optional | Cloudflare API token (required if `cdn_provider = "cloudflare"`) |
+| `cloudflare_api_token` | `terraform.tfvars` | Optional | Cloudflare API token with `Zone:Edit`, `DNS:Edit`, `Page Rules:Edit`, `Workers Scripts:Edit` permissions |
 | `cloudflare_zone_id` | `terraform.tfvars` | Optional | Cloudflare Domain Zone ID (required if `cdn_provider = "cloudflare"`) |
+| `cloudflare_account_id` | `terraform.tfvars` | Optional | Cloudflare Account ID required for deploying GCS Worker Signer |
 | `domain_name` | `terraform.tfvars` | Optional | Custom domain name (e.g. `nightrunner.example.com`) |
 | `google_client_id` | `terraform.tfvars` | Optional | Google OAuth Client ID for Firebase Social Login |
 | `google_client_secret` | `terraform.tfvars` | Optional | Google OAuth Client Secret for Firebase Social Login |
@@ -374,11 +375,19 @@ You can switch between CDN strategies in `terraform.tfvars`:
 Set the following in `terraform.tfvars`:
 
 ```hcl
-cdn_provider         = "cloudflare"
-cloudflare_api_token = "YOUR_CLOUDFLARE_API_TOKEN"
-cloudflare_zone_id   = "YOUR_CLOUDFLARE_ZONE_ID"
-domain_name          = "nightrunner.example.com"
+cdn_provider          = "cloudflare"
+cloudflare_api_token  = "YOUR_CLOUDFLARE_API_TOKEN"
+cloudflare_zone_id    = "YOUR_CLOUDFLARE_ZONE_ID"
+cloudflare_account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+domain_name           = "nightrunner.example.com"
 ```
+
+> **Cloudflare API Token Permissions**:
+> When creating your Cloudflare API Token, select **Create Custom Token** with the following permissions:
+> - **Zone -> Zone -> Read**
+> - **Zone -> DNS -> Edit**
+> - **Zone -> Page Rules -> Edit**
+> - **Account -> Workers Scripts -> Edit**
 
 
 
