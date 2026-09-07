@@ -11,7 +11,7 @@ resource "cloudflare_record" "app" {
   zone_id = var.cloudflare_zone_id
   name    = var.domain_name
   type    = "CNAME"
-  value   = replace(replace(google_cloud_run_v2_service.backend.uri, "https://", ""), "/", "")
+  content = replace(replace(google_cloud_run_v2_service.backend.uri, "https://", ""), "/", "")
   proxied = true # Enables Cloudflare Free CDN, SSL, and DDoS Protection
   ttl     = 1    # Auto TTL when proxied
 }
@@ -87,6 +87,6 @@ EOF
 resource "cloudflare_workers_route" "gcs_signer_route" {
   count       = local.enable_cloudflare ? 1 : 0
   zone_id     = var.cloudflare_zone_id
-  pattern     = "*${var.domain_name}/*"
+  pattern     = "${var.domain_name}/*"
   script_name = cloudflare_workers_script.gcs_signer[0].name
 }
