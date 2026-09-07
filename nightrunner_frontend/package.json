@@ -4,11 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "env-cmd -f .env.local vite",
+    "dev": "vite",
+    "dev:firebase": "vite --mode firebase",
     "build": "vite build",
     "lint": "oxlint",
     "test": "vitest run",
-    "preview": "env-cmd -f .env.local vite preview"
+    "preview": "vite preview"
   },
   "dependencies": {
     "env-cmd": "^11.0.0",
