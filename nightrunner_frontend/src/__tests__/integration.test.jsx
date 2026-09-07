@@ -44,12 +44,12 @@ describe('Live Backend & OIDC Integration Tests', () => {
         }
       });
       if (meRes.status === 200) break;
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 250));
     }
 
     expect(meRes.status).toBe(200);
     const meData = await meRes.json();
     expect(meData).toHaveProperty('id');
     expect(meData.email).toMatch(/admin.*@.*/);
-  });
+  }, 10000);
 });

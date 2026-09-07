@@ -139,9 +139,13 @@ class AuthService {
             return inMemoryToken;
         }
 
-        // Fallback: read the token oidc-client-ts persisted to sessionStorage.
-        // This covers tabs that are opened directly (e.g. /live in a new tab)
-        // where AuthServiceProvider hasn't finished wiring up the React context yet.
+        // Fallback: check Firebase token if initialized in Firebase mode
+        const firebaseToken = localStorage.getItem("firebase_id_token");
+        if (firebaseToken) {
+            return firebaseToken;
+        }
+
+        // Fallback: read the token oidc-client-ts persisted to sessionStorage/localStorage.
         try {
 
             const authority =
