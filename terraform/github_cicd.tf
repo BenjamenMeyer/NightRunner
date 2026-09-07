@@ -126,3 +126,10 @@ resource "github_actions_secret" "gcp_frontend_bucket" {
   plaintext_value = google_storage_bucket.frontend.name
 }
 
+resource "github_actions_secret" "gcp_google_client_id" {
+  count           = var.github_repo_name != "" && var.google_client_id != "" ? 1 : 0
+  repository      = var.github_repo_name
+  secret_name     = "GCP_GOOGLE_CLIENT_ID"
+  plaintext_value = var.google_client_id
+}
+
