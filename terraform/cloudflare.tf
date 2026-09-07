@@ -42,7 +42,7 @@ resource "cloudflare_page_rule" "static_assets" {
 }
 
 # Cloudflare Worker: Sign requests to Private GCS bucket using HMAC Key
-resource "cloudflare_worker_script" "gcs_signer" {
+resource "cloudflare_workers_script" "gcs_signer" {
   count      = local.enable_cloudflare ? 1 : 0
   account_id = var.cloudflare_account_id
   name       = "nightrunner-gcs-signer"
@@ -84,9 +84,9 @@ EOF
 }
 
 # Cloudflare Worker Route: Map frontend domain to GCS Worker Signer
-resource "cloudflare_worker_route" "gcs_signer_route" {
+resource "cloudflare_workers_route" "gcs_signer_route" {
   count       = local.enable_cloudflare ? 1 : 0
   zone_id     = var.cloudflare_zone_id
   pattern     = "*${var.domain_name}/*"
-  script_name = cloudflare_worker_script.gcs_signer[0].name
+  script_name = cloudflare_workers_script.gcs_signer[0].name
 }
