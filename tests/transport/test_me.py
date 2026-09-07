@@ -85,9 +85,12 @@ class TestMeEndpoint:
         assert resp.status == falcon.HTTP_200
         assert resp.json["roles"] == []
 
-    async def test_unknown_user_returns_401(self, test_client, token_factory):
-        """A valid JWT whose sub doesn't match any local user is rejected."""
+    async def test_unknown_user_auto_provisions(self, test_client, token_factory):
+        """A valid JWT whose sub doesn't match any local user is automatically provisioned."""
         # No user seeded — the DB is empty.
         headers = token_factory()
         resp = await test_client.simulate_get("/v1/me", headers=headers)
-        assert resp.status == falcon.HTTP_401
+        assert resp.status == falcon.HTTP_200
+        assert resp.json["id"] is not None
+        assert resp.json["roles"] == []
+

@@ -12,11 +12,15 @@ import AuthServiceProvider from "./api/AuthServiceProvider.jsx";
 import BrandingProvider from "./branding/BrandingProvider.jsx";
 import {EventProvider} from "./api/helpers/EventContext.jsx";
 
+const authority =
+    import.meta.env.VITE_OIDC_AUTHORITY ??
+    "http://localhost:4000";
+
+const isGoogleSecureToken = authority.includes("securetoken.google.com");
+
 const oidcConfig = {
 
-    authority:
-        import.meta.env.VITE_OIDC_AUTHORITY ??
-        "http://localhost:4000",
+    authority,
 
     client_id:
         import.meta.env.VITE_OIDC_CLIENT_ID ??
@@ -28,6 +32,19 @@ const oidcConfig = {
     response_type: "code",
 
     scope: "openid profile email",
+
+    // Google OAuth public SPA client flow (PKCE authorization code flow)
+    ...(isGoogleSecureToken ? {
+        response_mode: "query",
+        metadata: {
+            issuer: authority,
+            authorization_endpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+            token_endpoint: "https://oauth2.googleapis.com/token",
+            jwks_uri: "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+            userinfo_endpoint: "https://openidconnect.googleapis.com/v1/userinfo",
+            code_challenge_methods_supported: ["S256"],
+        }
+    } : {}),
 
     // Store the session in localStorage so all tabs share the same OIDC session.
     // The default (sessionStorage) is tab-isolated, which breaks pages opened

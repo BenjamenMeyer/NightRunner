@@ -81,7 +81,38 @@ class AuthMiddleware:
             )
 
             if not rows or not isinstance(rows, list):
-                raise falcon.HTTPUnauthorized(title="User not found", description="No local account for this identity.")
+                # Just-In-Time (JIT) auto-provisioning for Firebase / Social Auth users
+                email = payload.get("email", f"{external_id}@auth.local")
+                name = payload.get("name") or payload.get("preferred_username") or email.split("@")[0]
+                username = payload.get("preferred_username") or email.split("@")[0]
+                
+                import uuid
+                new_user_id = str(uuid.uuid4())
+
+                try:
+                    await self.db.execute(
+                        """
+                        INSERT INTO users (id, external_id, username, email, display_name)
+                        VALUES (:id, :ext_id, :username, :email, :display_name)
+                        """,
+                        {
+                            "id": new_user_id,
+                            "ext_id": external_id,
+                            "username": username,
+                            "email": email,
+                            "display_name": name
+                        }
+                    )
+                    rows = [{
+                        "id": new_user_id,
+                        "username": username,
+                        "email": email,
+                        "display_name": name,
+                        "role": None
+                    }]
+                except Exception as ex:
+                    logger.exception(f"Failed to auto-provision user {external_id}: {ex}")
+                    raise falcon.HTTPUnauthorized(title="User not found", description="No local account for this identity.")
 
             # First row has user info (same for all rows)
             user = {
@@ -92,6 +123,7 @@ class AuthMiddleware:
             }
             # Collect all non-null roles from rows
             roles = [row["role"] for row in rows if row.get("role")]
+
 
             req.context.user = user
             req.context.roles = roles

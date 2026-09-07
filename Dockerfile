@@ -35,8 +35,6 @@ COPY nightrunner_backend/ nightrunner_backend/
 RUN adduser -D nightrunner
 USER nightrunner
 
-# Expose the application port
-EXPOSE 8000
-
-# Set the entry point
-CMD ["uvicorn", "nightrunner_backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Set default port and entry point (respecting $PORT environment variable passed by Cloud Run)
+ENV PORT=8000
+CMD ["sh", "-c", "uvicorn nightrunner_backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

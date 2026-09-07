@@ -21,7 +21,9 @@ test = [
     "pytest-asyncio",
     "schemathesis",
     "cryptography",
+    "anyio<4.0.0",
 ]
+
 
 [tool.setuptools]
 packages = ["nightrunner_backend"]

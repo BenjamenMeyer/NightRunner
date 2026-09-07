@@ -15,6 +15,11 @@ export default defineConfig(({ mode }) => {
       },
     },
 
+    test: {
+      globals: true,
+      environment: 'jsdom',
+    },
+
     //CUSTOM CONFIG
     define: {
       __API_BACKEND_URL__: JSON.stringify('http://localhost:8000'),
