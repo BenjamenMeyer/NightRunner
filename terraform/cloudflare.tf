@@ -55,8 +55,12 @@ async function handleRequest(request) {
   const url = new URL(request.url)
 
   // Pass API requests directly to Cloud Run backend
-  if (url.pathname.startsWith('/v1/') || url.pathname === '/health') {
-    return fetch(request)
+  const apiPaths = ['/v1/', '/auth/', '/users', '/me', '/events', '/patrols', '/stations', '/configurations', '/reports', '/health']
+  if (apiPaths.some(p => url.pathname.startsWith(p) || url.pathname === p)) {
+    const cloudRunHost = "${replace(replace(google_cloud_run_v2_service.backend.uri, "https://", ""), "/", "")}"
+    const backendUrl = new URL(url.pathname + url.search, "https://" + cloudRunHost)
+    const backendRequest = new Request(backendUrl.toString(), request)
+    return fetch(backendRequest)
   }
 
   // Construct GCS Origin URL (SPA routing: static files vs client-side route fallback to /index.html)
