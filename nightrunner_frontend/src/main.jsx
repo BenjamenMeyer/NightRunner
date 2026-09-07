@@ -12,11 +12,15 @@ import BrandingProvider from "@/branding/BrandingProvider.jsx";
 import AuthServiceProvider from "@/api/AuthServiceProvider.jsx";
 
 
+const authority =
+    import.meta.env.VITE_OIDC_AUTHORITY ??
+    "http://localhost:4000";
+
+const isGoogleSecureToken = authority.includes("securetoken.google.com");
+
 const oidcConfig = {
 
-    authority:
-        import.meta.env.VITE_OIDC_AUTHORITY ??
-        "http://localhost:4000",
+    authority,
 
     client_id:
         import.meta.env.VITE_OIDC_CLIENT_ID ??
@@ -30,6 +34,18 @@ const oidcConfig = {
 
     scope:
         "openid profile email",
+
+    // Google securetoken.google.com does not send CORS headers for browser .well-known/openid-configuration discovery fetches.
+    // Supplying static metadata prevents oidc-client-ts from making the cross-origin discovery fetch.
+    ...(isGoogleSecureToken ? {
+        metadata: {
+            issuer: authority,
+            authorization_endpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+            token_endpoint: "https://oauth2.googleapis.com/token",
+            jwks_uri: "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+            userinfo_endpoint: "https://openidconnect.googleapis.com/v1/userinfo",
+        }
+    } : {}),
 
     // Store the session in localStorage so all tabs share the same OIDC session.
     // The default (sessionStorage) is tab-isolated, which breaks pages opened
