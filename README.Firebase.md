@@ -77,12 +77,12 @@ When developing directly inside `nightrunner_frontend/`:
   Runs Vite with default settings pointing to `http://localhost:4000`.
 
 - **Live Firebase Mode**:
-  1. Create a `.env.firebase.local` file inside `nightrunner_frontend/`:
+  1. `nightrunner_frontend/.env.firebase` comes preconfigured with `VITE_OIDC_AUTHORITY=https://securetoken.google.com/tlnightops-nightrunner-dev`.
+  2. Create a `.env.firebase.local` file inside `nightrunner_frontend/` to set your Client ID:
      ```env
-     VITE_OIDC_AUTHORITY=https://securetoken.google.com/tlnightops-nightrunner-dev
-     VITE_OIDC_CLIENT_ID=550013958206-b8itq3abj95t7hs75cm914mgsfpdtgkt.apps.googleusercontent.com
+     VITE_OIDC_CLIENT_ID=<your-google-oauth-client-id>
      ```
-  2. Run Vite with `--mode firebase`:
+  3. Run Vite with `--mode firebase`:
      ```bash
      npm run dev:firebase
      ```
