@@ -66,7 +66,26 @@ To test live Google OAuth or Firebase user accounts on your local machine:
    docker compose --env-file .env.local up --build
    ```
 
-3. Open `http://localhost:3000/` in your browser. Clicking **Sign In** will redirect to Google OAuth / Firebase and successfully return to `http://localhost:3000/callback`!
+### Mode C: Frontend Direct Dev Server (`npm run dev` vs `npm run dev:firebase`)
+
+When developing directly inside `nightrunner_frontend/`:
+
+- **Mock OIDC Mode** (default):
+  ```bash
+  npm run dev
+  ```
+  Runs Vite with default settings pointing to `http://localhost:4000`.
+
+- **Live Firebase Mode**:
+  1. Create a `.env.firebase.local` file inside `nightrunner_frontend/`:
+     ```env
+     VITE_OIDC_AUTHORITY=https://securetoken.google.com/tlnightops-nightrunner-dev
+     VITE_OIDC_CLIENT_ID=550013958206-b8itq3abj95t7hs75cm914mgsfpdtgkt.apps.googleusercontent.com
+     ```
+  2. Run Vite with `--mode firebase`:
+     ```bash
+     npm run dev:firebase
+     ```
 
 ---
 
