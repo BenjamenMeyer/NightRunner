@@ -11,7 +11,7 @@ const USER_KEY = "night-runner-user";
  * @property {string} email
  * @property {string} displayName
  * @property {boolean} isAdmin
- * @property {Object<string, string>} roles
+ * @property {Record<string, string>} roles
  */
 
 export default class UserService {
