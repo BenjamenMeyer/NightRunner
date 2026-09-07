@@ -1,8 +1,6 @@
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 
-import NOAImage from "../../../public/favicon.jpg";
-
 import "./Login.css";
 
 function Login() {
@@ -46,7 +44,7 @@ function Login() {
 
                 <img
                     className="login-logo"
-                    src={NOAImage}
+                    src="/favicon.jpg"
                     alt="Night Ops Adventures"
                 />
 

@@ -1,7 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 
-import NOAImage from "../../public/favicon.jpg";
 import "./Sidebar.css";
 import ApiService from "../api/ApiService.js";
 
@@ -93,7 +92,7 @@ function Sidebar({open, close}) {
             >
                 <div className="sidebar-header">
                     <img
-                        src={NOAImage}
+                        src="/favicon.jpg"
                         alt="Night Runner"
                         className="sidebar-logo"
                     />
