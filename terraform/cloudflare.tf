@@ -61,14 +61,37 @@ async function handleRequest(request) {
 
   // Construct GCS Origin URL
   const gcsHost = "${google_storage_bucket.frontend.name}.storage.googleapis.com"
-  const gcsUrl = new URL(url.pathname === '/' ? '/index.html' : url.pathname, "https://" + gcsHost)
+  const pathname = url.pathname === '/' ? '/index.html' : url.pathname
+  const gcsUrl = "https://" + gcsHost + pathname
 
-  // Fetch static asset from Private GCS bucket using HMAC secret header authentication
-  const modifiedRequest = new Request(gcsUrl.toString(), {
-    method: request.method,
+  // Compute HMAC Authorization header using GCS HMAC Access Key & Secret
+  const accessKey = "${google_storage_hmac_key.cdn_hmac.access_id}"
+  const secretKey = GCS_HMAC_SECRET
+
+  // Date headers
+  const now = new Date()
+  const dateStr = now.toUTCString()
+
+  // Canonical String for GCS HMAC V2 / Interoperability Auth: GET\n\n\n<date>\n/<bucket>/<path>
+  const canonicalString = "GET\n\n\n" + dateStr + "\n/${google_storage_bucket.frontend.name}" + pathname
+
+  // Compute HMAC-SHA1 signature
+  const encoder = new TextEncoder()
+  const keyData = encoder.encode(secretKey)
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw', keyData, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+  )
+  const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(canonicalString))
+  const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)))
+
+  const authorizationHeader = "AWS " + accessKey + ":" + signatureBase64
+
+  const modifiedRequest = new Request(gcsUrl, {
+    method: 'GET',
     headers: new Headers({
       'Host': gcsHost,
-      'Authorization': 'Bearer ' + GCS_HMAC_SECRET,
+      'Date': dateStr,
+      'Authorization': authorizationHeader,
       'User-Agent': 'Cloudflare-Worker-GCS-Signer'
     })
   })
