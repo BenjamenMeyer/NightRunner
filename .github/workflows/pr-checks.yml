@@ -51,7 +51,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: nightrunner_frontend
-        run: npm ci || npm install
+        run: npm install
 
       - name: Run Frontend Linter (oxlint)
         working-directory: nightrunner_frontend

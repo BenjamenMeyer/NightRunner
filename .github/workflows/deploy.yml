@@ -173,7 +173,7 @@ jobs:
       - name: Install & Build Frontend
         working-directory: nightrunner_frontend
         run: |
-          npm ci || npm install
+          npm install
           npx vite build
         env:
           VITE_BACKEND_URL: "https://nightrunner-backend-550013958206.us-east1.run.app"
