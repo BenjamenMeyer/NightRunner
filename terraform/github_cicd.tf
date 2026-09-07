@@ -24,11 +24,11 @@ resource "google_project_iam_member" "cicd_cloud_run" {
   member  = "serviceAccount:${google_service_account.github_cicd.email}"
 }
 
-# Grant Storage Object Admin role (Upload frontend build to GCS)
-resource "google_storage_bucket_iam_member" "cicd_gcs_frontend" {
-  bucket = google_storage_bucket.frontend.name
-  role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${google_service_account.github_cicd.email}"
+# Grant Storage Admin role (Access Terraform state bucket & upload frontend builds)
+resource "google_project_iam_member" "cicd_storage_admin" {
+  project = var.project_id
+  role    = "roles/storage.admin"
+  member  = "serviceAccount:${google_service_account.github_cicd.email}"
 }
 
 # Allow CI/CD SA to act as the Cloud Run runtime Service Account
