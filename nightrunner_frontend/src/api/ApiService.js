@@ -103,29 +103,6 @@ class ApiService {
     //
 
     /**
-     * Begins the OIDC login flow.
-     *
-     * @returns {Promise<void>}
-     */
-    async login() {
-
-        return this.auth.login();
-
-    }
-
-    /**
-     * Determines whether the current user is authenticated.
-     *
-     * @returns {boolean}
-     */
-    isAuthenticated() {
-
-        return this.auth.isAuthenticated();
-
-    }
-
-
-    /**
      * Registers a new user.
      *
      * @param {Object} user
