@@ -14,15 +14,15 @@ resource "google_storage_bucket" "tf_state" {
   }
 }
 
-# GCS Bucket for Frontend Static Files (Public access enabled for Cloudflare CDN origin)
+# GCS Bucket for Frontend Static Files
 resource "google_storage_bucket" "frontend" {
   name                        = "${var.project_id}-frontend-${random_id.bucket_suffix.hex}"
   location                    = var.region
   force_destroy               = true
   uniform_bucket_level_access = true
 
-  # Allow public read access for Cloudflare CDN origin fetching
-  public_access_prevention = "inherited"
+  # Restrict public access when CDN provider or private origin signing is configured
+  public_access_prevention = var.cdn_provider != "none" ? "enforced" : "inherited"
 
   website {
     main_page_suffix = "index.html"
@@ -30,8 +30,9 @@ resource "google_storage_bucket" "frontend" {
   }
 }
 
-# Grant public read access to allUsers for static website hosting / Cloudflare origin
+# Grant public read access to allUsers ONLY when no CDN provider is configured (Direct dev mode)
 resource "google_storage_bucket_iam_member" "frontend_public_read" {
+  count  = var.cdn_provider == "none" ? 1 : 0
   bucket = google_storage_bucket.frontend.name
   role   = "roles/storage.objectViewer"
   member = "allUsers"
