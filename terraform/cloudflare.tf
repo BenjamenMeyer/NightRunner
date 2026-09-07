@@ -59,9 +59,10 @@ async function handleRequest(request) {
     return fetch(request)
   }
 
-  // Construct GCS Origin URL
+  // Construct GCS Origin URL (SPA routing: static files vs client-side route fallback to /index.html)
   const gcsHost = "${google_storage_bucket.frontend.name}.storage.googleapis.com"
-  const pathname = url.pathname === '/' ? '/index.html' : url.pathname
+  const isStaticAsset = url.pathname.startsWith('/assets/') || url.pathname.includes('.')
+  const pathname = (url.pathname === '/' || !isStaticAsset) ? '/index.html' : url.pathname
   const gcsUrl = "https://" + gcsHost + pathname
 
   // Compute HMAC Authorization header using GCS HMAC Access Key & Secret
@@ -96,7 +97,28 @@ async function handleRequest(request) {
     })
   })
 
-  return fetch(modifiedRequest)
+  const response = await fetch(modifiedRequest)
+
+  // If object not found (e.g. direct deep link SPA navigation), serve /index.html
+  if (response.status === 404 || response.status === 403) {
+    const fallbackPath = '/index.html'
+    const fallbackCanonical = "GET\n\n\n" + dateStr + "\n/${google_storage_bucket.frontend.name}" + fallbackPath
+    const fallbackSigBuffer = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(fallbackCanonical))
+    const fallbackSigBase64 = btoa(String.fromCharCode(...new Uint8Array(fallbackSigBuffer)))
+    const fallbackAuth = "AWS " + accessKey + ":" + fallbackSigBase64
+
+    return fetch("https://" + gcsHost + fallbackPath, {
+      method: 'GET',
+      headers: new Headers({
+        'Host': gcsHost,
+        'Date': dateStr,
+        'Authorization': fallbackAuth,
+        'User-Agent': 'Cloudflare-Worker-GCS-Signer'
+      })
+    })
+  }
+
+  return response
 }
 EOF
 
