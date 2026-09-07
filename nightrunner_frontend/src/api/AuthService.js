@@ -62,7 +62,11 @@ class AuthService {
      */
     isAuthenticated() {
 
-        return this.auth?.isAuthenticated ?? false;
+        if (this.auth?.isAuthenticated) {
+            return true;
+        }
+
+        return Boolean(localStorage.getItem("firebase_id_token"));
 
     }
 
@@ -139,9 +143,13 @@ class AuthService {
             return inMemoryToken;
         }
 
-        // Fallback: read the token oidc-client-ts persisted to sessionStorage.
-        // This covers tabs that are opened directly (e.g. /live in a new tab)
-        // where AuthServiceProvider hasn't finished wiring up the React context yet.
+        // Fallback: check Firebase token if initialized in Firebase mode
+        const firebaseToken = localStorage.getItem("firebase_id_token");
+        if (firebaseToken) {
+            return firebaseToken;
+        }
+
+        // Fallback: read the token oidc-client-ts persisted to sessionStorage/localStorage.
         try {
 
             const authority =
@@ -212,6 +220,19 @@ class AuthService {
      * @returns {Promise<void>}
      */
     async logout() {
+
+        localStorage.removeItem("firebase_id_token");
+
+        try {
+            const { isFirebaseMode, firebaseLogout } = await import("@/api/firebaseAuth.js");
+            if (isFirebaseMode) {
+                await firebaseLogout();
+                window.location.href = "/login?loggedOut=true";
+                return;
+            }
+        } catch {
+            // Ignore error if firebase module fail
+        }
 
         if (!this.auth) {
 

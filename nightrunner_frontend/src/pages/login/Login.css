@@ -311,6 +311,62 @@
 
 
 /* ==========================================
+   Firebase Dual Auth Form & Social Button
+   ========================================== */
+
+.login-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.login-field label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary, var(--text));
+}
+
+.login-field input {
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.login-field input:focus {
+    border-color: var(--button-bg);
+}
+
+.login-social-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.login-social-button:hover:not(:disabled) {
+    background: var(--card-bg);
+    border-color: var(--text-secondary);
+}
+
+
+/* ==========================================
    Error
    ========================================== */
 

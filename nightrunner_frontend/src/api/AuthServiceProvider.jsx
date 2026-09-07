@@ -15,6 +15,20 @@ export default function AuthServiceProvider({
 
     }, [auth]);
 
+    useEffect(() => {
+        import("@/api/firebaseAuth.js").then(({ subscribeToFirebaseToken, isFirebaseMode }) => {
+            if (isFirebaseMode) {
+                return subscribeToFirebaseToken((token) => {
+                    if (token) {
+                        localStorage.setItem("firebase_id_token", token);
+                    } else {
+                        localStorage.removeItem("firebase_id_token");
+                    }
+                });
+            }
+        });
+    }, []);
+
     return children;
 
 }

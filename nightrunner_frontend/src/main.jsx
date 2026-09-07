@@ -39,8 +39,8 @@ const oidcConfig = {
         response_mode: "query",
         metadata: {
             issuer: authority,
-            authorization_endpoint: `https://identitytoolkit.googleapis.com/v2/projects/${projectId}/oauth/authorize`,
-            token_endpoint: `https://identitytoolkit.googleapis.com/v2/projects/${projectId}/oauth/token`,
+            authorization_endpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+            token_endpoint: "https://oauth2.googleapis.com/token",
             jwks_uri: "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
             code_challenge_methods_supported: ["S256"],
         }
