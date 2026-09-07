@@ -5,12 +5,16 @@ import {
     useState
 } from "react";
 
+import { useAuth } from "react-oidc-context";
+
 import EventSelector from "./EventSelector.jsx";
 import ApiService from "../ApiService.js";
 
 const EventContext = createContext(null);
 
 export function EventProvider({ children }) {
+
+    const auth = useAuth();
 
     const [event, setEvent] = useState(null)
     const [eventId, setEventId] = useState(null);
@@ -29,8 +33,25 @@ export function EventProvider({ children }) {
     //
 
     useEffect(() => {
+        if (auth.isLoading) {
+            return;
+        }
+
+        if (!auth.isAuthenticated) {
+            setEvent(null);
+            setEventId(null);
+            setSelectableEvents([]);
+            setShowEventSelector(false);
+            setError(null);
+            setLoading(false);
+            return;
+        }
+
         initializeEvent();
-    }, []);
+    }, [
+        auth.isLoading,
+        auth.isAuthenticated
+    ]);
 
 
     async function initializeEvent() {
