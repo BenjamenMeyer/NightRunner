@@ -53,6 +53,11 @@ resource "google_cloud_run_v2_service" "backend" {
       }
 
       env {
+        name  = "FRONT_END_URL"
+        value = var.domain_name != "" ? "https://${var.domain_name}" : "https://${google_storage_bucket.frontend.name}.storage.googleapis.com"
+      }
+
+      env {
         name  = "OIDC_ISSUER"
         value = "https://securetoken.google.com/${var.project_id}"
       }
