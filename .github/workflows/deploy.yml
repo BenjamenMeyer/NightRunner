@@ -28,8 +28,6 @@ jobs:
               - 'Makefile'
             frontend:
               - 'nightrunner_frontend/**'
-            terraform:
-              - 'terraform/**'
 
   # Verify backend unit tests before deploying
   test-backend:
@@ -186,49 +184,3 @@ jobs:
           path: nightrunner_frontend/dist
           destination: ${{ secrets.GCP_FRONTEND_BUCKET }}
           parent: false
-
-  deploy-terraform:
-    name: Apply OpenTofu / Terraform Changes
-    needs: changes
-    if: ${{ needs.changes.outputs.terraform == 'true' || github.event_name == 'workflow_dispatch' }}
-    runs-on: ubuntu-latest
-    environment: production
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Authenticate to Google Cloud via OIDC
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-      - name: Set up OpenTofu
-        uses: opentofu/setup-opentofu@v1
-
-      - name: OpenTofu Init & Apply
-        working-directory: terraform
-        run: |
-          tofu init -backend-config="bucket=${{ secrets.GCP_TF_STATE_BUCKET }}" -backend-config="prefix=nightrunner/state" -reconfigure -input=false
-          tofu apply -auto-approve -input=false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
-          TF_VAR_region: ${{ secrets.GCP_REGION }}
-          TF_VAR_environment: ${{ secrets.GCP_TF_ENV }}
-          TF_VAR_db_name: ${{ secrets.GCP_DB_NAME }}
-          TF_VAR_db_user: ${{ secrets.GCP_DB_USER }}
-          TF_VAR_db_password: ${{ secrets.GCP_DB_PASSWORD }}
-          TF_VAR_billing_account_id: ${{ secrets.GCP_BILLING_ACCOUNT_ID }}
-          TF_VAR_monthly_budget_amount: ${{ secrets.GCP_MONTHLY_BUDGET_AMOUNT }}
-          TF_VAR_github_org: ${{ secrets.GCP_GITHUB_ORG }}
-          TF_VAR_github_repo_name: ${{ secrets.GCP_GITHUB_REPO_NAME }}
-          TF_VAR_cdn_provider: ${{ secrets.GCP_CDN_PROVIDER }}
-          TF_VAR_cloudflare_account_id: ${{ secrets.GCP_CLOUDFLARE_ACCOUNT_ID }}
-          TF_VAR_cloudflare_zone_id: ${{ secrets.GCP_CLOUDFLARE_ZONE_ID }}
-          TF_VAR_cloudflare_api_token: ${{ secrets.GCP_CLOUDFLARE_API_TOKEN }}
-          TF_VAR_domain_name: ${{ secrets.GCP_DOMAIN_NAME }}
