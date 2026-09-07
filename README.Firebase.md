@@ -89,7 +89,26 @@ When developing directly inside `nightrunner_frontend/`:
 
 ---
 
-## 3. Automated Terraform Environment Deployment
+## 3. Understanding Frontend vs Backend OIDC Requirements
+
+When setting up local environment files or deploying containers, keep in mind the differences between frontend and backend configuration:
+
+| Variable | Scope | Purpose | Firebase Example |
+| :--- | :--- | :--- | :--- |
+| `VITE_OIDC_AUTHORITY` | **Frontend** | OIDC discovery & issuer URL | `https://securetoken.google.com/tlnightops-nightrunner-dev` |
+| `VITE_OIDC_CLIENT_ID` | **Frontend** | Google OAuth SPA Client ID (public identifier) | `<your-google-oauth-client-id>.apps.googleusercontent.com` |
+| `OIDC_ISSUER` | **Backend** | Expected issuer of incoming JWT tokens | `https://securetoken.google.com/tlnightops-nightrunner-dev` |
+| `OIDC_AUDIENCE` | **Backend** | Expected token audience (`aud` claim in Firebase JWTs) | `tlnightops-nightrunner-dev` *(GCP Project ID)* |
+| `JWKS_URL` | **Backend** | Google service account public key set for JWT signature validation | `https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com` |
+
+> [!NOTE]
+> `VITE_OIDC_CLIENT_ID` and `OIDC_AUDIENCE` are **different** under Firebase:
+> - **Frontend** uses the Google OAuth **Client ID** to direct users to the Google login page.
+> - **Backend** validates incoming Firebase JWTs where the `aud` claim matches your **Firebase Project ID**.
+
+---
+
+## 4. Automated Terraform Environment Deployment
 
 When running Terraform via `./run-terraform dev apply`, OpenTofu automatically:
 1. Configures GCP Identity Platform base settings and authorized domains.
