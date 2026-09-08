@@ -3,6 +3,7 @@ import { useAuth } from "react-oidc-context";
 
 import "./Me.css";
 
+import AuthService from "../api/AuthService";
 import ApiService from "../api/ApiService";
 
 export default function Me() {
@@ -13,6 +14,7 @@ export default function Me() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const isAuthenticated = AuthService.isAuthenticated();
 
 
     //
@@ -26,13 +28,13 @@ export default function Me() {
             try {
 
                 /*
-                 * AuthService / OIDC tells us whether the
+                 * AuthService tells us whether the
                  * identity provider session exists.
                  *
                  * UserService tells us which Night Runner
                  * application account belongs to that identity.
                  */
-                if (!auth.isAuthenticated) {
+                if (!isAuthenticated) {
 
                     throw new Error(
                         "You are not authenticated."
@@ -56,14 +58,13 @@ export default function Me() {
             catch (err) {
 
                 console.error(
-                    "Failed to load profile:",
+                    "Failed to load user profile:",
                     err
                 );
 
                 setError(
-                    err instanceof Error
-                        ? err.message
-                        : "Failed to load profile."
+                    err?.message ??
+                    "Failed to load user profile."
                 );
 
             }
@@ -76,10 +77,9 @@ export default function Me() {
         }
 
         /*
-         * react-oidc-context may still be resolving the
-         * authentication state when this component mounts.
+         * Authentication state may still be resolving when this component mounts.
          */
-        if (!auth.isLoading) {
+        if (!auth.isLoading || isAuthenticated) {
 
             loadUser();
 
@@ -87,7 +87,7 @@ export default function Me() {
 
     }, [
         auth.isLoading,
-        auth.isAuthenticated
+        isAuthenticated
     ]);
 
 

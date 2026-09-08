@@ -8,6 +8,7 @@ import {
 import { useAuth } from "react-oidc-context";
 
 import EventSelector from "./EventSelector.jsx";
+import AuthService from "../AuthService.js";
 import ApiService from "../ApiService.js";
 
 const EventContext = createContext(null);
@@ -25,6 +26,8 @@ export function EventProvider({ children }) {
     const [showEventSelector, setShowEventSelector] = useState(false);
     const [selectableEvents, setSelectableEvents] = useState([]);
 
+    const isAuthenticated = AuthService.isAuthenticated();
+
 
     //
     // Initialize event context when authentication changes.
@@ -32,7 +35,7 @@ export function EventProvider({ children }) {
 
     useEffect(() => {
 
-        if (auth.isLoading) {
+        if (auth.isLoading && !isAuthenticated) {
             return;
         }
 
@@ -41,7 +44,7 @@ export function EventProvider({ children }) {
          *
          * EventContext has nothing to do.
          */
-        if (!auth.isAuthenticated) {
+        if (!isAuthenticated) {
 
             setEvent(null);
             setEventId(null);
@@ -57,7 +60,7 @@ export function EventProvider({ children }) {
 
     }, [
         auth.isLoading,
-        auth.isAuthenticated
+        isAuthenticated
     ]);
 
 
