@@ -12,9 +12,8 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
-RUN npm ci
+COPY package.json yarn.lock ./
+RUN corepack enable && yarn install --frozen-lockfile
 
 COPY . .
 
