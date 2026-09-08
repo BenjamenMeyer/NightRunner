@@ -54,8 +54,8 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
   const url = new URL(request.url)
 
-  // Pass API requests directly to Cloud Run backend (supports both /api/v1/... and legacy /v1/...)
-  const isApiRequest = url.pathname.startsWith('/api/') || ['/v1/', '/auth/', '/users', '/me', '/events', '/patrols', '/stations', '/configurations', '/reports', '/health'].some(p => url.pathname.startsWith(p) || url.pathname === p)
+  // Pass API requests directly to Cloud Run backend (strictly routes /api/* and health checks)
+  const isApiRequest = url.pathname.startsWith('/api/') || url.pathname === '/health'
   if (isApiRequest) {
     const cloudRunHost = "${replace(replace(google_cloud_run_v2_service.backend.uri, "https://", ""), "/", "")}"
     const targetPathname = url.pathname.startsWith('/api/') ? url.pathname.replace('/api', '') : url.pathname
