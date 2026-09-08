@@ -1,0 +1,151 @@
+:root {
+
+    /* ==========================================
+       Backgrounds (Night Ops Stealth & Midnight)
+       ========================================== */
+
+    --sidebar-bg: #0d1520;
+    --header-bg: #142235;
+    --page-bg: #080d14;
+
+    /* ==========================================
+       Cards & Surfaces
+       ========================================== */
+
+    --card-bg: #111c2d;
+
+    /* ==========================================
+       Text
+       ========================================== */
+
+    --sidebar-text: #FFFFFF;
+    --header-text: #FFFFFF;
+
+    --text-primary: #F0F4F8;
+    --text-secondary: #94A3B8;
+
+    /* ==========================================
+       Borders
+       ========================================== */
+
+    --border: #1E293B;
+
+    /* ==========================================
+       Navigation
+       ========================================== */
+
+    --sidebar-hover: #1E2D42;
+
+    /* ==========================================
+       Buttons & Accents (Compass Teal / Mint Glow)
+       ========================================== */
+
+    --button-bg: #14B8A6;
+    --button-hover: #0D9488;
+    --button-text: #042F2C;
+
+    /* ==========================================
+       Forms
+       ========================================== */
+
+    --input-bg: #0F172A;
+    --input-border: #334155;
+    --input-text: #F8FAFC;
+    --input-focus: #14B8A6;
+
+    /* ==========================================
+       Links
+       ========================================== */
+
+    --link: #2DD4BF;
+    --link-hover: #5EEAD4;
+
+    /* ==========================================
+       Shadows
+       ========================================== */
+
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+
+    /* ==========================================
+       Status Colors
+       ========================================== */
+
+    --success: #10B981;
+    --warning: #F59E0B;
+    --error: #EF4444;
+    --info: #3B82F6;
+
+}
+
+body {
+
+    background: var(--page-bg);
+    color: var(--text-primary);
+
+}
+
+.header {
+
+    background: var(--header-bg);
+    color: var(--header-text);
+
+}
+
+.page-content {
+
+    background: var(--page-bg);
+
+}
+
+.card {
+
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+
+}
+
+.form input,
+.form select,
+.form textarea {
+
+    background: var(--input-bg);
+    color: var(--input-text);
+    border: 1px solid var(--input-border);
+
+}
+
+.form input:focus,
+.form select:focus,
+.form textarea:focus {
+
+    outline: none;
+    border-color: var(--input-focus);
+
+}
+
+.form button {
+
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+
+}
+
+.form button:hover {
+
+    background: var(--button-hover);
+
+}
+
+a {
+
+    color: var(--link);
+
+}
+
+a:hover {
+
+    color: var(--link-hover);
+
+}

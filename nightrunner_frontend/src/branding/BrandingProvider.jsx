@@ -10,7 +10,7 @@ export default function BrandingProvider({ children }) {
 
     const [brandingId, setBrandingId] = useState(() => {
 
-        return localStorage.getItem(STORAGE_KEY) ?? "trail-life";
+        return localStorage.getItem(STORAGE_KEY) ?? "night-ops";
 
     });
 

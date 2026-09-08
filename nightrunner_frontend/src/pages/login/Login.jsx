@@ -9,11 +9,13 @@ import {
 } from "@/api/firebaseAuth.js";
 
 import ApiService from "@/api/ApiService.js";
+import useBranding from "@/branding/useBranding";
 
 import "./Login.css";
 
 function Login() {
 
+    const { branding } = useBranding();
     const location = useLocation();
     const navigate = useNavigate();
     const auth = useAuth();
@@ -127,8 +129,8 @@ function Login() {
 
                 <img
                     className="login-logo"
-                    src="/favicon.jpg"
-                    alt="Night Ops Adventures"
+                    src={branding.logo}
+                    alt={branding.organizationName}
                 />
 
                 {loggedOut && (
