@@ -14,7 +14,7 @@ jobs:
       terraform: ${{ steps.filter.outputs.terraform }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Filter Changed Paths
         id: filter
@@ -33,12 +33,14 @@ jobs:
   version:
     name: Generate Release Version
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       version: ${{ steps.semver.outputs.version }}
       version_tag: ${{ steps.semver.outputs.version_tag }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
 
@@ -65,6 +67,13 @@ jobs:
           echo "version_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
           echo "Calculated Version: ${NEW_VERSION}, Release Tag: ${RELEASE_TAG}"
 
+      - name: Create and Push Git Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.semver.outputs.version_tag }}" -m "Release ${{ steps.semver.outputs.version_tag }} (${{ steps.semver.outputs.version }})" || true
+          git push origin "${{ steps.semver.outputs.version_tag }}" || true
+
   # Verify backend unit tests before deploying
   test-backend:
     name: Run Backend Unit Tests
@@ -73,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -102,7 +111,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Authenticate to Google Cloud via OIDC
         uses: google-github-actions/auth@v2
@@ -131,6 +140,7 @@ jobs:
           gcloud run deploy ${{ secrets.GCP_CLOUD_RUN_SERVICE }} \
             --image ${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ needs.version.outputs.version }} \
             --region ${{ secrets.GCP_REGION }} \
+            --port 8000 \
             --set-env-vars APP_VERSION="${{ needs.version.outputs.version }}"
 
   lint-frontend:
@@ -140,7 +150,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -163,7 +173,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -176,7 +186,7 @@ jobs:
 
       - name: Start Backend Stack (App + OIDC Server + Postgres + Seed)
         run: |
-          docker compose up -d
+          docker compose up -d db oidc app
           echo "Waiting for API server & OIDC server health checks..."
           for i in {1..30}; do
             API_OK=$(curl -s -f http://127.0.0.1:8000/health > /dev/null && echo "ok" || echo "fail")
@@ -213,7 +223,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Authenticate to Google Cloud via OIDC
         uses: google-github-actions/auth@v2
@@ -257,7 +267,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

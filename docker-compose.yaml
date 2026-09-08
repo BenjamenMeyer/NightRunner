@@ -32,6 +32,8 @@ services:
         condition: service_healthy
       oidc:
         condition: service_healthy
+      seed:
+        condition: service_completed_successfully
 
   # VITE_ vars are baked into the JS bundle at build time
   frontend:
@@ -147,7 +149,7 @@ services:
   seed:
     image: postgres:16-alpine
     depends_on:
-      app:
+      db:
         condition: service_started
     entrypoint: ["sh", "-c"]
     command:
