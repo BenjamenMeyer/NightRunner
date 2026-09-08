@@ -21,7 +21,7 @@ backend_test:
 	./venv/bin/pytest -q
 
 frontend_test:
-	cd nightrunner_frontend && npm run test
+	cd nightrunner_frontend && yarn test
 
 terraform_test: terraform_lint
 
@@ -31,7 +31,7 @@ backend_lint:
 	./venv/bin/pytest --co -q > /dev/null
 
 frontend_lint:
-	cd nightrunner_frontend && npm run lint
+	cd nightrunner_frontend && yarn lint
 
 terraform_lint:
 	tofu -chdir=terraform fmt -check

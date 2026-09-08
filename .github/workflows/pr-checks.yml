@@ -51,11 +51,11 @@ jobs:
 
       - name: Install Dependencies
         working-directory: nightrunner_frontend
-        run: npm install
+        run: corepack enable && yarn install --frozen-lockfile
 
       - name: Run Frontend Linter (oxlint)
         working-directory: nightrunner_frontend
-        run: npm run lint
+        run: yarn lint
 
       - name: Start Backend Docker Stack
         run: |
@@ -76,14 +76,14 @@ jobs:
 
       - name: Run Vitest Unit & Integration Tests
         working-directory: nightrunner_frontend
-        run: npm run test
+        run: yarn test
         env:
           VITE_BACKEND_URL: "http://127.0.0.1:8000"
           VITE_OIDC_AUTHORITY: "http://localhost:4000"
 
       - name: Verify Production Build (vite build)
         working-directory: nightrunner_frontend
-        run: npm run build
+        run: yarn build
 
       - name: Tear Down Stack
         if: always()
