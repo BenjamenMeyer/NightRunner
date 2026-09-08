@@ -10,14 +10,14 @@ import { useAuth } from "react-oidc-context";
 import EventSelector from "./EventSelector.jsx";
 import AuthService from "../AuthService.js";
 import ApiService from "../ApiService.js";
-import useBranding from "../../branding/useBranding.js";
+import useBranding from "@/branding/UseBranding.js";
 
 const EventContext = createContext(null);
 
 export function EventProvider({ children }) {
 
     const auth = useAuth();
-    const { changeBranding } = useBranding();
+    const { changeBranding }  = useBranding();
 
     const [event, setEvent] = useState(null);
     const [eventId, setEventId] = useState(null);

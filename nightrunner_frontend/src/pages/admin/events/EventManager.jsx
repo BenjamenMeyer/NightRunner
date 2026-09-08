@@ -6,8 +6,9 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import "./EventManager.css";
-import { useEventContext } from "../../../api/helpers/EventContext.jsx";
+import { useEventContext } from "@/api/helpers/EventContext.jsx";
 import ApiService from "../../../api/ApiService.js";
+import brandings from "@/branding/index.js";
 
 export default function EventManager() {
     const navigate = useNavigate();
@@ -309,9 +310,16 @@ export default function EventManager() {
                                 onChange={handleChange}
                                 disabled={saving}
                             >
-                                <option value="night-ops">Night Ops (Default)</option>
-                                <option value="trail-life">Trail Life USA</option>
-                                <option value="ahg">American Heritage Girls</option>
+                                {Object.entries(brandings).map(
+                                    ([id, theme]) => (
+                                        <option
+                                            key={id}
+                                            value={id}
+                                        >
+                                            {theme.organizationName}
+                                        </option>
+                                    )
+                                )}
                             </select>
 
                             <small>

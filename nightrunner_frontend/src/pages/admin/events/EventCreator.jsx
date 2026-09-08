@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ApiService from "../../../api/ApiService.js";
 
 import "./EventCreator.css";
+import brandings from "@/branding/index.js";
 
 export default function EventCreator() {
 
@@ -250,9 +251,16 @@ export default function EventCreator() {
                                 onChange={handleChange}
                                 disabled={saving}
                             >
-                                <option value="night-ops">Night Ops (Default)</option>
-                                <option value="trail-life">Trail Life USA</option>
-                                <option value="ahg">American Heritage Girls</option>
+                                {Object.entries(brandings).map(
+                                    ([id, theme]) => (
+                                        <option
+                                            key={id}
+                                            value={id}
+                                        >
+                                            {theme.organizationName}
+                                        </option>
+                                    )
+                                )}
                             </select>
 
                             <small>
