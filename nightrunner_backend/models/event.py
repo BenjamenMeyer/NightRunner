@@ -9,6 +9,7 @@ class Event:
     date: Optional[str] = None
     description: Optional[str] = None
     rounding_precision: int = 1000
+    theme: str = "night-ops"
     organizers: List[str] = field(default_factory=list)
     stations: List[str] = field(default_factory=list)
     patrols: List[str] = field(default_factory=list)
@@ -20,6 +21,7 @@ class Event:
             "date": self.date,
             "description": self.description,
             "roundingPrecision": self.rounding_precision,
+            "theme": self.theme,
             "organizers": self.organizers,
             "stations": self.stations,
             "patrols": self.patrols,

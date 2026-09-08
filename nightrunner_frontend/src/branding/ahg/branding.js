@@ -1,4 +1,4 @@
-import logo from "./logo.png";
+import logo from "../nightops/logo.jpg";
 import colors from "./colors.css?url";
 
 export default {

@@ -1,22 +1,18 @@
 :root {
 
     /* ==========================================
-       Backgrounds
+       Backgrounds (Night Ops Stealth & Midnight)
        ========================================== */
+
+    --sidebar-bg: #0d1520;
+    --header-bg: #142235;
+    --page-bg: #080d14;
 
     /* ==========================================
-       Backgrounds & Header (AHG Navy & Light Slate)
+       Cards & Surfaces
        ========================================== */
 
-    --sidebar-bg: #00345d;
-    --header-bg: #005fa9;
-    --page-bg: #f4f7fa;
-
-    /* ==========================================
-       Cards
-       ========================================== */
-
-    --card-bg: #FFFFFF;
+    --card-bg: #111c2d;
 
     /* ==========================================
        Text
@@ -25,59 +21,59 @@
     --sidebar-text: #FFFFFF;
     --header-text: #FFFFFF;
 
-    --text-primary: #1F2937;
-    --text-secondary: #6B7280;
+    --text-primary: #F0F4F8;
+    --text-secondary: #94A3B8;
 
     /* ==========================================
        Borders
        ========================================== */
 
-    --border: #D4DCE5;
+    --border: #1E293B;
 
     /* ==========================================
        Navigation
        ========================================== */
 
-    --sidebar-hover: #002240;
+    --sidebar-hover: #1E2D42;
 
     /* ==========================================
-       Buttons & Accents (AHG Red / Navy)
+       Buttons & Accents (Compass Teal / Mint Glow)
        ========================================== */
 
-    --button-bg: #ef4041;
-    --button-hover: #d03031;
-    --button-text: #FFFFFF;
+    --button-bg: #14B8A6;
+    --button-hover: #0D9488;
+    --button-text: #042F2C;
 
     /* ==========================================
        Forms
        ========================================== */
 
-    --input-bg: #FFFFFF;
-    --input-border: #D4DCE5;
-    --input-text: #1F2937;
-    --input-focus: #005fa9;
+    --input-bg: #0F172A;
+    --input-border: #334155;
+    --input-text: #F8FAFC;
+    --input-focus: #14B8A6;
 
     /* ==========================================
        Links
        ========================================== */
 
-    --link: #005fa9;
-    --link-hover: #00345d;
+    --link: #2DD4BF;
+    --link-hover: #5EEAD4;
 
     /* ==========================================
        Shadows
        ========================================== */
 
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 
     /* ==========================================
        Status Colors
        ========================================== */
 
-    --success: #2E7D32;
-    --warning: #F9A825;
-    --error: #C62828;
-    --info: #0288D1;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --error: #EF4444;
+    --info: #3B82F6;
 
 }
 

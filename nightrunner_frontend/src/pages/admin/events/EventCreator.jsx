@@ -17,7 +17,8 @@ export default function EventCreator() {
         name: "",
         date: "",
         description: "",
-        roundingPrecision: 1000
+        roundingPrecision: 1000,
+        theme: "night-ops"
     });
 
     function handleChange(event) {
@@ -87,8 +88,8 @@ export default function EventCreator() {
                 name,
                 date: form.date,
                 description,
-                roundingPrecision:
-                form.roundingPrecision
+                roundingPrecision: form.roundingPrecision,
+                theme: form.theme
             });
 
             /*
@@ -235,6 +236,30 @@ export default function EventCreator() {
 
                         </div>
 
+
+                        <div className="form-group">
+
+                            <label htmlFor="event-theme">
+                                Branding Theme
+                            </label>
+
+                            <select
+                                id="event-theme"
+                                name="theme"
+                                value={form.theme}
+                                onChange={handleChange}
+                                disabled={saving}
+                            >
+                                <option value="night-ops">Night Ops (Default)</option>
+                                <option value="trail-life">Trail Life USA</option>
+                                <option value="ahg">American Heritage Girls</option>
+                            </select>
+
+                            <small>
+                                Visual color theme applied to the user interface for this event.
+                            </small>
+
+                        </div>
 
                         <div className="form-group">
 

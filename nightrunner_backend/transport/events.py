@@ -53,12 +53,16 @@ class EventsResource:
         stats = list(dict.fromkeys(str(x) for x in stats_data if x is not None and not isinstance(x, (dict, list))))
         pats = list(dict.fromkeys(str(x) for x in pats_data if x is not None and not isinstance(x, (dict, list))))
 
+        theme_val = data.get("theme", "night-ops")
+        theme = str(theme_val) if theme_val else "night-ops"
+
         event = Event(
             id=str(uuid6.uuid7()),
             name=str(name),
             date=str(date) if date is not None and not isinstance(date, str) else date,
             description=str(description) if description is not None and not isinstance(description, str) else description,
             rounding_precision=rounding_precision,
+            theme=theme,
             organizers=orgs,
             stations=stats,
             patrols=pats,
@@ -88,6 +92,7 @@ class EventResource:
         event.date = data.get("date", event.date)
         event.description = data.get("description", event.description)
         event.rounding_precision = data.get("roundingPrecision", event.rounding_precision)
+        event.theme = data.get("theme", event.theme)
         event.organizers = data.get("organizers", event.organizers)
         event.stations = data.get("stations", event.stations)
         event.patrols = data.get("patrols", event.patrols)

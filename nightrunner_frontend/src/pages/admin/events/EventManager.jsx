@@ -27,7 +27,8 @@ export default function EventManager() {
         name: "",
         date: "",
         description: "",
-        roundingPrecision: 1000
+        roundingPrecision: 1000,
+        theme: "night-ops"
     });
 
     const isSystemAdmin =
@@ -43,7 +44,8 @@ export default function EventManager() {
             date: event.date ?? "",
             description: event.description ?? "",
             roundingPrecision:
-                event.roundingPrecision ?? 1000
+                event.roundingPrecision ?? 1000,
+            theme: event.theme ?? "night-ops"
         });
 
         setError(null);
@@ -103,7 +105,8 @@ export default function EventManager() {
                         description:
                             form.description.trim(),
                         roundingPrecision:
-                        form.roundingPrecision
+                            form.roundingPrecision,
+                        theme: form.theme
                     }
                 );
 
@@ -118,7 +121,10 @@ export default function EventManager() {
                     updatedEvent.description ?? "",
 
                 roundingPrecision:
-                    updatedEvent.roundingPrecision ?? 1000
+                    updatedEvent.roundingPrecision ?? 1000,
+
+                theme:
+                    updatedEvent.theme ?? "night-ops"
             });
 
             setSuccess(
@@ -289,6 +295,28 @@ export default function EventManager() {
                                 disabled={saving}
                                 rows={5}
                             />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="event-theme">
+                                Branding Theme
+                            </label>
+
+                            <select
+                                id="event-theme"
+                                name="theme"
+                                value={form.theme}
+                                onChange={handleChange}
+                                disabled={saving}
+                            >
+                                <option value="night-ops">Night Ops (Default)</option>
+                                <option value="trail-life">Trail Life USA</option>
+                                <option value="ahg">American Heritage Girls</option>
+                            </select>
+
+                            <small>
+                                Visual color theme applied to the user interface for this event.
+                            </small>
                         </div>
 
                         <div className="form-group">

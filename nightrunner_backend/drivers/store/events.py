@@ -4,7 +4,7 @@ from nightrunner_backend.models.event import Event
 
 LIST_EVENTS_BATCH = """
 SELECT
-    e.id, e.name, e.date, e.description, e.rounding_precision,
+    e.id, e.name, e.date, e.description, e.rounding_precision, COALESCE(e.theme, 'night-ops') AS theme,
     GROUP_CONCAT(DISTINCT eo.user_id) AS organizers,
     GROUP_CONCAT(DISTINCT s.id) AS stations,
     GROUP_CONCAT(DISTINCT p.id) AS patrols
@@ -12,16 +12,16 @@ FROM events e
 LEFT JOIN event_organizers eo ON e.id = eo.event_id
 LEFT JOIN stations s ON e.id = s.event_id
 LEFT JOIN patrols p ON e.id = p.event_id
-GROUP BY e.id, e.name, e.date, e.description, e.rounding_precision
+GROUP BY e.id, e.name, e.date, e.description, e.rounding_precision, e.theme
 """
-GET_EVENT = "SELECT id, name, date, description, rounding_precision FROM events WHERE id = :id"
+GET_EVENT = "SELECT id, name, date, description, rounding_precision, COALESCE(theme, 'night-ops') AS theme FROM events WHERE id = :id"
 CREATE_EVENT = """
-    INSERT INTO events (id, name, date, description, rounding_precision)
-    VALUES (:id, :name, :date, :description, :rounding_precision)
+    INSERT INTO events (id, name, date, description, rounding_precision, theme)
+    VALUES (:id, :name, :date, :description, :rounding_precision, :theme)
 """
 UPDATE_EVENT = """
     UPDATE events
-    SET name = :name, date = :date, description = :description, rounding_precision = :rounding_precision
+    SET name = :name, date = :date, description = :description, rounding_precision = :rounding_precision, theme = :theme
     WHERE id = :id
 """
 DELETE_EVENT = "DELETE FROM events WHERE id = :id"
@@ -50,6 +50,7 @@ class EventsStore:
                 date=row["date"],
                 description=row["description"],
                 rounding_precision=row["rounding_precision"],
+                theme=row.get("theme") or "night-ops",
             )
             # GROUP_CONCAT returns a comma-separated string or None when no rows match
             event.organizers = [x for x in (row.get("organizers") or "").split(",") if x]
@@ -75,6 +76,7 @@ class EventsStore:
             "date": event.date,
             "description": event.description,
             "rounding_precision": event.rounding_precision,
+            "theme": event.theme,
         })
         for user_id in event.organizers:
             await self.driver.execute(ADD_EVENT_ORGANIZER, {"event_id": event.id, "user_id": user_id})
@@ -86,6 +88,7 @@ class EventsStore:
             "date": event.date,
             "description": event.description,
             "rounding_precision": event.rounding_precision,
+            "theme": event.theme,
         })
         # Sync organizers: delete then re-insert
         await self.driver.execute(DELETE_EVENT_ORGANIZERS, {"event_id": event.id})
