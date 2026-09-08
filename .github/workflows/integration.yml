@@ -39,7 +39,8 @@ jobs:
       run: |
         RESPONSE=$(curl -s http://localhost:8000/health)
         echo "Health Response: $RESPONSE"
-        if [ "$RESPONSE" != '{"status":"ok"}' ] && [ "$RESPONSE" != '{"status": "ok"}' ]; then
+        STATUS=$(echo "$RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin).get('status', ''))")
+        if [ "$STATUS" != "ok" ]; then
           echo "Error: Unexpected health status output."
           exit 1
         fi
