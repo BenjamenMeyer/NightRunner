@@ -140,6 +140,7 @@ jobs:
           gcloud run deploy ${{ secrets.GCP_CLOUD_RUN_SERVICE }} \
             --image ${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ needs.version.outputs.version }} \
             --region ${{ secrets.GCP_REGION }} \
+            --port 8000 \
             --set-env-vars APP_VERSION="${{ needs.version.outputs.version }}"
 
   lint-frontend:
@@ -185,7 +186,7 @@ jobs:
 
       - name: Start Backend Stack (App + OIDC Server + Postgres + Seed)
         run: |
-          docker compose up -d
+          docker compose up -d db oidc app
           echo "Waiting for API server & OIDC server health checks..."
           for i in {1..30}; do
             API_OK=$(curl -s -f http://127.0.0.1:8000/health > /dev/null && echo "ok" || echo "fail")
