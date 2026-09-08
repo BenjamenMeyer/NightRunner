@@ -7,6 +7,8 @@ import Sidebar from "./Sidebar";
 
 import Footer from "@/components/Footer.jsx";
 
+import AuthService from "@/api/AuthService.js";
+
 export default function Layout() {
 
     const auth = useAuth();
@@ -14,7 +16,7 @@ export default function Layout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const loggedIn =
-        auth.isAuthenticated;
+        AuthService.isAuthenticated();
 
     return (
 
