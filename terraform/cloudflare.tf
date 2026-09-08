@@ -16,11 +16,11 @@ resource "cloudflare_record" "app" {
   ttl     = 1    # Auto TTL when proxied
 }
 
-# Cloudflare Page Rule 1: Bypass cache for API calls (/v1/* -> Cloud Run)
+# Cloudflare Page Rule 1: Bypass cache for API calls (/api/* -> Cloud Run)
 resource "cloudflare_page_rule" "api_no_cache" {
   count    = local.enable_cloudflare ? 1 : 0
   zone_id  = var.cloudflare_zone_id
-  target   = "*${var.domain_name}/v1/*"
+  target   = "*${var.domain_name}/api/*"
   priority = 1
 
   actions {
@@ -54,11 +54,12 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
   const url = new URL(request.url)
 
-  // Pass API requests directly to Cloud Run backend
-  const apiPaths = ['/v1/', '/auth/', '/users', '/me', '/events', '/patrols', '/stations', '/configurations', '/reports', '/health']
-  if (apiPaths.some(p => url.pathname.startsWith(p) || url.pathname === p)) {
+  // Pass API requests directly to Cloud Run backend (supports both /api/v1/... and legacy /v1/...)
+  const isApiRequest = url.pathname.startsWith('/api/') || ['/v1/', '/auth/', '/users', '/me', '/events', '/patrols', '/stations', '/configurations', '/reports', '/health'].some(p => url.pathname.startsWith(p) || url.pathname === p)
+  if (isApiRequest) {
     const cloudRunHost = "${replace(replace(google_cloud_run_v2_service.backend.uri, "https://", ""), "/", "")}"
-    const backendUrl = new URL(url.pathname + url.search, "https://" + cloudRunHost)
+    const targetPathname = url.pathname.startsWith('/api/') ? url.pathname.replace('/api', '') : url.pathname
+    const backendUrl = new URL(targetPathname + url.search, "https://" + cloudRunHost)
     const backendRequest = new Request(backendUrl.toString(), request)
     return fetch(backendRequest)
   }

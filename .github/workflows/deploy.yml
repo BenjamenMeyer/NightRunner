@@ -177,8 +177,8 @@ jobs:
           yarn install --frozen-lockfile
           yarn build
         env:
-          VITE_API_BACKEND_URL: "${{ secrets.GCP_BACKEND_URL || 'https://nightrunner-backend-p6zq2tffpa-ue.a.run.app/v1' }}"
-          VITE_BACKEND_URL: "${{ secrets.GCP_BACKEND_URL || 'https://nightrunner-backend-p6zq2tffpa-ue.a.run.app' }}"
+          VITE_API_BACKEND_URL: "${{ secrets.GCP_DOMAIN_NAME != '' && format('https://{0}/api/v1', secrets.GCP_DOMAIN_NAME) || secrets.GCP_BACKEND_URL || 'https://nightrunner-backend-p6zq2tffpa-ue.a.run.app/v1' }}"
+          VITE_BACKEND_URL: "${{ secrets.GCP_DOMAIN_NAME != '' && format('https://{0}/api', secrets.GCP_DOMAIN_NAME) || secrets.GCP_BACKEND_URL || 'https://nightrunner-backend-p6zq2tffpa-ue.a.run.app' }}"
           VITE_OIDC_AUTHORITY: "https://securetoken.google.com/${{ secrets.GCP_PROJECT_ID }}"
           VITE_OIDC_CLIENT_ID: "${{ secrets.GCP_GOOGLE_CLIENT_ID || secrets.GCP_PROJECT_ID }}"
           VITE_FIREBASE_API_KEY: "${{ secrets.GCP_FIREBASE_API_KEY }}"
