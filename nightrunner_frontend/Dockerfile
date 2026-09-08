@@ -28,9 +28,7 @@ ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
 ENV VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY
 ENV VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID
 
-# Use npx vite build directly — npm run build invokes env-cmd which requires
-# .env.local and will fail in Docker where that file is not present.
-RUN npx vite build
+RUN yarn build
 
 # ── Stage 2: runtime ──────────────────────────────────────────────────────────
 FROM nginx:1.27-alpine AS runtime
