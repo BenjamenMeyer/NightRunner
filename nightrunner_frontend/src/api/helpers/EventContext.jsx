@@ -16,46 +16,59 @@ export function EventProvider({ children }) {
 
     const auth = useAuth();
 
-    const [event, setEvent] = useState(null)
+    const [event, setEvent] = useState(null);
     const [eventId, setEventId] = useState(null);
 
     const [loading, setLoading] = useState(true);
-
     const [error, setError] = useState(null);
 
     const [showEventSelector, setShowEventSelector] = useState(false);
-
     const [selectableEvents, setSelectableEvents] = useState([]);
 
 
     //
-    // Determine the initial event
+    // Initialize event context when authentication changes.
     //
 
     useEffect(() => {
+
         if (auth.isLoading) {
             return;
         }
 
+        /*
+         * Logged out:
+         *
+         * EventContext has nothing to do.
+         */
         if (!auth.isAuthenticated) {
+
             setEvent(null);
             setEventId(null);
             setSelectableEvents([]);
             setShowEventSelector(false);
             setError(null);
             setLoading(false);
+
             return;
         }
 
         initializeEvent();
+
     }, [
         auth.isLoading,
         auth.isAuthenticated
     ]);
 
 
+    //
+    // Determine initial event state.
+    //
+
     async function initializeEvent() {
+
         try {
+
             setLoading(true);
             setError(null);
 
@@ -68,41 +81,73 @@ export function EventProvider({ children }) {
                 );
             }
 
-            const isSystemAdmin = user.isAdmin === true;
+            const isSystemAdmin = ApiService.userData.isSystemAdmin();
 
-            const roles = user.roles ?? {};
+            const roles =
+                user.roles ?? {};
 
-            const eventIds = Object.keys(roles);
+            const eventIds =
+                Object.keys(roles);
 
 
             //
-            // Root administrators may select any event.
+            // SYSTEM ADMIN
+            //
+            // System admins do NOT need an event assignment.
+            //
+            // They are allowed to select any event.
             //
 
             if (isSystemAdmin) {
-                await loadSelectableEvents();
 
-                setShowEventSelector(true);
+                const events =
+                    await loadSelectableEvents();
+
+                /*
+                 * There is no error if there are no events.
+                 *
+                 * The administrator simply has no event
+                 * selected yet.
+                 */
+                setEvent(null);
+                setEventId(null);
+
+                /*
+                 * If events exist, let the administrator
+                 * choose one.
+                 */
+                setShowEventSelector(
+                    events.length > 0
+                );
 
                 return;
             }
 
 
             //
-            // User has no event assignments.
+            // NORMAL USER
+            //
+            // Normal users must have at least one
+            // event assignment.
             //
 
             if (eventIds.length === 0) {
+
                 throw new Error(
                     "No event is currently assigned to your account."
                 );
+
             }
 
+
             //
-            // User has exactly one event.
+            // Exactly one event.
+            //
+            // Select it automatically.
             //
 
             if (eventIds.length === 1) {
+
                 await selectEvent(
                     eventIds[0]
                 );
@@ -112,17 +157,23 @@ export function EventProvider({ children }) {
 
 
             //
-            // User has multiple events.
+            // Multiple events.
+            //
+            // Let the user choose.
             //
 
-            await loadSelectableEvents(
-                eventIds
-            );
+            const events =
+                await loadSelectableEvents(
+                    eventIds
+                );
 
-            setShowEventSelector(true);
+            setShowEventSelector(
+                events.length > 0
+            );
 
         }
         catch (error) {
+
             console.error(
                 "Failed to initialize event context:",
                 error
@@ -132,14 +183,19 @@ export function EventProvider({ children }) {
                 error?.message ??
                 "Unable to determine the current event."
             );
+
         }
         finally {
+
             setLoading(false);
+
         }
+
     }
 
+
     //
-    // Load selectable events
+    // Load selectable events.
     //
 
     async function loadSelectableEvents(
@@ -155,9 +211,10 @@ export function EventProvider({ children }) {
                 : response?.events ?? [];
 
 
-        /*
-         * Root administrators can select any event.
-         */
+        //
+        // System admins can see every event.
+        //
+
         if (!allowedEventIds) {
 
             setSelectableEvents(
@@ -169,10 +226,10 @@ export function EventProvider({ children }) {
         }
 
 
-        /*
-         * Non-root users may only select events that
-         * appear in their roles map.
-         */
+        //
+        // Normal users can only see assigned events.
+        //
+
         const allowedIds =
             new Set(
                 allowedEventIds.map(
@@ -198,25 +255,19 @@ export function EventProvider({ children }) {
 
 
     //
-    // Get the currently selected event
+    // Get the currently selected event.
     //
 
     function getCurrentEvent() {
 
-        /*
-         * Event is already selected.
-         */
         if (event) {
-
             return event;
-
         }
 
-
         /*
-         * No event is selected.
-         *
-         * Open the selector so the user can choose one.
+         * This is particularly useful for system admins:
+         * they may be logged in without having selected
+         * an event yet.
          */
         openEventSelector();
 
@@ -226,16 +277,13 @@ export function EventProvider({ children }) {
 
 
     //
-    // Select an event
+    // Select an event.
     //
 
     async function selectEvent(
         selectedEvent
     ) {
 
-        /*
-         * Accept either an event ID or an event object.
-         */
         const selectedEventId =
             typeof selectedEvent === "object"
                 ? selectedEvent?.id
@@ -243,18 +291,20 @@ export function EventProvider({ children }) {
 
 
         if (!selectedEventId) {
-
             return null;
-
         }
 
 
-        /*
-         * Non-root users can only select events
-         * assigned to them.
-         */
+        //
+        // Verify access.
+        //
+        // System admins automatically have access to
+        // every event.
+        //
+        const isSystemAdmin = ApiService.userData.isSystemAdmin();
+
         if (
-            !ApiService.userData.isSystemAdmin() &&
+            !isSystemAdmin &&
             !ApiService.userData.hasEventAccess(
                 selectedEventId
             )
@@ -324,7 +374,7 @@ export function EventProvider({ children }) {
 
 
     //
-    // Open event selector
+    // Open event selector.
     //
 
     async function openEventSelector() {
@@ -345,10 +395,14 @@ export function EventProvider({ children }) {
             );
 
 
-        /*
-         * A non-root user with zero or one event
-         * has nothing to select.
-         */
+        //
+        // Normal users with zero or one event
+        // cannot change events.
+        //
+        // System admins are exempt because they can
+        // select any event, even with zero assignments.
+        //
+
         if (
             !isSystemAdmin &&
             eventIds.length <= 1
@@ -363,22 +417,33 @@ export function EventProvider({ children }) {
 
             setError(null);
 
-            if (isSystemAdmin) {
+            let events;
 
-                await loadSelectableEvents();
+            if (isSystemAdmin) {
+                events =
+                    await loadSelectableEvents();
 
             }
             else {
-
-                await loadSelectableEvents(
-                    eventIds
-                );
+                events =
+                    await loadSelectableEvents(
+                        eventIds
+                    );
 
             }
 
-            setShowEventSelector(
-                true
-            );
+            /*
+             * Do not show an empty selector.
+             */
+            if (events.length === 0) {
+
+                setShowEventSelector(false);
+
+                return;
+
+            }
+
+            setShowEventSelector(true);
 
         }
         catch (error) {
@@ -399,43 +464,32 @@ export function EventProvider({ children }) {
 
 
     //
-    // Change event
-    //
-    // Public alias for opening the selector.
+    // Change event.
     //
 
     function changeEvent() {
-
         return openEventSelector();
-
     }
 
 
     //
-    // Close selector
+    // Close selector.
     //
 
     function closeEventSelector() {
 
         /*
-         * Do not allow the selector to be closed when
-         * there is no current event.
+         * A system admin is allowed to have no selected
+         * event, so they can close the selector even
+         * when eventId is null.
          */
-        if (!eventId) {
-
-            return;
-
-        }
-
-        setShowEventSelector(
-            false
-        );
+        setShowEventSelector(false);
 
     }
 
 
     //
-    // Determine whether the user can change events
+    // Current user permissions.
     //
 
     const user =
@@ -455,42 +509,54 @@ export function EventProvider({ children }) {
 
 
     //
-    // Context value
+    // Context value.
     //
 
     const value = {
 
-        /*
-         * Current event
-         */
+        //
+        // Current event
+        //
+
         event,
         eventId,
 
-        /*
-         * Event state
-         */
+        //
+        // State
+        //
+
         loading,
         error,
+
         isSelected:
             eventId !== null,
 
-        /*
-         * Event operations
-         */
+        //
+        // Operations
+        //
+
         getCurrentEvent,
         selectEvent,
         changeEvent,
 
-        /*
-         * Selector operations
-         */
+        //
+        // Selector
+        //
+
         openEventSelector,
         closeEventSelector,
 
-        /*
-         * Permissions
-         */
-        canChangeEvent
+        //
+        // Permissions
+        //
+
+        canChangeEvent,
+
+        //
+        // Useful to consumers
+        //
+
+        isSystemAdmin
 
     };
 
