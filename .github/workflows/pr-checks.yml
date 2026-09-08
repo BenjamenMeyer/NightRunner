@@ -63,7 +63,7 @@ jobs:
 
       - name: Start Backend Docker Stack
         run: |
-          docker compose up -d
+          docker compose up -d db oidc app
           echo "Waiting for API server & OIDC server health checks..."
           for i in {1..30}; do
             API_OK=$(curl -s -f http://127.0.0.1:8000/health > /dev/null && echo "ok" || echo "fail")
