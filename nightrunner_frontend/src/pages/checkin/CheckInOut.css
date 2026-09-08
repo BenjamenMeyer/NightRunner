@@ -1,0 +1,253 @@
+/* ---------- Action Selection ---------- */
+
+.checkin-action-card {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 1.25rem;
+
+    padding: 1.5rem;
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+}
+
+.checkin-action-card h2 {
+
+    margin: 0;
+
+}
+
+.action-selector {
+
+    display: grid;
+
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 1rem;
+
+}
+
+.action-button {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: .4rem;
+
+    min-height: 130px;
+
+    padding: 1.25rem;
+
+    border: 2px solid var(--border);
+
+    border-radius: 12px;
+
+    background: var(--page-bg);
+
+    color: var(--text-primary);
+
+    cursor: pointer;
+
+    transition: .15s ease;
+
+}
+
+.action-button:hover {
+
+    border-color: var(--button-bg);
+
+    transform: translateY(-1px);
+
+}
+
+.action-button.active {
+
+    border-color: var(--button-bg);
+
+    background: var(--button-bg);
+
+    color: var(--header-text);
+
+}
+
+.action-button span:not(.action-icon) {
+
+    font-size: 1.15rem;
+
+    font-weight: 600;
+
+}
+
+.action-button small {
+
+    opacity: .75;
+
+}
+
+.action-icon {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 42px;
+
+    height: 42px;
+
+    border-radius: 50%;
+
+    font-size: 1.5rem;
+
+    font-weight: 700;
+
+}
+
+/* ---------- Submit ---------- */
+
+.checkin-submit-panel {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 1rem;
+
+    padding: 1.5rem;
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    text-align: center;
+
+}
+
+.checkin-submit-panel h2 {
+
+    margin: 0;
+
+}
+
+.checkin-submit-panel p {
+
+    margin: 0;
+
+    color: var(--text-secondary);
+
+    line-height: 1.7;
+
+}
+
+.checkin-submit-panel .primary-button {
+
+    min-width: 220px;
+
+    padding: .9rem 2rem;
+
+    font-size: 1.05rem;
+
+}
+
+.checkin-submit-panel .primary-button:disabled {
+
+    opacity: .5;
+
+    cursor: not-allowed;
+
+}
+
+/* ---------- Completion ---------- */
+
+.checkin-complete-panel {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 1rem;
+
+    padding: 2rem 1.5rem;
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    text-align: center;
+
+}
+
+.checkin-complete-icon {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 64px;
+
+    height: 64px;
+
+    border-radius: 50%;
+
+    background: #edf8ef;
+
+    border: 1px solid #7ac48a;
+
+    color: #2e7d32;
+
+    font-size: 2rem;
+
+    font-weight: 700;
+
+}
+
+.checkin-complete-panel h2 {
+
+    margin: 0;
+
+}
+
+.checkin-complete-panel p {
+
+    margin: 0;
+
+    color: var(--text-secondary);
+
+    line-height: 1.7;
+
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 600px) {
+
+    .action-selector {
+
+        grid-template-columns: 1fr;
+
+    }
+
+}

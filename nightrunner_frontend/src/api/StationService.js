@@ -10,35 +10,6 @@ export default class StationService {
 
         this.transport = transport;
         this.userService = userService;
-
-        this.fakeStations = [
-            {
-                id: "e92e54e4-7627-434c-a086-e63355bf4e5e",
-                name: "Ropes Challenge",
-                description: "A station focused on knot-tying and lashing skills.",
-                activeConfigurationId: "uuid-string-config-2",
-                event: "event-abc", // Used internally to map to mock events
-                members: [
-                    {
-                        userId: "uuid-string-user-1",
-                        role: "station_leader"
-                    }
-                ]
-            },
-            {
-                id: "uuid-string-station-2",
-                name: "First Aid Arena",
-                description: "Emergency response scenarios and triage basics.",
-                activeConfigurationId: "uuid-string-config-5",
-                event: "event-abc",
-                members: [
-                    {
-                        userId: "uuid-string-user-4",
-                        role: "station_leader"
-                    }
-                ]
-            }
-        ];
     }
 
     /**
@@ -56,10 +27,6 @@ export default class StationService {
             );
 
         }
-
-        //return this.fakeStations.find(
-        //    station => station.id === stationId
-        //);
 
         return await this.transport.get(
             `/stations/${stationId}`
@@ -89,8 +56,6 @@ export default class StationService {
             );
 
         }
-
-        // this.fakeStations
 
 
         return await this.transport.get(

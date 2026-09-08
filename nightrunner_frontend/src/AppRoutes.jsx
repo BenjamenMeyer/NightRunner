@@ -1,0 +1,226 @@
+import Dashboard from "./pages/Dashboard.jsx";
+import Me from "./pages/Me.jsx";
+import Events from "./pages/user/Events.jsx";
+import Patrols from "./pages/user/Patrols.jsx";
+import Stations from "./pages/user/Stations.jsx";
+import Scoring from "./pages/scoring/Scoring.jsx";
+
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import EventManager from "./pages/admin/events/EventManager.jsx";
+import EventCreator from "./pages/admin/events/EventCreator.jsx";
+import PatrolsAdmin from "./pages/admin/patrols/Patrols.jsx";
+import PatrolEditor from "./pages/admin/patrols/PatrolEditor.jsx";
+import StationsAdmin from "./pages/admin/stations/Stations.jsx";
+import StationEditor from "./pages/admin/stations/StationEditor.jsx";
+import UserManager from "./pages/admin/user/UserManager.jsx";
+import Reports from "./pages/admin/reports/Reports.jsx";
+import PrintReport from "./pages/admin/reports/PrintReport.jsx";
+import Configurations from "./pages/admin/configurations/Configurations.jsx";
+import ConfigurationEditor from "./pages/admin/configurations/ConfigurationEditor.jsx";
+
+import Login from "./pages/login/Login.jsx";
+import Register from "./pages/login/Register.jsx";
+import Callback from "./pages/Callback.jsx";
+
+import LiveScoring from "./pages/livescoring/LiveScoring.jsx";
+import CheckInOut from "@/pages/checkin/CheckInOut.jsx";
+
+
+export const ACCESS = {
+    PUBLIC: "public",
+    USER: "user",
+    ADMIN: "admin",
+    SYSTEM_ADMIN: "system-admin"
+};
+
+
+export const AppRoutes = [
+
+    {
+        path: "/",
+        element: Dashboard,
+        access: ACCESS.USER,
+        redirect: "/dashboard"
+    },
+
+
+    // Authentication
+
+    {
+        path: "/login",
+        element: Login,
+        name: "Login",
+        access: ACCESS.PUBLIC,
+        anonymous: true
+    },
+    {
+        path: "/register",
+        element: Register,
+        access: ACCESS.PUBLIC,
+        anonymous: true
+    },
+    {
+        path: "/callback",
+        element: Callback,
+        access: ACCESS.PUBLIC
+    },
+
+    // Application
+
+    {
+        path: "/dashboard",
+        element: Dashboard,
+        name: "Dashboard",
+        access: ACCESS.USER,
+        exact: true
+    },
+    {
+        path: "/events",
+        element: Events,
+        name: "Events",
+        access: ACCESS.USER
+    },
+    {
+        path: "/patrols",
+        element: Patrols,
+        name: "Patrols",
+        access: ACCESS.USER
+    },
+    {
+        path: "/stations",
+        element: Stations,
+        name: "Stations",
+        access: ACCESS.USER
+    },
+    {
+        path: "/scoring",
+        element: Scoring,
+        name: "Scoring",
+        access: ACCESS.USER
+    },
+    {
+        path: "/checkin",
+        element: CheckInOut,
+        name: "Check In / Check Out",
+        access: ACCESS.USER
+    },
+    {
+        path: "/me",
+        element: Me,
+        access: ACCESS.USER
+    },
+
+    // Live Scoring
+
+    {
+        path: "/live",
+        element: LiveScoring,
+        name: "Live Scoring",
+        access: ACCESS.USER,
+        layout: false,
+        newTab: true
+    },
+
+    // Administration
+
+    {
+        path: "/admin",
+        element: AdminDashboard,
+        name: "Admin Dashboard",
+        access: ACCESS.ADMIN,
+        exact: true
+    },
+    {
+        path: "/admin/events",
+        element: EventManager,
+        name: "Event Manager",
+        access: ACCESS.ADMIN
+    },
+    {
+        path: "/admin/events/create",
+        element: EventCreator,
+        access: ACCESS.ADMIN
+    },
+    {
+        path: "/admin/patrols",
+        element: PatrolsAdmin,
+        name: "Patrol Manager",
+        access: ACCESS.ADMIN
+    },
+    {
+        path: "/admin/patrols/create",
+        element: () => (
+            <PatrolEditor
+                mode="create"
+            />
+        ),
+        access: ACCESS.ADMIN
+    },
+    {
+        path: "/admin/patrols/edit",
+        element: () => (
+            <PatrolEditor
+                mode="edit"
+            />
+        ),
+        access: ACCESS.ADMIN
+    },
+    {
+        path: "/admin/stations",
+        element: StationsAdmin,
+        name: "Station Manager",
+        access: ACCESS.ADMIN
+    },
+    {
+        path: "/admin/stations/create",
+        element: StationEditor,
+        access: ACCESS.ADMIN
+    },
+    {
+        path: "/admin/stations/edit",
+        element: StationEditor,
+        access: ACCESS.ADMIN
+    },
+    {
+        path: "/admin/users",
+        element: UserManager,
+        name: "User Manager",
+        access: ACCESS.ADMIN
+    },
+    {
+        path: "/admin/reports",
+        element: Reports,
+        name: "Event Reports",
+        access: ACCESS.ADMIN
+    },
+    {
+        path: "/reports/print",
+        element: PrintReport,
+        access: ACCESS.USER,
+        layout: false
+    },
+    {
+        path: "/admin/configurations",
+        element: Configurations,
+        name: "Configuration Manager",
+        access: ACCESS.SYSTEM_ADMIN
+    },
+    {
+        path: "/admin/configurations/create",
+        element: () => (
+            <ConfigurationEditor
+                mode="create"
+            />
+        ),
+        access: ACCESS.SYSTEM_ADMIN
+    },
+    {
+        path: "/admin/configurations/edit",
+        element: () => (
+            <ConfigurationEditor
+                mode="edit"
+            />
+        ),
+        access: ACCESS.SYSTEM_ADMIN
+    }
+];

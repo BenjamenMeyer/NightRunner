@@ -516,31 +516,6 @@ paths:
       responses:
         '201':
           description: Scores submitted successfully.
-
-  /v1/reports/event/{eventId}:
-    get:
-      summary: Get Event Report
-      description: Retrieves the final scoring report for a given event.
-      tags:
-        - Reports
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: eventId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: The event report object.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EventReport'
-        '404':
-          description: Report not found for this event.
   /v1/reports/events/{eventId}:
     get:
       summary: Get Event Report
@@ -1221,6 +1196,59 @@ components:
           type: string
         score:
           type: number
+    StationReport:
+      type: object
+      properties:
+        stationId:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        patrols:
+          type: array
+          items:
+            $ref: '#/components/schemas/StationReportPatrol'
+    StationReportPatrol:
+      type: object
+      properties:
+        patrolId:
+          type: string
+          format: uuid
+        patrolName:
+          type: string
+          nullable: true
+        total:
+          type: number
+          format: double
+        breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/StationReportTask'
+    StationReportTask:
+      type: object
+      properties:
+        taskId:
+          type: string
+          format: uuid
+        taskName:
+          type: string
+          nullable: true
+        rawScore:
+          type: number
+          format: double
+        weight:
+          type: number
+          format: double
+        weightedScore:
+          type: number
+          format: double
+        active:
+          type: boolean
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
     Error:
       type: object
       properties:
