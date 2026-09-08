@@ -165,7 +165,7 @@ export default function AdminDashboard() {
 
                             <Link
                                 className="primary-button"
-                                to="/admin/event"
+                                to="/admin/events"
                             >
                                 Manage Event
                             </Link>

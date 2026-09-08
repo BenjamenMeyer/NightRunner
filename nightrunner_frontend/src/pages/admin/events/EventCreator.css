@@ -1,71 +1,327 @@
 .event-creator {
-
-    padding: 1rem;
-
+    width: 100%;
     max-width: 1200px;
-
     margin: 0 auto;
-
+    padding: 1.5rem;
+    box-sizing: border-box;
 }
 
-.event-creator-notice {
+.event-creator .page-header {
+    margin-bottom: 1.5rem;
+}
 
-    padding: 1rem;
+.event-creator .page-header h1 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.event-creator .page-header p {
+    margin: .5rem 0 0;
+    color: var(--text-secondary);
+}
+
+.event-creator .event-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.event-creator .admin-section {
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card-bg);
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
+}
+
+.event-creator .section-header {
+    margin-bottom: 1.5rem;
+}
+
+.event-creator .section-header h2 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.event-creator .section-header p {
+    margin: .5rem 0 0;
+    color: var(--text-secondary);
+}
+
+.event-creator .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+.event-creator .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    min-width: 0;
+}
+
+.event-creator .form-group-full {
+    grid-column: 1 / -1;
+}
+
+.event-creator .form-group label {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.event-creator .form-group input,
+.event-creator .form-group textarea,
+.event-creator .form-group select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: .7rem .8rem;
+
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+
+    background: var(--input-bg);
+    color: var(--input-text);
+
+    font: inherit;
+
+    transition:
+            border-color .15s ease,
+            box-shadow .15s ease;
+}
+
+.event-creator .form-group input,
+.event-creator .form-group select {
+    min-height: 42px;
+}
+
+.event-creator .form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.event-creator .form-group input::placeholder,
+.event-creator .form-group textarea::placeholder {
+    color: var(--text-secondary);
+    opacity: .75;
+}
+
+/*
+ * Theme selector
+ */
+
+.event-creator .form-group select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    cursor: pointer;
+
+    padding-right: 2.5rem;
+
+    background-color: var(--input-bg);
+    color: var(--input-text);
+
+    background-image:
+            linear-gradient(
+                    45deg,
+                    transparent 50%,
+                    var(--text-secondary) 50%
+            ),
+            linear-gradient(
+                    135deg,
+                    var(--text-secondary) 50%,
+                    transparent 50%
+            );
+
+    background-position:
+            calc(100% - 17px) 50%,
+            calc(100% - 11px) 50%;
+
+    background-size:
+            6px 6px,
+            6px 6px;
+
+    background-repeat: no-repeat;
+}
+
+.event-creator .form-group select option {
+    background: var(--input-bg);
+    color: var(--input-text);
+}
+
+.event-creator .form-group input:focus,
+.event-creator .form-group textarea:focus,
+.event-creator .form-group select:focus {
+    outline: none;
+
+    border-color: var(--input-focus);
+
+    box-shadow:
+            0 0 0 3px
+            rgba(121, 6, 13, .12);
+}
+
+.event-creator .form-group input:disabled,
+.event-creator .form-group textarea:disabled,
+.event-creator .form-group select:disabled {
+    cursor: not-allowed;
+    opacity: .65;
+}
+
+.event-creator .form-group small {
+    color: var(--text-secondary);
+    font-size: .875rem;
+    line-height: 1.4;
+}
+
+/*
+ * Event setup notice
+ */
+
+.event-creator-notice {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+
+    padding: 1rem 1.1rem;
 
     border: 1px solid var(--border);
-
     border-radius: 8px;
 
-    background: var(--card-bg);
-
+    background: var(--page-bg);
 }
 
 .event-creator-notice strong {
-
     display: block;
-
-    margin-bottom: .5rem;
-
+    color: var(--text-primary);
 }
 
 .event-creator-notice p {
-
     margin: 0;
-
-    color: var(--muted-text);
-
+    color: var(--text-secondary);
+    line-height: 1.5;
 }
+
+/*
+ * Error
+ */
+
+.event-creator .error-banner {
+    margin-bottom: 1.25rem;
+    padding: .85rem 1rem;
+
+    border: 1px solid var(--error);
+    border-radius: 6px;
+
+    background: var(--card-bg);
+    color: var(--error);
+}
+
+/*
+ * Form actions
+ */
 
 .event-creator .form-actions {
-
     display: flex;
-
     justify-content: flex-end;
+    align-items: center;
 
-    gap: 1rem;
+    gap: .75rem;
 
-    margin-top: 1rem;
-
+    margin-top: .25rem;
 }
+
+.event-creator .form-actions button {
+    min-width: 140px;
+}
+
+/*
+ * Primary button
+ */
+
+.event-creator .primary-button {
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+}
+
+.event-creator .primary-button:hover:not(:disabled) {
+    background: var(--button-hover);
+}
+
+/*
+ * Secondary button
+ */
+
+.event-creator .secondary-button {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.event-creator .secondary-button:hover:not(:disabled) {
+    background: var(--page-bg);
+}
+
+/*
+ * Disabled buttons
+ */
+
+.event-creator .form-actions button:disabled {
+    cursor: not-allowed;
+    opacity: .65;
+}
+
+/*
+ * Mobile
+ */
 
 @media (max-width: 768px) {
 
     .event-creator {
+        padding: 1rem;
+    }
 
-        padding: .75rem;
+    .event-creator .admin-section {
+        padding: 1rem;
+    }
 
+    .event-creator .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .event-creator .form-group-full {
+        grid-column: auto;
     }
 
     .event-creator .form-actions {
-
         flex-direction: column-reverse;
-
+        align-items: stretch;
     }
 
     .event-creator .form-actions button {
-
         width: 100%;
+        min-width: 0;
+    }
 
+}
+
+@media (max-width: 480px) {
+
+    .event-creator {
+        padding: .75rem;
+    }
+
+    .event-creator .admin-section {
+        padding: .9rem;
+        border-radius: 8px;
+    }
+
+    .event-creator .section-header {
+        margin-bottom: 1.1rem;
     }
 
 }

@@ -17,10 +17,13 @@ export default function EventManager() {
         event,
         eventId,
         loading: eventLoading,
-        error: eventError
+        error: eventError,
+        selectEvent
     } = useEventContext();
 
     const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
@@ -90,6 +93,17 @@ export default function EventManager() {
                 );
             }
 
+            if (
+                !Number.isInteger(
+                    form.roundingPrecision
+                ) ||
+                form.roundingPrecision < 1
+            ) {
+                throw new Error(
+                    "Rounding precision must be a positive whole number."
+                );
+            }
+
             if (!eventId || !event) {
                 throw new Error(
                     "No event is currently selected."
@@ -128,6 +142,14 @@ export default function EventManager() {
                     updatedEvent.theme ?? "night-ops"
             });
 
+            /*
+             * Refresh the selected event in EventContext.
+             *
+             * EventContext remains the source of truth for
+             * the currently selected event.
+             */
+            await selectEvent(eventId);
+
             setSuccess(
                 "Event details saved successfully."
             );
@@ -143,6 +165,66 @@ export default function EventManager() {
             );
         } finally {
             setSaving(false);
+        }
+    }
+
+    async function handleDelete() {
+        if (!eventId || !event) {
+            setError(
+                "No event is currently selected."
+            );
+
+            return;
+        }
+
+        const eventName =
+            event.name ??
+            "this event";
+
+        const confirmed =
+            window.confirm(
+                `Are you sure you want to delete "${eventName}"?\n\nThis action cannot be undone.`
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        setDeleting(true);
+        setError(null);
+        setSuccess(null);
+
+        try {
+            await ApiService.eventData.deleteEvent(
+                eventId
+            );
+
+            /*
+             * Clear the selected event from EventContext.
+             *
+             * Passing null allows EventContext to represent
+             * that there is no longer a selected event.
+             */
+            await selectEvent(null);
+
+            navigate(
+                "/admin/",
+                {
+                    replace: true
+                }
+            );
+        } catch (error) {
+            console.error(
+                "Failed to delete event:",
+                error
+            );
+
+            setError(
+                error?.message ??
+                "Failed to delete event."
+            );
+        } finally {
+            setDeleting(false);
         }
     }
 
@@ -262,7 +344,10 @@ export default function EventManager() {
                                 type="text"
                                 value={form.name}
                                 onChange={handleChange}
-                                disabled={saving}
+                                disabled={
+                                    saving ||
+                                    deleting
+                                }
                                 required
                             />
                         </div>
@@ -278,7 +363,10 @@ export default function EventManager() {
                                 type="date"
                                 value={form.date}
                                 onChange={handleChange}
-                                disabled={saving}
+                                disabled={
+                                    saving ||
+                                    deleting
+                                }
                                 required
                             />
                         </div>
@@ -293,7 +381,10 @@ export default function EventManager() {
                                 name="description"
                                 value={form.description}
                                 onChange={handleChange}
-                                disabled={saving}
+                                disabled={
+                                    saving ||
+                                    deleting
+                                }
                                 rows={5}
                             />
                         </div>
@@ -308,15 +399,22 @@ export default function EventManager() {
                                 name="theme"
                                 value={form.theme}
                                 onChange={handleChange}
-                                disabled={saving}
+                                disabled={
+                                    saving ||
+                                    deleting
+                                }
                             >
-                                {Object.entries(brandings).map(
+                                {Object.entries(
+                                    brandings
+                                ).map(
                                     ([id, theme]) => (
                                         <option
                                             key={id}
                                             value={id}
                                         >
-                                            {theme.organizationName}
+                                            {
+                                                theme.organizationName
+                                            }
                                         </option>
                                     )
                                 )}
@@ -337,9 +435,14 @@ export default function EventManager() {
                                 name="roundingPrecision"
                                 type="number"
                                 min="1"
-                                value={form.roundingPrecision}
+                                value={
+                                    form.roundingPrecision
+                                }
                                 onChange={handleChange}
-                                disabled={saving}
+                                disabled={
+                                    saving ||
+                                    deleting
+                                }
                                 required
                             />
 
@@ -409,12 +512,31 @@ export default function EventManager() {
                     <button
                         type="submit"
                         className="primary-button"
-                        disabled={saving}
+                        disabled={
+                            saving ||
+                            deleting
+                        }
                     >
                         {saving
                             ? "Saving..."
                             : "Save Changes"}
                     </button>
+
+                    {isSystemAdmin && (
+                        <button
+                            type="button"
+                            className="danger-button"
+                            onClick={handleDelete}
+                            disabled={
+                                saving ||
+                                deleting
+                            }
+                        >
+                            {deleting
+                                ? "Deleting..."
+                                : "Delete Event"}
+                        </button>
+                    )}
                 </div>
             </form>
         </div>

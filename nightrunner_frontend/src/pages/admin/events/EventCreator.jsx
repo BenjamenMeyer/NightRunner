@@ -11,7 +11,6 @@ export default function EventCreator() {
     const navigate = useNavigate();
 
     const [saving, setSaving] = useState(false);
-
     const [error, setError] = useState(null);
 
     const [form, setForm] = useState({
@@ -21,6 +20,11 @@ export default function EventCreator() {
         roundingPrecision: 1000,
         theme: "night-ops"
     });
+
+
+    //
+    // Form changes
+    //
 
     function handleChange(event) {
 
@@ -42,6 +46,11 @@ export default function EventCreator() {
 
     }
 
+
+    //
+    // Create event
+    //
+
     async function handleSubmit(event) {
 
         event.preventDefault();
@@ -51,10 +60,16 @@ export default function EventCreator() {
 
         try {
 
-            const name = form.name.trim();
+            const name =
+                form.name.trim();
 
             const description =
                 form.description.trim();
+
+
+            //
+            // Validate name
+            //
 
             if (!name) {
 
@@ -64,6 +79,11 @@ export default function EventCreator() {
 
             }
 
+
+            //
+            // Validate date
+            //
+
             if (!form.date) {
 
                 throw new Error(
@@ -71,6 +91,11 @@ export default function EventCreator() {
                 );
 
             }
+
+
+            //
+            // Validate rounding precision
+            //
 
             if (
                 !Number.isInteger(
@@ -85,22 +110,38 @@ export default function EventCreator() {
 
             }
 
-            const createdEvent = await ApiService.eventData.createEvent({
+
+            //
+            // Create event
+            //
+
+            await ApiService.eventData.createEvent({
+
                 name,
-                date: form.date,
+
+                date:
+                form.date,
+
                 description,
-                roundingPrecision: form.roundingPrecision,
-                theme: form.theme
+
+                roundingPrecision:
+                form.roundingPrecision,
+
+                theme:
+                form.theme
+
             });
 
-            /*
-             * The backend creates the event ID.
-             *
-             * After creation, send the administrator
-             * to the event management page.
-             */
+
+            //
+            // Return to the event manager.
+            //
+            // Event selection is handled by EventContext,
+            // so we do not navigate to an event-specific URL.
+            //
+
             navigate(
-                `/admin/event/${createdEvent.id}`,
+                "/events",
                 {
                     replace: true
                 }
@@ -115,7 +156,7 @@ export default function EventCreator() {
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to create event."
             );
 
@@ -127,6 +168,7 @@ export default function EventCreator() {
         }
 
     }
+
 
     return (
 
@@ -146,6 +188,7 @@ export default function EventCreator() {
 
             </div>
 
+
             {error && (
 
                 <div className="error-banner">
@@ -155,6 +198,7 @@ export default function EventCreator() {
                 </div>
 
             )}
+
 
             <form
                 className="event-form"
@@ -177,6 +221,7 @@ export default function EventCreator() {
                         </div>
 
                     </div>
+
 
                     <div className="form-grid">
 
@@ -251,23 +296,29 @@ export default function EventCreator() {
                                 onChange={handleChange}
                                 disabled={saving}
                             >
+
                                 {Object.entries(brandings).map(
                                     ([id, theme]) => (
+
                                         <option
                                             key={id}
                                             value={id}
                                         >
                                             {theme.organizationName}
                                         </option>
+
                                     )
                                 )}
+
                             </select>
 
                             <small>
-                                Visual color theme applied to the user interface for this event.
+                                Visual color theme applied to
+                                the user interface for this event.
                             </small>
 
                         </div>
+
 
                         <div className="form-group">
 
@@ -288,8 +339,7 @@ export default function EventCreator() {
                             />
 
                             <small>
-                                Used when calculating scoring
-                                precision.
+                                Used when calculating scoring.
                             </small>
 
                         </div>
@@ -316,6 +366,7 @@ export default function EventCreator() {
 
                     </div>
 
+
                     <div className="event-creator-notice">
 
                         <strong>
@@ -339,13 +390,11 @@ export default function EventCreator() {
                         type="button"
                         className="secondary-button"
                         onClick={() =>
-                            navigate("/admin")
+                            navigate("/events")
                         }
                         disabled={saving}
                     >
-
                         Cancel
-
                     </button>
 
                     <button
@@ -353,20 +402,13 @@ export default function EventCreator() {
                         className="primary-button"
                         disabled={saving}
                     >
-
                         {saving
                             ? "Creating..."
                             : "Create Event"
                         }
-
                     </button>
-
                 </div>
-
             </form>
-
         </div>
-
     );
-
 }
