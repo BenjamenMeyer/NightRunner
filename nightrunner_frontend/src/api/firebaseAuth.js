@@ -4,6 +4,7 @@ import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signInWithPopup,
+    signInWithRedirect,
     GoogleAuthProvider,
     signOut,
     onIdTokenChanged,
@@ -53,12 +54,19 @@ export async function firebaseRegisterWithEmail(email, password) {
 }
 
 /**
- * Sign in with Google Social Auth via Firebase Auth popup
+ * Sign in with Google Social Auth via Firebase Auth
  */
 export async function firebaseLoginWithGoogle() {
     if (!auth) throw new Error("Firebase Auth is not enabled.");
     const provider = new GoogleAuthProvider();
-    return await signInWithPopup(auth, provider);
+    try {
+        return await signInWithPopup(auth, provider);
+    } catch (err) {
+        if (err.code === "auth/popup-blocked" || err.code === "auth/popup-closed-by-user" || err.message?.includes("Cross-Origin-Opener-Policy")) {
+            return await signInWithRedirect(auth, provider);
+        }
+        throw err;
+    }
 }
 
 /**
