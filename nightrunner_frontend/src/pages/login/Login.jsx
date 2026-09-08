@@ -8,6 +8,8 @@ import {
     firebaseSendPasswordResetEmail
 } from "@/api/firebaseAuth.js";
 
+import ApiService from "@/api/ApiService.js";
+
 import "./Login.css";
 
 function Login() {
@@ -62,6 +64,7 @@ function Login() {
         setIsSubmitting(true);
         try {
             await firebaseLoginWithEmail(email, password);
+            await ApiService.userData.get().catch(() => {});
             navigate(fromPath);
         } catch (err) {
             console.error("Firebase Email login error:", err);
@@ -76,6 +79,7 @@ function Login() {
         setIsSubmitting(true);
         try {
             await firebaseLoginWithGoogle();
+            await ApiService.userData.get().catch(() => {});
             navigate(fromPath);
         } catch (err) {
             console.error("Firebase Google login error:", err);
