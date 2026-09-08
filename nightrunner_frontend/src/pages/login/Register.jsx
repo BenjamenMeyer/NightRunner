@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
     isFirebaseMode,
-    firebaseRegisterWithEmail
+    firebaseRegisterWithEmail,
+    firebaseUpdateProfile
 } from "@/api/firebaseAuth.js";
 import ApiService from "../../api/ApiService.js";
 import "./Register.css";
@@ -60,7 +61,12 @@ function Register() {
         try {
 
             if (isFirebaseMode) {
-                await firebaseRegisterWithEmail(form.email, form.password);
+                const userCredential = await firebaseRegisterWithEmail(form.email, form.password);
+                if (form.displayName && userCredential?.user) {
+                    await firebaseUpdateProfile(userCredential.user, {
+                        displayName: form.displayName
+                    });
+                }
             } else {
                 await ApiService.register({
 
