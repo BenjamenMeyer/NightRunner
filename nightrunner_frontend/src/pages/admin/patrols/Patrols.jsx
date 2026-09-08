@@ -7,7 +7,9 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import ApiService from "../../../api/ApiService.js";
-import { useEventContext } from "../../../api/helpers/EventContext.jsx";
+import { useEventContext } from "@/api/helpers/EventContext.jsx";
+
+import QRCodeModal from "./QRCodeModal.jsx";
 
 import "./Patrols.css";
 
@@ -26,6 +28,8 @@ export default function Patrols() {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const [qrPatrol, setQrPatrol] = useState(null);
 
     useEffect(() => {
         if (eventLoading) {
@@ -101,7 +105,7 @@ export default function Patrols() {
         }
 
         const confirmed = window.confirm(
-            `Delete "${patrol.programName}"?\n\n` +
+            `Delete "${patrol.name}"?\n\n` +
             "This action cannot be undone."
         );
 
@@ -141,7 +145,7 @@ export default function Patrols() {
         }
 
         return patrols.filter(patrol =>
-            patrol.programName
+            patrol.name
                 ?.toLowerCase()
                 .includes(query)
         );
@@ -308,15 +312,15 @@ export default function Patrols() {
                                     <td>
                                         <div className="patrol-name">
                                             <strong>
-                                                {patrol.programName}
+                                                {patrol.name}
                                             </strong>
                                         </div>
                                     </td>
 
                                     <td>
-                                            <span className="member-count">
-                                                {patrol.members?.length ?? 0}
-                                            </span>{" "}
+                                        <span className="member-count">
+                                            {patrol.members?.length ?? 0}
+                                        </span>{" "}
                                         {patrol.members?.length === 1
                                             ? "member"
                                             : "members"}
@@ -331,6 +335,16 @@ export default function Patrols() {
 
                                     <td>
                                         <div className="row-actions">
+                                            <button
+                                                type="button"
+                                                className="secondary-button small"
+                                                onClick={() =>
+                                                    setQrPatrol(patrol)
+                                                }
+                                            >
+                                                QR Code
+                                            </button>
+
                                             <button
                                                 type="button"
                                                 className="secondary-button small"
@@ -365,6 +379,15 @@ export default function Patrols() {
                     </div>
                 )}
             </section>
+
+            {qrPatrol && (
+                <QRCodeModal
+                    patrol={qrPatrol}
+                    onClose={() =>
+                        setQrPatrol(null)
+                    }
+                />
+            )}
         </div>
     );
 }

@@ -71,11 +71,11 @@ createRoot(
             <AuthProvider {...oidcConfig}>
                 <AuthServiceProvider>
 
-                    <EventProvider>
-                        <BrandingProvider>
+                    <BrandingProvider>
+                        <EventProvider>
                             <App />
-                        </BrandingProvider>
-                    </EventProvider>
+                        </EventProvider>
+                    </BrandingProvider>
 
                 </AuthServiceProvider>
             </AuthProvider>

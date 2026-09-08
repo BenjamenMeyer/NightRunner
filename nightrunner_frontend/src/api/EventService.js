@@ -86,7 +86,19 @@ export default class EventService {
             "/events",
             event
         );
-
     }
 
+
+    /**
+     * Deletes an event.
+     *
+     * @param {string} eventId
+     * @returns {Promise<void>}
+     */
+    async deleteEvent(eventId) {
+        if (!eventId) {
+            throw new Error( "An event ID is required." );
+        }
+        return await this.transport.delete( `/events/${eventId}` );
+    }
 }

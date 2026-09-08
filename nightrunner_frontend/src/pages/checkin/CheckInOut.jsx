@@ -300,7 +300,7 @@ export default function CheckInOut() {
                                 onSelect={
                                     handlePatrolSelection
                                 }
-                                displayField="programName"
+                                displayField="name"
                                 allowScan
                             />
 
@@ -324,7 +324,7 @@ export default function CheckInOut() {
                                 {canSubmit ? (
                                     <p>
                                         <strong>
-                                            {selectedPatrol.programName}
+                                            {selectedPatrol.name}
                                         </strong>
                                         {" "}
                                         will be marked as{" "}
@@ -369,7 +369,7 @@ export default function CheckInOut() {
 
                             <p>
                                 <strong>
-                                    {selectedPatrol.programName}
+                                    {selectedPatrol.name}
                                 </strong>
                                 {" "}
                                 has been{" "}

@@ -9,9 +9,9 @@ import {
 } from "@/api/firebaseAuth.js";
 
 import ApiService from "@/api/ApiService.js";
-import useBranding from "@/branding/useBranding.js";
 
 import "./Login.css";
+import useBranding from "@/branding/UseBranding.js";
 
 function Login() {
 

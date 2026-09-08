@@ -3,17 +3,11 @@
    ========================================================= */
 
 .event-manager {
-
     width: 100%;
-
     max-width: 1400px;
-
     margin: 0 auto;
-
     padding: 1rem;
-
     box-sizing: border-box;
-
 }
 
 
@@ -22,31 +16,21 @@
    ========================================================= */
 
 .event-manager .page-header {
-
     display: flex;
-
     justify-content: space-between;
-
     align-items: flex-start;
-
     gap: 1rem;
-
     margin-bottom: 1.5rem;
-
 }
 
 .event-manager .page-header h1 {
-
     margin: 0 0 .35rem;
-
+    color: var(--text-primary);
 }
 
 .event-manager .page-header p {
-
     margin: 0;
-
     color: var(--text-secondary);
-
 }
 
 
@@ -54,92 +38,63 @@
    Sections
    ========================================================= */
 
-.admin-section {
-
+.event-manager .admin-section {
     background: var(--card-bg);
-
     border: 1px solid var(--border);
-
     border-radius: 12px;
-
     padding: 1.5rem;
-
     margin-bottom: 1.5rem;
-
+    box-shadow: var(--shadow);
 }
 
-.section-header {
-
+.event-manager .section-header {
     margin-bottom: 1.25rem;
-
 }
 
-.section-header h2 {
-
+.event-manager .section-header h2 {
     margin: 0 0 .35rem;
-
+    color: var(--text-primary);
 }
 
-.section-header p {
-
+.event-manager .section-header p {
     margin: 0;
-
     color: var(--text-secondary);
-
 }
 
 
 /* =========================================================
    Event Selection
-   System Admin only when no event is assigned
    ========================================================= */
 
-.event-selection {
-
+.event-manager .event-selection {
     background: var(--card-bg);
-
     border: 1px solid var(--border);
-
     border-radius: 12px;
-
     padding: 1.5rem;
-
     margin-bottom: 1.5rem;
-
+    box-shadow: var(--shadow);
 }
 
-.event-selection h2 {
-
+.event-manager .event-selection h2 {
     margin: 0 0 .4rem;
-
+    color: var(--text-primary);
 }
 
-.event-selection p {
-
+.event-manager .event-selection p {
     margin: 0 0 1.25rem;
-
     color: var(--text-secondary);
-
 }
 
-.event-selection-controls {
-
+.event-manager .event-selection-controls {
     display: flex;
-
     align-items: flex-end;
-
     gap: 1rem;
-
     flex-wrap: wrap;
-
 }
 
-.event-selection-controls .form-group {
-
+.event-manager .event-selection-controls .form-group {
     flex: 1;
-
     min-width: 250px;
-
 }
 
 
@@ -147,107 +102,133 @@
    Forms
    ========================================================= */
 
-.form-grid {
-
+.event-manager .form-grid {
     display: grid;
-
     grid-template-columns:
         repeat(2, minmax(0, 1fr));
-
     gap: 1.25rem;
-
 }
 
-.form-group {
-
+.event-manager .form-group {
     display: flex;
-
     flex-direction: column;
-
     gap: .45rem;
-
 }
 
-.form-group-full {
-
+.event-manager .form-group-full {
     grid-column: 1 / -1;
-
 }
 
-.form-group label {
-
+.event-manager .form-group label {
+    color: var(--text-primary);
     font-weight: 600;
-
 }
 
-.form-group input,
-.form-group textarea,
-.form-group select {
-
+.event-manager .form-group input,
+.event-manager .form-group textarea,
+.event-manager .form-group select {
     width: 100%;
-
     box-sizing: border-box;
-
     padding: .75rem .85rem;
 
-    border: 1px solid var(--border);
-
+    border: 1px solid var(--input-border);
     border-radius: 8px;
 
-    background: var(--background);
-
-    color: var(--text);
+    background: var(--input-bg);
+    color: var(--input-text);
 
     font: inherit;
 
     transition:
             border-color .15s ease,
             box-shadow .15s ease;
-
 }
 
-.form-group textarea {
+.event-manager .form-group input,
+.event-manager .form-group select {
+    min-height: 42px;
+}
 
+.event-manager .form-group textarea {
     resize: vertical;
-
     min-height: 120px;
-
+    line-height: 1.5;
 }
 
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
+.event-manager .form-group input::placeholder,
+.event-manager .form-group textarea::placeholder {
+    color: var(--text-secondary);
+}
 
-    outline: none;
 
-    border-color: var(--primary);
+/* =========================================================
+   Theme Select
+   ========================================================= */
 
-    box-shadow:
-            0 0 0 2px
-            color-mix(
-                    in srgb,
-                    var(--primary) 20%,
-                    transparent
+.event-manager .form-group select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    cursor: pointer;
+
+    padding-right: 2.5rem;
+
+    background-color: var(--input-bg);
+    color: var(--input-text);
+
+    background-image:
+            linear-gradient(
+                    45deg,
+                    transparent 50%,
+                    var(--text-secondary) 50%
+            ),
+            linear-gradient(
+                    135deg,
+                    var(--text-secondary) 50%,
+                    transparent 50%
             );
 
+    background-position:
+            calc(100% - 17px) 50%,
+            calc(100% - 11px) 50%;
+
+    background-size:
+            6px 6px,
+            6px 6px;
+
+    background-repeat: no-repeat;
 }
 
-.form-group input:disabled,
-.form-group textarea:disabled,
-.form-group select:disabled {
+.event-manager .form-group select option {
+    background: var(--input-bg);
+    color: var(--input-text);
+}
 
+
+/* =========================================================
+   Form Focus
+   ========================================================= */
+
+.event-manager .form-group input:focus,
+.event-manager .form-group textarea:focus,
+.event-manager .form-group select:focus {
+    outline: none;
+    border-color: var(--input-focus);
+    box-shadow: var(--shadow);
+}
+
+.event-manager .form-group input:disabled,
+.event-manager .form-group textarea:disabled,
+.event-manager .form-group select:disabled {
     opacity: .65;
-
     cursor: not-allowed;
-
 }
 
-.form-group small {
-
+.event-manager .form-group small {
     color: var(--text-secondary);
-
     font-size: .85rem;
-
+    line-height: 1.4;
 }
 
 
@@ -255,65 +236,45 @@
    Event Information
    ========================================================= */
 
-.event-information-grid {
-
+.event-manager .event-information-grid {
     display: grid;
-
     grid-template-columns:
         repeat(4, minmax(0, 1fr));
-
     gap: 1rem;
-
 }
 
-.event-information-grid > div {
-
+.event-manager .event-information-grid > div {
     display: flex;
-
     flex-direction: column;
-
     gap: .35rem;
 
     padding: 1rem;
 
-    background: var(--background);
-
+    background: var(--page-bg);
     border: 1px solid var(--border);
-
     border-radius: 8px;
 
     min-width: 0;
-
 }
 
-.information-label {
-
+.event-manager .information-label {
     font-size: .8rem;
-
     font-weight: 600;
-
     text-transform: uppercase;
-
     letter-spacing: .04em;
-
     color: var(--text-secondary);
-
 }
 
-.event-information-grid strong {
-
+.event-manager .event-information-grid strong {
     font-size: 1.25rem;
-
+    color: var(--text-primary);
 }
 
-.event-information-grid code {
-
+.event-manager .event-information-grid code {
+    color: var(--text-primary);
     font-size: .8rem;
-
     overflow-wrap: anywhere;
-
     word-break: break-word;
-
 }
 
 
@@ -321,16 +282,56 @@
    Form Actions
    ========================================================= */
 
-.form-actions {
-
+.event-manager .form-actions {
     display: flex;
-
     justify-content: flex-end;
-
+    align-items: center;
     gap: .75rem;
-
     margin-top: 1rem;
+}
 
+
+/* =========================================================
+   Buttons
+   ========================================================= */
+
+.event-manager .primary-button {
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+}
+
+.event-manager .primary-button:hover:not(:disabled) {
+    background: var(--button-hover);
+}
+
+.event-manager .secondary-button {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.event-manager .secondary-button:hover:not(:disabled) {
+    background: var(--page-bg);
+}
+
+.event-manager .danger-button {
+    background: var(--error);
+    color: var(--button-text);
+    border: none;
+}
+
+.event-manager .danger-button:hover:not(:disabled) {
+    background: var(--button-hover);
+}
+
+.event-manager .form-actions button {
+    min-width: 140px;
+}
+
+.event-manager .form-actions button:disabled {
+    opacity: .65;
+    cursor: not-allowed;
 }
 
 
@@ -338,37 +339,24 @@
    Messages
    ========================================================= */
 
-.error-banner,
-.success-banner {
-
+.event-manager .error-banner,
+.event-manager .success-banner {
     padding: 1rem 1.1rem;
-
     border-radius: 8px;
-
     margin-bottom: 1.5rem;
-
     font-weight: 500;
-
 }
 
-.error-banner {
-
-    background: rgba(220, 53, 69, .12);
-
-    border: 1px solid rgba(220, 53, 69, .35);
-
-    color: #c62828;
-
+.event-manager .error-banner {
+    background: var(--card-bg);
+    border: 1px solid var(--error);
+    color: var(--error);
 }
 
-.success-banner {
-
-    background: rgba(76, 175, 80, .12);
-
-    border: 1px solid rgba(76, 175, 80, .35);
-
-    color: #2e7d32;
-
+.event-manager .success-banner {
+    background: var(--card-bg);
+    border: 1px solid var(--success);
+    color: var(--success);
 }
 
 
@@ -376,18 +364,12 @@
    Loading
    ========================================================= */
 
-.loading-panel {
-
+.event-manager .loading-panel {
     display: flex;
-
     align-items: center;
-
     justify-content: center;
-
     min-height: 250px;
-
     color: var(--text-secondary);
-
 }
 
 
@@ -397,11 +379,9 @@
 
 @media (max-width: 900px) {
 
-    .event-information-grid {
-
+    .event-manager .event-information-grid {
         grid-template-columns:
             repeat(2, minmax(0, 1fr));
-
     }
 
 }
@@ -410,52 +390,38 @@
 @media (max-width: 700px) {
 
     .event-manager {
-
         padding: .75rem;
-
     }
 
     .event-manager .page-header {
-
         flex-direction: column;
-
     }
 
-    .admin-section,
-    .event-selection {
-
+    .event-manager .admin-section,
+    .event-manager .event-selection {
         padding: 1rem;
-
     }
 
-    .form-grid {
-
+    .event-manager .form-grid {
         grid-template-columns: 1fr;
-
     }
 
-    .form-group-full {
-
+    .event-manager .form-group-full {
         grid-column: auto;
-
     }
 
-    .event-information-grid {
-
+    .event-manager .event-information-grid {
         grid-template-columns: 1fr;
-
     }
 
-    .form-actions {
-
-        justify-content: stretch;
-
+    .event-manager .form-actions {
+        flex-direction: column;
+        align-items: stretch;
     }
 
-    .form-actions button {
-
+    .event-manager .form-actions button {
         width: 100%;
-
+        min-width: 0;
     }
 
 }
@@ -464,23 +430,16 @@
 @media (max-width: 450px) {
 
     .event-manager {
-
         padding: .5rem;
-
     }
 
-    .event-selection-controls {
-
+    .event-manager .event-selection-controls {
         flex-direction: column;
-
         align-items: stretch;
-
     }
 
-    .event-selection-controls .form-group {
-
+    .event-manager .event-selection-controls .form-group {
         min-width: 0;
-
     }
 
 }
