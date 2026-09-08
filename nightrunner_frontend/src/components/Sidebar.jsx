@@ -2,81 +2,177 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 
 import "./Sidebar.css";
+
 import ApiService from "../api/ApiService.js";
+import {
+    ACCESS,
+    AppRoutes
+} from "../AppRoutes.jsx";
 
-function Sidebar({open, close}) {
 
-    const auth = useAuth();
+function canAccess(route) {
+
+    if (
+        route.access === ACCESS.PUBLIC
+    ) {
+        return true;
+    }
+
+    if (
+        !ApiService.userData.getCached()
+    ) {
+        return false;
+    }
+
+    if (
+        route.access === ACCESS.SYSTEM_ADMIN
+    ) {
+        return ApiService.userData
+            .isSystemAdmin();
+    }
+
+    if (
+        route.access === ACCESS.ADMIN
+    ) {
+        return ApiService.userData
+            .isAdmin();
+    }
+
+    if (
+        route.access === ACCESS.USER
+    ) {
+        return true;
+    }
+
+    return false;
+
+}
+
+
+function Sidebar({ open, close }) {
+
+    const auth =
+        useAuth();
 
     const loggedIn = auth.isAuthenticated;
 
-    const isAdmin = ApiService.userData.isAdmin();
+    const user =
+        ApiService.userData.getCached();
 
-    const links = loggedIn
-        ? [
-            {
-                name: "Dashboard",
-                path: "/dashboard"
-            },
+    const isAdmin =
+        user &&
+        ApiService.userData.isAdmin();
 
-            ...(isAdmin
-                    ? [
-                        {
-                            name: "Admin Dashboard",
-                            path: "/admin",
-                            exact: true
-                        },
-                        {
-                            name: "Event Manager",
-                            path: "/admin/events"
-                        },
-                        {
-                            name: "Patrol Manager",
-                            path: "/admin/patrols"
-                        },
-                        {
-                            name: "Station Manager",
-                            path: "/admin/stations"
-                        },
-                        {
-                            name: "User Manager",
-                            path: "/admin/users"
-                        },
-                        ...(ApiService.userData.isSystemAdmin()
-                            ? [
-                                {
-                                    name: "Configuration Manager",
-                                    path: "/admin/configurations"
-                                }
-                            ]
-                            : [])
-                    ]
-                    : [
-                        {
-                            name: "Events",
-                            path: "/events"
-                        },
-                        {
-                            name: "Patrols",
-                            path: "/patrols"
-                        },
-                        {
-                            name: "Stations",
-                            path: "/stations"
-                        }
-                    ]
-            ),
-            {
-                name: "Scoring",
-                path: "/scoring"
-            }
-        ]
-        : [
-            {
-                name: "Login",
-                path: "/login"
-            }
-        ];
+
+    const links =
+        AppRoutes.filter(
+            route =>
+                route.name &&
+                canAccess(route) &&
+                (
+                    loggedIn ||
+                    route.access === ACCESS.PUBLIC
+                )
+        );
+
+
+    const mainLinks =
+        links.filter(
+            route =>
+                !route.path.startsWith("/admin") &&
+                route.path !== "/scoring" &&
+                route.path !== "/live"
+        );
+
+
+    const scoringLinks =
+        links.filter(
+            route =>
+                route.path === "/scoring" ||
+                route.path === "/live"
+        );
+
+
+    const adminLinks =
+        links.filter(
+            route =>
+                route.path.startsWith("/admin")
+        );
+
+
+    function renderLink(route) {
+
+        if (route.external) {
+
+            return (
+                <a
+                    key={route.path}
+                    href={route.path}
+                    target={
+                        route.newTab
+                            ? "_blank"
+                            : undefined
+                    }
+                    rel={
+                        route.newTab
+                            ? "noopener noreferrer"
+                            : undefined
+                    }
+                    onClick={close}
+                    className="sidebar-link"
+                >
+
+                    <span>
+                        {route.name}
+                    </span>
+
+                    {route.newTab && (
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                            <polyline points="15 3 21 3 21 9" />
+                            <line
+                                x1="10"
+                                y1="14"
+                                x2="21"
+                                y2="3"
+                            />
+                        </svg>
+                    )}
+
+                </a>
+            );
+
+        }
+
+
+        return (
+            <NavLink
+                key={route.path}
+                to={route.path}
+                end={route.exact}
+                onClick={close}
+                className={({ isActive }) =>
+                    isActive
+                        ? "sidebar-link active"
+                        : "sidebar-link"
+                }
+            >
+                {route.name}
+            </NavLink>
+        );
+
+    }
+
 
     return (
         <>
@@ -87,88 +183,68 @@ function Sidebar({open, close}) {
                 />
             )}
 
+
             <aside
                 className={`sidebar ${open ? "open" : ""}`}
             >
+
                 <div className="sidebar-header">
+
                     <img
                         src="/favicon.jpg"
                         alt="Night Runner"
                         className="sidebar-logo"
                     />
+
                     <h2>
                         Night Runner
                     </h2>
 
                 </div>
 
+
                 <nav className="sidebar-nav">
 
-                    {links.map(link => (
+                    {!isAdmin && mainLinks.length > 0 && (
+                        <section className="sidebar-section">
 
-                        <NavLink
-                            key={link.path}
-                            to={link.path}
-                            end={link.exact}
-                            onClick={close}
-                            className={({ isActive }) =>
-                                isActive
-                                    ? "sidebar-link active"
-                                    : "sidebar-link"
-                            }
-                        >
+                            <div className="sidebar-section-title">
+                                Main
+                            </div>
 
-                            {link.name}
+                            {mainLinks.map(renderLink)}
 
-                        </NavLink>
+                        </section>
+                    )}
 
-                    ))}
 
-                    {loggedIn && (
+                    {scoringLinks.length > 0 && (
+                        <section className="sidebar-section">
 
-                        <a
-                            href="/live"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="sidebar-link live-link"
-                        >
+                            <div className="sidebar-section-title">
+                                Scoring
+                            </div>
 
-                            Live Scoring
+                            {scoringLinks.map(renderLink)}
 
-                            <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                aria-hidden="true"
-                            >
+                        </section>
+                    )}
 
-                                <path
-                                    d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
-                                />
 
-                                <polyline
-                                    points="15 3 21 3 21 9"
-                                />
+                    {isAdmin && adminLinks.length > 0 && (
+                        <section className="sidebar-section sidebar-section-admin">
 
-                                <line
-                                    x1="10"
-                                    y1="14"
-                                    x2="21"
-                                    y2="3"
-                                />
+                            <div className="sidebar-section-title">
+                                Administration
+                            </div>
 
-                            </svg>
+                            {adminLinks.map(renderLink)}
 
-                        </a>
-
+                        </section>
                     )}
 
                 </nav>
+
 
                 <div className="sidebar-footer">
 
@@ -183,11 +259,10 @@ function Sidebar({open, close}) {
                 </div>
 
             </aside>
-
         </>
-
     );
 
 }
+
 
 export default Sidebar;

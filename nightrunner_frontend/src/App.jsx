@@ -1,29 +1,26 @@
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import {
+    Routes,
+    Route,
+    Navigate
+} from "react-router-dom";
 
-import { useAuth } from "react-oidc-context";
+import {
+    useAuth
+} from "react-oidc-context";
 
-import Layout from "./components/Layout";
+import Layout from "./components/Layout.jsx";
+import NotFound from "./pages/NotFound.jsx";
 
-import Me from "./pages/Me";
-import Login from "./pages/login/Login";
-import Register from "./pages/login/Register.jsx";
-import NotFound from "./pages/NotFound";
-import LiveScoring from "./pages/livescoring/LiveScoring.jsx";
-import Callback from "./pages/Callback.jsx";
-import Events from "./pages/user/Events.jsx";
-import Dashboard from "./pages/Dashboard.jsx";
-import Patrols from "./pages/user/Patrols.jsx";
-import Scoring from "./pages/scoring/Scoring.jsx";
-import Stations from "./pages/user/Stations.jsx";
-import AdminRoutes from "./pages/admin/AdminRoutes.jsx";
+import {
+    ACCESS,
+    AppRoutes
+} from "./AppRoutes.jsx";
+
 
 function ProtectedRoute({ children }) {
 
     const auth =
         useAuth();
-
-    const location =
-        useLocation();
 
 
     if (auth.isLoading) {
@@ -51,49 +48,137 @@ function ProtectedRoute({ children }) {
 
 
     if (!auth.isAuthenticated) {
+
         return (
             <Navigate
                 to="/login"
-                state={{
-                    from: location
-                }}
                 replace
             />
         );
+
     }
 
+
     return children;
+
 }
 
 
 function AnonymousRoute({ children }) {
 
-    const auth = useAuth();
+    const auth =
+        useAuth();
+
 
     if (auth.isLoading) {
+
         return (
             <div>
                 Loading authentication...
             </div>
         );
+
     }
 
 
     if (auth.isAuthenticated) {
+
         return (
             <Navigate
                 to="/dashboard"
                 replace
             />
         );
+
     }
+
 
     return children;
 
 }
 
 
-function App() {
+function RouteElement({ route }) {
+
+    const Element =
+        route.element;
+
+
+    if (route.redirect) {
+
+        return (
+            <Navigate
+                to={route.redirect}
+                replace
+            />
+        );
+
+    }
+
+
+    const element =
+        <Element />;
+
+
+    if (route.anonymous) {
+
+        return (
+            <AnonymousRoute>
+                {element}
+            </AnonymousRoute>
+        );
+
+    }
+
+
+    if (
+        route.access === ACCESS.PUBLIC
+    ) {
+        return element;
+    }
+
+
+    return (
+        <ProtectedRoute>
+            {element}
+        </ProtectedRoute>
+    );
+
+}
+
+
+function renderRoute(route) {
+
+    return (
+        <Route
+            key={route.path}
+            path={route.path}
+            element={
+                <RouteElement
+                    route={route}
+                />
+            }
+        />
+    );
+
+}
+
+
+export default function App() {
+
+    const layoutRoutes =
+        AppRoutes.filter(
+            route =>
+                route.layout !== false
+        );
+
+
+    const standaloneRoutes =
+        AppRoutes.filter(
+            route =>
+                route.layout === false
+        );
+
 
     return (
 
@@ -101,123 +186,16 @@ function App() {
 
             <Route element={<Layout />}>
 
-                <Route
-                    path="/"
-                    element={
-                        <Navigate
-                            to="/dashboard"
-                            replace
-                        />
-                    }
-                />
-
-
-                {/* Authentication */}
-
-                <Route
-                    path="/login"
-                    element={
-                        <AnonymousRoute>
-                            <Login />
-                        </AnonymousRoute>
-                    }
-                />
-
-                <Route
-                    path="/register"
-                    element={
-                        <AnonymousRoute>
-                            <Register />
-                        </AnonymousRoute>
-                    }
-                />
-
-                <Route
-                    path="/callback"
-                    element={<Callback />}
-                />
-
-                {/* Public */}
-
-                <Route
-                    path="/events"
-                    element={<Events />}
-                />
-
-
-                {/* Protected */}
-
-                <Route
-                    path="/dashboard"
-                    element={
-                        <ProtectedRoute>
-                            <Dashboard />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/me"
-                    element={
-                        <ProtectedRoute>
-                            <Me />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/patrols"
-                    element={
-                        <ProtectedRoute>
-                            <Patrols />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/scoring"
-                    element={
-                        <ProtectedRoute>
-                            <Scoring />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/stations"
-                    element={
-                        <ProtectedRoute>
-                            <Stations />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/admin/*"
-                    element={
-                        <ProtectedRoute>
-                            <AdminRoutes />
-                        </ProtectedRoute>
-                    }
-                />
-
-
-                <Route
-                    path="/404"
-                    element={<NotFound />}
-                />
+                {layoutRoutes.map(
+                    renderRoute
+                )}
 
             </Route>
 
 
-            <Route
-                path="/live"
-                element={
-                    <ProtectedRoute>
-                        <LiveScoring />
-                    </ProtectedRoute>
-                }
-            />
+            {standaloneRoutes.map(
+                renderRoute
+            )}
 
 
             <Route
@@ -230,6 +208,3 @@ function App() {
     );
 
 }
-
-
-export default App;
