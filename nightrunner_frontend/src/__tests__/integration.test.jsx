@@ -8,7 +8,7 @@ describe('Live Backend & OIDC Integration Tests', () => {
     const res = await fetch(`${backendUrl}/health`);
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data).toHaveProperty('status', 'ok');
+    expect(data.status).toBe('ok');
   });
 
   it('obtains OIDC token from mock provider and authenticates with backend /v1/me', async () => {
