@@ -141,7 +141,7 @@ export default function EventCreator() {
             //
 
             navigate(
-                "/events",
+                "/admin/events",
                 {
                     replace: true
                 }
@@ -390,7 +390,7 @@ export default function EventCreator() {
                         type="button"
                         className="secondary-button"
                         onClick={() =>
-                            navigate("/events")
+                            navigate("admin/events")
                         }
                         disabled={saving}
                     >

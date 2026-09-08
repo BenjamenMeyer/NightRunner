@@ -513,6 +513,13 @@ export function EventProvider({ children }) {
         return openEventSelector();
     }
 
+    async function clearEvent() {
+        setEvent(null);
+        setEventId(null);
+        setShowEventSelector(false);
+        setError(null);
+    }
+
 
     //
     // Close selector.
@@ -585,6 +592,7 @@ export function EventProvider({ children }) {
         getCurrentEvent,
         selectEvent,
         changeEvent,
+        clearEvent,
 
         //
         // Selector

@@ -18,7 +18,8 @@ export default function EventManager() {
         eventId,
         loading: eventLoading,
         error: eventError,
-        selectEvent
+        selectEvent,
+        clearEvent
     } = useEventContext();
 
     const [saving, setSaving] = useState(false);
@@ -49,7 +50,8 @@ export default function EventManager() {
             description: event.description ?? "",
             roundingPrecision:
                 event.roundingPrecision ?? 1000,
-            theme: event.theme ?? "night-ops"
+            theme:
+                event.theme ?? "night-ops"
         });
 
         setError(null);
@@ -64,6 +66,7 @@ export default function EventManager() {
 
         setForm(previous => ({
             ...previous,
+
             [name]:
                 name === "roundingPrecision"
                     ? Number(value)
@@ -115,13 +118,21 @@ export default function EventManager() {
                     eventId,
                     {
                         ...event,
-                        name: form.name.trim(),
-                        date: form.date,
+
+                        name:
+                            form.name.trim(),
+
+                        date:
+                            form.date,
+
                         description:
                             form.description.trim(),
+
                         roundingPrecision:
                             form.roundingPrecision,
-                        theme: form.theme
+
+                        theme:
+                            form.theme
                     }
                 );
 
@@ -139,14 +150,12 @@ export default function EventManager() {
                     updatedEvent.roundingPrecision ?? 1000,
 
                 theme:
-                    updatedEvent.theme ?? "night-ops"
+                    updatedEvent.theme ??
+                    "night-ops"
             });
 
             /*
              * Refresh the selected event in EventContext.
-             *
-             * EventContext remains the source of truth for
-             * the currently selected event.
              */
             await selectEvent(eventId);
 
@@ -200,15 +209,15 @@ export default function EventManager() {
             );
 
             /*
-             * Clear the selected event from EventContext.
-             *
-             * Passing null allows EventContext to represent
-             * that there is no longer a selected event.
+             * Remove the event from EventContext.
              */
-            await selectEvent(null);
+            clearEvent();
 
+            /*
+             * Return to the event manager.
+             */
             navigate(
-                "/admin/",
+                "/admin/events",
                 {
                     replace: true
                 }
@@ -232,7 +241,9 @@ export default function EventManager() {
         return (
             <div className="event-manager">
                 <div className="loading-panel">
-                    <p>Loading event...</p>
+                    <p>
+                        Loading event...
+                    </p>
                 </div>
             </div>
         );
@@ -251,13 +262,19 @@ export default function EventManager() {
     if (!event) {
         return (
             <div className="event-manager">
+
                 <div className="page-header">
+
                     <div>
-                        <h1>Event</h1>
+
+                        <h1>
+                            Event
+                        </h1>
 
                         <p>
                             No event is currently selected.
                         </p>
+
                     </div>
 
                     {isSystemAdmin && (
@@ -266,28 +283,36 @@ export default function EventManager() {
                             className="primary-button"
                             onClick={() =>
                                 navigate(
-                                    "/admin/events/create"
+                                    "create"
                                 )
                             }
                         >
                             + Create Event
                         </button>
                     )}
+
                 </div>
+
             </div>
         );
     }
 
     return (
         <div className="event-manager">
+
             <div className="page-header">
+
                 <div>
-                    <h1>Event</h1>
+
+                    <h1>
+                        Event
+                    </h1>
 
                     <p>
                         Manage the details and configuration
                         of the current event.
                     </p>
+
                 </div>
 
                 {isSystemAdmin && (
@@ -296,14 +321,16 @@ export default function EventManager() {
                         className="primary-button"
                         onClick={() =>
                             navigate(
-                                "/admin/events/create"
+                                "create"
                             )
                         }
                     >
                         + Create Event
                     </button>
                 )}
+
             </div>
+
 
             {error && (
                 <div className="error-banner">
@@ -311,29 +338,42 @@ export default function EventManager() {
                 </div>
             )}
 
+
             {success && (
                 <div className="success-banner">
                     {success}
                 </div>
             )}
 
+
             <form
                 className="event-form"
                 onSubmit={handleSubmit}
             >
+
                 <section className="admin-section">
+
                     <div className="section-header">
+
                         <div>
-                            <h2>Event Details</h2>
+
+                            <h2>
+                                Event Details
+                            </h2>
 
                             <p>
                                 Basic information about the event.
                             </p>
+
                         </div>
+
                     </div>
 
+
                     <div className="form-grid">
+
                         <div className="form-group">
+
                             <label htmlFor="event-name">
                                 Event Name
                             </label>
@@ -350,9 +390,12 @@ export default function EventManager() {
                                 }
                                 required
                             />
+
                         </div>
 
+
                         <div className="form-group">
+
                             <label htmlFor="event-date">
                                 Event Date
                             </label>
@@ -404,10 +447,12 @@ export default function EventManager() {
                                     deleting
                                 }
                             >
+
                                 {Object.entries(
                                     brandings
                                 ).map(
                                     ([id, theme]) => (
+
                                         <option
                                             key={id}
                                             value={id}
@@ -416,16 +461,23 @@ export default function EventManager() {
                                                 theme.organizationName
                                             }
                                         </option>
+
                                     )
                                 )}
+
                             </select>
 
                             <small>
-                                Visual color theme applied to the user interface for this event.
+                                Visual color theme applied
+                                to the user interface for
+                                this event.
                             </small>
+
                         </div>
 
+
                         <div className="form-group">
+
                             <label htmlFor="rounding-precision">
                                 Rounding Precision
                             </label>
@@ -435,6 +487,7 @@ export default function EventManager() {
                                 name="roundingPrecision"
                                 type="number"
                                 min="1"
+                                step="1"
                                 value={
                                     form.roundingPrecision
                                 }
@@ -447,26 +500,40 @@ export default function EventManager() {
                             />
 
                             <small>
-                                Used when calculating scoring
-                                precision.
+                                Used when calculating
+                                scoring precision.
                             </small>
+
                         </div>
+
                     </div>
+
                 </section>
 
+
                 <section className="admin-section">
+
                     <div className="section-header">
+
                         <div>
-                            <h2>Event Information</h2>
+
+                            <h2>
+                                Event Information
+                            </h2>
 
                             <p>
                                 Information managed by the system.
                             </p>
+
                         </div>
+
                     </div>
 
+
                     <div className="event-information-grid">
+
                         <div>
+
                             <span className="information-label">
                                 Event ID
                             </span>
@@ -474,9 +541,12 @@ export default function EventManager() {
                             <code>
                                 {event.id}
                             </code>
+
                         </div>
 
+
                         <div>
+
                             <span className="information-label">
                                 Patrols
                             </span>
@@ -484,9 +554,12 @@ export default function EventManager() {
                             <strong>
                                 {event.patrols?.length ?? 0}
                             </strong>
+
                         </div>
 
+
                         <div>
+
                             <span className="information-label">
                                 Stations
                             </span>
@@ -494,9 +567,12 @@ export default function EventManager() {
                             <strong>
                                 {event.stations?.length ?? 0}
                             </strong>
+
                         </div>
 
+
                         <div>
+
                             <span className="information-label">
                                 Organizers
                             </span>
@@ -504,11 +580,16 @@ export default function EventManager() {
                             <strong>
                                 {event.organizers?.length ?? 0}
                             </strong>
+
                         </div>
+
                     </div>
+
                 </section>
 
+
                 <div className="form-actions">
+
                     <button
                         type="submit"
                         className="primary-button"
@@ -519,8 +600,10 @@ export default function EventManager() {
                     >
                         {saving
                             ? "Saving..."
-                            : "Save Changes"}
+                            : "Save Changes"
+                        }
                     </button>
+
 
                     {isSystemAdmin && (
                         <button
@@ -534,11 +617,15 @@ export default function EventManager() {
                         >
                             {deleting
                                 ? "Deleting..."
-                                : "Delete Event"}
+                                : "Delete Event"
+                            }
                         </button>
                     )}
+
                 </div>
+
             </form>
+
         </div>
     );
 }
