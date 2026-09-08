@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import ApiService from "../../api/ApiService.js";
 import { useEventContext } from "../../api/helpers/EventContext.jsx";
 
-import QRScanner from "./QRScanner";
+import DataSelector from "../../api/patrol-selector/DataSelector.jsx";
 import ScoreForm from "./ScoreForm";
 
 import "./Scoring.css";
@@ -25,7 +25,6 @@ export default function Scoring() {
     const [selectedPatrol, setSelectedPatrol] = useState(null);
     const [selectedStation, setSelectedStation] = useState(null);
 
-    const [showScanner, setShowScanner] = useState(false);
     const [scoringStarted, setScoringStarted] = useState(false);
 
     useEffect(() => {
@@ -99,33 +98,13 @@ export default function Scoring() {
         }
     }
 
-    function handleManualSelection(event) {
-        const patrol =
-            patrols.find(
-                patrol =>
-                    String(patrol.id) ===
-                    String(event.target.value)
-            );
-
-        setSelectedPatrol(patrol ?? null);
-        setScoringStarted(false);
-    }
-
-    function handleScan(patrol) {
+    function handlePatrolSelection(patrol) {
         setSelectedPatrol(patrol);
-        setShowScanner(false);
         setScoringStarted(false);
     }
 
-    function handleStationSelection(event) {
-        const station =
-            stations.find(
-                station =>
-                    String(station.id) ===
-                    String(event.target.value)
-            );
-
-        setSelectedStation(station ?? null);
+    function handleStationSelection(station) {
+        setSelectedStation(station);
         setScoringStarted(false);
     }
 
@@ -147,8 +126,11 @@ export default function Scoring() {
 
     return (
         <div className="scoring-page">
+
             <div className="page-header">
+
                 <div>
+
                     <h1>
                         Scoring
                     </h1>
@@ -156,7 +138,9 @@ export default function Scoring() {
                     <p>
                         Record patrol scores for each station.
                     </p>
+
                 </div>
+
             </div>
 
             {error && (
@@ -181,119 +165,45 @@ export default function Scoring() {
                 <>
                     {!scoringStarted ? (
                         <>
-                            <div className="score-selection-card">
-                                <h2>
-                                    Select Patrol
-                                </h2>
+                            <DataSelector
+                                title="Select Patrol"
+                                description="Scan the patrol QR code or select one manually."
+                                label="Patrol"
+                                items={patrols}
+                                selected={selectedPatrol}
+                                onSelect={
+                                    handlePatrolSelection
+                                }
+                                displayField="programName"
+                                allowScan
+                            />
 
-                                <p>
-                                    Scan the patrol QR code or select one manually.
-                                </p>
-
-                                <div className="patrol-selection">
-                                    <button
-                                        className="scan-card"
-                                        onClick={() =>
-                                            setShowScanner(true)
-                                        }
-                                    >
-                                        <span className="scan-icon">
-                                            📷
-                                        </span>
-
-                                        <span>
-                                            Scan QR Code
-                                        </span>
-                                    </button>
-
-                                    <div className="selection-divider">
-                                        OR
-                                    </div>
-
-                                    <div className="manual-selection">
-                                        <label>
-                                            Patrol
-                                        </label>
-
-                                        <select
-                                            value={
-                                                selectedPatrol?.id ?? ""
-                                            }
-                                            onChange={
-                                                handleManualSelection
-                                            }
-                                        >
-                                            <option value="">
-                                                Select Patrol...
-                                            </option>
-
-                                            {patrols.map(patrol => (
-                                                <option
-                                                    key={patrol.id}
-                                                    value={patrol.id}
-                                                >
-                                                    {patrol.programName}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {selectedPatrol && (
-                                    <div className="selected-patrol">
-                                        <span>✓</span>
-
-                                        <div>
-                                            <small>
-                                                Selected Patrol
-                                            </small>
-
-                                            <div>
-                                                {selectedPatrol.programName}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="score-selection-card">
-                                <h2>
-                                    Select Station
-                                </h2>
-
-                                <select
-                                    value={
-                                        selectedStation?.id ?? ""
-                                    }
-                                    onChange={
-                                        handleStationSelection
-                                    }
-                                >
-                                    <option value="">
-                                        Select Station...
-                                    </option>
-
-                                    {stations.map(station => (
-                                        <option
-                                            key={station.id}
-                                            value={station.id}
-                                        >
-                                            {station.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                            <DataSelector
+                                title="Select Station"
+                                label="Station"
+                                items={stations}
+                                selected={selectedStation}
+                                onSelect={
+                                    handleStationSelection
+                                }
+                                displayField="name"
+                            />
                         </>
                     ) : (
                         <div className="score-selection-card">
+
                             <h2>
                                 Currently Scoring
                             </h2>
 
-                            <div className="selected-patrol">
-                                <span>📝</span>
+                            <div className="selected-data">
+
+                                <span>
+                                    📝
+                                </span>
 
                                 <div>
+
                                     <small>
                                         Patrol
                                     </small>
@@ -301,13 +211,19 @@ export default function Scoring() {
                                     <div>
                                         {selectedPatrol.programName}
                                     </div>
+
                                 </div>
+
                             </div>
 
-                            <div className="selected-patrol">
-                                <span>📍</span>
+                            <div className="selected-data">
+
+                                <span>
+                                    📍
+                                </span>
 
                                 <div>
+
                                     <small>
                                         Station
                                     </small>
@@ -315,8 +231,11 @@ export default function Scoring() {
                                     <div>
                                         {selectedStation.name}
                                     </div>
+
                                 </div>
+
                             </div>
+
                         </div>
                     )}
 
@@ -328,11 +247,13 @@ export default function Scoring() {
                             />
                         ) : (
                             <div className="ready-panel">
+
                                 <h2>
                                     Ready to Begin
                                 </h2>
 
                                 <p>
+
                                     <strong>
                                         Patrol:
                                     </strong>{" "}
@@ -344,6 +265,7 @@ export default function Scoring() {
                                         Station:
                                     </strong>{" "}
                                     {selectedStation.name}
+
                                 </p>
 
                                 <button
@@ -352,10 +274,12 @@ export default function Scoring() {
                                 >
                                     Start Scoring
                                 </button>
+
                             </div>
                         )
                     ) : (
                         <div className="empty-panel">
+
                             <h2>
                                 Ready to Score
                             </h2>
@@ -363,19 +287,12 @@ export default function Scoring() {
                             <p>
                                 Select a patrol and station to begin scoring.
                             </p>
+
                         </div>
                     )}
                 </>
             )}
 
-            {showScanner && (
-                <QRScanner
-                    onScan={handleScan}
-                    onCancel={() =>
-                        setShowScanner(false)
-                    }
-                />
-            )}
         </div>
     );
 }

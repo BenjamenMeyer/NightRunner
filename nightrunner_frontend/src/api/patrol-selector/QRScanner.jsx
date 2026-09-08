@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
-import "./Scoring.css";
+import "../../pages/scoring/Scoring.css";
 
 export default function QRScanner({ onScan, onCancel }) {
 

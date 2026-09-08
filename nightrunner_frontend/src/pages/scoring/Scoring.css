@@ -1,246 +1,4 @@
-/* -------- Selection ------- */
-.score-selection-card {
-
-    background: var(--card-bg);
-
-    border: 1px solid var(--border);
-
-    border-radius: 14px;
-
-    padding: 1.5rem;
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 1.25rem;
-
-}
-
-.score-selection-card h2 {
-
-    margin: 0;
-
-}
-
-.score-selection-card p {
-
-    margin: 0;
-
-    color: var(--text-secondary);
-
-}
-
-.patrol-selection {
-
-    display: grid;
-
-    grid-template-columns: 240px 60px 1fr;
-
-    gap: 1.5rem;
-
-    align-items: stretch;
-
-}
-
-.scan-card {
-
-    display: flex;
-
-    flex-direction: column;
-
-    justify-content: center;
-
-    align-items: center;
-
-    gap: .75rem;
-
-    min-height: 180px;
-
-    border: 2px dashed var(--button-bg);
-
-    border-radius: 14px;
-
-    background: var(--page-bg);
-
-    cursor: pointer;
-
-    transition: .15s ease;
-
-}
-
-.scan-card:hover {
-
-    transform: translateY(-2px);
-
-    background: var(--card-bg);
-
-    border-color: var(--button-hover);
-
-    box-shadow: 0 8px 20px rgba(0,0,0,.08);
-
-}
-
-.scan-icon {
-
-    font-size: 3.25rem;
-
-}
-
-.scan-card span:last-child {
-
-    font-weight: 600;
-
-}
-
-.selection-divider {
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    color: var(--text-secondary);
-
-    font-weight: 700;
-
-    position: relative;
-
-}
-
-.selection-divider::before,
-.selection-divider::after {
-
-    content: "";
-
-    flex: 1;
-
-    height: 1px;
-
-    background: var(--border);
-
-}
-
-.selection-divider::before {
-
-    margin-right: .75rem;
-
-}
-
-.selection-divider::after {
-
-    margin-left: .75rem;
-
-}
-
-.manual-selection {
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: .75rem;
-
-}
-
-.manual-selection label {
-
-    font-weight: 600;
-
-    color: var(--text-primary);
-
-}
-
-.manual-selection select {
-
-    padding: .9rem 1rem;
-
-    border: 1px solid var(--border);
-
-    border-radius: 10px;
-
-    font-size: 1rem;
-
-    background: var(--card-bg);
-
-}
-
-.manual-selection select:focus {
-
-    outline: none;
-
-    border-color: var(--button-bg);
-
-}
-
-.selected-patrol {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: .75rem;
-
-    padding: 1rem 1.25rem;
-
-    background: #edf8ef;
-
-    border: 1px solid #7ac48a;
-
-    border-left: 6px solid #2e7d32;
-
-    border-radius: 10px;
-
-    font-weight: 600;
-
-}
-
-.station-selection {
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: .75rem;
-
-}
-
-.station-selection label {
-
-    font-weight: 600;
-
-}
-
-.station-selection select {
-
-    padding: .9rem 1rem;
-
-    border: 1px solid var(--border);
-
-    border-radius: 10px;
-
-    font-size: 1rem;
-
-    background: var(--card-bg);
-
-}
-
-@media (max-width: 900px) {
-
-    .patrol-selection {
-
-        grid-template-columns: 1fr;
-
-    }
-
-    .selection-divider {
-
-        margin: -.5rem 0;
-
-    }
-
-}
+/* -------- Ready Panel ------- */
 
 .ready-panel {
 
@@ -286,21 +44,28 @@
 
     font-size: 1.05rem;
 
-    padding: 0.9rem 2rem;
+    padding: .9rem 2rem;
 
 }
 
 /* ---------- Tasks ---------- */
 
 .tasks-section {
+
     display: flex;
+
     flex-direction: column;
+
     gap: 1rem;
+
 }
 
 .score-field {
+
     display: flex;
+
     flex-direction: column;
+
     gap: .85rem;
 
     padding: 1rem 1.25rem;
@@ -312,31 +77,43 @@
     border-radius: 12px;
 
     transition: .15s ease;
+
 }
 
 .score-field:hover {
+
     border-color: var(--button-bg);
+
 }
 
 .score-field label:first-child {
+
     font-size: 1rem;
+
     font-weight: 600;
+
     color: var(--text-primary);
+
 }
 
 .score-field small {
+
     color: var(--text-secondary);
+
     font-size: .85rem;
+
 }
 
 .score-field input,
 .score-field select,
 .score-field textarea {
+
     width: 100%;
 
     padding: .8rem 1rem;
 
     border: 1px solid var(--border);
+
     border-radius: 8px;
 
     background: var(--card-bg);
@@ -344,6 +121,7 @@
     font-size: 1rem;
 
     transition: .15s;
+
 }
 
 .score-field input:focus,
@@ -387,6 +165,7 @@
 .checkbox-option input {
 
     width: 22px;
+
     height: 22px;
 
     margin-top: 2px;
@@ -420,6 +199,7 @@
     display: flex;
 
     align-items: center;
+
     justify-content: center;
 
     width: 100%;
@@ -433,11 +213,12 @@
     overflow: hidden;
 
     font-family: monospace;
+
     font-weight: bold;
 
     font-size: clamp(1.4rem, 6vw, 2.6rem);
 
-    letter-spacing: clamp(0px, 0.25vw, 2px);
+    letter-spacing: clamp(0px, .25vw, 2px);
 
     white-space: nowrap;
 
@@ -447,7 +228,7 @@
 
     display: grid;
 
-    grid-template-columns: repeat(2,1fr);
+    grid-template-columns: repeat(2, 1fr);
 
     gap: 1rem;
 
@@ -485,7 +266,7 @@
 
     display: grid;
 
-    grid-template-columns: repeat(4,1fr);
+    grid-template-columns: repeat(4, 1fr);
 
     gap: .75rem;
 
@@ -573,23 +354,23 @@
 
 /* ---------- Responsive ---------- */
 
-@media (max-width:768px){
+@media (max-width: 768px) {
 
-    .timer-times{
+    .timer-times {
 
-        grid-template-columns:1fr;
-
-    }
-
-    .manual-time-grid{
-
-        grid-template-columns:repeat(2,1fr);
+        grid-template-columns: 1fr;
 
     }
 
-    .timer-buttons{
+    .manual-time-grid {
 
-        flex-direction:column;
+        grid-template-columns: repeat(2, 1fr);
+
+    }
+
+    .timer-buttons {
+
+        flex-direction: column;
 
     }
 

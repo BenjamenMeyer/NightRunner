@@ -81,7 +81,9 @@ function Sidebar({ open, close }) {
             route =>
                 !route.path.startsWith("/admin") &&
                 route.path !== "/scoring" &&
-                route.path !== "/live"
+                route.path !== "/live" &&
+                route.path !== "/login" &&
+                route.path !== "/checkin"
         );
 
 
@@ -89,7 +91,8 @@ function Sidebar({ open, close }) {
         links.filter(
             route =>
                 route.path === "/scoring" ||
-                route.path === "/live"
+                route.path === "/live" ||
+                route.path === "/checkin"
         );
 
 
