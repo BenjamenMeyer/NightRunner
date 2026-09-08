@@ -6,9 +6,14 @@ import "./Me.css";
 import AuthService from "../api/AuthService";
 import ApiService from "../api/ApiService";
 
+import useBranding from "../branding/UseBranding";
+import brandings from "../branding";
+
 export default function Me() {
 
     const auth = useAuth();
+
+    const {brandingId, changeBranding} = useBranding();
 
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -89,8 +94,6 @@ export default function Me() {
         auth.isLoading,
         isAuthenticated
     ]);
-
-
 
     //
     // Loading
@@ -177,9 +180,7 @@ export default function Me() {
 
         return (
             <div className="profile-container">
-
                 <div className="profile-card error">
-
                     <h2>
                         Error
                     </h2>
@@ -187,9 +188,7 @@ export default function Me() {
                     <p>
                         No Night Runner user account found.
                     </p>
-
                 </div>
-
             </div>
         );
 
@@ -215,19 +214,18 @@ export default function Me() {
     const eventEntries =
         Object.entries(roles);
 
+    const availableThemes =
+        Object.entries(brandings);
+
     return (
         <div className="profile-container">
-
             <div className="profile-card">
-
                 <div className="profile-header">
-
                     <div className="profile-avatar">
                         {initial}
                     </div>
 
                     <div className="profile-header-info">
-
                         <h1>
                             {displayName}
                         </h1>
@@ -235,16 +233,11 @@ export default function Me() {
                         <p>
                             @{user.username}
                         </p>
-
                     </div>
-
                 </div>
 
-
                 <div className="profile-details">
-
                     <div className="profile-field">
-
                         <span>
                             Email
                         </span>
@@ -252,12 +245,9 @@ export default function Me() {
                         <strong>
                             {user.email}
                         </strong>
-
                     </div>
 
-
                     <div className="profile-field">
-
                         <span>
                             User ID
                         </span>
@@ -265,12 +255,9 @@ export default function Me() {
                         <strong className="small-text">
                             {user.id}
                         </strong>
-
                     </div>
 
-
                     <div className="profile-field">
-
                         <span>
                             External ID
                         </span>
@@ -278,18 +265,15 @@ export default function Me() {
                         <strong className="small-text">
                             {user.externalId}
                         </strong>
-
                     </div>
 
 
                     <div className="profile-field">
-
                         <span>
                             Account
                         </span>
 
                         <div className="roles">
-
                             {user.isAdmin === true ? (
 
                                 <span className="role">
@@ -303,43 +287,77 @@ export default function Me() {
                                 </span>
 
                             )}
-
                         </div>
-
                     </div>
 
 
                     <div className="profile-field">
-
                         <span>
                             Event Roles
                         </span>
 
                         <div className="roles">
-
                             {eventEntries.length > 0 ? (
-
                                 eventEntries.map(
                                     ([eventId, role]) => (
-
                                         <span
                                             key={eventId}
                                             className="role"
                                         >
                                             {eventId}: {role}
                                         </span>
-
                                     )
                                 )
-
                             ) : (
-
                                 <span className="role">
                                     No event roles
                                 </span>
-
                             )}
                         </div>
+                    </div>
+                </div>
+
+                {/*
+                 * Settings
+                 */}
+
+                <div className="profile-settings">
+                    <div className="profile-section-header">
+                        <h2>
+                            Settings
+                        </h2>
+                    </div>
+
+
+                    <div className="profile-setting">
+                        <div className="profile-setting-info">
+                            <strong>
+                                Theme
+                            </strong>
+
+                            <span>
+                                Choose the visual theme used by Night Runner.
+                            </span>
+                        </div>
+
+                        <select
+                            className="theme-select"
+                            value={brandingId}
+                            onChange={event =>
+                                changeBranding(event.target.value)
+                            }
+                        >
+                            {Object.entries(brandings).map(
+                                ([id, theme]) => (
+                                    <option
+                                        key={id}
+                                        value={id}
+                                    >
+                                        {theme.organizationName}
+                                    </option>
+                                )
+                            )}
+                         </select>
                     </div>
                 </div>
             </div>
