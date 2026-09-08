@@ -23,6 +23,7 @@ import Register from "./pages/login/Register.jsx";
 import Callback from "./pages/Callback.jsx";
 
 import LiveScoring from "./pages/livescoring/LiveScoring.jsx";
+import CheckInOut from "@/pages/checkin/CheckInOut.jsx";
 
 
 export const ACCESS = {
@@ -95,6 +96,12 @@ export const AppRoutes = [
         path: "/scoring",
         element: Scoring,
         name: "Scoring",
+        access: ACCESS.USER
+    },
+    {
+        path: "/checkin",
+        element: CheckInOut,
+        name: "Check In / Check Out",
         access: ACCESS.USER
     },
     {
