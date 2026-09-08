@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Authenticate to Google Cloud via OIDC
         uses: google-github-actions/auth@v2
