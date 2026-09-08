@@ -37,14 +37,14 @@ describe('Live Backend & OIDC Integration Tests', () => {
 
     // 2. Call backend /v1/me with the Bearer token (with retries to handle container startup race conditions)
     let meRes;
-    for (let attempt = 1; attempt <= 5; attempt++) {
+    for (let attempt = 1; attempt <= 10; attempt++) {
       meRes = await fetch(`${backendUrl}/v1/me`, {
         headers: {
           'Authorization': `Bearer ${tokenData.access_token}`
         }
       });
       if (meRes.status === 200) break;
-      await new Promise(r => setTimeout(r, 250));
+      await new Promise(r => setTimeout(r, 500));
     }
 
     expect(meRes.status).toBe(200);

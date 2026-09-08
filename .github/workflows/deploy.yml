@@ -111,11 +111,11 @@ jobs:
 
       - name: Install Dependencies
         working-directory: nightrunner_frontend
-        run: npm ci || npm install
+        run: corepack enable && yarn install --frozen-lockfile
 
       - name: "Gate 1: Run Linter (oxlint)"
         working-directory: nightrunner_frontend
-        run: npm run lint
+        run: yarn lint
 
       - name: Start Backend Stack (App + OIDC Server + Postgres + Seed)
         run: |
@@ -137,14 +137,14 @@ jobs:
 
       - name: "Gate 2: Run Unit & Integration Tests (vitest against Docker Compose stack)"
         working-directory: nightrunner_frontend
-        run: npm run test
+        run: yarn test
         env:
           VITE_BACKEND_URL: "http://127.0.0.1:8000"
           VITE_OIDC_AUTHORITY: "http://localhost:4000"
 
       - name: "Gate 3: Verify Production Build (vite build)"
         working-directory: nightrunner_frontend
-        run: npm run build
+        run: yarn build
 
   deploy-frontend:
     name: Deploy Frontend to GCS
@@ -173,12 +173,14 @@ jobs:
       - name: Install & Build Frontend
         working-directory: nightrunner_frontend
         run: |
-          npm ci
-          npx vite build
+          corepack enable
+          yarn install --frozen-lockfile
+          yarn build
         env:
           VITE_BACKEND_URL: "https://nightrunner-backend-550013958206.us-east1.run.app"
           VITE_OIDC_AUTHORITY: "https://securetoken.google.com/${{ secrets.GCP_PROJECT_ID }}"
           VITE_OIDC_CLIENT_ID: "${{ secrets.GCP_GOOGLE_CLIENT_ID || secrets.GCP_PROJECT_ID }}"
+          VITE_FIREBASE_API_KEY: "${{ secrets.GCP_FIREBASE_API_KEY }}"
 
       - name: Upload Static Assets to GCS Bucket
         uses: google-github-actions/upload-cloud-storage@v2

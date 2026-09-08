@@ -51,22 +51,24 @@ jobs:
 
       - name: Install Dependencies
         working-directory: nightrunner_frontend
-        run: npm ci
+        run: corepack enable && yarn install --frozen-lockfile
 
       - name: Run Frontend Linter (oxlint)
         working-directory: nightrunner_frontend
-        run: npm run lint
+        run: yarn lint
 
       - name: Start Backend Docker Stack
         run: |
           docker compose up -d
-          echo "Waiting for API server health check..."
-          for i in {1..20}; do
-            if curl -s -f http://127.0.0.1:8000/health > /dev/null; then
-              echo "API server is healthy!"
+          echo "Waiting for API server & OIDC server health checks..."
+          for i in {1..30}; do
+            API_OK=$(curl -s -f http://127.0.0.1:8000/health > /dev/null && echo "ok" || echo "fail")
+            OIDC_OK=$(curl -s -f http://localhost:4000/.well-known/openid-configuration > /dev/null && echo "ok" || echo "fail")
+            if [ "$API_OK" = "ok" ] && [ "$OIDC_OK" = "ok" ]; then
+              echo "API server & OIDC server are healthy!"
               break
             fi
-            echo "Waiting... ($i/20)"
+            echo "Waiting... ($i/30)"
             sleep 2
           done
           echo "Waiting for database seed completion..."
@@ -74,14 +76,14 @@ jobs:
 
       - name: Run Vitest Unit & Integration Tests
         working-directory: nightrunner_frontend
-        run: npm run test
+        run: yarn test
         env:
           VITE_BACKEND_URL: "http://127.0.0.1:8000"
           VITE_OIDC_AUTHORITY: "http://localhost:4000"
 
       - name: Verify Production Build (vite build)
         working-directory: nightrunner_frontend
-        run: npm run build
+        run: yarn build
 
       - name: Tear Down Stack
         if: always()
