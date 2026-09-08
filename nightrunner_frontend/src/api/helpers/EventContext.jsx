@@ -10,12 +10,14 @@ import { useAuth } from "react-oidc-context";
 import EventSelector from "./EventSelector.jsx";
 import AuthService from "../AuthService.js";
 import ApiService from "../ApiService.js";
+import useBranding from "../../branding/useBranding";
 
 const EventContext = createContext(null);
 
 export function EventProvider({ children }) {
 
     const auth = useAuth();
+    const { changeBranding } = useBranding();
 
     const [event, setEvent] = useState(null);
     const [eventId, setEventId] = useState(null);
@@ -52,6 +54,7 @@ export function EventProvider({ children }) {
             setShowEventSelector(false);
             setError(null);
             setLoading(false);
+            changeBranding("night-ops");
 
             return;
         }
@@ -343,6 +346,10 @@ export function EventProvider({ children }) {
 
             setEventId(
                 selectedEventData.id
+            );
+
+            changeBranding(
+                selectedEventData.theme || "night-ops"
             );
 
             setShowEventSelector(
