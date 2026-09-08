@@ -147,4 +147,12 @@ resource "github_actions_secret" "gcp_backend_url" {
   plaintext_value = google_cloud_run_v2_service.backend.uri
 }
 
+resource "github_actions_secret" "gcp_domain_name" {
+  count           = var.github_repo_name != "" && var.domain_name != "" ? 1 : 0
+  repository      = var.github_repo_name
+  secret_name     = "GCP_DOMAIN_NAME"
+  plaintext_value = var.domain_name
+}
+
+
 
