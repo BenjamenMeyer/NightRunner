@@ -48,20 +48,18 @@ jobs:
           # Fetch all tags
           git fetch --tags || true
           
-          # Find latest tag matching v*.*.* or default to v0.1.0
+          # Find latest tag matching v*.*.* or default to initial release v0.1.0
           LATEST_TAG=$(git tag -l "v*" --sort=-v:refname | head -n 1)
           if [ -z "$LATEST_TAG" ]; then
-            BASE_VERSION="0.1.0"
+            NEW_VERSION="v0.1.0-${github.run_number}"
+            RELEASE_TAG="v0.1.0"
           else
             BASE_VERSION="${LATEST_TAG#v}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
+            PATCH=$((PATCH + 1))
+            NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}-${github.run_number}"
+            RELEASE_TAG="v${MAJOR}.${MINOR}.${PATCH}"
           fi
-          
-          # Parse major.minor.patch
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
-          PATCH=$((PATCH + 1))
-          
-          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}-${github.run_number}"
-          RELEASE_TAG="v${MAJOR}.${MINOR}.${PATCH}"
           
           echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
           echo "version_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
