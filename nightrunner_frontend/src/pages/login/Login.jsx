@@ -4,7 +4,8 @@ import { useAuth } from "react-oidc-context";
 import {
     isFirebaseMode,
     firebaseLoginWithEmail,
-    firebaseLoginWithGoogle
+    firebaseLoginWithGoogle,
+    firebaseSendPasswordResetEmail
 } from "@/api/firebaseAuth.js";
 
 import "./Login.css";
@@ -23,6 +24,13 @@ function Login() {
     const [password, setPassword] = useState("");
     const [firebaseError, setFirebaseError] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Reset password modal state
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [resetEmail, setResetEmail] = useState("");
+    const [resetSuccess, setResetSuccess] = useState(false);
+    const [resetError, setResetError] = useState(null);
+    const [isResetting, setIsResetting] = useState(false);
 
     const fromPath = location.state?.from ?? "/dashboard";
 
@@ -76,6 +84,36 @@ function Login() {
             setIsSubmitting(false);
         }
     }
+
+    function openResetModal() {
+        setResetEmail(email);
+        setResetSuccess(false);
+        setResetError(null);
+        setShowResetModal(true);
+    }
+
+    function closeResetModal() {
+        setShowResetModal(false);
+        setResetSuccess(false);
+        setResetError(null);
+    }
+
+    async function handleSendResetEmail(e) {
+        e.preventDefault();
+        setResetError(null);
+        setResetSuccess(false);
+        setIsResetting(true);
+        try {
+            await firebaseSendPasswordResetEmail(resetEmail);
+            setResetSuccess(true);
+        } catch (err) {
+            console.error("Firebase Password Reset error:", err);
+            setResetError(err.message || "Failed to send password reset email.");
+        } finally {
+            setIsResetting(false);
+        }
+    }
+
 
     return (
 
@@ -206,7 +244,16 @@ function Login() {
                                 </div>
 
                                 <div className="login-field">
-                                    <label htmlFor="login-password">Password</label>
+                                    <div className="login-label-row">
+                                        <label htmlFor="login-password">Password</label>
+                                        <button
+                                            type="button"
+                                            className="login-forgot-link"
+                                            onClick={openResetModal}
+                                        >
+                                            Forgot password?
+                                        </button>
+                                    </div>
                                     <input
                                         id="login-password"
                                         type="password"
@@ -331,6 +378,83 @@ function Login() {
                 </p>
 
             </div>
+
+            {showResetModal && (
+                <div className="modal-overlay" onClick={closeResetModal}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Reset Password</h2>
+                            <button
+                                type="button"
+                                className="modal-close"
+                                onClick={closeResetModal}
+                                aria-label="Close"
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        {resetSuccess ? (
+                            <div className="modal-body">
+                                <p className="modal-success-message">
+                                    Password reset email sent! Check your inbox at <strong>{resetEmail}</strong> for further instructions.
+                                </p>
+                                <button
+                                    type="button"
+                                    className="login-button"
+                                    onClick={closeResetModal}
+                                >
+                                    Done
+                                </button>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSendResetEmail} className="modal-body">
+                                <p className="modal-instruction">
+                                    Enter your email address and we'll send you a link to reset your password.
+                                </p>
+
+                                <div className="login-field">
+                                    <label htmlFor="reset-email">Email Address</label>
+                                    <input
+                                        id="reset-email"
+                                        type="email"
+                                        required
+                                        value={resetEmail}
+                                        onChange={(e) => setResetEmail(e.target.value)}
+                                        placeholder="you@example.com"
+                                        disabled={isResetting}
+                                    />
+                                </div>
+
+                                {resetError && (
+                                    <div className="login-error">
+                                        <strong>Reset failed</strong>
+                                        <span>{resetError}</span>
+                                    </div>
+                                )}
+
+                                <div className="modal-actions">
+                                    <button
+                                        type="button"
+                                        className="modal-cancel-button"
+                                        onClick={closeResetModal}
+                                        disabled={isResetting}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="login-button"
+                                        disabled={isResetting}
+                                    >
+                                        {isResetting ? "Sending..." : "Send Reset Email"}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            )}
 
         </div>
 
