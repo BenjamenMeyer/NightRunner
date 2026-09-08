@@ -20,6 +20,7 @@ class MeResource:
             "username": user["username"],
             "email": user["email"],
             "displayName": user["display_name"],
+            "isAdmin": user.get("is_admin", False) or ("admin" in req.context.roles) or ("system-admin" in req.context.roles),
             "roles": req.context.roles,
         }
         resp.status = falcon.HTTP_200

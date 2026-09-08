@@ -72,7 +72,7 @@ class AuthMiddleware:
             # Optimized query to fetch user and roles in one go
             rows = await self.db.execute(
                 """
-                SELECT u.id, u.username, u.email, u.display_name, r.role
+                SELECT u.id, u.username, u.email, u.display_name, u.is_admin, r.role
                 FROM users u
                 LEFT JOIN user_roles r ON u.id = r.user_id
                 WHERE u.external_id = :ext_id
@@ -92,8 +92,8 @@ class AuthMiddleware:
                 try:
                     await self.db.execute(
                         """
-                        INSERT INTO users (id, external_id, username, email, display_name)
-                        VALUES (:id, :ext_id, :username, :email, :display_name)
+                        INSERT INTO users (id, external_id, username, email, display_name, is_admin)
+                        VALUES (:id, :ext_id, :username, :email, :display_name, FALSE)
                         """,
                         {
                             "id": new_user_id,
@@ -108,6 +108,7 @@ class AuthMiddleware:
                         "username": username,
                         "email": email,
                         "display_name": name,
+                        "is_admin": False,
                         "role": None
                     }]
                 except Exception as ex:
@@ -119,7 +120,8 @@ class AuthMiddleware:
                 "id": rows[0]["id"],
                 "username": rows[0]["username"],
                 "email": rows[0]["email"],
-                "display_name": rows[0]["display_name"]
+                "display_name": rows[0]["display_name"],
+                "is_admin": bool(rows[0].get("is_admin"))
             }
             # Collect all non-null roles from rows
             roles = [row["role"] for row in rows if row.get("role")]
