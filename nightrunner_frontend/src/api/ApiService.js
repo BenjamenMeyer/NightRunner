@@ -4,6 +4,7 @@ import AuthService from "./AuthService.js";
 import UserService from "./UserService.js";
 import EventService from "./EventService.js";
 import PatrolService from "./PatrolService.js";
+import ReportService from "./ReportService.js";
 import StationService from "./StationService.js";
 import ConfigurationService from "@/api/ConfigurationService.js";
 
@@ -57,6 +58,13 @@ class ApiService {
     configurationData;
 
     /**
+     * Report operations
+     *
+     * @type {ReportService}
+     */
+    reportData;
+
+    /**
      * Direct backend transport.
      *
      * @type {BackendTransport}
@@ -94,6 +102,9 @@ class ApiService {
 
         this.configurationData =
             new ConfigurationService();
+
+        this.reportData =
+            new ReportService();
 
     }
 
