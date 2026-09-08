@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 
 import "./Sidebar.css";
-
+import AuthService from "../api/AuthService.js";
 import ApiService from "../api/ApiService.js";
 import {
     ACCESS,
@@ -54,7 +54,7 @@ function Sidebar({ open, close }) {
     const auth =
         useAuth();
 
-    const loggedIn = auth.isAuthenticated;
+    const loggedIn = AuthService.isAuthenticated();
 
     const user =
         ApiService.userData.getCached();
