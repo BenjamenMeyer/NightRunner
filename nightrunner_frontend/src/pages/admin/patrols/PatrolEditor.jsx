@@ -1,10 +1,17 @@
-import { useEffect, useState } from "react";
+import {
+    useEffect,
+    useState
+} from "react";
+
 import {
     useNavigate,
     useSearchParams
 } from "react-router-dom";
 
 import ApiService from "../../../api/ApiService.js";
+import { useEventContext } from "@/api/helpers/EventContext.jsx";
+
+import QRCodeModal from "./QRCodeModal.jsx";
 
 import "./PatrolEditor.css";
 
@@ -20,7 +27,7 @@ const EMPTY_MEMBER = {
 };
 
 const EMPTY_PATROL = {
-    programName: "",
+    name: "",
     members: []
 };
 
@@ -31,12 +38,22 @@ export default function PatrolEditor({
                                      }) {
 
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
+
+    const [searchParams] =
+        useSearchParams();
+
+    const {
+        eventId,
+        event,
+        loading: eventLoading,
+        error: eventError
+    } = useEventContext();
 
     const patrolId =
         searchParams.get("patrolId");
 
-    const isEdit = mode === "edit";
+    const isEdit =
+        mode === "edit";
 
     const [patrol, setPatrol] =
         useState(EMPTY_PATROL);
@@ -48,7 +65,10 @@ export default function PatrolEditor({
         useState(null);
 
     const [loading, setLoading] =
-        useState(isEdit);
+        useState(
+            isEdit ||
+            eventLoading
+        );
 
     const [saving, setSaving] =
         useState(false);
@@ -59,10 +79,47 @@ export default function PatrolEditor({
     const [memberError, setMemberError] =
         useState(null);
 
+    const [showQRCode, setShowQRCode] =
+        useState(false);
+
+
+    //
+    // Load the patrol when editing.
+    //
+
     useEffect(() => {
 
-        if (!isEdit) {
+        if (eventLoading) {
             return;
+        }
+
+        if (eventError) {
+
+            setError(eventError);
+            setLoading(false);
+
+            return;
+
+        }
+
+        if (!eventId) {
+
+            setError(
+                "No event is currently selected."
+            );
+
+            setLoading(false);
+
+            return;
+
+        }
+
+        if (!isEdit) {
+
+            setLoading(false);
+
+            return;
+
         }
 
         if (!patrolId) {
@@ -74,11 +131,23 @@ export default function PatrolEditor({
             setLoading(false);
 
             return;
+
         }
 
         loadPatrol();
 
-    }, [isEdit, patrolId]);
+    }, [
+        eventId,
+        eventLoading,
+        eventError,
+        isEdit,
+        patrolId
+    ]);
+
+
+    //
+    // Load existing patrol.
+    //
 
     async function loadPatrol() {
 
@@ -95,7 +164,8 @@ export default function PatrolEditor({
             setPatrol({
                 ...EMPTY_PATROL,
                 ...data,
-                members: data.members ?? []
+                members:
+                    data.members ?? []
             });
 
         } catch (error) {
@@ -106,7 +176,7 @@ export default function PatrolEditor({
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to load patrol."
             );
 
@@ -118,7 +188,15 @@ export default function PatrolEditor({
 
     }
 
-    function updatePatrol(field, value) {
+
+    //
+    // Update patrol information.
+    //
+
+    function updatePatrol(
+        field,
+        value
+    ) {
 
         setPatrol(current => ({
             ...current,
@@ -127,16 +205,31 @@ export default function PatrolEditor({
 
     }
 
-    function updateMember(field, value) {
+
+    //
+    // Update member editor.
+    //
+
+    function updateMember(
+        field,
+        value
+    ) {
 
         setMember(current => ({
             ...current,
-            [field]: field === "troop"
-                ? value.toUpperCase()
-                : value
+
+            [field]:
+                field === "troop"
+                    ? value.toUpperCase()
+                    : value
         }));
 
     }
+
+
+    //
+    // Reset member editor.
+    //
 
     function resetMemberEditor() {
 
@@ -149,13 +242,27 @@ export default function PatrolEditor({
 
     }
 
-    function validateTroop(troop) {
+
+    //
+    // Validate troop number.
+    //
+
+    function validateTroop(
+        troop
+    ) {
 
         return TROOP_PATTERN.test(
-            troop.trim().toUpperCase()
+            troop
+                .trim()
+                .toUpperCase()
         );
 
     }
+
+
+    //
+    // Add or update member.
+    //
 
     function addMember() {
 
@@ -165,7 +272,9 @@ export default function PatrolEditor({
             member.name.trim();
 
         const troop =
-            member.troop.trim().toUpperCase();
+            member.troop
+                .trim()
+                .toUpperCase();
 
         if (!name) {
 
@@ -189,12 +298,14 @@ export default function PatrolEditor({
 
         const newMember = {
 
-            id: editingMemberId ??
+            id:
+                editingMemberId ??
                 crypto.randomUUID(),
 
             name,
 
-            rank: member.rank,
+            rank:
+            member.rank,
 
             troop
 
@@ -204,19 +315,21 @@ export default function PatrolEditor({
 
             ...current,
 
-            members: editingMemberId
+            members:
+                editingMemberId
 
-                ? current.members.map(
-                    existing =>
-                        existing.id === editingMemberId
-                            ? newMember
-                            : existing
-                )
+                    ? current.members.map(
+                        existing =>
+                            existing.id ===
+                            editingMemberId
+                                ? newMember
+                                : existing
+                    )
 
-                : [
-                    ...current.members,
-                    newMember
-                ]
+                    : [
+                        ...current.members,
+                        newMember
+                    ]
 
         }));
 
@@ -224,7 +337,14 @@ export default function PatrolEditor({
 
     }
 
-    function editMember(memberToEdit) {
+
+    //
+    // Edit existing member.
+    //
+
+    function editMember(
+        memberToEdit
+    ) {
 
         setEditingMemberId(
             memberToEdit.id
@@ -236,7 +356,8 @@ export default function PatrolEditor({
                 memberToEdit.name ?? "",
 
             rank:
-                memberToEdit.rank ?? RANKS[0],
+                memberToEdit.rank ??
+                RANKS[0],
 
             troop:
                 memberToEdit.troop ?? ""
@@ -252,32 +373,58 @@ export default function PatrolEditor({
 
     }
 
-    function removeMember(id) {
+
+    //
+    // Remove member.
+    //
+
+    function removeMember(
+        id
+    ) {
 
         setPatrol(current => ({
 
             ...current,
 
-            members: current.members.filter(
-                member => member.id !== id
-            )
+            members:
+                current.members.filter(
+                    member =>
+                        member.id !== id
+                )
 
         }));
 
-        if (editingMemberId === id) {
+        if (
+            editingMemberId === id
+        ) {
             resetMemberEditor();
         }
 
     }
 
+
+    //
+    // Save patrol.
+    //
+
     async function savePatrol() {
 
         setError(null);
 
-        const programName =
-            patrol.programName.trim();
+        if (!eventId) {
 
-        if (!programName) {
+            setError(
+                "No event is currently selected."
+            );
+
+            return;
+
+        }
+
+        const name =
+            patrol.name.trim();
+
+        if (!name) {
 
             setError(
                 "Patrol name is required."
@@ -295,18 +442,23 @@ export default function PatrolEditor({
 
                 ...patrol,
 
-                programName,
+                name,
 
-                members: patrol.members.map(
-                    member => ({
-                        ...member,
-                        name: member.name.trim(),
-                        troop:
-                            member.troop
-                                ?.trim()
-                                .toUpperCase() ?? ""
-                    })
-                )
+                members:
+                    patrol.members.map(
+                        member => ({
+                            ...member,
+
+                            name:
+                                member.name.trim(),
+
+                            troop:
+                                member.troop
+                                    ?.trim()
+                                    .toUpperCase() ??
+                                ""
+                        })
+                    )
 
             };
 
@@ -320,12 +472,15 @@ export default function PatrolEditor({
             } else {
 
                 await ApiService.patrolData.createPatrol(
+                    eventId,
                     payload
                 );
 
             }
 
-            navigate("/admin/patrols");
+            navigate(
+                "/admin/patrols"
+            );
 
         } catch (error) {
 
@@ -335,7 +490,7 @@ export default function PatrolEditor({
             );
 
             setError(
-                error.message ??
+                error?.message ??
                 "Failed to save patrol."
             );
 
@@ -346,6 +501,59 @@ export default function PatrolEditor({
         }
 
     }
+
+
+    //
+    // Event loading.
+    //
+
+    if (eventLoading) {
+
+        return (
+
+            <div className="patrol-editor-page">
+
+                <div className="editor-loading">
+
+                    <span className="loading-spinner" />
+
+                    Loading event...
+
+                </div>
+
+            </div>
+
+        );
+
+    }
+
+
+    //
+    // Event error.
+    //
+
+    if (eventError) {
+
+        return (
+
+            <div className="patrol-editor-page">
+
+                <div className="error-banner">
+
+                    {eventError}
+
+                </div>
+
+            </div>
+
+        );
+
+    }
+
+
+    //
+    // Patrol loading.
+    //
 
     if (loading) {
 
@@ -367,6 +575,7 @@ export default function PatrolEditor({
 
     }
 
+
     return (
 
         <div className="patrol-editor-page">
@@ -377,7 +586,9 @@ export default function PatrolEditor({
                     type="button"
                     className="back-button"
                     onClick={() =>
-                        navigate("/admin/patrols")
+                        navigate(
+                            "/admin/patrols"
+                        )
                     }
                 >
                     ← Back to Patrols
@@ -398,14 +609,15 @@ export default function PatrolEditor({
 
                     <p>
                         {isEdit
-                            ? "Update the patrol and its members."
-                            : "Create a patrol and add its members."
+                            ? `Update the patrol and its members for ${event?.name ?? "the current event"}.`
+                            : `Create a patrol for ${event?.name ?? "the current event"} and add its members.`
                         }
                     </p>
 
                 </div>
 
             </header>
+
 
             {error && (
 
@@ -416,6 +628,7 @@ export default function PatrolEditor({
                 </div>
 
             )}
+
 
             <div className="editor-layout">
 
@@ -437,7 +650,23 @@ export default function PatrolEditor({
 
                         </div>
 
+                        {isEdit &&
+                            patrol.id && (
+
+                                <button
+                                    type="button"
+                                    className="secondary-button"
+                                    onClick={() =>
+                                        setShowQRCode(true)
+                                    }
+                                >
+                                    QR Code
+                                </button>
+
+                            )}
+
                     </div>
+
 
                     <div className="editor-card-body">
 
@@ -449,11 +678,11 @@ export default function PatrolEditor({
 
                             <input
                                 value={
-                                    patrol.programName
+                                    patrol.name
                                 }
                                 onChange={event =>
                                     updatePatrol(
-                                        "programName",
+                                        "name",
                                         event.target.value
                                     )
                                 }
@@ -466,6 +695,7 @@ export default function PatrolEditor({
                     </div>
 
                 </section>
+
 
                 {/* Members */}
 
@@ -493,6 +723,7 @@ export default function PatrolEditor({
                         </span>
 
                     </div>
+
 
                     <div className="editor-card-body">
 
@@ -524,6 +755,7 @@ export default function PatrolEditor({
 
                                     </thead>
 
+
                                     <tbody>
 
                                     {patrol.members.map(
@@ -536,25 +768,31 @@ export default function PatrolEditor({
                                             >
 
                                                 <td>
+
                                                     <strong>
                                                         {
                                                             currentMember.name
                                                         }
                                                     </strong>
+
                                                 </td>
 
                                                 <td>
+
                                                     {
                                                         currentMember.rank
                                                     }
+
                                                 </td>
 
                                                 <td>
+
                                                     <code>
                                                         {
                                                             currentMember.troop
                                                         }
                                                     </code>
+
                                                 </td>
 
                                                 <td>
@@ -617,6 +855,7 @@ export default function PatrolEditor({
 
                         )}
 
+
                         <div className="member-editor">
 
                             <div className="member-editor-header">
@@ -641,6 +880,7 @@ export default function PatrolEditor({
 
                             </div>
 
+
                             {memberError && (
 
                                 <div className="member-error">
@@ -651,15 +891,19 @@ export default function PatrolEditor({
 
                             )}
 
+
                             <div className="member-form">
 
                                 <label className="form-field">
+
                                     <span>
                                         Name
                                     </span>
 
                                     <input
-                                        value={member.name}
+                                        value={
+                                            member.name
+                                        }
                                         onChange={event =>
                                             updateMember(
                                                 "name",
@@ -675,13 +919,17 @@ export default function PatrolEditor({
 
                                 </label>
 
+
                                 <label className="form-field">
+
                                     <span>
                                         Rank
                                     </span>
 
                                     <select
-                                        value={member.rank}
+                                        value={
+                                            member.rank
+                                        }
                                         onChange={event =>
                                             updateMember(
                                                 "rank",
@@ -690,16 +938,18 @@ export default function PatrolEditor({
                                         }
                                     >
 
-                                        {RANKS.map(rank => (
+                                        {RANKS.map(
+                                            rank => (
 
-                                            <option
-                                                key={rank}
-                                                value={rank}
-                                            >
-                                                {rank}
-                                            </option>
+                                                <option
+                                                    key={rank}
+                                                    value={rank}
+                                                >
+                                                    {rank}
+                                                </option>
 
-                                        ))}
+                                            )
+                                        )}
 
                                     </select>
 
@@ -709,13 +959,17 @@ export default function PatrolEditor({
 
                                 </label>
 
+
                                 <label className="form-field troop-field">
+
                                     <span>
                                         Troop
                                     </span>
 
                                     <input
-                                        value={member.troop}
+                                        value={
+                                            member.troop
+                                        }
                                         onChange={event =>
                                             updateMember(
                                                 "troop",
@@ -733,6 +987,7 @@ export default function PatrolEditor({
                                     </small>
 
                                 </label>
+
 
                                 <div className="member-form-actions">
 
@@ -775,18 +1030,22 @@ export default function PatrolEditor({
 
             </div>
 
+
             <footer className="editor-footer">
 
                 <button
                     type="button"
                     className="secondary-button"
                     onClick={() =>
-                        navigate("/admin/patrols")
+                        navigate(
+                            "/admin/patrols"
+                        )
                     }
                     disabled={saving}
                 >
                     Cancel
                 </button>
+
 
                 <button
                     type="button"
@@ -794,7 +1053,7 @@ export default function PatrolEditor({
                     onClick={savePatrol}
                     disabled={
                         saving ||
-                        !patrol.programName.trim()
+                        !patrol.name.trim()
                     }
                 >
                     {saving
@@ -806,6 +1065,18 @@ export default function PatrolEditor({
                 </button>
 
             </footer>
+
+
+            {showQRCode && (
+
+                <QRCodeModal
+                    patrol={patrol}
+                    onClose={() =>
+                        setShowQRCode(false)
+                    }
+                />
+
+            )}
 
         </div>
 

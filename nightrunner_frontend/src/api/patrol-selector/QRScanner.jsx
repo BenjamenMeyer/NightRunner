@@ -1,20 +1,42 @@
-import { useEffect, useRef, useState } from "react";
-import { Html5Qrcode } from "html5-qrcode";
-import "../../pages/scoring/Scoring.css";
+import {
+    useEffect,
+    useRef,
+    useState
+} from "react";
 
-export default function QRScanner({ onScan, onCancel }) {
+import {
+    Html5Qrcode
+} from "html5-qrcode";
 
-    const scannerRef = useRef(null);
-    const [error, setError] = useState(null);
+import "./QRScanner.css";
+
+export default function QRScanner({
+                                      onScan,
+                                      onCancel
+                                  }) {
+
+    const scannerRef =
+        useRef(null);
+
+    const [error, setError] =
+        useState(null);
+
+    const [scanning, setScanning] =
+        useState(false);
 
     useEffect(() => {
 
-        const scanner = new Html5Qrcode("qr-reader");
+        const scanner =
+            new Html5Qrcode(
+                "qr-reader"
+            );
 
-        scannerRef.current = scanner;
+        scannerRef.current =
+            scanner;
 
         let mounted = true;
         let started = false;
+        let scanned = false;
 
         async function startScanner() {
 
@@ -22,56 +44,137 @@ export default function QRScanner({ onScan, onCancel }) {
 
                 setError(null);
 
+                /*
+                 * Request access to the available cameras.
+                 */
+                const cameras =
+                    await Html5Qrcode.getCameras();
+
+                if (!mounted) {
+                    return;
+                }
+
+                if (
+                    !cameras ||
+                    cameras.length === 0
+                ) {
+
+                    throw new Error(
+                        "NO_CAMERA"
+                    );
+
+                }
+
+                /*
+                 * Prefer the rear/environment camera.
+                 */
+                const camera =
+                    cameras.find(
+                        currentCamera =>
+                            /back|rear|environment/i.test(
+                                currentCamera.label
+                            )
+                    ) ?? cameras[0];
+
                 await scanner.start(
-                    {
-                        facingMode: "environment"
-                    },
+                    camera.id,
                     {
                         fps: 10,
+
                         qrbox: {
                             width: 250,
                             height: 250
-                        }
-                    },
-                    (decodedText) => {
+                        },
 
-                        if (!mounted) {
+                        aspectRatio: 1
+                    },
+                    decodedText => {
+
+                        if (
+                            !mounted ||
+                            scanned
+                        ) {
                             return;
                         }
 
+                        /*
+                         * The QR code contains a JSON object:
+                         *
+                         * {
+                         *     "id": "patrol-uuid"
+                         * }
+                         */
+                        let payload;
+
                         try {
 
-                            const patrolId = JSON.parse(decodedText);
+                            payload =
+                                JSON.parse(
+                                    decodedText.trim()
+                                );
 
-                            if (!patrolId) {
-                                throw new Error("Empty QR code");
-                            }
-
-                            // The QR code contains the patrol UUID.
-                            onScan?.({
-                                id: patrolId
-                            });
-
-                        } catch (error) {
-
-                            console.error(
-                                "Invalid patrol QR code:",
-                                error
-                            );
+                        } catch {
 
                             setError(
                                 "This is not a valid patrol QR code."
                             );
 
+                            return;
+
                         }
+
+                        /*
+                         * Validate the decoded payload.
+                         */
+                        if (
+                            !payload ||
+                            typeof payload !== "object" ||
+                            typeof payload.id !== "string" ||
+                            !payload.id.trim()
+                        ) {
+
+                            setError(
+                                "This is not a valid patrol QR code."
+                            );
+
+                            return;
+
+                        }
+
+                        /*
+                         * Prevent the same QR code from
+                         * triggering multiple callbacks.
+                         */
+                        scanned = true;
+
+                        const patrolId =
+                            payload.id.trim();
+
+                        /*
+                         * Pass the patrol UUID to the caller.
+                         */
+                        onScan?.({
+                            id: patrolId
+                        });
 
                     },
                     () => {
-                        // Ignore normal QR decode failures.
+
+                        /*
+                         * Normal decode failures are ignored.
+                         *
+                         * The scanner calls this continuously
+                         * while it searches for a QR code.
+                         */
+
                     }
                 );
 
                 started = true;
+
+                if (mounted) {
+                    setScanning(true);
+                }
 
             } catch (error) {
 
@@ -84,16 +187,51 @@ export default function QRScanner({ onScan, onCancel }) {
                     return;
                 }
 
-                if (error?.name === "NotFoundError") {
+                setScanning(false);
+
+                if (
+                    error?.message ===
+                    "NO_CAMERA"
+                ) {
 
                     setError(
                         "No camera was found on this device."
                     );
 
-                } else if (error?.name === "NotAllowedError") {
+                } else if (
+                    error?.name ===
+                    "NotAllowedError"
+                ) {
 
                     setError(
                         "Camera permission was denied. Please allow camera access and try again."
+                    );
+
+                } else if (
+                    error?.name ===
+                    "NotFoundError"
+                ) {
+
+                    setError(
+                        "No camera was found on this device."
+                    );
+
+                } else if (
+                    error?.name ===
+                    "NotReadableError"
+                ) {
+
+                    setError(
+                        "The camera is already being used by another application."
+                    );
+
+                } else if (
+                    error?.name ===
+                    "SecurityError"
+                ) {
+
+                    setError(
+                        "Camera access is not available from this page."
                     );
 
                 } else {
@@ -114,17 +252,17 @@ export default function QRScanner({ onScan, onCancel }) {
 
             mounted = false;
 
-            // Only attempt to stop the scanner if it
-            // actually started successfully.
             if (!started) {
                 return;
             }
 
-            scanner.stop()
+            scanner
+                .stop()
                 .catch(error => {
 
-                    // The scanner may already have stopped.
-                    // Do not let cleanup throw into React.
+                    /*
+                     * The scanner may already have stopped.
+                     */
                     console.debug(
                         "QR scanner cleanup:",
                         error
@@ -144,48 +282,67 @@ export default function QRScanner({ onScan, onCancel }) {
 
     return (
 
-        <div className="modal-backdrop">
+        <div
+            className="qr-scanner-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="qr-scanner-title"
+        >
 
-            <div className="modal qr-modal">
+            <div className="qr-scanner-modal">
 
-                <h2>
-                    Scan Patrol QR Code
-                </h2>
+                <div className="qr-scanner-header">
 
-                <p>
-                    Scan the QR code assigned to the patrol.
-                </p>
+                    <div>
 
-                <div
-                    id="qr-reader"
-                    className="qr-reader"
-                />
+                        <h2 id="qr-scanner-title">
+                            Scan Patrol QR Code
+                        </h2>
 
-                {error && (
-
-                    <div className="qr-error">
-
-                        {error}
+                        <p>
+                            Scan the QR code assigned
+                            to the patrol.
+                        </p>
 
                     </div>
 
+                </div>
+
+                <div className="qr-scanner-view">
+
+                    <div
+                        id="qr-reader"
+                        className="qr-reader"
+                    />
+
+                </div>
+
+                {scanning && !error && (
+
+                    <p className="qr-scanner-status">
+                        Point your camera at the patrol
+                        QR code.
+                    </p>
+
                 )}
 
-                <div className="modal-buttons">
+                {error && (
 
+                    <div className="qr-scanner-error">
+                        {error}
+                    </div>
+
+                )}
+                <div className="qr-scanner-actions">
                     <button
-                        className="secondary-button"
+                        type="button"
+                        className="qr-scanner-cancel"
                         onClick={handleCancel}
                     >
                         Cancel
                     </button>
-
                 </div>
-
             </div>
-
         </div>
-
     );
-
 }

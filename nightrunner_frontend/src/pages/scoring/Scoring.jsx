@@ -174,7 +174,7 @@ export default function Scoring() {
                                 onSelect={
                                     handlePatrolSelection
                                 }
-                                displayField="programName"
+                                displayField="name"
                                 allowScan
                             />
 
@@ -209,7 +209,7 @@ export default function Scoring() {
                                     </small>
 
                                     <div>
-                                        {selectedPatrol.programName}
+                                        {selectedPatrol.name}
                                     </div>
 
                                 </div>
@@ -257,7 +257,7 @@ export default function Scoring() {
                                     <strong>
                                         Patrol:
                                     </strong>{" "}
-                                    {selectedPatrol.programName}
+                                    {selectedPatrol.name}
 
                                     <br />
 

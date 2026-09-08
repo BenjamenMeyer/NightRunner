@@ -119,7 +119,7 @@ export default function Patrols() {
                         >
                             <div className="patrol-card-header">
                                 <h2>
-                                    {patrol.programName}
+                                    {patrol.name}
                                 </h2>
                             </div>
 

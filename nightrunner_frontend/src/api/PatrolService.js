@@ -1,25 +1,42 @@
 /**
  * Provides patrol-related API operations.
  *
- * Patrols are event-scoped. When no event ID is supplied,
- * the current user's assigned event is used.
+ * Patrols are event-scoped. The event ID must be supplied
+ * explicitly by the caller. Event selection is managed by
+ * EventContext and is not handled by this service.
  */
 export default class PatrolService {
 
-    constructor(transport, userService) {
+    constructor(transport) {
 
         this.transport = transport;
-        this.userService = userService;
 
     }
 
     /**
      * Gets a patrol by UUID.
      *
+     * @param {string} eventId
+     *     ID of the event the patrol belongs to.
+     *
      * @param {string} patrolId
-     * @returns {Promise<Object>} Patrol object.
+     *     UUID of the patrol.
+     *
+     * @returns {Promise<Object>}
+     *     Patrol object.
      */
-    async getPatrol(patrolId) {
+    async getPatrol(
+        eventId,
+        patrolId
+    ) {
+
+        if (!eventId) {
+
+            throw new Error(
+                "An event ID is required."
+            );
+
+        }
 
         if (!patrolId) {
 
@@ -38,28 +55,26 @@ export default class PatrolService {
     /**
      * Gets all patrols for an event.
      *
-     * If eventId is omitted, the current user's event
-     * is used.
+     * @param {string} eventId
+     *     ID of the event whose patrols should be returned.
      *
-     * @param {string|null} eventId
-     * @returns {Promise<Object[]>} Array of patrol objects.
+     * @returns {Promise<Object[]>}
+     *     Array of patrol objects.
      */
-    async getPatrols(eventId = null) {
+    async getPatrols(
+        eventId
+    ) {
 
-        const resolvedEventId =
-            eventId ??
-            this.userService.getEventId();
-
-        if (!resolvedEventId) {
+        if (!eventId) {
 
             throw new Error(
-                "No event is currently selected."
+                "An event ID is required."
             );
 
         }
 
         return await this.transport.get(
-            `/patrols?event=${resolvedEventId}`
+            `/patrols?event=${encodeURIComponent(eventId)}`
         );
 
     }
@@ -67,23 +82,38 @@ export default class PatrolService {
     /**
      * Creates a patrol for an event.
      *
-     * If eventId is omitted, the current user's event
-     * is used.
+     * @param {string} eventId
+     *     ID of the event the patrol belongs to.
      *
      * @param {Object} patrol
-     * @param {string|null} eventId
-     * @returns {Promise<Object>} Created patrol object.
+     *     Patrol data.
+     *
+     * @param {string} patrol.name
+     *     Name of the patrol.
+     *
+     * @param {Object[]} [patrol.members=[]]
+     *     Members belonging to the patrol.
+     *
+     * @returns {Promise<Object>}
+     *     Created patrol object.
      */
-    async createPatrol(patrol, eventId = null) {
+    async createPatrol(
+        eventId,
+        patrol
+    ) {
 
-        const resolvedEventId =
-            eventId ??
-            this.userService.getEventId();
-
-        if (!resolvedEventId) {
+        if (!eventId) {
 
             throw new Error(
-                "No event is currently selected."
+                "An event ID is required."
+            );
+
+        }
+
+        if (!patrol) {
+
+            throw new Error(
+                "Patrol data is required."
             );
 
         }
@@ -92,7 +122,7 @@ export default class PatrolService {
             "/patrols",
             {
                 ...patrol,
-                event: resolvedEventId
+                eventId
             }
         );
 
@@ -101,15 +131,60 @@ export default class PatrolService {
     /**
      * Updates a patrol.
      *
+     * @param {string} eventId
+     *     ID of the event the patrol belongs to.
+     *
      * @param {string} patrolId
+     *     UUID of the patrol to update.
+     *
      * @param {Object} patrol
-     * @returns {Promise<Object>} Updated patrol object.
+     *     Updated patrol data.
+     *
+     * @param {string} [patrol.name]
+     *     Updated patrol name.
+     *
+     * @param {Object[]} [patrol.members]
+     *     Updated patrol members.
+     *
+     * @returns {Promise<Object>}
+     *     Updated patrol object.
      */
-    async updatePatrol(patrolId, patrol) {
+    async updatePatrol(
+        eventId,
+        patrolId,
+        patrol
+    ) {
+
+        if (!eventId) {
+
+            throw new Error(
+                "An event ID is required."
+            );
+
+        }
+
+        if (!patrolId) {
+
+            throw new Error(
+                "A patrol ID is required."
+            );
+
+        }
+
+        if (!patrol) {
+
+            throw new Error(
+                "Patrol data is required."
+            );
+
+        }
 
         return await this.transport.put(
             `/patrols/${patrolId}`,
-            patrol
+            {
+                ...patrol,
+                eventId
+            }
         );
 
     }
@@ -117,10 +192,26 @@ export default class PatrolService {
     /**
      * Deletes a patrol.
      *
+     * @param {string} eventId
+     *     ID of the event the patrol belongs to.
+     *
      * @param {string} patrolId
-     * @returns {Promise<null>} Null on success.
+     *     UUID of the patrol to delete.
+     *
+     * @returns {Promise<null>}
+     *     Null on successful deletion.
      */
-    async deletePatrol(patrolId) {
+    async deletePatrol(
+        patrolId
+    ) {
+
+        if (!patrolId) {
+
+            throw new Error(
+                "A patrol ID is required."
+            );
+
+        }
 
         return await this.transport.delete(
             `/patrols/${patrolId}`

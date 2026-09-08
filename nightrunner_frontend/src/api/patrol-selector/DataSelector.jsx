@@ -1,4 +1,6 @@
-import { useState } from "react";
+import {
+    useState
+} from "react";
 
 import QRScanner from "./QRScanner.jsx";
 
@@ -14,9 +16,15 @@ export default function DataSelector({
                                          displayField = "name",
                                          allowScan = false
                                      }) {
-    const [showScanner, setShowScanner] = useState(false);
+
+    const [showScanner, setShowScanner] =
+        useState(false);
+
+    const [scanError, setScanError] =
+        useState(null);
 
     function handleManualSelection(event) {
+
         const selectedItem =
             items.find(
                 item =>
@@ -24,12 +32,76 @@ export default function DataSelector({
                     String(event.target.value)
             );
 
-        onSelect(selectedItem ?? null);
+        onSelect(
+            selectedItem ?? null
+        );
+
     }
 
-    function handleScan(item) {
-        onSelect(item);
+    function handleScan(scannedData) {
+
+        setScanError(null);
+
+        const scannedId =
+            scannedData?.id?.trim();
+
+        if (!scannedId) {
+
+            setScanError(
+                "The scanned QR code does not contain a patrol ID."
+            );
+
+            return;
+        }
+
+        const selectedItem =
+            items.find(
+                item =>
+                    String(item.id) ===
+                    String(scannedId)
+            );
+
+        if (!selectedItem) {
+
+            setScanError(
+                "The scanned patrol could not be found in this event."
+            );
+
+            return;
+        }
+
+        /*
+         * Return the complete item to the parent.
+         *
+         * The parent therefore receives:
+         *
+         * {
+         *     id,
+         *     name,
+         *     members,
+         *     ...
+         * }
+         */
+        onSelect(
+            selectedItem
+        );
+
         setShowScanner(false);
+
+    }
+
+    function openScanner() {
+
+        setScanError(null);
+        setShowScanner(true);
+
+    }
+
+    function closeScanner() {
+
+        setScanError(null);
+        setShowScanner(false);
+
     }
 
     return (
@@ -51,13 +123,14 @@ export default function DataSelector({
                 </div>
 
                 {allowScan ? (
+
                     <div className="data-selector-options">
 
                         <button
                             type="button"
                             className="scan-card"
-                            onClick={() =>
-                                setShowScanner(true)
+                            onClick={
+                                openScanner
                             }
                         >
                             <span className="scan-icon">
@@ -92,19 +165,24 @@ export default function DataSelector({
                                 </option>
 
                                 {items.map(item => (
+
                                     <option
                                         key={item.id}
                                         value={item.id}
                                     >
                                         {item[displayField]}
                                     </option>
+
                                 ))}
+
                             </select>
 
                         </div>
 
                     </div>
+
                 ) : (
+
                     <div className="manual-selection">
 
                         <label>
@@ -124,19 +202,32 @@ export default function DataSelector({
                             </option>
 
                             {items.map(item => (
+
                                 <option
                                     key={item.id}
                                     value={item.id}
                                 >
                                     {item[displayField]}
                                 </option>
+
                             ))}
+
                         </select>
 
                     </div>
+
+                )}
+
+                {scanError && (
+
+                    <div className="qr-scanner-error">
+                        {scanError}
+                    </div>
+
                 )}
 
                 {selected && (
+
                     <div className="selected-data">
 
                         <span>
@@ -144,6 +235,7 @@ export default function DataSelector({
                         </span>
 
                         <div>
+
                             <small>
                                 Selected {label}
                             </small>
@@ -151,21 +243,24 @@ export default function DataSelector({
                             <div>
                                 {selected[displayField]}
                             </div>
+
                         </div>
 
                     </div>
+
                 )}
 
             </div>
 
             {showScanner && (
+
                 <QRScanner
                     onScan={handleScan}
-                    onCancel={() =>
-                        setShowScanner(false)
-                    }
+                    onCancel={closeScanner}
                 />
+
             )}
+
         </>
     );
 }
