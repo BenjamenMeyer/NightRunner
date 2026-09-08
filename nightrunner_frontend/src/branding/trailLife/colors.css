@@ -3,7 +3,7 @@
     /* Backgrounds */
 
     --sidebar-bg: #2F343A;
-    --header-bg: #8B1E23;
+    --header-bg: #79060D;
     --page-bg: #ECEFF1;
 
     /* Cards */
@@ -28,18 +28,18 @@
 
     /* Buttons */
 
-    --button-bg: #8B1E23;
-    --button-hover: #74181C;
+    --button-bg: #79060D;
+    --button-hover: #5e040a;
 
     --button-text: #FFFFFF;
 
     --input-bg: #FFFFFF;
     --input-border: #D6D9DC;
     --input-text: #222222;
-    --input-focus: #8B1E23;
+    --input-focus: #79060D;
 
-    --link: #8B1E23;
-    --link-hover: #74181C;
+    --link: #79060D;
+    --link-hover: #5e040a;
 
     --shadow: 0 2px 8px rgba(0,0,0,.12);
 
