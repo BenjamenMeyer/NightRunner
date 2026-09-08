@@ -24,9 +24,16 @@ export default function AuthServiceProvider({
                     if (token) {
                         localStorage.setItem("firebase_id_token", token);
                         setFirebaseUser(user);
+                        // Eagerly fetch backend user profile & roles so cached user and admin rights update reactively
+                        import("@/api/ApiService.js").then(({ default: ApiService }) => {
+                            ApiService.userData.get().catch(() => {});
+                        });
                     } else {
                         localStorage.removeItem("firebase_id_token");
                         setFirebaseUser(null);
+                        import("@/api/ApiService.js").then(({ default: ApiService }) => {
+                            ApiService.userData.clear();
+                        });
                     }
                 });
             }
