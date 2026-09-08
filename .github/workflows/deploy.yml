@@ -29,6 +29,44 @@ jobs:
             frontend:
               - 'nightrunner_frontend/**'
 
+  # Generate semantic version for release and deployments
+  version:
+    name: Generate Release Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+      version_tag: ${{ steps.semver.outputs.version_tag }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate Semantic Version
+        id: semver
+        run: |
+          # Fetch all tags
+          git fetch --tags || true
+          
+          # Find latest tag matching v*.*.* or default to v0.1.0
+          LATEST_TAG=$(git tag -l "v*" --sort=-v:refname | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            BASE_VERSION="0.1.0"
+          else
+            BASE_VERSION="${LATEST_TAG#v}"
+          fi
+          
+          # Parse major.minor.patch
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
+          PATCH=$((PATCH + 1))
+          
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}-${github.run_number}"
+          RELEASE_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          
+          echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "version_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
+          echo "Calculated Version: ${NEW_VERSION}, Release Tag: ${RELEASE_TAG}"
+
   # Verify backend unit tests before deploying
   test-backend:
     name: Run Backend Unit Tests
@@ -57,7 +95,7 @@ jobs:
 
   deploy-backend:
     name: Build & Deploy Backend
-    needs: [changes, test-backend]
+    needs: [changes, version, test-backend]
     if: ${{ needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     permissions:
@@ -82,17 +120,20 @@ jobs:
 
       - name: Build & Push Docker Image
         run: |
-          IMAGE_TAG="${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ github.sha }}"
+          IMAGE_TAG="${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ needs.version.outputs.version }}"
+          SHA_TAG="${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ github.sha }}"
           LATEST_TAG="${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:latest"
-          docker build -t $IMAGE_TAG -t $LATEST_TAG .
+          docker build -t $IMAGE_TAG -t $SHA_TAG -t $LATEST_TAG .
           docker push $IMAGE_TAG
+          docker push $SHA_TAG
           docker push $LATEST_TAG
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ${{ secrets.GCP_CLOUD_RUN_SERVICE }} \
-            --image ${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ github.sha }} \
-            --region ${{ secrets.GCP_REGION }}
+            --image ${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ needs.version.outputs.version }} \
+            --region ${{ secrets.GCP_REGION }} \
+            --set-env-vars APP_VERSION="${{ needs.version.outputs.version }}"
 
   # Verify frontend gates (lint, integration tests against docker-compose stack, build)
   test-frontend:
@@ -148,7 +189,7 @@ jobs:
 
   deploy-frontend:
     name: Deploy Frontend to GCS
-    needs: [changes, test-frontend]
+    needs: [changes, version, test-frontend]
     if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     permissions:
@@ -177,6 +218,7 @@ jobs:
           yarn install --frozen-lockfile
           yarn build
         env:
+          VITE_APP_VERSION: "${{ needs.version.outputs.version }}"
           VITE_API_BACKEND_URL: "${{ secrets.GCP_DOMAIN_NAME != '' && format('https://{0}/api/v1', secrets.GCP_DOMAIN_NAME) || secrets.GCP_BACKEND_URL || 'https://nightrunner-backend-p6zq2tffpa-ue.a.run.app/v1' }}"
           VITE_BACKEND_URL: "${{ secrets.GCP_DOMAIN_NAME != '' && format('https://{0}/api', secrets.GCP_DOMAIN_NAME) || secrets.GCP_BACKEND_URL || 'https://nightrunner-backend-p6zq2tffpa-ue.a.run.app' }}"
           VITE_OIDC_AUTHORITY: "https://securetoken.google.com/${{ secrets.GCP_PROJECT_ID }}"
@@ -189,3 +231,29 @@ jobs:
           path: nightrunner_frontend/dist
           destination: ${{ secrets.GCP_FRONTEND_BUCKET }}
           parent: false
+
+  create-release:
+    name: Create GitHub Release
+    needs: [version, deploy-backend, deploy-frontend]
+    if: always() && (needs.deploy-backend.result == 'success' || needs.deploy-frontend.result == 'success')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.version_tag }}
+          name: Release ${{ needs.version.outputs.version_tag }}
+          body: |
+            Automated Release ${{ needs.version.outputs.version_tag }} (${{ needs.version.outputs.version }})
+            
+            Commit: ${{ github.sha }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -77,7 +77,9 @@ async def test_transport_endpoints(test_client, dev_mode_enabled):
     # Test health endpoint
     resp = await test_client.simulate_get("/health")
     assert resp.status == falcon.HTTP_200
-    assert json.loads(resp.text) == {"status": "ok"}
+    data = json.loads(resp.text)
+    assert data["status"] == "ok"
+    assert "version" in data
 
     # Test login redirect (stubbed init does nothing, but on_get still works)
     resp = await test_client.simulate_get("/auth/login")

@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     oidc_redirect_uri: str = "http://localhost/callback"
     oidc_audience: str = ""
     jwks_url: str = ""
+    app_version: str = os.getenv("APP_VERSION", "v0.1.0-dev")
     front_end_url: str = os.getenv("FRONT_END_URL", "http://localhost:3000")
     
     # Database settings might be needed by the middleware to fetch user roles

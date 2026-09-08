@@ -72,6 +72,11 @@ resource "google_cloud_run_v2_service" "backend" {
         value = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
       }
 
+      env {
+        name  = "APP_VERSION"
+        value = "v0.1.0"
+      }
+
       ports {
         container_port = 8000
       }
