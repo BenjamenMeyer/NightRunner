@@ -6,7 +6,9 @@ import {
     signInWithPopup,
     GoogleAuthProvider,
     signOut,
-    onIdTokenChanged
+    onIdTokenChanged,
+    sendPasswordResetEmail,
+    updateProfile
 } from "firebase/auth";
 
 const authority = import.meta.env.VITE_OIDC_AUTHORITY ?? "http://localhost:4000";
@@ -81,3 +83,21 @@ export function subscribeToFirebaseToken(callback) {
         }
     });
 }
+
+/**
+ * Send password reset email via Firebase Auth
+ */
+export async function firebaseSendPasswordResetEmail(email) {
+    if (!auth) throw new Error("Firebase Auth is not enabled.");
+    return await sendPasswordResetEmail(auth, email);
+}
+
+/**
+ * Update user profile via Firebase Auth
+ */
+export async function firebaseUpdateProfile(user, profile) {
+    if (!auth) throw new Error("Firebase Auth is not enabled.");
+    return await updateProfile(user, profile);
+}
+
+

@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-import "./Register.css";
+import {
+    isFirebaseMode,
+    firebaseRegisterWithEmail,
+    firebaseUpdateProfile
+} from "@/api/firebaseAuth.js";
 import ApiService from "../../api/ApiService.js";
+import "./Register.css";
 
 function Register() {
 
@@ -56,24 +60,33 @@ function Register() {
 
         try {
 
-            await ApiService.register({
+            if (isFirebaseMode) {
+                const userCredential = await firebaseRegisterWithEmail(form.email, form.password);
+                if (form.displayName && userCredential?.user) {
+                    await firebaseUpdateProfile(userCredential.user, {
+                        displayName: form.displayName
+                    });
+                }
+            } else {
+                await ApiService.register({
 
-                displayName: form.displayName,
+                    displayName: form.displayName,
 
-                username: form.username,
+                    username: form.username,
 
-                email: form.email,
+                    email: form.email,
 
-                password: form.password
+                    password: form.password
 
-            });
+                });
+            }
 
             navigate("/");
 
         }
         catch (err) {
 
-            setError(err.message);
+            setError(err.message || "Failed to create account.");
 
         }
         finally {
