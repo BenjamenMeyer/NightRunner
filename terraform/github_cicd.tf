@@ -140,3 +140,11 @@ resource "github_actions_secret" "gcp_firebase_api_key" {
   plaintext_value = google_apikeys_key.firebase_api_key.key_string
 }
 
+resource "github_actions_secret" "gcp_backend_url" {
+  count           = var.github_repo_name != "" ? 1 : 0
+  repository      = var.github_repo_name
+  secret_name     = "GCP_BACKEND_URL"
+  plaintext_value = google_cloud_run_v2_service.backend.uri
+}
+
+
