@@ -17,6 +17,8 @@ import Scoring from "./pages/scoring/Scoring.jsx";
 import Stations from "./pages/user/Stations.jsx";
 import AdminRoutes from "./pages/admin/AdminRoutes.jsx";
 
+import AuthService from "@/api/AuthService.js";
+
 function ProtectedRoute({ children }) {
 
     const auth =
@@ -25,8 +27,9 @@ function ProtectedRoute({ children }) {
     const location =
         useLocation();
 
+    const isAuthenticated = AuthService.isAuthenticated();
 
-    if (auth.isLoading) {
+    if (auth.isLoading && !isAuthenticated) {
 
         return (
             <div>
@@ -37,7 +40,7 @@ function ProtectedRoute({ children }) {
     }
 
 
-    if (auth.error) {
+    if (auth.error && !isAuthenticated) {
 
         return (
             <div>
@@ -50,7 +53,7 @@ function ProtectedRoute({ children }) {
     }
 
 
-    if (!auth.isAuthenticated) {
+    if (!isAuthenticated) {
         return (
             <Navigate
                 to="/login"
@@ -70,7 +73,9 @@ function AnonymousRoute({ children }) {
 
     const auth = useAuth();
 
-    if (auth.isLoading) {
+    const isAuthenticated = AuthService.isAuthenticated();
+
+    if (auth.isLoading && !isAuthenticated) {
         return (
             <div>
                 Loading authentication...
@@ -79,7 +84,7 @@ function AnonymousRoute({ children }) {
     }
 
 
-    if (auth.isAuthenticated) {
+    if (isAuthenticated) {
         return (
             <Navigate
                 to="/dashboard"
