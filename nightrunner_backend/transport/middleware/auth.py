@@ -69,10 +69,10 @@ class AuthMiddleware:
             if not external_id:
                 raise falcon.HTTPUnauthorized(title="Invalid token", description="Token missing 'sub' claim.")
 
-            # Optimized query to fetch user and roles in one go
+            # Optimized query to fetch user, status, and roles in one go
             rows = await self.db.execute(
                 """
-                SELECT u.id, u.username, u.email, u.display_name, u.is_admin, r.role
+                SELECT u.id, u.username, u.email, u.display_name, u.is_admin, COALESCE(u.status, 'active') AS status, r.role
                 FROM users u
                 LEFT JOIN user_roles r ON u.id = r.user_id
                 WHERE u.external_id = :ext_id
@@ -92,8 +92,8 @@ class AuthMiddleware:
                 try:
                     await self.db.execute(
                         """
-                        INSERT INTO users (id, external_id, username, email, display_name, is_admin)
-                        VALUES (:id, :ext_id, :username, :email, :display_name, FALSE)
+                        INSERT INTO users (id, external_id, username, email, display_name, is_admin, status)
+                        VALUES (:id, :ext_id, :username, :email, :display_name, FALSE, 'pending')
                         """,
                         {
                             "id": new_user_id,
@@ -109,11 +109,16 @@ class AuthMiddleware:
                         "email": email,
                         "display_name": name,
                         "is_admin": False,
+                        "status": "pending",
                         "role": None
                     }]
                 except Exception as ex:
                     logger.exception(f"Failed to auto-provision user {external_id}: {ex}")
                     raise falcon.HTTPUnauthorized(title="User not found", description="No local account for this identity.")
+
+            user_status = rows[0].get("status") or "active"
+            if user_status == "blocked":
+                raise falcon.HTTPForbidden(title="Account Blocked", description="Your account has been blocked by an administrator.")
 
             # First row has user info (same for all rows)
             user = {
@@ -121,7 +126,8 @@ class AuthMiddleware:
                 "username": rows[0]["username"],
                 "email": rows[0]["email"],
                 "display_name": rows[0]["display_name"],
-                "is_admin": bool(rows[0].get("is_admin"))
+                "is_admin": bool(rows[0].get("is_admin")),
+                "status": user_status
             }
             # Collect all non-null roles from rows
             roles = [row["role"] for row in rows if row.get("role")]
