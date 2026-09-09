@@ -881,6 +881,42 @@
 
 }
 
+.system-admin-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    min-height: 42px;
+
+    color: var(--text-primary);
+
+    font-size: 14px;
+    font-weight: 500;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+}
+
+.system-admin-toggle input {
+    width: 16px;
+    height: 16px;
+
+    margin: 0;
+
+    flex-shrink: 0;
+
+    cursor: pointer;
+}
+
+.system-admin-toggle span {
+    color: var(--text-primary);
+
+    font-size: 14px;
+    font-weight: 500;
+
+    white-space: nowrap;
+}
 
 /* ==========================================
    Responsive
