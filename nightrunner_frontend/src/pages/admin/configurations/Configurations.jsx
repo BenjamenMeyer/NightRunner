@@ -878,6 +878,19 @@ export default function Configurations() {
 
                                 <button
                                     type="button"
+                                    onClick={() => {
+                                        if (selectedConfiguration) {
+                                            navigate(
+                                                `/admin/configurations/create?copyFrom=${selectedConfiguration.id}`
+                                            );
+                                        }
+                                    }}
+                                >
+                                    Copy as Template
+                                </button>
+
+                                <button
+                                    type="button"
                                     onClick={
                                         exportConfiguration
                                     }

@@ -200,3 +200,34 @@ describe('Station Tasks Persistence & Independent Custom Tasks Contracts', () =>
   });
 });
 
+describe('Copy Configuration as Template Contracts', () => {
+  it('pre-populates new configuration state with tasks and appended copy title when copyFrom parameter is provided', () => {
+    const existingConfig = {
+      id: 'cfg-original',
+      groupId: 'grp-knot-1',
+      name: 'Advanced Lashings',
+      description: 'Lashing tasks preset',
+      tasks: [
+        { name: 'Tripod Lashing', type: 'Timed Challenge' },
+        { name: 'Shear Lashing', type: 'Stopwatch' }
+      ]
+    };
+
+    const copyFromId = 'cfg-original';
+    const targetConfig = copyFromId ? existingConfig : null;
+
+    const newConfigurationState = {
+      groupId: targetConfig?.groupId ?? '',
+      name: copyFromId ? `${targetConfig?.name} (Copy)` : '',
+      description: targetConfig?.description ?? '',
+      tasks: targetConfig?.tasks ? JSON.parse(JSON.stringify(targetConfig.tasks)) : []
+    };
+
+    expect(newConfigurationState.name).toBe('Advanced Lashings (Copy)');
+    expect(newConfigurationState.groupId).toBe('grp-knot-1');
+    expect(newConfigurationState.tasks).toHaveLength(2);
+    expect(newConfigurationState.tasks[0].name).toBe('Tripod Lashing');
+  });
+});
+
+

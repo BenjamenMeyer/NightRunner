@@ -41,6 +41,9 @@ export default function ConfigurationEditor() {
     const configurationId =
         searchParams.get("id");
 
+    const copyFromId =
+        searchParams.get("copyFrom");
+
     const editing =
         Boolean(configurationId);
 
@@ -76,7 +79,7 @@ export default function ConfigurationEditor() {
 
     useEffect(() => {
         load();
-    }, [configurationId]);
+    }, [configurationId, copyFromId]);
 
     async function load() {
         try {
@@ -93,7 +96,9 @@ export default function ConfigurationEditor() {
 
             setGroups(loadedGroups);
 
-            if (!configurationId) {
+            const targetId = configurationId || copyFromId;
+
+            if (!targetId) {
                 setConfiguration({
                     ...EMPTY_CONFIGURATION
                 });
@@ -103,7 +108,7 @@ export default function ConfigurationEditor() {
 
             const response =
                 await ApiService.configurationData
-                    .getConfiguration(configurationId);
+                    .getConfiguration(targetId);
 
             const loadedConfiguration =
                 response?.configuration ??
@@ -115,14 +120,16 @@ export default function ConfigurationEditor() {
                     loadedConfiguration?.group_id ??
                     "",
                 name:
-                    loadedConfiguration?.name ??
-                    "",
+                    copyFromId
+                        ? `${loadedConfiguration?.name || "Configuration"} (Copy)`
+                        : (loadedConfiguration?.name ?? ""),
                 description:
                     loadedConfiguration?.description ??
                     "",
                 tasks:
-                    loadedConfiguration?.tasks ??
-                    []
+                    loadedConfiguration?.tasks
+                        ? JSON.parse(JSON.stringify(loadedConfiguration.tasks))
+                        : []
             });
         }
         catch (error) {
