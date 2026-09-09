@@ -169,6 +169,35 @@ paths:
                 $ref: '#/components/schemas/User'
         '404':
           description: User not found.
+    patch:
+      summary: Patch User Role or Station
+      description: Incrementally add/remove roles or update user status/station assignments.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPatchRequest'
+      responses:
+        '200':
+          description: User patched successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found.
     delete:
       summary: Delete User
       description: Deletes a user from the system.
@@ -858,16 +887,39 @@ components:
           type: string
           example: "John Doe"
         roles:
+          type: object
+          additionalProperties:
+            type: string
+          example: {"uuid-string-event-1": "organizer"}
+        rolesList:
           type: array
           items:
             type: string
-            enum:
-              - admin
-              - organizer
-              - station_leader
-              - station_member
-              - volunteer
-          example: ["station_leader"]
+          example: ["event:uuid-string-event-1:organizer", "station:uuid-string-station-1:station_leader"]
+        status:
+          type: string
+          enum: [pending, active, blocked]
+          example: "active"
+    UserPatchRequest:
+      type: object
+      properties:
+        roleAction:
+          type: string
+          enum: [add, remove]
+        eventId:
+          type: string
+          format: uuid
+        role:
+          type: string
+        stationId:
+          type: string
+          format: uuid
+        stationAction:
+          type: string
+          enum: [assign, remove]
+        status:
+          type: string
+          enum: [pending, active, blocked]
     UserRegistration:
       type: object
       properties:
