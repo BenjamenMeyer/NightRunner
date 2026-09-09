@@ -61,6 +61,12 @@ IMPLEMENTED_PATHS: set[tuple[str, str]] = {
     ("GET",    "/v1/configurations/{configId}"),
     ("PUT",    "/v1/configurations/{configId}"),
     ("DELETE", "/v1/configurations/{configId}"),
+    ("GET",    "/v1/users"),
+    ("POST",   "/v1/users"),
+    ("GET",    "/v1/users/{userId}"),
+    ("PUT",    "/v1/users/{userId}"),
+    ("PATCH",  "/v1/users/{userId}"),
+    ("DELETE", "/v1/users/{userId}"),
 }
 
 

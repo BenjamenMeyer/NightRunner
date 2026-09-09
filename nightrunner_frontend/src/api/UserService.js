@@ -438,7 +438,7 @@ export default class UserService {
 
     async setUserStatus(userId, status) {
 
-        return await this.updateUser(
+        return await this.patchUser(
             userId,
             { status }
         );
@@ -447,18 +447,18 @@ export default class UserService {
 
     async setStationStaff(userId, stationId, stationRole = "staff") {
 
-        return await this.updateUser(
+        return await this.patchUser(
             userId,
-            { stationId, stationRole }
+            { stationId, stationRole, stationAction: "assign" }
         );
 
     }
 
     async toggleStationStaff(userId, stationId, action = "add") {
 
-        return await this.updateUser(
+        return await this.patchUser(
             userId,
-            { stationId, stationAction: action }
+            { stationId, stationAction: action === "add" ? "assign" : "remove" }
         );
 
     }
@@ -489,25 +489,40 @@ export default class UserService {
 
     }
 
+    async patchUser(
+        userId,
+        payload
+    ) {
+
+        return await BackendTransport.patch(
+            `/users/${userId}`,
+            payload
+        );
+
+    }
+
     /**
-     * Assigns a role to a user for an event.
+     * Assigns or updates a single role to a user for an event via PATCH.
      *
      * @param {string} userId
      * @param {string} eventId
      * @param {string} role
+     * @param {string} action ("add" | "remove")
      * @returns {Promise<User>}
      */
-    async setEventRole(
+    async patchEventRole(
         userId,
         eventId,
-        role
+        role,
+        action = "add"
     ) {
 
-        return await this.updateUser(
+        return await this.patchUser(
             userId,
             {
-                event: eventId,
-                role
+                eventId,
+                role,
+                roleAction: action
             }
         );
 
@@ -525,11 +540,11 @@ export default class UserService {
         eventId
     ) {
 
-        return await this.updateUser(
+        return await this.patchUser(
             userId,
             {
-                event: eventId,
-                role: null
+                eventId,
+                roleAction: "remove"
             }
         );
 

@@ -125,3 +125,42 @@ async def test_api_users_management(client, dev_mode_enabled, test_database):
     assert del_resp.status_code == 204
 
 
+@pytest.mark.asyncio
+async def test_api_patch_user_role(client, dev_mode_enabled, test_database):
+    driver = test_database
+    await driver.execute("""
+        INSERT INTO users (id, external_id, username, email, display_name, status, is_admin)
+        VALUES ('u-patch-1', 'ext-patch', 'patch_user', 'patch@example.com', 'Patch User', 'active', FALSE)
+    """)
+
+    # 1. Add single event role via PATCH
+    patch_resp = await client.simulate_patch("/v1/users/u-patch-1", json={
+        "eventId": "evt-101",
+        "role": "event-admin",
+        "roleAction": "add"
+    })
+    assert patch_resp.status_code == 200
+    user_data = patch_resp.json
+    assert user_data["roles"].get("evt-101") == "event-admin"
+
+    # 2. Add second event role via PATCH
+    patch_resp2 = await client.simulate_patch("/v1/users/u-patch-1", json={
+        "eventId": "evt-102",
+        "role": "scorer",
+        "roleAction": "add"
+    })
+    assert patch_resp2.status_code == 200
+    assert patch_resp2.json["roles"].get("evt-101") == "event-admin"
+    assert patch_resp2.json["roles"].get("evt-102") == "scorer"
+
+    # 3. Remove single event role via PATCH without wiping other roles
+    patch_resp3 = await client.simulate_patch("/v1/users/u-patch-1", json={
+        "eventId": "evt-101",
+        "roleAction": "remove"
+    })
+    assert patch_resp3.status_code == 200
+    assert "evt-101" not in patch_resp3.json["roles"]
+    assert patch_resp3.json["roles"].get("evt-102") == "scorer"
+
+
+

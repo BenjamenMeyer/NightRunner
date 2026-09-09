@@ -214,27 +214,24 @@ export default function UserManager() {
 
             let updatedUser;
 
-            if (isSystemAdmin) {
-                updatedUser =
-                    await ApiService.userData.updateUser(
-                        selectedUser.id,
-                        {
-                            eventId,
-                            role,
-                            status: selectedUser.status ?? "active",
-                            isAdmin: selectedUser.isAdmin === true
-                        }
-                    );
-            } else if (isEventAdmin) {
-                updatedUser =
-                    await ApiService.userData.updateUser(
-                        selectedUser.id,
-                        {
-                            eventId,
-                            role,
-                            status: selectedUser.status ?? "active"
-                        }
-                    );
+            if (isSystemAdmin || isEventAdmin) {
+                // Single event role update using incremental PATCH
+                updatedUser = await ApiService.userData.patchEventRole(
+                    selectedUser.id,
+                    eventId,
+                    role,
+                    "add"
+                );
+
+                // Also update system admin flag or user level status if system admin changed isAdmin/status
+                if (isSystemAdmin) {
+                    if (selectedUser.status) {
+                        updatedUser = await ApiService.userData.setUserStatus(selectedUser.id, selectedUser.status);
+                    }
+                    if (typeof selectedUser.isAdmin === 'boolean') {
+                        updatedUser = await ApiService.userData.setSystemAdmin(selectedUser.id, selectedUser.isAdmin);
+                    }
+                }
             } else if (isStationLeader) {
                 // Station leaders can update station staff assignment
                 updatedUser = await ApiService.userData.setStationStaff(
@@ -711,6 +708,31 @@ export default function UserManager() {
                                         )}
                                     </div>
                                     <small>Users can be assigned staff roles at multiple stations simultaneously.</small>
+                                </div>
+
+                                <div className="user-roles-summary-box">
+                                    <strong>Assigned Roles Summary</strong>
+                                    <div className="user-roles-list">
+                                        {selectedUser.isAdmin && (
+                                            <span className="role-badge role-system-admin">System Admin</span>
+                                        )}
+                                        {selectedUser.roles && typeof selectedUser.roles === 'object' && Object.keys(selectedUser.roles).length > 0 ? (
+                                            Object.entries(selectedUser.roles).map(([eId, r]) => (
+                                                <span key={eId} className="role-badge role-event-role">
+                                                    {r} ({eId === eventId ? (event?.name || 'Current Event') : eId})
+                                                </span>
+                                            ))
+                                        ) : (
+                                            !selectedUser.isAdmin && (selectedUser.rolesList?.length === 0 || !selectedUser.rolesList) && (
+                                                <span className="role-badge role-none">No Event Roles</span>
+                                            )
+                                        )}
+                                        {selectedUser.stationStaff?.map(st => (
+                                            <span key={st.stationId} className="role-badge role-station-staff">
+                                                Station Staff: {st.stationName || st.stationId}
+                                            </span>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div className="event-restriction">
