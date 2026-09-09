@@ -251,6 +251,88 @@ class UserResource:
         # Return updated user object
         await self.on_get(req, resp, user_id)
 
+    async def on_patch(self, req: falcon.Request, resp: falcon.Response, user_id: str):
+        """PATCH /v1/users/{user_id}
+        Incrementally adds or removes a single role or station assignment.
+        Supported body parameters:
+          - roleAction: "add" | "remove"
+          - eventId / event: target event UUID
+          - role: role string (e.g. "event-admin", "scorer", "user")
+          - stationId: station UUID
+          - stationAction: "add" | "remove"
+          - status: "active" | "pending" | "blocked"
+        """
+        payload = await req.get_media()
+
+        existing = await self.db.fetch_one("SELECT id FROM users WHERE id = :id", {"id": user_id})
+        if not existing:
+            raise falcon.HTTPNotFound(title="User not found", description=f"No user with ID {user_id}")
+
+        role_action = payload.get("roleAction") or payload.get("action") or "add"
+        event_id = payload.get("eventId") or payload.get("event")
+        role = payload.get("role")
+
+        if event_id:
+            role_str = f"{event_id}:{role}" if role and ":" not in role else (role or event_id)
+            if role_action == "remove" or not role:
+                await self.db.execute("DELETE FROM user_roles WHERE user_id = :uid AND (role = :r1 OR role LIKE :r2)", {
+                    "uid": user_id,
+                    "r1": role_str,
+                    "r2": f"{event_id}:%"
+                })
+            else:
+                # Remove existing role for this event first, then insert new role
+                await self.db.execute("DELETE FROM user_roles WHERE user_id = :uid AND (role = :r1 OR role LIKE :r2)", {
+                    "uid": user_id,
+                    "r1": role_str,
+                    "r2": f"{event_id}:%"
+                })
+                await self.db.execute("INSERT INTO user_roles (user_id, role) VALUES (:uid, :role)", {
+                    "uid": user_id,
+                    "role": role_str
+                })
+        elif role and role_action == "remove":
+            await self.db.execute("DELETE FROM user_roles WHERE user_id = :uid AND role = :role", {
+                "uid": user_id,
+                "role": role
+            })
+        elif role and role_action == "add":
+            await self.db.execute("INSERT INTO user_roles (user_id, role) VALUES (:uid, :role)", {
+                "uid": user_id,
+                "role": role
+            })
+
+        # Station staff toggle
+        station_id = payload.get("stationId")
+        station_action = payload.get("stationAction") or role_action
+        if station_id:
+            station_role = payload.get("stationRole") or "staff"
+            if station_action == "remove":
+                await self.db.execute("DELETE FROM station_staff WHERE user_id = :uid AND station_id = :sid", {
+                    "uid": user_id,
+                    "sid": station_id
+                })
+            else:
+                await self.db.execute("DELETE FROM station_staff WHERE user_id = :uid AND station_id = :sid", {
+                    "uid": user_id,
+                    "sid": station_id
+                })
+                await self.db.execute("INSERT INTO station_staff (station_id, user_id, role) VALUES (:sid, :uid, :role)", {
+                    "sid": station_id,
+                    "uid": user_id,
+                    "role": station_role
+                })
+
+        # User status toggle
+        status = payload.get("status")
+        if status:
+            await self.db.execute("UPDATE users SET status = :status WHERE id = :id", {
+                "id": user_id,
+                "status": status
+            })
+
+        await self.on_get(req, resp, user_id)
+
     async def on_delete(self, req: falcon.Request, resp: falcon.Response, user_id: str):
         existing = await self.db.fetch_one("SELECT id FROM users WHERE id = :id", {"id": user_id})
         if not existing:
