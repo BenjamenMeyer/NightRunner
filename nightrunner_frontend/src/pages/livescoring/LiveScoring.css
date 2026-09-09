@@ -214,7 +214,101 @@
 
 }
 
+.controls-row {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 1.5rem;
+
+    flex-wrap: wrap;
+
+}
+
+.refresh-controls {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: .5rem;
+
+}
+
+.refresh-label {
+
+    font-size: .875rem;
+
+    font-weight: 500;
+
+    color: var(--text-muted);
+
+}
+
+.refresh-select {
+
+    padding: .4rem .75rem;
+
+    border-radius: 6px;
+
+    border: 1px solid var(--border);
+
+    background: var(--card-bg);
+
+    color: var(--text-main);
+
+    font-size: .875rem;
+
+}
+
+.refresh-button {
+
+    padding: .4rem .75rem;
+
+    font-size: .875rem;
+
+}
+
+.last-updated-tag {
+
+    font-size: .8rem;
+
+    color: var(--text-muted);
+
+    margin-left: .25rem;
+
+}
+
 /* ---------- Status Cells ---------- */
+
+.not-arrived {
+
+    background: transparent;
+
+    color: var(--text-muted);
+
+}
+
+.checked-in {
+
+    background: #1976D2;
+
+    color: white;
+
+    font-weight: bold;
+
+}
+
+.in-progress {
+
+    background: #FF9800;
+
+    color: white;
+
+    font-weight: bold;
+
+}
 
 .completed {
 
@@ -226,9 +320,19 @@
 
 }
 
-.current {
+.scored-only {
 
-    background: #1976D2;
+    background: #9C27B0;
+
+    color: white;
+
+    font-weight: bold;
+
+}
+
+.completed-scored {
+
+    background: #2E7D32;
 
     color: white;
 
@@ -242,7 +346,7 @@
 
     display: flex;
 
-    gap: 2rem;
+    gap: 1.5rem;
 
     flex-wrap: wrap;
 
@@ -255,6 +359,8 @@
     align-items: center;
 
     gap: .5rem;
+
+    font-size: .875rem;
 
 }
 
@@ -270,15 +376,39 @@
 
 }
 
+.legend-box.not-arrived {
+
+    background: transparent;
+
+}
+
+.legend-box.checked-in {
+
+    background: #1976D2;
+
+}
+
+.legend-box.in-progress {
+
+    background: #FF9800;
+
+}
+
 .legend-box.completed {
 
     background: #4CAF50;
 
 }
 
-.legend-box.current {
+.legend-box.scored-only {
 
-    background: #1976D2;
+    background: #9C27B0;
+
+}
+
+.legend-box.completed-scored {
+
+    background: #2E7D32;
 
 }
 

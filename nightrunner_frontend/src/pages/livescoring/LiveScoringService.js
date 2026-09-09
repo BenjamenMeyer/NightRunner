@@ -9,14 +9,17 @@ export async function getLiveScoring(eventId) {
 
     const [
         stations,
-        patrols
+        patrols,
+        scoresReport
     ] = await Promise.all([
         ApiService.stationData.getStations(eventId),
-        ApiService.patrolData.getPatrols(eventId)
+        ApiService.patrolData.getPatrols(eventId),
+        ApiService.reportData.getEventReport(eventId).catch(() => ({ patrols: [] }))
     ]);
 
     return {
         stations: stations ?? [],
-        patrols: patrols ?? []
+        patrols: patrols ?? [],
+        scoresReport: scoresReport ?? { patrols: [] }
     };
 }
