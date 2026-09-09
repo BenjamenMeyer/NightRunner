@@ -1,3 +1,5 @@
+import "./ConfigurationTaskEditor.css";
+
 const TASK_TYPES = [
     "Timed Challenge",
     "Stopwatch",
