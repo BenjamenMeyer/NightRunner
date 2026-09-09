@@ -537,6 +537,14 @@ export default function StationEditor() {
                         </span>
                         </div>
                     )}
+                <div className="station-scoring-summary-preview" style={{ marginTop: "1rem", padding: "1rem", background: "#eef6ff", borderRadius: "8px", border: "1px solid #b6d4fe" }}>
+                    <strong style={{ fontSize: "0.95em", color: "#0c5460", display: "block", marginBottom: "0.35rem" }}>
+                        🏆 Station Scoring Total Calculation Preview (Example Data)
+                    </strong>
+                    <div style={{ fontSize: "0.85em", color: "#17a2b8" }}>
+                        Sum of Active Task Scores × Station Weight ({station.stationWeight ?? 1.0}) = <strong>Final Station Contribution to Event Total</strong>
+                    </div>
+                </div>
             </section>
 
             <section className="editor-section">
