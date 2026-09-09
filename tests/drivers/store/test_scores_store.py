@@ -21,3 +21,32 @@ async def test_scores_crud(store):
     # Delete
     await store.delete(score.id)
     assert await store.get(score.id) is None
+
+@pytest.mark.asyncio
+async def test_scores_aggregation(store):
+    from nightrunner_backend.models.patrol import Patrol
+    from nightrunner_backend.models.station import Station
+    from nightrunner_backend.drivers.store.patrols import PatrolsStore
+    from nightrunner_backend.drivers.store.stations import StationsStore
+
+    patrol_store = PatrolsStore(store.driver)
+    station_store = StationsStore(store.driver)
+
+    await patrol_store.create(Patrol(id="p1", event_id="e1", name="Alpha Patrol"))
+    await station_store.create(Station(id="s1", event_id="e1", name="Station 1"))
+
+    score_obj = Score(event_id="e1", station_id="s1", patrol_id="p1", task_id="t1", score_value=10, score_weight=1.0, active=True)
+    await store.create(score_obj)
+
+    # Test aggregate_event (verifies boolean active filter works in SQL queries)
+    event_agg = await store.aggregate_event("e1")
+    assert len(event_agg) == 1
+    assert event_agg[0]["patrol_id"] == "p1"
+    assert event_agg[0]["weighted_score"] == 10.0
+
+    # Test aggregate_station
+    station_agg = await store.aggregate_station("e1", "s1")
+    assert len(station_agg) == 1
+    assert station_agg[0]["patrol_id"] == "p1"
+    assert station_agg[0]["score_value"] == 10.0
+
