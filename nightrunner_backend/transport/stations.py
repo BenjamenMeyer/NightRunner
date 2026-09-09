@@ -29,6 +29,7 @@ class StationsResource:
             description=str(description) if description is not None and not isinstance(description, str) else description,
             active_configuration_id=str(active_config_id) if active_config_id is not None and not isinstance(active_config_id, str) else active_config_id,
             members=data.get("members", []),
+            tasks=data.get("tasks", []),
         )
         await store.create(station)
         resp.status = falcon.HTTP_201
@@ -55,6 +56,8 @@ class StationResource:
         station.description = data.get("description", station.description)
         station.active_configuration_id = data.get("activeConfigurationId", station.active_configuration_id)
         station.members = data.get("members", station.members)
+        if "tasks" in data:
+            station.tasks = data.get("tasks", [])
         if "eventId" in data:
             station.event_id = data.get("eventId")
         await store.update(station)

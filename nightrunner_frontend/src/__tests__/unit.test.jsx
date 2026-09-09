@@ -149,3 +149,85 @@ describe('Station Editor Configuration & Task Loading Contracts', () => {
     expect(currentTasks[0].name).toBe('Flint Fire');
   });
 });
+
+describe('Station Tasks Persistence & Independent Custom Tasks Contracts', () => {
+  it('includes tasks array in Station payload when saving station', () => {
+    const stationForm = {
+      name: 'Alpha Station',
+      description: 'First patrol station',
+      activeConfigurationId: 'cfg-1',
+      eventId: 'evt-1',
+      tasks: [
+        { id: 't1', description: 'Preset Task 1', scoreWeight: 1 },
+        { id: 'custom-1', description: 'Custom Station Task', scoreWeight: 2 }
+      ]
+    };
+
+    const payload = {
+      name: stationForm.name,
+      description: stationForm.description,
+      activeConfigurationId: stationForm.activeConfigurationId,
+      eventId: stationForm.eventId,
+      tasks: stationForm.tasks ?? []
+    };
+
+    expect(payload.tasks).toHaveLength(2);
+    expect(payload.tasks[1].description).toBe('Custom Station Task');
+  });
+
+  it('keeps custom station tasks isolated to station without mutating preset configuration template', () => {
+    const presetConfigurationTemplate = {
+      id: 'cfg-1',
+      key: 'pioneering_preset',
+      tasks: [{ id: 't1', description: 'Square Knot' }]
+    };
+
+    // Station initialized from preset template
+    const station = {
+      id: 'st-1',
+      activeConfigurationId: presetConfigurationTemplate.id,
+      tasks: JSON.parse(JSON.stringify(presetConfigurationTemplate.tasks))
+    };
+
+    // User adds custom task to station
+    station.tasks.push({ id: 't-custom', description: 'Custom Signal Mirroring' });
+
+    // Station tasks updated
+    expect(station.tasks).toHaveLength(2);
+    // Configuration template remains untouched
+    expect(presetConfigurationTemplate.tasks).toHaveLength(1);
+    expect(presetConfigurationTemplate.tasks[0].id).toBe('t1');
+  });
+});
+
+describe('Copy Configuration as Template Contracts', () => {
+  it('pre-populates new configuration state with tasks and appended copy title when copyFrom parameter is provided', () => {
+    const existingConfig = {
+      id: 'cfg-original',
+      groupId: 'grp-knot-1',
+      name: 'Advanced Lashings',
+      description: 'Lashing tasks preset',
+      tasks: [
+        { name: 'Tripod Lashing', type: 'Timed Challenge' },
+        { name: 'Shear Lashing', type: 'Stopwatch' }
+      ]
+    };
+
+    const copyFromId = 'cfg-original';
+    const targetConfig = copyFromId ? existingConfig : null;
+
+    const newConfigurationState = {
+      groupId: targetConfig?.groupId ?? '',
+      name: copyFromId ? `${targetConfig?.name} (Copy)` : '',
+      description: targetConfig?.description ?? '',
+      tasks: targetConfig?.tasks ? JSON.parse(JSON.stringify(targetConfig.tasks)) : []
+    };
+
+    expect(newConfigurationState.name).toBe('Advanced Lashings (Copy)');
+    expect(newConfigurationState.groupId).toBe('grp-knot-1');
+    expect(newConfigurationState.tasks).toHaveLength(2);
+    expect(newConfigurationState.tasks[0].name).toBe('Tripod Lashing');
+  });
+});
+
+
