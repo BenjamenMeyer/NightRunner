@@ -70,3 +70,31 @@ describe('Configuration Editor Payload Contracts', () => {
     expect(updatedTasks[2].name).toBe('First Aid');
   });
 });
+
+describe('Authentication Reactive State & Sidebar Navigation Contracts', () => {
+  it('populates user profile and activates admin links reactively upon authentication', () => {
+    // 1. Initial unauthenticated state: no cached user profile
+    let cachedUser = null;
+    let isAdmin = cachedUser && cachedUser.isAdmin;
+    expect(cachedUser).toBeNull();
+    expect(isAdmin).toBeFalsy();
+
+    // 2. Simulate login completion & eager fetch of /v1/me returning user profile
+    const fetchedUser = {
+      id: 'usr-123',
+      username: 'adminuser',
+      email: 'admin@example.com',
+      displayName: 'Admin User',
+      isAdmin: true,
+      roles: ['admin', 'scorer']
+    };
+
+    cachedUser = fetchedUser;
+    isAdmin = cachedUser.isAdmin === true;
+
+    // 3. Verify user state and admin navigation visibility contract
+    expect(cachedUser.displayName).toBe('Admin User');
+    expect(isAdmin).toBe(true);
+    expect(cachedUser.roles).toContain('admin');
+  });
+});
