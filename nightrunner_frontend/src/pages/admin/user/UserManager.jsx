@@ -278,7 +278,7 @@ export default function UserManager() {
             setError(null);
             setSuccess(null);
 
-            const updatedUser = await ApiService.userData.setUserStatus(
+            await ApiService.userData.setUserStatus(
                 selectedUser.id,
                 newStatus
             );

@@ -141,8 +141,7 @@ export default function Configurations() {
                 created?.group ??
                 created;
 
-            const loadedGroups =
-                await loadGroups();
+            await loadGroups();
 
             await loadConfigurations();
 
@@ -181,8 +180,7 @@ export default function Configurations() {
                 updated?.group ??
                 updated;
 
-            const loadedGroups =
-                await loadGroups();
+            await loadGroups();
 
             await loadConfigurations();
 

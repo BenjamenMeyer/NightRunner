@@ -131,6 +131,8 @@ export default function ConfigurationTaskEditor({
                         placeholder="Explain what the patrol must do..."
                     />
 
+                </label>
+
                 <label className="form-field">
 
                     <span>

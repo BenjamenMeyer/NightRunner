@@ -118,6 +118,8 @@ export default function TaskEditor({
                     placeholder="Explain what the patrol needs to do..."
                 />
 
+            </label>
+
             <label className="form-field">
 
                 <span>
