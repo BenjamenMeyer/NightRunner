@@ -95,6 +95,15 @@ export default function StationDetails({
                             {configuration?.name ?? "None"}
                         </td>
                     </tr>
+
+                    <tr>
+                        <th>
+                            Station Weight
+                        </th>
+                        <td>
+                            {station.stationWeight ?? 1.0}
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
@@ -115,6 +124,9 @@ export default function StationDetails({
                         </th>
                         <th>
                             Weight / Max
+                        </th>
+                        <th>
+                            Scoring Enabled
                         </th>
                     </tr>
                     </thead>
@@ -137,7 +149,11 @@ export default function StationDetails({
                                 </td>
 
                                 <td>
-                                    {task.maxScore ?? task.scoreWeight ?? "-"}
+                                    {(task.scoreWeight ?? 1.0)}x / {task.maxScore ?? "-"}
+                                </td>
+
+                                <td>
+                                    {task.active !== false ? "Yes" : "No"}
                                 </td>
                             </tr>
                         ))

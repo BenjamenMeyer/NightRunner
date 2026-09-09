@@ -163,4 +163,49 @@ async def test_api_patch_user_role(client, dev_mode_enabled, test_database):
     assert patch_resp3.json["roles"].get("evt-102") == "scorer"
 
 
+@pytest.mark.asyncio
+async def test_station_weight_and_score_patch_tie_breaker(client, dev_mode_enabled, test_database):
+    driver = test_database
+    # 1. Create Event & Station with custom stationWeight
+    await driver.execute("INSERT INTO events (id, name, date, description) VALUES ('evt-score-1', 'Scoring Event', '2026-09-09', 'Test Event');")
+    await driver.execute("INSERT INTO patrols (id, event_id, name) VALUES ('patrol-1', 'evt-score-1', 'Alpha Patrol');")
+
+    st_resp = await client.simulate_post("/v1/stations", json={
+        "eventId": "evt-score-1",
+        "name": "Station Weighted",
+        "stationWeight": 2.0
+    })
+    assert st_resp.status_code == 201
+    st_id = st_resp.json["id"]
+    assert st_resp.json["stationWeight"] == 2.0
+
+    # 2. Submit initial score for patrol (raw score 10, weight 1.0, active=True)
+    score_resp = await client.simulate_post("/v1/scores", json={
+        "eventId": "evt-score-1",
+        "stationId": st_id,
+        "patrolId": "patrol-1",
+        "scores": [
+            {"taskId": "task-1", "scoreValue": 10.0, "scoreWeight": 1.0, "active": True}
+        ]
+    })
+    assert score_resp.status_code == 201
+    score_id = score_resp.json["created"][0]["id"]
+
+    # 3. Check event report (raw 10 * task_weight 1.0 * station_weight 2.0 = 20.0)
+    report_resp = await client.simulate_get("/v1/reports/events/evt-score-1")
+    assert report_resp.status_code == 200
+    patrol_score = report_resp.json["patrols"][0]
+    assert patrol_score["eventTotal"] == 20.0
+
+    # 4. Tie-breaker adjustment: disable task (active=False) via PATCH /v1/scores/{scoreId}
+    patch_score_resp = await client.simulate_patch(f"/v1/scores/{score_id}", json={"active": False})
+    assert patch_score_resp.status_code == 200
+
+    # 5. Check event report after tie-breaker patch (total should drop to 0.0)
+    report_resp_after = await client.simulate_get("/v1/reports/events/evt-score-1")
+    assert report_resp_after.status_code == 200
+    assert report_resp_after.json["patrols"][0]["eventTotal"] == 0.0
+
+
+
 

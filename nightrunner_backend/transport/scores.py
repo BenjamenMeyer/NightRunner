@@ -67,3 +67,33 @@ class ScoresResource:
 
         resp.status = falcon.HTTP_201
         resp.media = {"created": created}
+
+
+class ScoreResource:
+    """PATCH /v1/scores/{scoreId} — adjust active status or scoreWeight for tie-breaking."""
+
+    async def on_patch(self, req: falcon.Request, resp: falcon.Response, scoreId: str):
+        store = ScoresStore(get_driver())
+        existing = await store.get(scoreId)
+        if not existing:
+            raise falcon.HTTPNotFound()
+
+        payload = await req.get_media()
+        if not isinstance(payload, dict):
+            raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
+
+        fields = {}
+        if "active" in payload:
+            fields["active"] = 1 if payload["active"] else 0
+        if "scoreWeight" in payload:
+            fields["score_weight"] = float(payload["scoreWeight"])
+        if "scoreValue" in payload:
+            fields["score_value"] = float(payload["scoreValue"])
+
+        if fields:
+            updated = await store.update(scoreId, **fields)
+            resp.media = updated.to_dict()
+        else:
+            resp.media = existing.to_dict()
+
+        resp.status = falcon.HTTP_200

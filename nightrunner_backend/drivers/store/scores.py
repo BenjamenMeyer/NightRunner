@@ -24,18 +24,19 @@ CREATE_SCORE = """
 # Aggregation queries – we let SQLite/Postgres do the heavy lifting
 AGGREGATE_STATION = """
     SELECT
+        s.id              AS score_id,
         s.patrol_id,
         p.name            AS patrol_name,
         s.task_id,
-        t.name            AS task_name,
+        COALESCE(t.name, s.task_id) AS task_name,
         s.score_value,
         s.score_weight,
         (s.score_value * s.score_weight) AS weighted_score,
         s.active,
         s.submitted_at
     FROM scores s
-    JOIN patrols p      ON p.id = s.patrol_id
-    JOIN station_tasks t ON t.id = s.task_id
+    JOIN patrols p       ON p.id = s.patrol_id
+    LEFT JOIN station_tasks t ON t.id = s.task_id
     WHERE s.event_id = :event_id AND s.station_id = :station_id
     ORDER BY s.patrol_id, s.task_id;
 """
@@ -45,10 +46,14 @@ AGGREGATE_EVENT = """
         s.patrol_id,
         p.name            AS patrol_name,
         s.station_id,
-        (s.score_value * s.score_weight) AS weighted_score
+        st.name           AS station_name,
+        st.station_weight,
+        SUM(CASE WHEN s.active = 1 OR s.active = TRUE THEN (s.score_value * s.score_weight * COALESCE(st.station_weight, 1.0)) ELSE 0.0 END) AS weighted_score
     FROM scores s
     JOIN patrols p ON p.id = s.patrol_id
-    WHERE s.event_id = :event_id;
+    LEFT JOIN stations st ON st.id = s.station_id
+    WHERE s.event_id = :event_id
+    GROUP BY s.patrol_id, s.station_id;
 """
 
 class ScoresStore:

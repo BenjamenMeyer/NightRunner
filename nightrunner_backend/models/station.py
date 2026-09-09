@@ -20,6 +20,7 @@ class Station:
     name: str = ""
     description: Optional[str] = None
     active_configuration_id: Optional[str] = None
+    station_weight: float = 1.0
     members: List[StationMember] = field(default_factory=list)
     tasks: list = field(default_factory=list)
 
@@ -30,6 +31,7 @@ class Station:
             "name": self.name,
             "description": self.description,
             "activeConfigurationId": self.active_configuration_id,
+            "stationWeight": self.station_weight,
             "members": self.members,
             "tasks": self.tasks,
         }

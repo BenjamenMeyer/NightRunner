@@ -486,6 +486,25 @@ export default function StationEditor() {
 
                     <label className="form-field">
                         <span>
+                            Station Weight (Multiplier)
+                        </span>
+
+                        <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            value={station.stationWeight ?? 1.0}
+                            onChange={event =>
+                                updateStation(
+                                    "stationWeight",
+                                    Number(event.target.value)
+                                )
+                            }
+                        />
+                    </label>
+
+                    <label className="form-field">
+                        <span>
                             Description
                         </span>
 

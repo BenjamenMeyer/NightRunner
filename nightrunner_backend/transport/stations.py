@@ -22,12 +22,14 @@ class StationsResource:
         description = data.get("description")
         active_config_id = data.get("activeConfigurationId")
         event_id = data.get("eventId")
+        stationWeight = data.get("stationWeight", 1.0)
         station = Station(
             id=str(uuid6.uuid7()),
             event_id=str(event_id) if event_id is not None and not isinstance(event_id, str) else event_id,
             name=str(name),
             description=str(description) if description is not None and not isinstance(description, str) else description,
             active_configuration_id=str(active_config_id) if active_config_id is not None and not isinstance(active_config_id, str) else active_config_id,
+            station_weight=float(stationWeight) if stationWeight is not None else 1.0,
             members=data.get("members", []),
             tasks=data.get("tasks", []),
         )
@@ -56,6 +58,8 @@ class StationResource:
         station.description = data.get("description", station.description)
         station.active_configuration_id = data.get("activeConfigurationId", station.active_configuration_id)
         station.members = data.get("members", station.members)
+        if "stationWeight" in data:
+            station.station_weight = float(data.get("stationWeight") if data.get("stationWeight") is not None else 1.0)
         if "tasks" in data:
             station.tasks = data.get("tasks", [])
         if "eventId" in data:

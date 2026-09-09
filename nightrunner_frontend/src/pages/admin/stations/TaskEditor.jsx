@@ -118,6 +118,44 @@ export default function TaskEditor({
                     placeholder="Explain what the patrol needs to do..."
                 />
 
+            <label className="form-field">
+
+                <span>
+                    Task Score Weight (Multiplier)
+                </span>
+
+                <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={task.scoreWeight ?? 1.0}
+                    onChange={event =>
+                        update(
+                            "scoreWeight",
+                            Number(event.target.value)
+                        )
+                    }
+                />
+
+            </label>
+
+            <label className="form-field checkbox-field" style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
+
+                <input
+                    type="checkbox"
+                    checked={task.active !== false}
+                    onChange={event =>
+                        update(
+                            "active",
+                            event.target.checked
+                        )
+                    }
+                />
+
+                <span>
+                    Include this task in scoring calculations
+                </span>
+
             </label>
 
             {(task.type === "Score Challenge" ||
