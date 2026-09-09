@@ -19,7 +19,7 @@ async def test_api_patrols_lifecycle(client, dev_mode_enabled):
     # Create Patrol
     patrol_data = {
         "eventId": event_id,
-        "name": "Scouts BSA",
+        "name": "Trail Life Patrol",
         "phoneNumber": "555-867-5309",
         "radioFrequency": "462.5625 MHz",
         "radioChannel": "Channel 1",
@@ -35,7 +35,7 @@ async def test_api_patrols_lifecycle(client, dev_mode_enabled):
     assert resp.status_code == 201
     created_patrol = resp.json
     patrol_id = created_patrol["id"]
-    assert created_patrol["name"] == "Scouts BSA"
+    assert created_patrol["name"] == "Trail Life Patrol"
     assert created_patrol["eventId"] == event_id
     assert created_patrol["phoneNumber"] == "555-867-5309"
     assert created_patrol["radioFrequency"] == "462.5625 MHz"
@@ -57,7 +57,7 @@ async def test_api_patrols_lifecycle(client, dev_mode_enabled):
     # Get Patrol
     resp = await client.simulate_get(f"/v1/patrols/{patrol_id}")
     assert resp.status_code == 200
-    assert resp.json["name"] == "Scouts BSA"
+    assert resp.json["name"] == "Trail Life Patrol"
     assert resp.json["phoneNumber"] == "555-867-5309"
     assert resp.json["radioChannel"] == "Channel 1"
 
