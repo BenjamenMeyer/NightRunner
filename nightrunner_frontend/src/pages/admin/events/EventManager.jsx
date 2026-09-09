@@ -36,6 +36,11 @@ export default function EventManager() {
         theme: "night-ops"
     });
 
+    const [stations, setStations] = useState([]);
+    const [patrols, setPatrols] = useState([]);
+    const [members, setMembers] = useState([]);
+    const [loadingMembers, setLoadingMembers] = useState(false);
+
     const isSystemAdmin =
         ApiService.userData.isSystemAdmin();
 
@@ -56,7 +61,44 @@ export default function EventManager() {
 
         setError(null);
         setSuccess(null);
-    }, [event]);
+
+        if (eventId) {
+            loadEventDetails(eventId);
+        }
+    }, [event, eventId]);
+
+    async function loadEventDetails(id) {
+        setLoadingMembers(true);
+        try {
+            const [fetchedStations, fetchedPatrols, allUsers] = await Promise.all([
+                ApiService.stationData.getStations(id).catch(() => []),
+                ApiService.patrolData.getPatrols(id).catch(() => []),
+                ApiService.userData.getUsers().catch(() => [])
+            ]);
+
+            setStations(Array.isArray(fetchedStations) ? fetchedStations : []);
+            setPatrols(Array.isArray(fetchedPatrols) ? fetchedPatrols : []);
+
+            const assignedMembers = (Array.isArray(allUsers) ? allUsers : []).filter(u => {
+                if (u.roles && u.roles[id]) {
+                    return true;
+                }
+                if (event?.organizers && Array.isArray(event.organizers)) {
+                    return event.organizers.includes(u.id);
+                }
+                return false;
+            }).map(u => ({
+                ...u,
+                assignedRole: u.roles?.[id] || (event?.organizers?.includes(u.id) ? "organizer" : "member")
+            }));
+
+            setMembers(assignedMembers);
+        } catch (err) {
+            console.error("Failed to load event details:", err);
+        } finally {
+            setLoadingMembers(false);
+        }
+    }
 
     function handleChange(inputEvent) {
         const {
@@ -552,7 +594,7 @@ export default function EventManager() {
                             </span>
 
                             <strong>
-                                {event.patrols?.length ?? 0}
+                                {patrols.length || (event.patrols?.length ?? 0)}
                             </strong>
 
                         </div>
@@ -565,7 +607,7 @@ export default function EventManager() {
                             </span>
 
                             <strong>
-                                {event.stations?.length ?? 0}
+                                {stations.length || (event.stations?.length ?? 0)}
                             </strong>
 
                         </div>
@@ -574,17 +616,63 @@ export default function EventManager() {
                         <div>
 
                             <span className="information-label">
-                                Organizers
+                                Organizers & Members
                             </span>
 
                             <strong>
-                                {event.organizers?.length ?? 0}
+                                {members.length || (event.organizers?.length ?? 0)}
                             </strong>
 
                         </div>
 
                     </div>
 
+                </section>
+
+                <section className="admin-section event-members-section">
+                    <div className="section-header">
+                        <h2>
+                            Assigned Members & Roles
+                        </h2>
+                        <p>
+                            Organizers, administrators, and staff assigned to this event.
+                        </p>
+                    </div>
+
+                    {loadingMembers ? (
+                        <p className="loading-members">Loading assigned members...</p>
+                    ) : members.length === 0 ? (
+                        <p className="no-members-message">No members currently assigned to this event.</p>
+                    ) : (
+                        <div className="table-responsive">
+                            <table className="members-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Username / Email</th>
+                                        <th>Assigned Role</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {members.map(member => (
+                                        <tr key={member.id}>
+                                            <td>
+                                                <strong>{member.displayName || member.username || "—"}</strong>
+                                            </td>
+                                            <td>
+                                                {member.email || member.username || "—"}
+                                            </td>
+                                            <td>
+                                                <span className={`role-badge role-${member.assignedRole}`}>
+                                                    {member.assignedRole}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </section>
 
 

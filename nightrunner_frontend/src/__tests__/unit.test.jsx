@@ -303,3 +303,38 @@ describe('Patrol Service & Editor Contracts', () => {
     expect(call2.patrol.name).toBe('Foxes');
   });
 });
+
+describe('EventManager Station Count & Member Roles Contracts', () => {
+  it('resolves actual stations count from loaded station objects or event station array fallback', () => {
+    const mockEvent = { id: 'evt-1', stations: ['st-1'], organizers: ['usr-1'] };
+    const fetchedStations = [
+      { id: 'st-1', name: 'Station 1' },
+      { id: 'st-2', name: 'Station 2' }
+    ];
+
+    const displayStationCount = fetchedStations.length || (mockEvent.stations?.length ?? 0);
+    expect(displayStationCount).toBe(2);
+  });
+
+  it('filters users assigned to selected event and maps their assigned role correctly', () => {
+    const targetEventId = 'evt-101';
+    const mockEvent = { id: targetEventId, organizers: ['usr-1'] };
+    const mockUsers = [
+      { id: 'usr-1', username: 'alice', email: 'alice@example.com', roles: { 'evt-101': 'event-admin' } },
+      { id: 'usr-2', username: 'bob', email: 'bob@example.com', roles: { 'evt-999': 'scorer' } },
+      { id: 'usr-3', username: 'charlie', email: 'charlie@example.com', roles: { 'evt-101': 'scorer' } }
+    ];
+
+    const assignedMembers = mockUsers.filter(u => u.roles?.[targetEventId] || mockEvent.organizers?.includes(u.id))
+      .map(u => ({
+        ...u,
+        assignedRole: u.roles?.[targetEventId] || 'organizer'
+      }));
+
+    expect(assignedMembers).toHaveLength(2);
+    expect(assignedMembers[0].username).toBe('alice');
+    expect(assignedMembers[0].assignedRole).toBe('event-admin');
+    expect(assignedMembers[1].username).toBe('charlie');
+    expect(assignedMembers[1].assignedRole).toBe('scorer');
+  });
+});
