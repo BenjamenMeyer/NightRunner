@@ -42,6 +42,7 @@ class PatrolsResource:
         event_id = data.get("eventId")
         phone_number = data.get("phoneNumber")
         radio_frequency = data.get("radioFrequency")
+        radio_channel = data.get("radioChannel")
         has_radio = bool(data.get("hasRadio", False))
         radio_identifier = data.get("radioIdentifier")
         patrol = Patrol(
@@ -51,6 +52,7 @@ class PatrolsResource:
             members=members,
             phone_number=str(phone_number) if phone_number is not None and not isinstance(phone_number, str) else phone_number,
             radio_frequency=str(radio_frequency) if radio_frequency is not None and not isinstance(radio_frequency, str) else radio_frequency,
+            radio_channel=str(radio_channel) if radio_channel is not None and not isinstance(radio_channel, str) else radio_channel,
             has_radio=has_radio,
             radio_identifier=str(radio_identifier) if radio_identifier is not None and not isinstance(radio_identifier, str) else radio_identifier,
         )
@@ -82,6 +84,8 @@ class PatrolResource:
             patrol.phone_number = data.get("phoneNumber")
         if "radioFrequency" in data:
             patrol.radio_frequency = data.get("radioFrequency")
+        if "radioChannel" in data:
+            patrol.radio_channel = data.get("radioChannel")
         if "hasRadio" in data:
             patrol.has_radio = bool(data.get("hasRadio"))
         if "radioIdentifier" in data:

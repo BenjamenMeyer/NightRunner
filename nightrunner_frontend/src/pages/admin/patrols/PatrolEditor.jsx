@@ -30,6 +30,7 @@ const EMPTY_PATROL = {
     name: "",
     phoneNumber: "",
     radioFrequency: "",
+    radioChannel: "",
     hasRadio: false,
     radioIdentifier: "",
     members: []
@@ -698,7 +699,7 @@ export default function PatrolEditor({
 
                         </label>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
                             <label className="form-field">
                                 <span>
                                     Cell Phone Number
@@ -729,10 +730,33 @@ export default function PatrolEditor({
                                             event.target.value
                                         )
                                     }
-                                    placeholder="e.g. 462.5625 MHz (Channel 1)"
+                                    placeholder="e.g. 462.5625 MHz"
+                                />
+                            </label>
+
+                            <label className="form-field">
+                                <span>
+                                    Radio Channel
+                                </span>
+                                <input
+                                    type="text"
+                                    value={patrol.radioChannel ?? ""}
+                                    onChange={event =>
+                                        updatePatrol(
+                                            "radioChannel",
+                                            event.target.value
+                                        )
+                                    }
+                                    placeholder="e.g. Channel 1 / TAC-2"
                                 />
                             </label>
                         </div>
+
+                        {!patrol.phoneNumber?.trim() && !patrol.radioFrequency?.trim() && !patrol.radioChannel?.trim() && !patrol.hasRadio && (
+                            <div style={{ marginTop: "1rem", padding: "0.75rem 1rem", backgroundColor: "#fff3cd", color: "#856404", border: "1px solid #ffeeba", borderRadius: "6px", fontSize: "0.9em" }}>
+                                ⚠️ <strong>No communication info set:</strong> Base camp has no cell phone number, radio frequency, or radio channel registered for this patrol.
+                            </div>
+                        )}
 
                         <div style={{ marginTop: "1rem", paddingTop: "0.75rem", borderTop: "1px solid #e9ecef" }}>
                             <label className="form-field checkbox-field" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>

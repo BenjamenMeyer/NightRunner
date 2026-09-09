@@ -27,6 +27,7 @@ class Patrol:
         members: Optional[List[PatrolMember]] = None,
         phone_number: Optional[str] = None,
         radio_frequency: Optional[str] = None,
+        radio_channel: Optional[str] = None,
         has_radio: bool = False,
         radio_identifier: Optional[str] = None,
     ):
@@ -36,6 +37,7 @@ class Patrol:
         self.members = members if members is not None else []
         self.phone_number = phone_number
         self.radio_frequency = radio_frequency
+        self.radio_channel = radio_channel
         self.has_radio = has_radio
         self.radio_identifier = radio_identifier
 
@@ -46,6 +48,7 @@ class Patrol:
             "name": self.name,
             "phoneNumber": self.phone_number,
             "radioFrequency": self.radio_frequency,
+            "radioChannel": self.radio_channel,
             "hasRadio": bool(self.has_radio),
             "radioIdentifier": self.radio_identifier,
             "members": [m.to_api_dict() for m in self.members],

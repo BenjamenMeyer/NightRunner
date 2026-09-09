@@ -2,5 +2,6 @@
 
 ALTER TABLE patrols ADD COLUMN phone_number TEXT;
 ALTER TABLE patrols ADD COLUMN radio_frequency TEXT;
+ALTER TABLE patrols ADD COLUMN radio_channel TEXT;
 ALTER TABLE patrols ADD COLUMN has_radio BOOLEAN DEFAULT FALSE;
 ALTER TABLE patrols ADD COLUMN radio_identifier TEXT;

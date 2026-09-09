@@ -83,6 +83,7 @@ async def test_patrol_communication_info(db):
         name="Alpha Patrol",
         phone_number="555-0199",
         radio_frequency="462.5625 MHz",
+        radio_channel="Channel 2",
         has_radio=True,
         radio_identifier="Radio-12",
     )
@@ -92,6 +93,7 @@ async def test_patrol_communication_info(db):
     assert fetched is not None
     assert fetched.phone_number == "555-0199"
     assert fetched.radio_frequency == "462.5625 MHz"
+    assert fetched.radio_channel == "Channel 2"
     assert fetched.has_radio is True
     assert fetched.radio_identifier == "Radio-12"
 
@@ -99,6 +101,7 @@ async def test_patrol_communication_info(db):
     p = next(x for x in patrols if x.id == patrol.id)
     assert p.phone_number == "555-0199"
     assert p.radio_frequency == "462.5625 MHz"
+    assert p.radio_channel == "Channel 2"
     assert p.has_radio is True
     assert p.radio_identifier == "Radio-12"
 

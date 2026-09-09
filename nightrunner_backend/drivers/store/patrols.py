@@ -5,21 +5,22 @@ from nightrunner_backend.models.patrol import Patrol, PatrolMember
 LIST_PATROLS_BATCH = """
 SELECT
     p.id AS patrol_id, p.event_id, p.name AS patrol_name,
-    p.phone_number, p.radio_frequency, p.has_radio, p.radio_identifier,
+    p.phone_number, p.radio_frequency, p.radio_channel, p.has_radio, p.radio_identifier,
     pm.id AS member_id, pm.name AS member_name, pm.rank, pm.troop
 FROM patrols p
 LEFT JOIN patrol_members pm ON p.id = pm.patrol_id
 ORDER BY p.id
 """
-GET_PATROL = "SELECT id, event_id, name, phone_number, radio_frequency, has_radio, radio_identifier FROM patrols WHERE id = :id"
+GET_PATROL = "SELECT id, event_id, name, phone_number, radio_frequency, radio_channel, has_radio, radio_identifier FROM patrols WHERE id = :id"
 CREATE_PATROL = """
-    INSERT INTO patrols (id, event_id, name, phone_number, radio_frequency, has_radio, radio_identifier)
-    VALUES (:id, :event_id, :name, :phone_number, :radio_frequency, :has_radio, :radio_identifier)
+    INSERT INTO patrols (id, event_id, name, phone_number, radio_frequency, radio_channel, has_radio, radio_identifier)
+    VALUES (:id, :event_id, :name, :phone_number, :radio_frequency, :radio_channel, :has_radio, :radio_identifier)
 """
 UPDATE_PATROL = """
     UPDATE patrols
     SET event_id = :event_id, name = :name, phone_number = :phone_number,
-        radio_frequency = :radio_frequency, has_radio = :has_radio, radio_identifier = :radio_identifier
+        radio_frequency = :radio_frequency, radio_channel = :radio_channel,
+        has_radio = :has_radio, radio_identifier = :radio_identifier
     WHERE id = :id
 """
 DELETE_PATROL = "DELETE FROM patrols WHERE id = :id"
@@ -49,6 +50,7 @@ class PatrolsStore:
                     name=row["patrol_name"],
                     phone_number=row["phone_number"],
                     radio_frequency=row["radio_frequency"],
+                    radio_channel=row["radio_channel"],
                     has_radio=bool(row["has_radio"]),
                     radio_identifier=row["radio_identifier"],
                 )
@@ -73,6 +75,7 @@ class PatrolsStore:
             name=row["name"],
             phone_number=row["phone_number"],
             radio_frequency=row["radio_frequency"],
+            radio_channel=row["radio_channel"],
             has_radio=bool(row["has_radio"]),
             radio_identifier=row["radio_identifier"],
         )
@@ -92,6 +95,7 @@ class PatrolsStore:
                 "name": patrol.name,
                 "phone_number": patrol.phone_number,
                 "radio_frequency": patrol.radio_frequency,
+                "radio_channel": patrol.radio_channel,
                 "has_radio": patrol.has_radio,
                 "radio_identifier": patrol.radio_identifier,
             },
@@ -114,6 +118,7 @@ class PatrolsStore:
                 "name": patrol.name,
                 "phone_number": patrol.phone_number,
                 "radio_frequency": patrol.radio_frequency,
+                "radio_channel": patrol.radio_channel,
                 "has_radio": patrol.has_radio,
                 "radio_identifier": patrol.radio_identifier,
             },

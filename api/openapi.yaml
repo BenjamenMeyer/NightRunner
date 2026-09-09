@@ -1050,7 +1050,11 @@ components:
         radioFrequency:
           type: string
           nullable: true
-          example: "462.5625 MHz (Channel 1)"
+          example: "462.5625 MHz"
+        radioChannel:
+          type: string
+          nullable: true
+          example: "Channel 1 / TAC-1"
         hasRadio:
           type: boolean
           default: false

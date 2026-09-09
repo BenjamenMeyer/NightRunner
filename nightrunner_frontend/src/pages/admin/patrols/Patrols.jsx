@@ -326,13 +326,18 @@ export default function Patrols() {
                                             {patrol.radioFrequency && (
                                                 <div>📻 {patrol.radioFrequency}</div>
                                             )}
+                                            {patrol.radioChannel && (
+                                                <div>📻 {patrol.radioChannel}</div>
+                                            )}
                                             {patrol.hasRadio && (
                                                 <div style={{ color: "#2b8a3e" }}>
                                                     Radio Issued: {patrol.radioIdentifier || "Yes"}
                                                 </div>
                                             )}
-                                            {!patrol.phoneNumber && !patrol.radioFrequency && !patrol.hasRadio && (
-                                                <span style={{ color: "#868e96" }}>—</span>
+                                            {!patrol.phoneNumber && !patrol.radioFrequency && !patrol.radioChannel && !patrol.hasRadio && (
+                                                <span style={{ display: "inline-block", padding: "0.15rem 0.4rem", backgroundColor: "#fff3cd", color: "#856404", border: "1px solid #ffeeba", borderRadius: "4px", fontSize: "0.8em", fontWeight: 600 }}>
+                                                    ⚠️ No Comms Set
+                                                </span>
                                             )}
                                         </div>
                                     </td>
