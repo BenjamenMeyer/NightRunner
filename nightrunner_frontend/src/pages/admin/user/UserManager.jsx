@@ -214,27 +214,24 @@ export default function UserManager() {
 
             let updatedUser;
 
-            if (isSystemAdmin) {
-                updatedUser =
-                    await ApiService.userData.updateUser(
-                        selectedUser.id,
-                        {
-                            eventId,
-                            role,
-                            status: selectedUser.status ?? "active",
-                            isAdmin: selectedUser.isAdmin === true
-                        }
-                    );
-            } else if (isEventAdmin) {
-                updatedUser =
-                    await ApiService.userData.updateUser(
-                        selectedUser.id,
-                        {
-                            eventId,
-                            role,
-                            status: selectedUser.status ?? "active"
-                        }
-                    );
+            if (isSystemAdmin || isEventAdmin) {
+                // Single event role update using incremental PATCH
+                updatedUser = await ApiService.userData.patchEventRole(
+                    selectedUser.id,
+                    eventId,
+                    role,
+                    "add"
+                );
+
+                // Also update system admin flag or user level status if system admin changed isAdmin/status
+                if (isSystemAdmin) {
+                    if (selectedUser.status) {
+                        updatedUser = await ApiService.userData.setUserStatus(selectedUser.id, selectedUser.status);
+                    }
+                    if (typeof selectedUser.isAdmin === 'boolean') {
+                        updatedUser = await ApiService.userData.setSystemAdmin(selectedUser.id, selectedUser.isAdmin);
+                    }
+                }
             } else if (isStationLeader) {
                 // Station leaders can update station staff assignment
                 updatedUser = await ApiService.userData.setStationStaff(

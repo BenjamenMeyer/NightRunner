@@ -438,7 +438,7 @@ export default class UserService {
 
     async setUserStatus(userId, status) {
 
-        return await this.updateUser(
+        return await this.patchUser(
             userId,
             { status }
         );
@@ -447,18 +447,18 @@ export default class UserService {
 
     async setStationStaff(userId, stationId, stationRole = "staff") {
 
-        return await this.updateUser(
+        return await this.patchUser(
             userId,
-            { stationId, stationRole }
+            { stationId, stationRole, stationAction: "assign" }
         );
 
     }
 
     async toggleStationStaff(userId, stationId, action = "add") {
 
-        return await this.updateUser(
+        return await this.patchUser(
             userId,
-            { stationId, stationAction: action }
+            { stationId, stationAction: action === "add" ? "assign" : "remove" }
         );
 
     }
