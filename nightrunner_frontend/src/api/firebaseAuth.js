@@ -47,7 +47,12 @@ export { auth };
  */
 export async function firebaseLoginWithEmail(email, password) {
     if (!auth) throw new Error("Firebase Auth is not enabled.");
-    return await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    if (userCredential?.user) {
+        const token = await userCredential.user.getIdToken();
+        localStorage.setItem("firebase_id_token", token);
+    }
+    return userCredential;
 }
 
 /**
@@ -64,14 +69,21 @@ export async function firebaseRegisterWithEmail(email, password) {
 export async function firebaseLoginWithGoogle() {
     if (!auth) throw new Error("Firebase Auth is not enabled.");
     const provider = new GoogleAuthProvider();
+    let userCredential;
     try {
-        return await signInWithPopup(auth, provider);
+        userCredential = await signInWithPopup(auth, provider);
     } catch (err) {
         if (err.code === "auth/popup-blocked" || err.code === "auth/popup-closed-by-user" || err.message?.includes("Cross-Origin-Opener-Policy")) {
-            return await signInWithRedirect(auth, provider);
+            userCredential = await signInWithRedirect(auth, provider);
+        } else {
+            throw err;
         }
-        throw err;
     }
+    if (userCredential?.user) {
+        const token = await userCredential.user.getIdToken();
+        localStorage.setItem("firebase_id_token", token);
+    }
+    return userCredential;
 }
 
 /**

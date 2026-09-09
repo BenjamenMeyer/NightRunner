@@ -136,6 +136,19 @@ export default class UserService {
 
     }
 
+    listeners = new Set();
+
+    subscribe(listener) {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+    }
+
+    notifyListeners(user) {
+        this.listeners.forEach(fn => {
+            try { fn(user); } catch (e) { console.error("UserService listener error:", e); }
+        });
+    }
+
     /**
      * Stores the Night Runner application user
      * locally.
@@ -159,6 +172,8 @@ export default class UserService {
             JSON.stringify(user)
         );
 
+        this.notifyListeners(user);
+
     }
 
     /**
@@ -171,6 +186,8 @@ export default class UserService {
         localStorage.removeItem(
             USER_KEY
         );
+
+        this.notifyListeners(null);
 
     }
 

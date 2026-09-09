@@ -66,11 +66,15 @@ function Sidebar({ open, close }) {
     const loggedIn = AuthService.isAuthenticated();
 
     useEffect(() => {
+        const unsubscribe = ApiService.userData.subscribe((u) => setUser(u));
+
         if (loggedIn) {
             ApiService.userData.get().then(u => setUser(u)).catch(() => {});
         } else {
             setUser(null);
         }
+
+        return () => unsubscribe();
     }, [loggedIn, auth.isAuthenticated]);
 
     const isAdmin =
