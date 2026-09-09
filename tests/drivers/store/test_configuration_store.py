@@ -106,3 +106,23 @@ async def test_configuration_crud_operations(config_store: ConfigurationStore):
         pass
     configs_after = await config_store.list_configurations()
     assert len([c for c in configs_after if c.id == config.id]) == 1
+
+
+@pytest.mark.asyncio
+async def test_configuration_without_group(config_store: ConfigurationStore):
+    # Create a configuration without a group (group_id is None or empty string)
+    config = Configuration(
+        id=str(uuid6.uuid7()),
+        group_id=None,
+        key="standalone_key",
+        value="standalone_value",
+        description="Standalone config"
+    )
+    await config_store.create_configuration(config)
+
+    fetched = await config_store.get_configuration(config.id)
+    assert fetched is not None
+    assert fetched.id == config.id
+    assert fetched.group_id is None
+    assert fetched.key == "standalone_key"
+
