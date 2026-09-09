@@ -47,19 +47,12 @@ export default class StationService {
 
         const resolvedEventId =
             eventId ??
-            this.userService.getEventId();
+            (this.userService ? (this.userService.eventId || null) : null);
 
-        if (!resolvedEventId) {
-
-            throw new Error(
-                "No event is currently selected."
-            );
-
-        }
-
+        const query = resolvedEventId ? `?event=${encodeURIComponent(resolvedEventId)}` : "";
 
         return await this.transport.get(
-            `/stations?event=${resolvedEventId}`
+            `/stations${query}`
         );
 
     }
@@ -78,21 +71,14 @@ export default class StationService {
 
         const resolvedEventId =
             eventId ??
-            this.userService.getEventId();
-
-        if (!resolvedEventId) {
-
-            throw new Error(
-                "No event is currently selected."
-            );
-
-        }
+            station.eventId ??
+            (this.userService ? (this.userService.eventId || null) : null);
 
         return await this.transport.post(
             "/stations",
             {
                 ...station,
-                event: resolvedEventId
+                ...(resolvedEventId ? { eventId: resolvedEventId } : {})
             }
         );
 

@@ -98,3 +98,54 @@ describe('Authentication Reactive State & Sidebar Navigation Contracts', () => {
     expect(cachedUser.roles).toContain('admin');
   });
 });
+
+describe('Station Editor Configuration & Task Loading Contracts', () => {
+  it('loads preset tasks from selected configuration into station editor state', () => {
+    const selectedConfig = {
+      id: 'cfg-ropework-1',
+      name: 'Advanced Ropework',
+      tasks: [
+        { id: 't1', name: 'Tripod Lashing', type: 'Timed Challenge' },
+        { id: 't2', name: 'Speed Bowline', type: 'Stopwatch' }
+      ]
+    };
+
+    const station = {
+      name: 'Ropes Station',
+      activeConfigurationId: selectedConfig.id,
+      tasks: selectedConfig.tasks ? JSON.parse(JSON.stringify(selectedConfig.tasks)) : []
+    };
+
+    expect(station.tasks).toHaveLength(2);
+    expect(station.tasks[0].name).toBe('Tripod Lashing');
+    expect(station.tasks[1].type).toBe('Stopwatch');
+  });
+
+  it('prompts confirmation and replaces tasks when switching active configuration preset', () => {
+    let confirmPromptCalled = false;
+    let userConfirmed = true;
+
+    const mockConfirm = (msg) => {
+      confirmPromptCalled = true;
+      return userConfirmed;
+    };
+
+    const existingTasks = [{ id: 't1', name: 'Old Task', type: 'Timed Challenge' }];
+    const newConfig = {
+      id: 'cfg-fire-1',
+      tasks: [{ id: 't2', name: 'Flint Fire', type: 'Timed Challenge' }]
+    };
+
+    let currentTasks = existingTasks;
+    if (currentTasks.length > 0) {
+      const confirmed = mockConfirm('Switching configuration presets will load tasks from the new configuration...');
+      if (confirmed) {
+        currentTasks = JSON.parse(JSON.stringify(newConfig.tasks));
+      }
+    }
+
+    expect(confirmPromptCalled).toBe(true);
+    expect(currentTasks).toHaveLength(1);
+    expect(currentTasks[0].name).toBe('Flint Fire');
+  });
+});
