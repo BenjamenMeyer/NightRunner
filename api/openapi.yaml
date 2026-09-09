@@ -1038,6 +1038,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StationMember'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/StationTask'
     StationMember:
       type: object
       properties:

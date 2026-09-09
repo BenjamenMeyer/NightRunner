@@ -21,6 +21,7 @@ class Station:
     description: Optional[str] = None
     active_configuration_id: Optional[str] = None
     members: List[StationMember] = field(default_factory=list)
+    tasks: list = field(default_factory=list)
 
     def to_api_dict(self) -> Dict[str, Any]:
         return {
@@ -30,4 +31,5 @@ class Station:
             "description": self.description,
             "activeConfigurationId": self.active_configuration_id,
             "members": self.members,
+            "tasks": self.tasks,
         }

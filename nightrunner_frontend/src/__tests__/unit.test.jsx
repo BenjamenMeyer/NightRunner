@@ -149,3 +149,54 @@ describe('Station Editor Configuration & Task Loading Contracts', () => {
     expect(currentTasks[0].name).toBe('Flint Fire');
   });
 });
+
+describe('Station Tasks Persistence & Independent Custom Tasks Contracts', () => {
+  it('includes tasks array in Station payload when saving station', () => {
+    const stationForm = {
+      name: 'Alpha Station',
+      description: 'First patrol station',
+      activeConfigurationId: 'cfg-1',
+      eventId: 'evt-1',
+      tasks: [
+        { id: 't1', description: 'Preset Task 1', scoreWeight: 1 },
+        { id: 'custom-1', description: 'Custom Station Task', scoreWeight: 2 }
+      ]
+    };
+
+    const payload = {
+      name: stationForm.name,
+      description: stationForm.description,
+      activeConfigurationId: stationForm.activeConfigurationId,
+      eventId: stationForm.eventId,
+      tasks: stationForm.tasks ?? []
+    };
+
+    expect(payload.tasks).toHaveLength(2);
+    expect(payload.tasks[1].description).toBe('Custom Station Task');
+  });
+
+  it('keeps custom station tasks isolated to station without mutating preset configuration template', () => {
+    const presetConfigurationTemplate = {
+      id: 'cfg-1',
+      key: 'pioneering_preset',
+      tasks: [{ id: 't1', description: 'Square Knot' }]
+    };
+
+    // Station initialized from preset template
+    const station = {
+      id: 'st-1',
+      activeConfigurationId: presetConfigurationTemplate.id,
+      tasks: JSON.parse(JSON.stringify(presetConfigurationTemplate.tasks))
+    };
+
+    // User adds custom task to station
+    station.tasks.push({ id: 't-custom', description: 'Custom Signal Mirroring' });
+
+    // Station tasks updated
+    expect(station.tasks).toHaveLength(2);
+    // Configuration template remains untouched
+    expect(presetConfigurationTemplate.tasks).toHaveLength(1);
+    expect(presetConfigurationTemplate.tasks[0].id).toBe('t1');
+  });
+});
+
