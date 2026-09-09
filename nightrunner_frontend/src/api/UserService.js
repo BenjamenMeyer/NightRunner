@@ -252,6 +252,18 @@ export default class UserService {
 
     }
 
+    /**
+     * Determines whether the current user's
+     * account status is pending approval.
+     *
+     * @returns {boolean}
+     */
+    isPending() {
+
+        return this.getCached()?.status === "pending";
+
+    }
+
 
     //
     // Event Roles

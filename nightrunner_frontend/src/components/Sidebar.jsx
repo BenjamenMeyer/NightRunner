@@ -19,9 +19,15 @@ function canAccess(route) {
         return true;
     }
 
+    const cachedUser = ApiService.userData.getCached();
+
     if (
-        !ApiService.userData.getCached()
+        !cachedUser
     ) {
+        return false;
+    }
+
+    if (cachedUser.status === "pending") {
         return false;
     }
 

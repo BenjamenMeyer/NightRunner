@@ -1,0 +1,57 @@
+.pending-page-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    padding: 2rem;
+}
+
+.pending-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 2.5rem;
+    max-width: 540px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+}
+
+.pending-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.pending-card h1 {
+    font-size: 1.6rem;
+    color: #212529;
+    margin-bottom: 0.75rem;
+}
+
+.pending-greeting {
+    font-size: 1.05rem;
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.pending-message {
+    font-size: 0.95rem;
+    color: #6c757d;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.pending-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+@media (max-width: 480px) {
+    .pending-card {
+        padding: 1.5rem;
+    }
+    .pending-actions {
+        flex-direction: column;
+    }
+}

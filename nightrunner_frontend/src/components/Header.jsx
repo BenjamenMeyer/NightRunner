@@ -197,13 +197,16 @@ function Header({
                             <hr className="header-dropdown-divider"/>
 
 
-                            <button
-                                className="header-dropdown-item"
-                                role="menuitem"
-                                onClick={handleChangeEvent}
-                            >
-                                Change Event
-                            </button>
+                            {/* If user is not pending, show Change Event */}
+                            {cachedUser?.status !== "pending" && (
+                                <button
+                                    className="header-dropdown-item"
+                                    role="menuitem"
+                                    onClick={handleChangeEvent}
+                                >
+                                    Change Event
+                                </button>
+                            )}
 
                             <button
                                 className="header-dropdown-item"
