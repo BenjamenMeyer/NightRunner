@@ -25,6 +25,7 @@ class ConfigurationsResource:
         key = data.get("key") or data.get("name") or ""
         value = data.get("value") or ""
         description = data.get("description")
+        tasks = data.get("tasks") or []
         raw_weight = data.get("stationWeight") if "stationWeight" in data else data.get("station_weight", 1.0)
         try:
             station_weight = float(raw_weight) if raw_weight is not None else 1.0
