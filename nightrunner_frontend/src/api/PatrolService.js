@@ -26,17 +26,11 @@ export default class PatrolService {
      *     Patrol object.
      */
     async getPatrol(
-        eventId,
-        patrolId
+        arg1,
+        arg2
     ) {
 
-        if (!eventId) {
-
-            throw new Error(
-                "An event ID is required."
-            );
-
-        }
+        const patrolId = arg2 ?? arg1;
 
         if (!patrolId) {
 
@@ -131,36 +125,35 @@ export default class PatrolService {
     /**
      * Updates a patrol.
      *
-     * @param {string} eventId
-     *     ID of the event the patrol belongs to.
+     * @param {string} arg1
+     *     ID of the event OR UUID of the patrol.
      *
-     * @param {string} patrolId
-     *     UUID of the patrol to update.
+     * @param {string|Object} arg2
+     *     UUID of the patrol OR patrol data.
      *
-     * @param {Object} patrol
+     * @param {Object} [arg3]
      *     Updated patrol data.
-     *
-     * @param {string} [patrol.name]
-     *     Updated patrol name.
-     *
-     * @param {Object[]} [patrol.members]
-     *     Updated patrol members.
      *
      * @returns {Promise<Object>}
      *     Updated patrol object.
      */
     async updatePatrol(
-        eventId,
-        patrolId,
-        patrol
+        arg1,
+        arg2,
+        arg3
     ) {
 
-        if (!eventId) {
+        let eventId = null;
+        let patrolId = null;
+        let patrol = null;
 
-            throw new Error(
-                "An event ID is required."
-            );
-
+        if (arg3 !== undefined) {
+            eventId = arg1;
+            patrolId = arg2;
+            patrol = arg3;
+        } else {
+            patrolId = arg1;
+            patrol = arg2;
         }
 
         if (!patrolId) {
@@ -183,7 +176,7 @@ export default class PatrolService {
             `/patrols/${patrolId}`,
             {
                 ...patrol,
-                eventId
+                ...(eventId ? { eventId } : {})
             }
         );
 
