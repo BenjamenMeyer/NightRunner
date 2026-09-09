@@ -157,3 +157,19 @@ async def test_configuration_endpoints(test_client, dev_mode_enabled):
     empty_cfg = json.loads(resp.text)
     assert empty_cfg["groupId"] is None
     assert empty_cfg["group_id"] is None
+
+    # Create a configuration with tasks payload
+    tasks_body = {
+        "groupId": group_id,
+        "name": "config_with_tasks",
+        "tasks": [
+            {"id": "t1", "name": "Stopwatch Challenge", "type": "Stopwatch"},
+            {"id": "t2", "name": "Knot Tying", "type": "Timed Challenge"}
+        ]
+    }
+    resp = await test_client.simulate_post("/v1/configurations", json=tasks_body)
+    assert resp.status == falcon.HTTP_201
+    cfg_with_tasks = json.loads(resp.text)
+    assert "tasks" in cfg_with_tasks
+    assert len(cfg_with_tasks["tasks"]) == 2
+    assert cfg_with_tasks["tasks"][0]["name"] == "Stopwatch Challenge"
