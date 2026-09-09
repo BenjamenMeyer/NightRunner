@@ -2,6 +2,7 @@ import "./Stations.css";
 
 const DEFAULT_TASK_TYPES = [
     "Timed Challenge",
+    "Stopwatch",
     "Score Challenge",
     "Pass / Fail",
     "Multiple Choice",

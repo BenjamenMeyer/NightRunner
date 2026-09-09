@@ -164,7 +164,9 @@ export default function ScoreField({
 
     }
 
-    switch (scoreValue.type) {
+    const fieldType = scoreValue.type || task.type;
+
+    switch (fieldType) {
 
         case "RangeRated":
 
@@ -276,6 +278,7 @@ export default function ScoreField({
 
             );
 
+        case "Timed Challenge":
         case "Stopwatch":
 
             return (
