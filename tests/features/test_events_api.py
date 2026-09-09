@@ -50,3 +50,33 @@ async def test_api_events_lifecycle(client, dev_mode_enabled):
     # Verify Deleted
     resp = await client.simulate_get(f"/v1/events/{event_id}")
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_api_event_stations_and_organizers(client, dev_mode_enabled, test_database):
+    driver = test_database
+    event_data = {
+        "name": "Station Test Event",
+        "date": "2026-10-01",
+        "organizers": ["user-org-1"]
+    }
+    resp = await client.simulate_post("/v1/events", json=event_data)
+    assert resp.status_code == 201
+    event_id = resp.json["id"]
+
+    # Create station linked to event
+    station_payload = {
+        "name": "Alpha Station",
+        "eventId": event_id
+    }
+    st_resp = await client.simulate_post("/v1/stations", json=station_payload)
+    assert st_resp.status_code == 201
+    station_id = st_resp.json["id"]
+
+    # Fetch event and verify stations and organizers list
+    get_resp = await client.simulate_get(f"/v1/events/{event_id}")
+    assert get_resp.status_code == 200
+    ev = get_resp.json
+    assert station_id in ev["stations"]
+    assert "user-org-1" in ev["organizers"]
+
