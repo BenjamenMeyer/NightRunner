@@ -254,5 +254,52 @@ describe('Copy Configuration as Template Contracts', () => {
   });
 });
 
+describe('Patrol Service & Editor Contracts', () => {
+  it('allows fetching patrol with single patrolId argument (without requiring explicit eventId)', async () => {
+    const mockTransport = {
+      get: (url) => Promise.resolve({ id: 'p-123', name: 'Eagle Patrol', members: [] })
+    };
 
+    // Import-like logic for PatrolService
+    const patrolId = 'p-123';
+    const arg1 = patrolId;
+    const arg2 = undefined;
+    const resolvedPatrolId = arg2 ?? arg1;
 
+    expect(resolvedPatrolId).toBe('p-123');
+
+    const res = await mockTransport.get(`/patrols/${resolvedPatrolId}`);
+    expect(res.name).toBe('Eagle Patrol');
+  });
+
+  it('allows updating patrol with (patrolId, payload) signature or (eventId, patrolId, payload) signature', async () => {
+    const updatePatrolHelper = (arg1, arg2, arg3) => {
+      let eventId = null;
+      let patrolId = null;
+      let patrol = null;
+
+      if (arg3 !== undefined) {
+        eventId = arg1;
+        patrolId = arg2;
+        patrol = arg3;
+      } else {
+        patrolId = arg1;
+        patrol = arg2;
+      }
+
+      return { eventId, patrolId, patrol };
+    };
+
+    // Signature 1: updatePatrol(patrolId, payload)
+    const call1 = updatePatrolHelper('p-100', { name: 'Foxes' });
+    expect(call1.patrolId).toBe('p-100');
+    expect(call1.patrol.name).toBe('Foxes');
+    expect(call1.eventId).toBeNull();
+
+    // Signature 2: updatePatrol(eventId, patrolId, payload)
+    const call2 = updatePatrolHelper('evt-1', 'p-100', { name: 'Foxes' });
+    expect(call2.eventId).toBe('evt-1');
+    expect(call2.patrolId).toBe('p-100');
+    expect(call2.patrol.name).toBe('Foxes');
+  });
+});

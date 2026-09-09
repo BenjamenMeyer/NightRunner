@@ -158,6 +158,7 @@ export default function PatrolEditor({
 
             const data =
                 await ApiService.patrolData.getPatrol(
+                    eventId,
                     patrolId
                 );
 
@@ -465,6 +466,7 @@ export default function PatrolEditor({
             if (isEdit) {
 
                 await ApiService.patrolData.updatePatrol(
+                    eventId,
                     patrolId,
                     payload
                 );
