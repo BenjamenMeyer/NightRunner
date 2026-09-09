@@ -29,7 +29,7 @@ export default function Footer() {
                 </span>
 
                 <span>
-                    Night Runner v{import.meta.env.VITE_APP_VERSION || "0.1.0-dev"}
+                    Night Runner {import.meta.env.VITE_APP_VERSION || "0.1.0-dev"}
                 </span>
 
             </div>
