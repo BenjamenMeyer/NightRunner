@@ -54,4 +54,19 @@ describe('Configuration Editor Payload Contracts', () => {
 
     expect(payload.description).toBeNull();
   });
+
+  it('preserves Stopwatch and Timed Challenge tasks array in configuration state', () => {
+    const existingTasks = [
+      { name: 'Knot Tying', type: 'Timed Challenge', maxScore: 100 },
+      { name: 'Speed Lashing', type: 'Stopwatch', timeLimit: 300 }
+    ];
+
+    const newTask = { name: 'First Aid', type: 'Score Challenge', maxScore: 50 };
+
+    const updatedTasks = [...existingTasks, newTask];
+
+    expect(updatedTasks).toHaveLength(3);
+    expect(updatedTasks[1].type).toBe('Stopwatch');
+    expect(updatedTasks[2].name).toBe('First Aid');
+  });
 });

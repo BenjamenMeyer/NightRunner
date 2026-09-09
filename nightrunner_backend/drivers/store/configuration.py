@@ -1,3 +1,4 @@
+import json
 from typing import List, Optional
 from nightrunner_backend.drivers.base import DatabaseDriver
 from nightrunner_backend.models.configuration import ConfigurationGroup, Configuration
@@ -29,6 +30,29 @@ UPDATE_CONFIG = """
     WHERE id = :id
 """
 DELETE_CONFIG = "DELETE FROM configurations WHERE id = :id"
+
+
+def _row_to_configuration(row: dict) -> Configuration:
+    tasks = []
+    val = row.get("value") or ""
+    if val:
+        try:
+            parsed = json.loads(val)
+            if isinstance(parsed, list):
+                tasks = parsed
+            elif isinstance(parsed, dict) and "tasks" in parsed:
+                tasks = parsed["tasks"]
+        except Exception:
+            tasks = []
+    return Configuration(
+        id=row["id"],
+        group_id=row.get("group_id"),
+        key=row.get("key") or "",
+        value=row.get("value") or "",
+        description=row.get("description"),
+        tasks=tasks
+    )
+
 
 class ConfigurationStore:
     def __init__(self, driver: DatabaseDriver):
@@ -63,27 +87,29 @@ class ConfigurationStore:
     # Configuration methods
     async def list_configurations(self) -> List[Configuration]:
         rows = await self.driver.execute(LIST_CONFIGS)
-        return [Configuration(**row) for row in rows]
+        return [_row_to_configuration(row) for row in rows]
 
     async def get_configuration(self, config_id: str) -> Optional[Configuration]:
         row = await self.driver.fetch_one(GET_CONFIG, {"id": config_id})
-        return Configuration(**row) if row else None
+        return _row_to_configuration(row) if row else None
 
     async def create_configuration(self, config: Configuration) -> None:
+        val = json.dumps(config.tasks) if config.tasks else config.value
         await self.driver.execute(CREATE_CONFIG, {
             "id": config.id,
             "group_id": config.group_id if config.group_id else None,
             "key": config.key,
-            "value": config.value,
+            "value": val,
             "description": config.description,
         })
 
     async def update_configuration(self, config: Configuration) -> None:
+        val = json.dumps(config.tasks) if config.tasks else config.value
         await self.driver.execute(UPDATE_CONFIG, {
             "id": config.id,
             "group_id": config.group_id if config.group_id else None,
             "key": config.key,
-            "value": config.value,
+            "value": val,
             "description": config.description,
         })
 

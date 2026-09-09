@@ -192,3 +192,4 @@ async def test_my_endpoint(test_client):
 - **Pre-PR rebase**: Always fetch and rebase on `upstream/main` again BEFORE opening a PR or pushing commits for review to guarantee branches are never outdated against base `main`.
 - **Fork-only pushes**: Always push branches to the personal fork (`origin`), and open cross-fork PRs targeting `TLNightOps/NightRunner:main`. Do NOT push directly to `upstream` or auto-merge PRs.
 - **PR Assignment**: Always assign the PR to the user submitting/creating it (e.g. `--assignee "@me"` or `--assignee <username>`).
+- **Post-Merge Cleanup**: Always clean up local branches (`git branch -d <branch-name>` or `-D` if squash-merged) after a pull request has been merged, while keeping remote branches untouched unless explicitly requested.
