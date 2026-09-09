@@ -16,3 +16,7 @@ class Score:
     score_weight: float = 1.0
     active: bool = True
     submitted_at: Optional[str] = None
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+    entry_mode: str = "live"
+

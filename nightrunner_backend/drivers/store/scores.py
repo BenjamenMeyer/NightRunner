@@ -12,10 +12,12 @@ GET_SCORE = "SELECT * FROM scores WHERE id = :id AND event_id = :event_id"
 CREATE_SCORE = """
     INSERT INTO scores (
         id, event_id, station_id, patrol_id, task_id,
-        score_value, score_weight, active, submitted_at
+        score_value, score_weight, active, submitted_at,
+        started_at, completed_at, entry_mode
     ) VALUES (
         :id, :event_id, :station_id, :patrol_id, :task_id,
-        :score_value, :score_weight, :active, CURRENT_TIMESTAMP
+        :score_value, :score_weight, :active, CURRENT_TIMESTAMP,
+        :started_at, :completed_at, :entry_mode
     )
 """
 
@@ -86,6 +88,9 @@ class ScoresStore:
             "score_value": score.score_value,
             "score_weight": score.score_weight,
             "active": int(score.active),
+            "started_at": score.started_at,
+            "completed_at": score.completed_at,
+            "entry_mode": score.entry_mode or "live",
         })
         return score
 

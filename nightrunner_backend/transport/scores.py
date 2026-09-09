@@ -58,6 +58,9 @@ class ScoresResource:
                 score_value=float(score_value),
                 score_weight=float(s.get("scoreWeight", 1.0)),
                 active=bool(s.get("active", True)),
+                started_at=s.get("startedAt") or payload.get("startedAt"),
+                completed_at=s.get("completedAt") or payload.get("completedAt"),
+                entry_mode=payload.get("entryMode", "live"),
             )
             await store.create(score)
             created.append({"id": score.id})

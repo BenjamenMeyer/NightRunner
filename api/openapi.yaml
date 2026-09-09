@@ -52,6 +52,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /v1/me:
+    get:
+      summary: Get Current User
+      description: Retrieves the profile and roles for the currently authenticated user.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The current user object with roles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /v1/users:
     get:
       summary: List Users
@@ -1135,6 +1157,18 @@ components:
         timestamp:
           type: string
           format: date-time
+        entryMode:
+          type: string
+          enum: [live, manual]
+          default: live
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
         scores:
           type: array
           items:

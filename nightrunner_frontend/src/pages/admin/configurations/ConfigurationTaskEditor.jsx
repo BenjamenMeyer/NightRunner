@@ -1,5 +1,6 @@
 const TASK_TYPES = [
     "Timed Challenge",
+    "Stopwatch",
     "Score Challenge",
     "Pass / Fail",
     "Multiple Choice",
@@ -244,6 +245,16 @@ export default function ConfigurationTaskEditor({
                         />
 
                     </label>
+
+                )}
+
+                {task.type === "Stopwatch" && (
+
+                    <div className="task-note">
+
+                        Stopwatch tasks allow live Start / Stop timing or manual entry of start/finish UTC timestamps and elapsed time from paper sheets.
+
+                    </div>
 
                 )}
 
