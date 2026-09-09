@@ -327,9 +327,14 @@ export default function QRScanner({
                 )}
 
                 {error && (
+                    <div>
+                        <div className="qr-scanner-error">
+                            {error}
+                        </div>
 
-                    <div className="qr-scanner-error">
-                        {error}
+                        <p>
+                            Make sure the website has access to the camera.
+                        </p>
                     </div>
 
                 )}
