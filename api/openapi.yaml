@@ -890,8 +890,17 @@ components:
         group_id:
           type: string
           format: uuid
+          nullable: true
+          example: "uuid-string-group-1"
+        groupId:
+          type: string
+          format: uuid
+          nullable: true
           example: "uuid-string-group-1"
         key:
+          type: string
+          example: "max_score"
+        name:
           type: string
           example: "max_score"
         value:
