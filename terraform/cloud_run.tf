@@ -36,8 +36,8 @@ resource "google_cloud_run_v2_service" "backend" {
       max_instance_count = var.max_cloud_run_instances
     }
 
-    # Set 15-second request execution timeout cap
-    timeout = "15s"
+    # Set request execution timeout cap (300s allows container cold start + DB migrations)
+    timeout = "300s"
 
     containers {
       image = var.backend_image != "" ? var.backend_image : "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.backend_repo.repository_id}/backend:latest"
