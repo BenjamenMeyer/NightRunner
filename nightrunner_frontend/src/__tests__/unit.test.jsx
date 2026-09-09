@@ -415,4 +415,9 @@ describe('UserService PATCH Methods Contracts', () => {
       payload: { stationId: 'st-5', stationAction: 'assign' }
     });
   });
+
+  it('provides a patch method on BackendTransport instance', async () => {
+    const BackendTransport = (await import('../api/BackendTransport.js')).default;
+    expect(typeof BackendTransport.patch).toBe('function');
+  });
 });
