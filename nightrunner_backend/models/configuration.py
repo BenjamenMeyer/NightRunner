@@ -22,7 +22,7 @@ class ConfigurationGroup:
 class Configuration:
     """A single configuration that belongs to a group."""
     id: str = field(default_factory=lambda: str(uuid6.uuid7()))
-    group_id: str = ""
+    group_id: Optional[str] = None
     key: str = ""
     value: str = ""
     description: Optional[str] = None
@@ -31,7 +31,9 @@ class Configuration:
         return {
             "id": self.id,
             "group_id": self.group_id,
+            "groupId": self.group_id,
             "key": self.key,
+            "name": self.key,
             "value": self.value,
             "description": self.description,
         }

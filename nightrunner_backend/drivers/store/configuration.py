@@ -72,7 +72,7 @@ class ConfigurationStore:
     async def create_configuration(self, config: Configuration) -> None:
         await self.driver.execute(CREATE_CONFIG, {
             "id": config.id,
-            "group_id": config.group_id,
+            "group_id": config.group_id if config.group_id else None,
             "key": config.key,
             "value": config.value,
             "description": config.description,
@@ -81,7 +81,7 @@ class ConfigurationStore:
     async def update_configuration(self, config: Configuration) -> None:
         await self.driver.execute(UPDATE_CONFIG, {
             "id": config.id,
-            "group_id": config.group_id,
+            "group_id": config.group_id if config.group_id else None,
             "key": config.key,
             "value": config.value,
             "description": config.description,

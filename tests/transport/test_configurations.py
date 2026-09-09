@@ -130,3 +130,30 @@ async def test_configuration_endpoints(test_client, dev_mode_enabled):
     # Delete the configuration
     resp = await test_client.simulate_delete(f"/v1/configurations/{config_id}")
     assert resp.status == falcon.HTTP_204
+
+    # Create a configuration with camelCase keys (groupId, name)
+    camel_body = {
+        "groupId": group_id,
+        "name": "camel_key",
+        "value": "camel_val",
+        "description": "camel desc",
+    }
+    resp = await test_client.simulate_post("/v1/configurations", json=camel_body)
+    assert resp.status == falcon.HTTP_201
+    camel_cfg = json.loads(resp.text)
+    assert camel_cfg["groupId"] == group_id
+    assert camel_cfg["group_id"] == group_id
+    assert camel_cfg["name"] == "camel_key"
+    assert camel_cfg["key"] == "camel_key"
+
+    # Create a configuration with empty groupId (should map to None/null)
+    empty_group_body = {
+        "groupId": "",
+        "name": "empty_group_key",
+        "value": "val",
+    }
+    resp = await test_client.simulate_post("/v1/configurations", json=empty_group_body)
+    assert resp.status == falcon.HTTP_201
+    empty_cfg = json.loads(resp.text)
+    assert empty_cfg["groupId"] is None
+    assert empty_cfg["group_id"] is None

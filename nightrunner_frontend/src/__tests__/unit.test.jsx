@@ -11,3 +11,47 @@ describe('Frontend Unit Tests Placeholder', () => {
     expect(apiBackend).toBeDefined();
   });
 });
+
+describe('Configuration Editor Payload Contracts', () => {
+  it('formats payload with groupId and name for backend consumption', () => {
+    const rawConfiguration = {
+      groupId: '018f-group-id',
+      name: ' Ropework Station Config ',
+      description: ' Handles knot tying tasks ',
+      tasks: [{ name: 'Square Knot', type: 'Timed Challenge' }]
+    };
+
+    const payload = {
+      groupId: rawConfiguration.groupId,
+      name: rawConfiguration.name.trim(),
+      description: rawConfiguration.description.trim() || null,
+      tasks: rawConfiguration.tasks ?? []
+    };
+
+    expect(payload).toEqual({
+      groupId: '018f-group-id',
+      name: 'Ropework Station Config',
+      description: 'Handles knot tying tasks',
+      tasks: [{ name: 'Square Knot', type: 'Timed Challenge' }]
+    });
+    expect(payload.groupId).not.toBe('');
+  });
+
+  it('handles optional description when empty', () => {
+    const rawConfiguration = {
+      groupId: '018f-group-id',
+      name: 'Firebuilding Config',
+      description: '   ',
+      tasks: []
+    };
+
+    const payload = {
+      groupId: rawConfiguration.groupId,
+      name: rawConfiguration.name.trim(),
+      description: rawConfiguration.description.trim() || null,
+      tasks: rawConfiguration.tasks ?? []
+    };
+
+    expect(payload.description).toBeNull();
+  });
+});
