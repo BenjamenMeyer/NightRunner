@@ -18,17 +18,35 @@ class PatrolMember:
 
 
 class Patrol:
-    """Patrol model with a `name` field."""
-    def __init__(self, id: str, event_id: Optional[str] = None, name: Optional[str] = None, members: Optional[List[PatrolMember]] = None):
+    """Patrol model with a `name` field and communication details."""
+    def __init__(
+        self,
+        id: str,
+        event_id: Optional[str] = None,
+        name: Optional[str] = None,
+        members: Optional[List[PatrolMember]] = None,
+        phone_number: Optional[str] = None,
+        radio_frequency: Optional[str] = None,
+        has_radio: bool = False,
+        radio_identifier: Optional[str] = None,
+    ):
         self.id = id
         self.event_id = event_id
         self.name = name
         self.members = members if members is not None else []
+        self.phone_number = phone_number
+        self.radio_frequency = radio_frequency
+        self.has_radio = has_radio
+        self.radio_identifier = radio_identifier
 
     def to_api_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
             "eventId": self.event_id,
             "name": self.name,
+            "phoneNumber": self.phone_number,
+            "radioFrequency": self.radio_frequency,
+            "hasRadio": bool(self.has_radio),
+            "radioIdentifier": self.radio_identifier,
             "members": [m.to_api_dict() for m in self.members],
         }

@@ -28,6 +28,10 @@ const EMPTY_MEMBER = {
 
 const EMPTY_PATROL = {
     name: "",
+    phoneNumber: "",
+    radioFrequency: "",
+    hasRadio: false,
+    radioIdentifier: "",
     members: []
 };
 
@@ -693,6 +697,79 @@ export default function PatrolEditor({
                             />
 
                         </label>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
+                            <label className="form-field">
+                                <span>
+                                    Cell Phone Number
+                                </span>
+                                <input
+                                    type="tel"
+                                    value={patrol.phoneNumber ?? ""}
+                                    onChange={event =>
+                                        updatePatrol(
+                                            "phoneNumber",
+                                            event.target.value
+                                        )
+                                    }
+                                    placeholder="e.g. 555-123-4567"
+                                />
+                            </label>
+
+                            <label className="form-field">
+                                <span>
+                                    Radio Frequency
+                                </span>
+                                <input
+                                    type="text"
+                                    value={patrol.radioFrequency ?? ""}
+                                    onChange={event =>
+                                        updatePatrol(
+                                            "radioFrequency",
+                                            event.target.value
+                                        )
+                                    }
+                                    placeholder="e.g. 462.5625 MHz (Channel 1)"
+                                />
+                            </label>
+                        </div>
+
+                        <div style={{ marginTop: "1rem", paddingTop: "0.75rem", borderTop: "1px solid #e9ecef" }}>
+                            <label className="form-field checkbox-field" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <input
+                                    type="checkbox"
+                                    checked={Boolean(patrol.hasRadio)}
+                                    onChange={event =>
+                                        updatePatrol(
+                                            "hasRadio",
+                                            event.target.checked
+                                        )
+                                    }
+                                />
+                                <span>
+                                    Patrol was issued a radio
+                                </span>
+                            </label>
+
+                            {patrol.hasRadio && (
+                                <label className="form-field" style={{ marginTop: "0.75rem" }}>
+                                    <span>
+                                        Radio Identifier / Asset Tag
+                                    </span>
+                                    <input
+                                        type="text"
+                                        value={patrol.radioIdentifier ?? ""}
+                                        onChange={event =>
+                                            updatePatrol(
+                                                "radioIdentifier",
+                                                event.target.value
+                                            )
+                                        }
+                                        placeholder="e.g. Radio-04, TAC-2"
+                                    />
+                                </label>
+                            )}
+                        </div>
 
                     </div>
 

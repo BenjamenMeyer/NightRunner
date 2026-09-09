@@ -298,6 +298,7 @@ export default function Patrols() {
                             <thead>
                             <tr>
                                 <th>Patrol</th>
+                                <th>Communication Info</th>
                                 <th>Members</th>
                                 <th>Event</th>
                                 <th className="actions-column">
@@ -314,6 +315,25 @@ export default function Patrols() {
                                             <strong>
                                                 {patrol.name}
                                             </strong>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div style={{ fontSize: "0.85em", lineHeight: "1.3" }}>
+                                            {patrol.phoneNumber && (
+                                                <div>📱 {patrol.phoneNumber}</div>
+                                            )}
+                                            {patrol.radioFrequency && (
+                                                <div>📻 {patrol.radioFrequency}</div>
+                                            )}
+                                            {patrol.hasRadio && (
+                                                <div style={{ color: "#2b8a3e" }}>
+                                                    Radio Issued: {patrol.radioIdentifier || "Yes"}
+                                                </div>
+                                            )}
+                                            {!patrol.phoneNumber && !patrol.radioFrequency && !patrol.hasRadio && (
+                                                <span style={{ color: "#868e96" }}>—</span>
+                                            )}
                                         </div>
                                     </td>
 

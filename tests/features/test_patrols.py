@@ -73,3 +73,32 @@ async def test_delete_patrol(db):
     
     fetched = await store.get(patrol.id)
     assert fetched is None
+
+
+@pytest.mark.asyncio
+async def test_patrol_communication_info(db):
+    store = PatrolsStore(db)
+    patrol = Patrol(
+        id=str(uuid6.uuid7()),
+        name="Alpha Patrol",
+        phone_number="555-0199",
+        radio_frequency="462.5625 MHz",
+        has_radio=True,
+        radio_identifier="Radio-12",
+    )
+    await store.create(patrol)
+
+    fetched = await store.get(patrol.id)
+    assert fetched is not None
+    assert fetched.phone_number == "555-0199"
+    assert fetched.radio_frequency == "462.5625 MHz"
+    assert fetched.has_radio is True
+    assert fetched.radio_identifier == "Radio-12"
+
+    patrols = await store.list()
+    p = next(x for x in patrols if x.id == patrol.id)
+    assert p.phone_number == "555-0199"
+    assert p.radio_frequency == "462.5625 MHz"
+    assert p.has_radio is True
+    assert p.radio_identifier == "Radio-12"
+
