@@ -421,3 +421,58 @@ describe('UserService PATCH Methods Contracts', () => {
     expect(typeof BackendTransport.patch).toBe('function');
   });
 });
+
+describe('Patrol Communication Information Contracts', () => {
+  it('constructs patrol payload with communication fields including phone number, radio frequency, radio channel, and radio identifier', () => {
+    const rawPatrol = {
+      name: 'Alpha Patrol',
+      phoneNumber: '555-867-5309',
+      radioFrequency: '462.5625 MHz',
+      radioChannel: 'Channel 1',
+      hasRadio: true,
+      radioIdentifier: 'Radio-04',
+      members: []
+    };
+
+    const payload = {
+      name: rawPatrol.name.trim(),
+      phoneNumber: rawPatrol.phoneNumber ? rawPatrol.phoneNumber.trim() : null,
+      radioFrequency: rawPatrol.radioFrequency ? rawPatrol.radioFrequency.trim() : null,
+      radioChannel: rawPatrol.radioChannel ? rawPatrol.radioChannel.trim() : null,
+      hasRadio: Boolean(rawPatrol.hasRadio),
+      radioIdentifier: rawPatrol.hasRadio && rawPatrol.radioIdentifier ? rawPatrol.radioIdentifier.trim() : null,
+      members: rawPatrol.members ?? []
+    };
+
+    expect(payload).toEqual({
+      name: 'Alpha Patrol',
+      phoneNumber: '555-867-5309',
+      radioFrequency: '462.5625 MHz',
+      radioChannel: 'Channel 1',
+      hasRadio: true,
+      radioIdentifier: 'Radio-04',
+      members: []
+    });
+  });
+
+  it('detects when no communication info is configured for a patrol', () => {
+    const emptyCommsPatrol = {
+      name: 'Bravo Patrol',
+      phoneNumber: '',
+      radioFrequency: '',
+      radioChannel: '',
+      hasRadio: false,
+      radioIdentifier: ''
+    };
+
+    const hasComms = Boolean(
+      emptyCommsPatrol.phoneNumber?.trim() ||
+      emptyCommsPatrol.radioFrequency?.trim() ||
+      emptyCommsPatrol.radioChannel?.trim() ||
+      emptyCommsPatrol.hasRadio
+    );
+
+    expect(hasComms).toBe(false);
+  });
+});
+

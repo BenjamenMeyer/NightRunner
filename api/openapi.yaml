@@ -1043,6 +1043,26 @@ components:
         name:
           type: string
           example: "TL Troop GA-0594"
+        phoneNumber:
+          type: string
+          nullable: true
+          example: "555-123-4567"
+        radioFrequency:
+          type: string
+          nullable: true
+          example: "462.5625 MHz"
+        radioChannel:
+          type: string
+          nullable: true
+          example: "Channel 1 / TAC-1"
+        hasRadio:
+          type: boolean
+          default: false
+          example: true
+        radioIdentifier:
+          type: string
+          nullable: true
+          example: "Radio-04"
         members:
           type: array
           items:

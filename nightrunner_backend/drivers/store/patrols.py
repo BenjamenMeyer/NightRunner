@@ -5,19 +5,22 @@ from nightrunner_backend.models.patrol import Patrol, PatrolMember
 LIST_PATROLS_BATCH = """
 SELECT
     p.id AS patrol_id, p.event_id, p.name AS patrol_name,
+    p.phone_number, p.radio_frequency, p.radio_channel, p.has_radio, p.radio_identifier,
     pm.id AS member_id, pm.name AS member_name, pm.rank, pm.troop
 FROM patrols p
 LEFT JOIN patrol_members pm ON p.id = pm.patrol_id
 ORDER BY p.id
 """
-GET_PATROL = "SELECT id, event_id, name FROM patrols WHERE id = :id"
+GET_PATROL = "SELECT id, event_id, name, phone_number, radio_frequency, radio_channel, has_radio, radio_identifier FROM patrols WHERE id = :id"
 CREATE_PATROL = """
-    INSERT INTO patrols (id, event_id, name)
-    VALUES (:id, :event_id, :name)
+    INSERT INTO patrols (id, event_id, name, phone_number, radio_frequency, radio_channel, has_radio, radio_identifier)
+    VALUES (:id, :event_id, :name, :phone_number, :radio_frequency, :radio_channel, :has_radio, :radio_identifier)
 """
 UPDATE_PATROL = """
     UPDATE patrols
-    SET event_id = :event_id, name = :name
+    SET event_id = :event_id, name = :name, phone_number = :phone_number,
+        radio_frequency = :radio_frequency, radio_channel = :radio_channel,
+        has_radio = :has_radio, radio_identifier = :radio_identifier
     WHERE id = :id
 """
 DELETE_PATROL = "DELETE FROM patrols WHERE id = :id"
@@ -41,7 +44,16 @@ class PatrolsStore:
         for row in rows:
             patrol_id = row["patrol_id"]
             if patrol_id not in patrols:
-                patrols[patrol_id] = Patrol(id=patrol_id, event_id=row["event_id"], name=row["patrol_name"])
+                patrols[patrol_id] = Patrol(
+                    id=patrol_id,
+                    event_id=row["event_id"],
+                    name=row["patrol_name"],
+                    phone_number=row["phone_number"],
+                    radio_frequency=row["radio_frequency"],
+                    radio_channel=row["radio_channel"],
+                    has_radio=bool(row["has_radio"]),
+                    radio_identifier=row["radio_identifier"],
+                )
             if row["member_id"]:
                 patrols[patrol_id].members.append(
                     PatrolMember(
@@ -57,7 +69,16 @@ class PatrolsStore:
         row = await self.driver.fetch_one(GET_PATROL, {"id": patrol_id})
         if not row:
             return None
-        patrol = Patrol(id=row["id"], event_id=row["event_id"], name=row["name"])
+        patrol = Patrol(
+            id=row["id"],
+            event_id=row["event_id"],
+            name=row["name"],
+            phone_number=row["phone_number"],
+            radio_frequency=row["radio_frequency"],
+            radio_channel=row["radio_channel"],
+            has_radio=bool(row["has_radio"]),
+            radio_identifier=row["radio_identifier"],
+        )
         member_rows = await self.driver.execute(LIST_PATROL_MEMBERS, {"patrol_id": patrol_id})
         patrol.members = [
             PatrolMember(id=m["id"], name=m["name"], rank=m["rank"], troop=m["troop"])
@@ -66,7 +87,19 @@ class PatrolsStore:
         return patrol
 
     async def create(self, patrol: Patrol) -> None:
-        await self.driver.execute(CREATE_PATROL, {"id": patrol.id, "event_id": patrol.event_id, "name": patrol.name})
+        await self.driver.execute(
+            CREATE_PATROL,
+            {
+                "id": patrol.id,
+                "event_id": patrol.event_id,
+                "name": patrol.name,
+                "phone_number": patrol.phone_number,
+                "radio_frequency": patrol.radio_frequency,
+                "radio_channel": patrol.radio_channel,
+                "has_radio": patrol.has_radio,
+                "radio_identifier": patrol.radio_identifier,
+            },
+        )
         for member in patrol.members:
             await self.driver.execute(CREATE_PATROL_MEMBER, {
                 "id": member.id,
@@ -77,7 +110,19 @@ class PatrolsStore:
             })
 
     async def update(self, patrol: Patrol) -> None:
-        await self.driver.execute(UPDATE_PATROL, {"id": patrol.id, "event_id": patrol.event_id, "name": patrol.name})
+        await self.driver.execute(
+            UPDATE_PATROL,
+            {
+                "id": patrol.id,
+                "event_id": patrol.event_id,
+                "name": patrol.name,
+                "phone_number": patrol.phone_number,
+                "radio_frequency": patrol.radio_frequency,
+                "radio_channel": patrol.radio_channel,
+                "has_radio": patrol.has_radio,
+                "radio_identifier": patrol.radio_identifier,
+            },
+        )
         # Sync members: delete then re-insert
         await self.driver.execute(DELETE_PATROL_MEMBERS, {"patrol_id": patrol.id})
         for member in patrol.members:
