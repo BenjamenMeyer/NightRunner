@@ -5,6 +5,7 @@ import {
 } from "react";
 
 import {
+    useLocation,
     useNavigate,
     useSearchParams
 } from "react-router-dom";
@@ -36,6 +37,7 @@ function createEmptyTask() {
 
 export default function ConfigurationEditor() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams] = useSearchParams();
 
     const configurationId =
@@ -43,6 +45,9 @@ export default function ConfigurationEditor() {
 
     const copyFromId =
         searchParams.get("copyFrom");
+
+    const copyFromStation =
+        location.state?.copyFromStation ?? null;
 
     const editing =
         Boolean(configurationId);
@@ -79,7 +84,7 @@ export default function ConfigurationEditor() {
 
     useEffect(() => {
         load();
-    }, [configurationId, copyFromId]);
+    }, [configurationId, copyFromId, copyFromStation]);
 
     async function load() {
         try {
@@ -95,6 +100,33 @@ export default function ConfigurationEditor() {
                     : groupsResponse?.groups ?? [];
 
             setGroups(loadedGroups);
+
+            if (copyFromStation) {
+                let targetGroupId = "";
+                let activeConfig = null;
+
+                if (copyFromStation.activeConfigurationId) {
+                    try {
+                        const fetchedConfig = await ApiService.configurationData.getConfiguration(copyFromStation.activeConfigurationId);
+                        activeConfig = fetchedConfig?.configuration ?? fetchedConfig;
+                        targetGroupId = activeConfig?.groupId ?? activeConfig?.group_id ?? "";
+                    } catch (e) {
+                        console.warn("Could not fetch active config for station:", e);
+                    }
+                }
+
+                const stationTasks = (copyFromStation.tasks && copyFromStation.tasks.length > 0)
+                    ? copyFromStation.tasks
+                    : (activeConfig?.tasks ?? []);
+
+                setConfiguration({
+                    groupId: targetGroupId,
+                    name: `${copyFromStation.name || "Station"} Preset`,
+                    description: copyFromStation.description || `Configuration created from station ${copyFromStation.name}`,
+                    tasks: JSON.parse(JSON.stringify(stationTasks))
+                });
+                return;
+            }
 
             const targetId = configurationId || copyFromId;
 

@@ -26,6 +26,8 @@ export default function Stations() {
 
     const [search, setSearch] = useState("");
 
+    const [configurations, setConfigurations] = useState([]);
+
     useEffect(() => {
         if (eventLoading) {
             return;
@@ -54,19 +56,23 @@ export default function Stations() {
                 setLoading(true);
                 setError(null);
 
-                const stationResponse =
-                    await ApiService.stationData.getStations(
-                        eventId
-                    );
+                const [stationResponse, configResponse] =
+                    await Promise.all([
+                        ApiService.stationData.getStations(eventId),
+                        ApiService.configurationData.getConfigurations()
+                    ]);
 
                 if (cancelled) {
                     return;
                 }
 
-                const loadedStations =
-                    stationResponse ?? [];
+                const loadedStations = stationResponse ?? [];
+                const loadedConfigs = Array.isArray(configResponse)
+                    ? configResponse
+                    : configResponse?.configurations ?? [];
 
                 setStations(loadedStations);
+                setConfigurations(loadedConfigs);
 
                 setSelectedStation(current => {
                     if (!current) {
@@ -321,42 +327,51 @@ export default function Stations() {
                                 </p>
                             </div>
                         ) : (
-                            filteredStations.map(station => (
-                                <button
-                                    type="button"
-                                    key={station.id}
-                                    className={
-                                        selectedStation?.id === station.id
-                                            ? "station-card selected"
-                                            : "station-card"
-                                    }
-                                    onClick={() =>
-                                        setSelectedStation(station)
-                                    }
-                                >
-                                    <span className="station-card-content">
-                                        <strong>
-                                            {station.name}
-                                        </strong>
+                            filteredStations.map(station => {
+                                const config =
+                                    station.activeConfiguration ??
+                                    configurations.find(
+                                        c => String(c.id) === String(station.activeConfigurationId)
+                                    );
 
-                                        <span>
-                                            {station.activeConfiguration?.name ??
-                                                station.type ??
-                                                "No configuration"}
+                                return (
+                                    <button
+                                        type="button"
+                                        key={station.id}
+                                        className={
+                                            selectedStation?.id === station.id
+                                                ? "station-card selected"
+                                                : "station-card"
+                                        }
+                                        onClick={() =>
+                                            setSelectedStation(station)
+                                        }
+                                    >
+                                        <span className="station-card-content">
+                                            <strong>
+                                                {station.name}
+                                            </strong>
+
+                                            <span>
+                                                {config?.name ??
+                                                    station.type ??
+                                                    "No configuration"}
+                                            </span>
                                         </span>
-                                    </span>
 
-                                    <span className="station-card-arrow">
-                                        →
-                                    </span>
-                                </button>
-                            ))
+                                        <span className="station-card-arrow">
+                                            →
+                                        </span>
+                                    </button>
+                                );
+                            })
                         )}
                     </div>
                 </section>
 
                 <StationDetails
                     station={selectedStation}
+                    configurations={configurations}
                     onDelete={deleteStation}
                     onEdit={() => {
                         if (!selectedStation) {
@@ -368,6 +383,14 @@ export default function Stations() {
                                 selectedStation.id
                             )}`
                         );
+                    }}
+                    onCopyToTemplate={(stationToCopy) => {
+                        // Pass station details to configuration creation page
+                        navigate("/admin/configurations/create", {
+                            state: {
+                                copyFromStation: stationToCopy
+                            }
+                        });
                     }}
                 />
             </div>

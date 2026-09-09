@@ -228,6 +228,31 @@ describe('Copy Configuration as Template Contracts', () => {
     expect(newConfigurationState.tasks).toHaveLength(2);
     expect(newConfigurationState.tasks[0].name).toBe('Tripod Lashing');
   });
+
+  it('pre-populates new configuration state when copying from a Station instance back to Configuration Manager', () => {
+    const stationInstance = {
+      id: 'st-101',
+      name: 'Pioneering Post 1',
+      description: 'Outdoor pioneering station with custom task',
+      activeConfigurationId: 'cfg-rope-base',
+      tasks: [
+        { name: 'Tripod Lashing', type: 'Timed Challenge' },
+        { name: 'Custom Signal Flagging', type: 'Score Challenge' }
+      ]
+    };
+
+    const newConfigFromStation = {
+      groupId: '',
+      name: `${stationInstance.name} Preset`,
+      description: stationInstance.description,
+      tasks: JSON.parse(JSON.stringify(stationInstance.tasks))
+    };
+
+    expect(newConfigFromStation.name).toBe('Pioneering Post 1 Preset');
+    expect(newConfigFromStation.tasks).toHaveLength(2);
+    expect(newConfigFromStation.tasks[1].name).toBe('Custom Signal Flagging');
+  });
 });
+
 
 
