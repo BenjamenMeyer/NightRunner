@@ -142,7 +142,7 @@ jobs:
             --region ${{ secrets.GCP_REGION }} \
             --port 8000 \
             --timeout 300s \
-            --set-env-vars APP_VERSION="${{ needs.version.outputs.version }}"
+            --update-env-vars APP_VERSION="${{ needs.version.outputs.version }}"
 
   lint-frontend:
     name: Run Frontend Linter
