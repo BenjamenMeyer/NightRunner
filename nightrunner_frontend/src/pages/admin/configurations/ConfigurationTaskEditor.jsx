@@ -133,6 +133,46 @@ export default function ConfigurationTaskEditor({
 
                 </label>
 
+                <label className="form-field">
+
+                    <span>
+                        Task Score Weight (Multiplier)
+                    </span>
+
+                    <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={task.scoreWeight ?? 1.0}
+                        onChange={event =>
+                            update(
+                                "scoreWeight",
+                                Number(event.target.value)
+                            )
+                        }
+                    />
+
+                </label>
+
+                <label className="form-field checkbox-field" style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
+
+                    <input
+                        type="checkbox"
+                        checked={task.active !== false}
+                        onChange={event =>
+                            update(
+                                "active",
+                                event.target.checked
+                            )
+                        }
+                    />
+
+                    <span>
+                        Include this task in scoring calculations
+                    </span>
+
+                </label>
+
                 {(task.type === "Score Challenge" ||
                     task.type === "Timed Challenge") && (
 
@@ -279,6 +319,31 @@ export default function ConfigurationTaskEditor({
                     </div>
 
                 )}
+
+                <div className="scoring-preview-box" style={{ gridColumn: "1 / -1", marginTop: "1rem", padding: "0.85rem", background: "#f8f9fa", borderRadius: "6px", border: "1px solid #e9ecef" }}>
+                    <strong style={{ fontSize: "0.9em", color: "#495057", display: "block", marginBottom: "0.35rem" }}>
+                        📊 Dynamic Scoring Calculation Preview (Example Data)
+                    </strong>
+                    {task.active === false ? (
+                        <span style={{ color: "#dc3545", fontSize: "0.85em" }}>
+                            🚫 Task disabled for scoring: Contributes <strong>0 points</strong> to final score.
+                        </span>
+                    ) : (
+                        <div style={{ fontSize: "0.85em", color: "#343a40" }}>
+                            {task.maxScore ? (
+                                <span>
+                                    Example Raw Score: <strong>{Math.round(task.maxScore * 0.85)}</strong> / {task.maxScore} (85%)<br />
+                                    Weighted Task Score = Raw Score ({Math.round(task.maxScore * 0.85)}) × Task Weight ({task.scoreWeight ?? 1.0}) = <strong>{(Math.round(task.maxScore * 0.85) * (task.scoreWeight ?? 1.0)).toFixed(1)} points</strong>
+                                </span>
+                            ) : (
+                                <span>
+                                    Example Raw Score: <strong>85</strong> points<br />
+                                    Weighted Task Score = Raw Score (85) × Task Weight ({task.scoreWeight ?? 1.0}) = <strong>{(85 * (task.scoreWeight ?? 1.0)).toFixed(1)} points</strong>
+                                </span>
+                            )}
+                        </div>
+                    )}
+                </div>
 
             </div>
 

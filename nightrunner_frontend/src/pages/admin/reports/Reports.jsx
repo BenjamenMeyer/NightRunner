@@ -748,6 +748,38 @@ export default function Reports() {
                     </section>
 
 
+                    <section className="report-results-section">
+
+                        <div className="report-section-heading">
+
+                            <div>
+
+                                <div className="report-section-eyebrow">
+                                    Tie-Breaking & Adjustments
+                                </div>
+
+                                <h2>
+                                    Scoring Adjustments
+                                </h2>
+
+                                <p>
+                                    Adjust task active status or task weights on recorded scores to resolve ties or fine-tune event scoring.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div className="report-empty-section" style={{ textAlign: "left" }}>
+                            <p style={{ margin: "0 0 0.5rem 0", color: "#666" }}>
+                                In the event of a tie, the scoring team can modify task weights or toggle task inclusion (active flag) per station.
+                            </p>
+                            <small>Use Station Reports to inspect detailed task score breakdowns per patrol and apply targeted score adjustment patches (`PATCH /v1/scores/:id`).</small>
+                        </div>
+
+                    </section>
+
+
                     <footer className="report-document-footer">
 
                         <span>

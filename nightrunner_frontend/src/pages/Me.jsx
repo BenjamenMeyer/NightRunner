@@ -214,9 +214,6 @@ export default function Me() {
     const eventEntries =
         Object.entries(roles);
 
-    const availableThemes =
-        Object.entries(brandings);
-
     return (
         <div className="profile-container">
             <div className="profile-card">

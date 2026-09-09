@@ -20,3 +20,19 @@ class Score:
     completed_at: Optional[str] = None
     entry_mode: str = "live"
 
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "eventId": self.event_id,
+            "stationId": self.station_id,
+            "patrolId": self.patrol_id,
+            "taskId": self.task_id,
+            "scoreValue": self.score_value,
+            "scoreWeight": self.score_weight,
+            "active": self.active,
+            "submittedAt": self.submitted_at,
+            "startedAt": self.started_at,
+            "completedAt": self.completed_at,
+            "entryMode": self.entry_mode
+        }
+

@@ -39,4 +39,19 @@ export default class ReportService {
 
     }
 
+    async patchScore(scoreId, payload) {
+
+        if (!scoreId) {
+            throw new Error(
+                "A score ID is required."
+            );
+        }
+
+        return await BackendTransport.patch(
+            `/scores/${scoreId}`,
+            payload
+        );
+
+    }
+
 }

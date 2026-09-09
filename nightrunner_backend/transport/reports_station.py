@@ -25,6 +25,7 @@ class StationReportResource:
             })
             weighted = r['weighted_score']
             patrol['breakdown'].append({
+                'scoreId': r.get('score_id'),
                 'taskId': r['task_id'],
                 'taskName': r.get('task_name'),
                 'rawScore': r['score_value'],
