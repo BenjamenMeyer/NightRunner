@@ -37,4 +37,4 @@ USER nightrunner
 
 # Set default port and entry point (respecting $PORT environment variable passed by Cloud Run)
 ENV PORT=8000
-CMD ["sh", "-c", "uvicorn nightrunner_backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "exec uvicorn nightrunner_backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

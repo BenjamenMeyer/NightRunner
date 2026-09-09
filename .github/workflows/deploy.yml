@@ -141,6 +141,7 @@ jobs:
             --image ${{ secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ needs.version.outputs.version }} \
             --region ${{ secrets.GCP_REGION }} \
             --port 8000 \
+            --timeout 300s \
             --set-env-vars APP_VERSION="${{ needs.version.outputs.version }}"
 
   lint-frontend:
