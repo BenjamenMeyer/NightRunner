@@ -182,10 +182,20 @@ export default function StationEditor() {
     }
 
     function handleGroupChange(groupId) {
+        if (station.tasks && station.tasks.length > 0) {
+            const confirmed = window.confirm(
+                "Switching station types will update the configuration and clear custom tasks. Do you want to proceed?"
+            );
+            if (!confirmed) {
+                return;
+            }
+        }
+
         if (!groupId) {
             setStation(current => ({
                 ...current,
-                activeConfigurationId: null
+                activeConfigurationId: null,
+                tasks: []
             }));
             return;
         }
@@ -199,18 +209,36 @@ export default function StationEditor() {
                     ) === String(groupId)
             );
 
+        const configTasks = firstConfiguration?.tasks ? JSON.parse(JSON.stringify(firstConfiguration.tasks)) : [];
+
         setStation(current => ({
             ...current,
             activeConfigurationId:
-                firstConfiguration?.id ?? null
+                firstConfiguration?.id ?? null,
+            tasks: configTasks
         }));
     }
 
     function handleConfigurationChange(configurationId) {
-        updateStation(
-            "activeConfigurationId",
-            configurationId || null
-        );
+        if (station.activeConfigurationId && station.activeConfigurationId !== configurationId) {
+            if (station.tasks && station.tasks.length > 0) {
+                const confirmed = window.confirm(
+                    "Switching configuration presets will load tasks from the new configuration and replace current tasks. Do you want to proceed?"
+                );
+                if (!confirmed) {
+                    return;
+                }
+            }
+        }
+
+        const selectedConfig = configurations.find(c => String(c.id) === String(configurationId));
+        const configTasks = selectedConfig?.tasks ? JSON.parse(JSON.stringify(selectedConfig.tasks)) : [];
+
+        setStation(current => ({
+            ...current,
+            activeConfigurationId: configurationId || null,
+            tasks: configTasks
+        }));
     }
 
     function addTask() {
