@@ -1,6 +1,8 @@
 import { initializeApp, getApps } from "firebase/app";
 import {
     getAuth,
+    setPersistence,
+    browserLocalPersistence,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signInWithPopup,
@@ -33,6 +35,9 @@ if (isFirebaseMode) {
         app = getApps()[0];
     }
     auth = getAuth(app);
+    setPersistence(auth, browserLocalPersistence).catch((err) => {
+        console.warn("Failed to set Firebase Auth local persistence:", err);
+    });
 }
 
 export { auth };
