@@ -126,3 +126,28 @@ async def test_configuration_without_group(config_store: ConfigurationStore):
     assert fetched.group_id is None
     assert fetched.key == "standalone_key"
 
+
+@pytest.mark.asyncio
+async def test_configuration_with_tasks(config_store: ConfigurationStore):
+    # Create a configuration containing tasks
+    tasks_data = [
+        {"name": "Task 1", "type": "Stopwatch", "maxScore": 100},
+        {"name": "Task 2", "type": "Timed Challenge", "timeLimit": 300}
+    ]
+    config = Configuration(
+        id=str(uuid6.uuid7()),
+        group_id=None,
+        key="task_preset_config",
+        value="",
+        description="Config with tasks",
+        tasks=tasks_data
+    )
+    await config_store.create_configuration(config)
+
+    fetched = await config_store.get_configuration(config.id)
+    assert fetched is not None
+    assert fetched.tasks == tasks_data
+    assert len(fetched.tasks) == 2
+    assert fetched.tasks[0]["name"] == "Task 1"
+
+

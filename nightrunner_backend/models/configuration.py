@@ -26,6 +26,7 @@ class Configuration:
     key: str = ""
     value: str = ""
     description: Optional[str] = None
+    tasks: list = field(default_factory=list)
 
     def to_api_dict(self) -> Dict[str, Any]:
         return {
@@ -36,4 +37,5 @@ class Configuration:
             "name": self.key,
             "value": self.value,
             "description": self.description,
+            "tasks": self.tasks,
         }

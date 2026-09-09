@@ -25,6 +25,7 @@ class ConfigurationsResource:
         key = data.get("key") or data.get("name") or ""
         value = data.get("value") or ""
         description = data.get("description")
+        tasks = data.get("tasks") or []
 
         config = Configuration(
             id=str(uuid6.uuid7()),
@@ -32,6 +33,7 @@ class ConfigurationsResource:
             key=str(key),
             value=str(value),
             description=str(description) if description is not None and not isinstance(description, str) else description,
+            tasks=tasks if isinstance(tasks, list) else []
         )
         try:
             await store.create_configuration(config)
@@ -72,6 +74,8 @@ class ConfigurationResource:
         config.key = data.get("key", data.get("name", config.key))
         config.value = data.get("value", config.value)
         config.description = data.get("description", config.description)
+        if "tasks" in data and isinstance(data["tasks"], list):
+            config.tasks = data["tasks"]
 
         try:
             await store.update_configuration(config)

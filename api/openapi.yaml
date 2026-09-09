@@ -932,6 +932,11 @@ components:
           type: string
           nullable: true
           example: "Maximum score for this task"
+        tasks:
+          type: array
+          items:
+            type: object
+            description: "Station task definition"
     Event:
       type: object
       properties:
