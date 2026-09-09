@@ -18,6 +18,7 @@ import {
 
 
 import AuthService from "@/api/AuthService.js";
+import ApiService from "@/api/ApiService.js";
 
 function ProtectedRoute({ children }) {
 
@@ -60,6 +61,27 @@ function ProtectedRoute({ children }) {
                 state={{
                     from: location
                 }}
+                replace
+            />
+        );
+    }
+
+    const cachedUser = AuthService.isAuthenticated() ? ApiService.userData.getCached() : null;
+    const isPending = cachedUser?.status === "pending";
+
+    if (isPending && location.pathname !== "/pending") {
+        return (
+            <Navigate
+                to="/pending"
+                replace
+            />
+        );
+    }
+
+    if (!isPending && location.pathname === "/pending") {
+        return (
+            <Navigate
+                to="/dashboard"
                 replace
             />
         );

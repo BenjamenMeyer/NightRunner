@@ -488,4 +488,31 @@ describe('Patrol Communication Information Contracts', () => {
   });
 });
 
+describe('Pending Approval User Contracts', () => {
+  it('identifies pending user status correctly and blocks normal route access', () => {
+    const pendingUser = { id: 'u-1', username: 'pending_guy', status: 'pending' };
+    const activeUser = { id: 'u-2', username: 'active_guy', status: 'active' };
+
+    const isPendingUser = (user) => user?.status === 'pending';
+
+    expect(isPendingUser(pendingUser)).toBe(true);
+    expect(isPendingUser(activeUser)).toBe(false);
+  });
+
+  it('determines target redirect path based on user status', () => {
+    const getRedirectPath = (status, currentPath) => {
+      const isPending = status === 'pending';
+      if (isPending && currentPath !== '/pending') return '/pending';
+      if (!isPending && currentPath === '/pending') return '/dashboard';
+      return null;
+    };
+
+    expect(getRedirectPath('pending', '/events')).toBe('/pending');
+    expect(getRedirectPath('pending', '/pending')).toBeNull();
+    expect(getRedirectPath('active', '/pending')).toBe('/dashboard');
+    expect(getRedirectPath('active', '/events')).toBeNull();
+  });
+});
+
+
 

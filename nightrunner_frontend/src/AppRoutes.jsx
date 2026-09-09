@@ -21,6 +21,7 @@ import ConfigurationEditor from "./pages/admin/configurations/ConfigurationEdito
 import Login from "./pages/login/Login.jsx";
 import Register from "./pages/login/Register.jsx";
 import Callback from "./pages/Callback.jsx";
+import PendingApproval from "./pages/PendingApproval.jsx";
 
 import LiveScoring from "./pages/livescoring/LiveScoring.jsx";
 import CheckInOut from "@/pages/checkin/CheckInOut.jsx";
@@ -63,6 +64,11 @@ export const AppRoutes = [
         path: "/callback",
         element: Callback,
         access: ACCESS.PUBLIC
+    },
+    {
+        path: "/pending",
+        element: PendingApproval,
+        access: ACCESS.USER
     },
 
     // Application
