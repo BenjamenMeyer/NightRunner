@@ -18,15 +18,15 @@ UPDATE_GROUP = """
 DELETE_GROUP = "DELETE FROM configuration_groups WHERE id = :id"
 
 # SQL statements for Configuration
-LIST_CONFIGS = "SELECT id, group_id, key, value, description FROM configurations"
-GET_CONFIG = "SELECT id, group_id, key, value, description FROM configurations WHERE id = :id"
+LIST_CONFIGS = "SELECT id, group_id, key, value, description, station_weight FROM configurations"
+GET_CONFIG = "SELECT id, group_id, key, value, description, station_weight FROM configurations WHERE id = :id"
 CREATE_CONFIG = """
-    INSERT INTO configurations (id, group_id, key, value, description)
-    VALUES (:id, :group_id, :key, :value, :description)
+    INSERT INTO configurations (id, group_id, key, value, description, station_weight)
+    VALUES (:id, :group_id, :key, :value, :description, :station_weight)
 """
 UPDATE_CONFIG = """
     UPDATE configurations
-    SET group_id = :group_id, key = :key, value = :value, description = :description
+    SET group_id = :group_id, key = :key, value = :value, description = :description, station_weight = :station_weight
     WHERE id = :id
 """
 DELETE_CONFIG = "DELETE FROM configurations WHERE id = :id"
@@ -44,13 +44,16 @@ def _row_to_configuration(row: dict) -> Configuration:
                 tasks = parsed["tasks"]
         except Exception:
             tasks = []
+    raw_weight = row.get("station_weight")
+    station_weight = float(raw_weight) if raw_weight is not None else 1.0
     return Configuration(
         id=row["id"],
         group_id=row.get("group_id"),
         key=row.get("key") or "",
         value=row.get("value") or "",
         description=row.get("description"),
-        tasks=tasks
+        tasks=tasks,
+        station_weight=station_weight
     )
 
 
@@ -101,6 +104,7 @@ class ConfigurationStore:
             "key": config.key,
             "value": val,
             "description": config.description,
+            "station_weight": float(config.station_weight) if config.station_weight is not None else 1.0,
         })
 
     async def update_configuration(self, config: Configuration) -> None:
@@ -111,6 +115,7 @@ class ConfigurationStore:
             "key": config.key,
             "value": val,
             "description": config.description,
+            "station_weight": float(config.station_weight) if config.station_weight is not None else 1.0,
         })
 
     async def delete_configuration(self, config_id: str) -> None:

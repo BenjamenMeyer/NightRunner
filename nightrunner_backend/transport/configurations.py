@@ -26,6 +26,11 @@ class ConfigurationsResource:
         value = data.get("value") or ""
         description = data.get("description")
         tasks = data.get("tasks") or []
+        raw_weight = data.get("stationWeight") if "stationWeight" in data else data.get("station_weight", 1.0)
+        try:
+            station_weight = float(raw_weight) if raw_weight is not None else 1.0
+        except (TypeError, ValueError):
+            station_weight = 1.0
 
         config = Configuration(
             id=str(uuid6.uuid7()),
@@ -33,7 +38,8 @@ class ConfigurationsResource:
             key=str(key),
             value=str(value),
             description=str(description) if description is not None and not isinstance(description, str) else description,
-            tasks=tasks if isinstance(tasks, list) else []
+            tasks=tasks if isinstance(tasks, list) else [],
+            station_weight=station_weight
         )
         try:
             await store.create_configuration(config)
@@ -76,6 +82,12 @@ class ConfigurationResource:
         config.description = data.get("description", config.description)
         if "tasks" in data and isinstance(data["tasks"], list):
             config.tasks = data["tasks"]
+        if "stationWeight" in data or "station_weight" in data:
+            raw_w = data.get("stationWeight") if "stationWeight" in data else data.get("station_weight")
+            try:
+                config.station_weight = float(raw_w) if raw_w is not None else 1.0
+            except (TypeError, ValueError):
+                pass
 
         try:
             await store.update_configuration(config)

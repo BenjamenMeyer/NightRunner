@@ -821,6 +821,12 @@ export default function Configurations() {
                             )}
 
                             <div className="configuration-details-section">
+                                <p style={{ margin: "0.5rem 0", fontSize: "0.9rem", color: "var(--text-muted)" }}>
+                                    <strong>Preset Station Weight:</strong> {selectedConfiguration.stationWeight ?? selectedConfiguration.station_weight ?? 1.0}
+                                </p>
+                            </div>
+
+                            <div className="configuration-details-section">
                                 <h3>
                                     Tasks
                                 </h3>
