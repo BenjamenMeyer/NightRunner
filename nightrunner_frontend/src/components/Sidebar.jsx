@@ -83,6 +83,8 @@ function Sidebar({ open, close }) {
                 )
         );
 
+    const dashboardLink =
+        links.find(route => route.path === "/dashboard");
 
     const mainLinks =
         links.filter(
@@ -215,6 +217,15 @@ function Sidebar({ open, close }) {
 
 
                 <nav className="sidebar-nav">
+
+                    {isAdmin && dashboardLink && (
+                        <section className="sidebar-section">
+                            <div className="sidebar-section-title">
+                                Main
+                            </div>
+                            {renderLink(dashboardLink)}
+                        </section>
+                    )}
 
                     {!isAdmin && mainLinks.length > 0 && (
                         <section className="sidebar-section">

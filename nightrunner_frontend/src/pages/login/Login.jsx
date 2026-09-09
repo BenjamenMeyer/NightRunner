@@ -265,6 +265,7 @@ function Login() {
                                         type="password"
                                         required
                                         value={password}
+                                        autoComplete="current-password"
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="••••••••"
                                         disabled={isSubmitting}

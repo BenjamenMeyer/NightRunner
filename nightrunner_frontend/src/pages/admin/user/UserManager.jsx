@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import ApiService from "../../../api/ApiService.js";
-import { useEventContext } from "../../../api/helpers/EventContext.jsx";
+import { useEventContext } from "@/api/helpers/EventContext.jsx";
 
 import "./UserManager.css";
 
@@ -750,12 +750,16 @@ export default function UserManager() {
                                 </div>
 
                                 {isSystemAdmin && (
-                                    <label className="form-field">
+                                    <div className="form-field">
                                         <span>
-                                            System Administrator
+                                            Access
                                         </span>
 
-                                        <label>
+                                        <label className="system-admin-toggle">
+                                            <span>
+                                                System administrator
+                                            </span>
+
                                             <input
                                                 type="checkbox"
                                                 checked={
@@ -769,9 +773,8 @@ export default function UserManager() {
                                                 }
                                             />
 
-                                            System administrator
                                         </label>
-                                    </label>
+                                    </div>
                                 )}
 
                                 {isEventAdmin &&
