@@ -2,6 +2,7 @@ name: PR Quality Gates
 
 on:
   pull_request:
+    branches: ["**"]
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
@@ -15,9 +16,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -44,9 +42,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -102,9 +97,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up OpenTofu
         uses: opentofu/setup-opentofu@v1
