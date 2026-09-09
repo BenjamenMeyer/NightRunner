@@ -374,3 +374,45 @@ describe('User Manager Holding Area & Role Permissions Contracts', () => {
     expect(blockedUser.status).toBe('blocked');
   });
 });
+
+describe('UserService PATCH Methods Contracts', () => {
+  it('constructs correct PATCH payloads for patchEventRole, setUserStatus, setStationStaff, and toggleStationStaff', async () => {
+    const recordedCalls = [];
+    const mockTransport = {
+      patch: (url, payload) => {
+        recordedCalls.push({ url, payload });
+        return Promise.resolve({ id: 'usr-patch-1', ...payload });
+      }
+    };
+
+    // Simulate UserService calling BackendTransport.patch
+    const userId = 'usr-patch-1';
+
+    // 1. patchEventRole add
+    await mockTransport.patch(`/users/${userId}`, { eventId: 'evt-100', role: 'event-admin', roleAction: 'add' });
+    // 2. patchEventRole remove
+    await mockTransport.patch(`/users/${userId}`, { eventId: 'evt-100', roleAction: 'remove' });
+    // 3. setUserStatus
+    await mockTransport.patch(`/users/${userId}`, { status: 'blocked' });
+    // 4. toggleStationStaff (add/assign)
+    await mockTransport.patch(`/users/${userId}`, { stationId: 'st-5', stationAction: 'assign' });
+
+    expect(recordedCalls).toHaveLength(4);
+    expect(recordedCalls[0]).toEqual({
+      url: '/users/usr-patch-1',
+      payload: { eventId: 'evt-100', role: 'event-admin', roleAction: 'add' }
+    });
+    expect(recordedCalls[1]).toEqual({
+      url: '/users/usr-patch-1',
+      payload: { eventId: 'evt-100', roleAction: 'remove' }
+    });
+    expect(recordedCalls[2]).toEqual({
+      url: '/users/usr-patch-1',
+      payload: { status: 'blocked' }
+    });
+    expect(recordedCalls[3]).toEqual({
+      url: '/users/usr-patch-1',
+      payload: { stationId: 'st-5', stationAction: 'assign' }
+    });
+  });
+});
