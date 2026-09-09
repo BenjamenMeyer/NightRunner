@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 
@@ -54,10 +55,17 @@ function Sidebar({ open, close }) {
     const auth =
         useAuth();
 
+    const [user, setUser] = useState(() => ApiService.userData.getCached());
+
     const loggedIn = AuthService.isAuthenticated();
 
-    const user =
-        ApiService.userData.getCached();
+    useEffect(() => {
+        if (loggedIn) {
+            ApiService.userData.get().then(u => setUser(u)).catch(() => {});
+        } else {
+            setUser(null);
+        }
+    }, [loggedIn, auth.isAuthenticated]);
 
     const isAdmin =
         user &&

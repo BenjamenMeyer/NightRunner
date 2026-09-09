@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 
 import AuthService from "@/api/AuthService.js";
+import ApiService from "@/api/ApiService.js";
 
 export default function AuthServiceProvider({
                                                 children
@@ -14,7 +15,12 @@ export default function AuthServiceProvider({
 
         AuthService.initialize(auth);
 
-    }, [auth]);
+        if (auth.isAuthenticated) {
+            // Eagerly fetch backend user profile & roles so cached user and admin rights update reactively
+            ApiService.userData.get().catch(() => {});
+        }
+
+    }, [auth, auth.isAuthenticated]);
 
     useEffect(() => {
         let unsubscribe;
@@ -25,15 +31,11 @@ export default function AuthServiceProvider({
                         localStorage.setItem("firebase_id_token", token);
                         setFirebaseUser(user);
                         // Eagerly fetch backend user profile & roles so cached user and admin rights update reactively
-                        import("@/api/ApiService.js").then(({ default: ApiService }) => {
-                            ApiService.userData.get().catch(() => {});
-                        });
+                        ApiService.userData.get().catch(() => {});
                     } else {
                         localStorage.removeItem("firebase_id_token");
                         setFirebaseUser(null);
-                        import("@/api/ApiService.js").then(({ default: ApiService }) => {
-                            ApiService.userData.clear();
-                        });
+                        ApiService.userData.clear();
                     }
                 });
             }
