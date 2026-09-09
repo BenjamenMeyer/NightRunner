@@ -66,8 +66,9 @@ async def test_api_patrols_lifecycle(client, dev_mode_enabled):
         "name": "Updated Patrol",
         "phoneNumber": "555-999-0000",
         "radioFrequency": "467.5625 MHz",
-        "hasRadio": False,
-        "radioIdentifier": None,
+        "radioChannel": "Channel 2",
+        "hasRadio": True,
+        "radioIdentifier": "Radio-99",
         "members": [
             {"name": "Charlie"}
         ]
@@ -77,10 +78,20 @@ async def test_api_patrols_lifecycle(client, dev_mode_enabled):
     assert resp.json["name"] == "Updated Patrol"
     assert resp.json["phoneNumber"] == "555-999-0000"
     assert resp.json["radioFrequency"] == "467.5625 MHz"
-    assert resp.json["hasRadio"] is False
-    assert resp.json["radioIdentifier"] is None
+    assert resp.json["radioChannel"] == "Channel 2"
+    assert resp.json["hasRadio"] is True
+    assert resp.json["radioIdentifier"] == "Radio-99"
     assert len(resp.json["members"]) == 1
     assert resp.json["members"][0]["name"] == "Charlie"
+
+    # Verify Update Persistence via GET request
+    resp = await client.simulate_get(f"/v1/patrols/{patrol_id}")
+    assert resp.status_code == 200
+    assert resp.json["phoneNumber"] == "555-999-0000"
+    assert resp.json["radioFrequency"] == "467.5625 MHz"
+    assert resp.json["radioChannel"] == "Channel 2"
+    assert resp.json["hasRadio"] is True
+    assert resp.json["radioIdentifier"] == "Radio-99"
 
     # Delete Patrol
     resp = await client.simulate_delete(f"/v1/patrols/{patrol_id}")

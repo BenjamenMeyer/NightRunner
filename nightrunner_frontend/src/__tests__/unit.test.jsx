@@ -455,24 +455,37 @@ describe('Patrol Communication Information Contracts', () => {
     });
   });
 
-  it('detects when no communication info is configured for a patrol', () => {
-    const emptyCommsPatrol = {
+  it('formats empty string comms inputs to null and false when saving', () => {
+    const rawPatrol = {
       name: 'Bravo Patrol',
-      phoneNumber: '',
+      phoneNumber: '  ',
       radioFrequency: '',
-      radioChannel: '',
+      radioChannel: '  ',
       hasRadio: false,
-      radioIdentifier: ''
+      radioIdentifier: 'Ignored when hasRadio is false',
+      members: []
     };
 
-    const hasComms = Boolean(
-      emptyCommsPatrol.phoneNumber?.trim() ||
-      emptyCommsPatrol.radioFrequency?.trim() ||
-      emptyCommsPatrol.radioChannel?.trim() ||
-      emptyCommsPatrol.hasRadio
-    );
+    const payload = {
+      name: rawPatrol.name.trim(),
+      phoneNumber: rawPatrol.phoneNumber?.trim() || null,
+      radioFrequency: rawPatrol.radioFrequency?.trim() || null,
+      radioChannel: rawPatrol.radioChannel?.trim() || null,
+      hasRadio: Boolean(rawPatrol.hasRadio),
+      radioIdentifier: rawPatrol.hasRadio && rawPatrol.radioIdentifier ? rawPatrol.radioIdentifier.trim() : null,
+      members: rawPatrol.members ?? []
+    };
 
-    expect(hasComms).toBe(false);
+    expect(payload).toEqual({
+      name: 'Bravo Patrol',
+      phoneNumber: null,
+      radioFrequency: null,
+      radioChannel: null,
+      hasRadio: false,
+      radioIdentifier: null,
+      members: []
+    });
   });
 });
+
 

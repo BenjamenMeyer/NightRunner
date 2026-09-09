@@ -450,6 +450,16 @@ export default function PatrolEditor({
 
                 name,
 
+                phoneNumber: patrol.phoneNumber?.trim() || null,
+
+                radioFrequency: patrol.radioFrequency?.trim() || null,
+
+                radioChannel: patrol.radioChannel?.trim() || null,
+
+                hasRadio: Boolean(patrol.hasRadio),
+
+                radioIdentifier: patrol.hasRadio && patrol.radioIdentifier ? patrol.radioIdentifier.trim() : null,
+
                 members:
                     patrol.members.map(
                         member => ({
