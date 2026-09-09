@@ -17,6 +17,8 @@ from nightrunner_backend.transport.reports_event import EventReportResource
 from nightrunner_backend.transport.reports_station import StationReportResource
 from nightrunner_backend.transport.login import LoginResource
 
+from nightrunner_backend.transport.users import UsersResource, UserResource
+
 # Configure logging
 logging.basicConfig(level=logging.DEBUG if settings.dev_mode else logging.INFO)
 logger = logging.getLogger(__name__)
@@ -77,6 +79,10 @@ def register_routes(app):
     app.add_route("/v1/stations/{stationId}", StationResource())
     app.add_route("/v1/reports/stations/{stationId}", StationReportResource())
     app.add_route("/v1/reports/events/{eventId}", EventReportResource())
+    app.add_route("/v1/users", UsersResource())
+    app.add_route("/v1/users/{user_id}", UserResource())
+    app.add_route("/users", UsersResource())
+    app.add_route("/users/{user_id}", UserResource())
     # Non‑versioned aliases required by tests (GET/POST/PUT/DELETE on root paths)
     app.add_route("/events", EventsResource())
     app.add_route("/events/{event_id}", EventResource())

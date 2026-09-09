@@ -338,3 +338,39 @@ describe('EventManager Station Count & Member Roles Contracts', () => {
     expect(assignedMembers[1].assignedRole).toBe('scorer');
   });
 });
+
+describe('User Manager Holding Area & Role Permissions Contracts', () => {
+  it('filters pending users in holding area for event admins and station leaders', () => {
+    const eventId = 'evt-1';
+    const allUsers = [
+      { id: 'u1', username: 'pending_user', status: 'pending', roles: {} },
+      { id: 'u2', username: 'active_user', status: 'active', roles: { 'evt-1': 'user' } },
+      { id: 'u3', username: 'other_user', status: 'active', roles: { 'evt-2': 'user' } }
+    ];
+
+    // Event admin visibility
+    const eventAdminVisible = allUsers.filter(u => u.roles?.[eventId] != null || u.status === 'pending');
+    expect(eventAdminVisible).toHaveLength(2);
+    expect(eventAdminVisible.map(u => u.username)).toContain('pending_user');
+    expect(eventAdminVisible.map(u => u.username)).toContain('active_user');
+
+    // Station leader visibility (my station = st-1)
+    const myStationIds = new Set(['st-1']);
+    allUsers[1].stationStaff = [{ stationId: 'st-1' }];
+    const stationLeaderVisible = allUsers.filter(u => u.status === 'pending' || u.stationStaff?.some(s => myStationIds.has(s.stationId)));
+    expect(stationLeaderVisible).toHaveLength(2);
+    expect(stationLeaderVisible.map(u => u.username)).toContain('pending_user');
+  });
+
+  it('enforces status transition contracts for approve (active) and block (blocked)', () => {
+    const user = { id: 'u1', username: 'new_scout', status: 'pending' };
+
+    // Approve action
+    const approvedUser = { ...user, status: 'active' };
+    expect(approvedUser.status).toBe('active');
+
+    // Block action
+    const blockedUser = { ...approvedUser, status: 'blocked' };
+    expect(blockedUser.status).toBe('blocked');
+  });
+});

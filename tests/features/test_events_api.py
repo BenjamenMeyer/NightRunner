@@ -80,3 +80,48 @@ async def test_api_event_stations_and_organizers(client, dev_mode_enabled, test_
     assert station_id in ev["stations"]
     assert "user-org-1" in ev["organizers"]
 
+
+@pytest.mark.asyncio
+async def test_api_users_management(client, dev_mode_enabled, test_database):
+    driver = test_database
+    # Insert test user into DB directly
+    await driver.execute("""
+        INSERT INTO users (id, external_id, username, email, display_name, status, is_admin)
+        VALUES ('u-test-1', 'ext-1', 'scout_jane', 'jane@example.com', 'Jane Scout', 'pending', FALSE)
+    """)
+
+    # List users
+    resp = await client.simulate_get("/v1/users")
+    assert resp.status_code == 200
+    users = resp.json
+    assert any(u["id"] == "u-test-1" and u["status"] == "pending" for u in users)
+
+    # Get single user
+    resp = await client.simulate_get("/v1/users/u-test-1")
+    assert resp.status_code == 200
+    assert resp.json["username"] == "scout_jane"
+
+    # Approve user (update status to 'active')
+    resp = await client.simulate_put("/v1/users/u-test-1", json={"status": "active"})
+    assert resp.status_code == 200
+    assert resp.json["status"] == "active"
+
+    # Block user
+    resp = await client.simulate_put("/v1/users/u-test-1", json={"status": "blocked"})
+    assert resp.status_code == 200
+    assert resp.json["status"] == "blocked"
+
+    # Assign to station
+    # First create a station
+    st_resp = await client.simulate_post("/v1/stations", json={"name": "Pioneering Station"})
+    st_id = st_resp.json["id"]
+
+    assign_resp = await client.simulate_put("/v1/users/u-test-1", json={"stationId": st_id, "stationRole": "staff"})
+    assert assign_resp.status_code == 200
+    assert any(s["stationId"] == st_id for s in assign_resp.json["stationStaff"])
+
+    # Delete user
+    del_resp = await client.simulate_delete("/v1/users/u-test-1")
+    assert del_resp.status_code == 204
+
+

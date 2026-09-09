@@ -436,6 +436,24 @@ export default class UserService {
 
     }
 
+    async setUserStatus(userId, status) {
+
+        return await this.updateUser(
+            userId,
+            { status }
+        );
+
+    }
+
+    async setStationStaff(userId, stationId, stationRole = "staff") {
+
+        return await this.updateUser(
+            userId,
+            { stationId, stationRole }
+        );
+
+    }
+
 
     //
     // User Access Management

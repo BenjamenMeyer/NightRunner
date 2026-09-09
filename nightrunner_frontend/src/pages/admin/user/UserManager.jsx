@@ -28,6 +28,9 @@ export default function UserManager() {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
+    const [stations, setStations] = useState([]);
+    const [statusFilter, setStatusFilter] = useState("all");
+
     const currentUser =
         ApiService.userData.getCached();
 
@@ -38,6 +41,15 @@ export default function UserManager() {
         eventId
             ? ApiService.userData.isEventAdmin(eventId)
             : false;
+
+    // Station Leader check: user is staff on one or more stations for the selected event
+    const userStationAssignments = useMemo(() => {
+        const userStaff = currentUser?.stationStaff ?? [];
+        if (!eventId) return userStaff;
+        return userStaff.filter(s => s.eventId === eventId);
+    }, [currentUser, eventId]);
+
+    const isStationLeader = userStationAssignments.length > 0;
 
     useEffect(() => {
         if (eventLoading) {
@@ -56,21 +68,24 @@ export default function UserManager() {
             return;
         }
 
-        loadUsers();
+        loadUsersAndStations();
     }, [eventId, eventLoading, eventError]);
 
-    async function loadUsers() {
+    async function loadUsersAndStations() {
         try {
             setLoading(true);
             setError(null);
 
-            const response =
-                await ApiService.userData.getUsers();
+            const [userRes, stationRes] = await Promise.all([
+                ApiService.userData.getUsers().catch(() => []),
+                ApiService.stationData.getStations(eventId).catch(() => [])
+            ]);
 
-            setUsers(response ?? []);
+            setUsers(userRes ?? []);
+            setStations(Array.isArray(stationRes) ? stationRes : []);
         } catch (error) {
             console.error(
-                "Failed to load users:",
+                "Failed to load user manager data:",
                 error
             );
 
@@ -88,29 +103,45 @@ export default function UserManager() {
             return users;
         }
 
-        if (!isEventAdmin || !eventId) {
-            return [];
+        if (isEventAdmin) {
+            // Event admins see all users assigned to this event + all pending users in holding area
+            return users.filter(u => u.roles?.[eventId] != null || u.status === "pending" || (u.roles && typeof u.roles === 'object' && Object.keys(u.roles).includes(eventId)));
         }
 
-        return users.filter(user =>
-            user.roles?.[eventId] != null
-        );
+        if (isStationLeader) {
+            // Station leaders see users assigned to their station(s) + all pending users needing assignment
+            const myStationIds = new Set(userStationAssignments.map(s => s.stationId));
+            return users.filter(u => {
+                if (u.status === "pending") return true;
+                return (u.stationStaff ?? []).some(s => myStationIds.has(s.stationId));
+            });
+        }
+
+        return [];
     }, [
         users,
         isSystemAdmin,
         isEventAdmin,
+        isStationLeader,
+        userStationAssignments,
         eventId
     ]);
 
     const filteredUsers = useMemo(() => {
+        let result = visibleUsers;
+
+        if (statusFilter !== "all") {
+            result = result.filter(u => u.status === statusFilter);
+        }
+
         const query =
             search.trim().toLowerCase();
 
         if (!query) {
-            return visibleUsers;
+            return result;
         }
 
-        return visibleUsers.filter(user =>
+        return result.filter(user =>
             user.username
                 ?.toLowerCase()
                 .includes(query) ||
@@ -123,6 +154,7 @@ export default function UserManager() {
         );
     }, [
         visibleUsers,
+        statusFilter,
         search
     ]);
 
@@ -189,30 +221,40 @@ export default function UserManager() {
                         {
                             eventId,
                             role,
-                            isAdmin:
-                                selectedUser.isAdmin === true
+                            status: selectedUser.status ?? "active",
+                            isAdmin: selectedUser.isAdmin === true
                         }
                     );
-            } else {
+            } else if (isEventAdmin) {
                 updatedUser =
                     await ApiService.userData.updateUser(
                         selectedUser.id,
                         {
                             eventId,
-                            role
+                            role,
+                            status: selectedUser.status ?? "active"
                         }
                     );
+            } else if (isStationLeader) {
+                // Station leaders can update station staff assignment
+                updatedUser = await ApiService.userData.setStationStaff(
+                    selectedUser.id,
+                    selectedUser.assignedStationId ?? "",
+                    "staff"
+                );
             }
 
             setUsers(current =>
                 current.map(user =>
-                    user.id === updatedUser.id
-                        ? updatedUser
+                    user.id === (updatedUser?.id || selectedUser.id)
+                        ? (updatedUser || selectedUser)
                         : user
                 )
             );
 
-            setSelectedUser(updatedUser);
+            if (updatedUser) {
+                setSelectedUser(updatedUser);
+            }
 
             setSuccess(
                 "User updated successfully."
@@ -227,6 +269,57 @@ export default function UserManager() {
                 error?.message ??
                 "Failed to update user."
             );
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    async function handleStatusChange(newStatus) {
+        if (!selectedUser) return;
+        try {
+            setSaving(true);
+            setError(null);
+            setSuccess(null);
+
+            const updatedUser = await ApiService.userData.setUserStatus(
+                selectedUser.id,
+                newStatus
+            );
+
+            setUsers(current =>
+                current.map(u => u.id === selectedUser.id ? { ...u, status: newStatus } : u)
+            );
+            setSelectedUser(curr => curr ? { ...curr, status: newStatus } : null);
+            setSuccess(`User status changed to ${newStatus}.`);
+        } catch (err) {
+            console.error("Failed to update status:", err);
+            setError(err?.message ?? "Failed to update user status.");
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    async function handleAssignStation(stationId) {
+        if (!selectedUser) return;
+        try {
+            setSaving(true);
+            setError(null);
+            setSuccess(null);
+
+            const updatedUser = await ApiService.userData.setStationStaff(
+                selectedUser.id,
+                stationId,
+                "staff"
+            );
+
+            setUsers(current =>
+                current.map(u => u.id === selectedUser.id ? (updatedUser || { ...u, assignedStationId: stationId }) : u)
+            );
+            setSelectedUser(curr => curr ? (updatedUser || { ...curr, assignedStationId: stationId }) : null);
+            setSuccess(stationId ? "User assigned to station." : "Station assignment cleared.");
+        } catch (err) {
+            console.error("Failed to assign station:", err);
+            setError(err?.message ?? "Failed to assign user to station.");
         } finally {
             setSaving(false);
         }
@@ -293,7 +386,7 @@ export default function UserManager() {
         );
     }
 
-    if (!isSystemAdmin && !isEventAdmin) {
+    if (!isSystemAdmin && !isEventAdmin && !isStationLeader) {
         return (
             <div className="user-manager-page">
                 <div className="user-manager-denied">
@@ -363,6 +456,19 @@ export default function UserManager() {
                     />
                 </div>
 
+                <div className="filter-wrapper">
+                    <select
+                        className="status-filter-select"
+                        value={statusFilter}
+                        onChange={e => setStatusFilter(e.target.value)}
+                    >
+                        <option value="all">All Statuses</option>
+                        <option value="pending">Pending Approval (Holding Area)</option>
+                        <option value="active">Active</option>
+                        <option value="blocked">Blocked</option>
+                    </select>
+                </div>
+
                 <span className="user-count">
                     {filteredUsers.length}{" "}
                     {filteredUsers.length === 1
@@ -393,13 +499,14 @@ export default function UserManager() {
                                 <h3>No users found</h3>
 
                                 <p>
-                                    Try changing your search.
+                                    Try changing your search or status filter.
                                 </p>
                             </div>
                         ) : (
                             filteredUsers.map(user => {
                                 const role =
                                     getEventRole(user);
+                                const userStatus = user.status || "active";
 
                                 return (
                                     <button
@@ -431,6 +538,12 @@ export default function UserManager() {
                                             <span>
                                                 @{user.username}
                                             </span>
+                                        </span>
+
+                                        <span
+                                            className={`status-badge status-${userStatus}`}
+                                        >
+                                            {userStatus}
                                         </span>
 
                                         <span
@@ -478,6 +591,12 @@ export default function UserManager() {
                                             @{selectedUser.username}
                                         </p>
                                     </div>
+
+                                    <div className="status-badge-header">
+                                        <span className={`status-badge status-${selectedUser.status || 'active'}`}>
+                                            {selectedUser.status || 'active'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -498,6 +617,7 @@ export default function UserManager() {
                                                 event.target.value
                                             )
                                         }
+                                        disabled={!isSystemAdmin}
                                     />
                                 </label>
 
@@ -515,6 +635,7 @@ export default function UserManager() {
                                                 event.target.value
                                             )
                                         }
+                                        disabled={!isSystemAdmin && !isEventAdmin}
                                     />
                                 </label>
 
@@ -533,32 +654,54 @@ export default function UserManager() {
                                                 event.target.value
                                             )
                                         }
+                                        disabled={!isSystemAdmin && !isEventAdmin}
                                     />
                                 </label>
 
-                                <label className="form-field">
-                                    <span>
-                                        Event Role
-                                    </span>
+                                {(isSystemAdmin || isEventAdmin) && (
+                                    <label className="form-field">
+                                        <span>
+                                            Event Role
+                                        </span>
 
+                                        <select
+                                            value={
+                                                getEventRole(
+                                                    selectedUser
+                                                ) ?? "user"
+                                            }
+                                            onChange={event =>
+                                                updateSelectedEventRole(
+                                                    event.target.value
+                                                )
+                                            }
+                                        >
+                                            {EVENT_ROLES.map(role => (
+                                                <option
+                                                    key={role}
+                                                    value={role}
+                                                >
+                                                    {formatRole(role)}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                )}
+
+                                <label className="form-field">
+                                    <span>Station Assignment</span>
                                     <select
                                         value={
-                                            getEventRole(
-                                                selectedUser
-                                            ) ?? "user"
+                                            selectedUser.assignedStationId ||
+                                            (selectedUser.stationStaff && selectedUser.stationStaff[0]?.stationId) ||
+                                            ""
                                         }
-                                        onChange={event =>
-                                            updateSelectedEventRole(
-                                                event.target.value
-                                            )
-                                        }
+                                        onChange={e => handleAssignStation(e.target.value)}
                                     >
-                                        {EVENT_ROLES.map(role => (
-                                            <option
-                                                key={role}
-                                                value={role}
-                                            >
-                                                {formatRole(role)}
+                                        <option value="">No Station Assigned</option>
+                                        {stations.map(st => (
+                                            <option key={st.id} value={st.id}>
+                                                {st.name}
                                             </option>
                                         ))}
                                     </select>
@@ -624,6 +767,43 @@ export default function UserManager() {
                             <div className="details-divider" />
 
                             <div className="detail-actions">
+                                {(isSystemAdmin || isEventAdmin) && (
+                                    <>
+                                        {(selectedUser.status === "pending" || !selectedUser.status) && (
+                                            <button
+                                                type="button"
+                                                className="success-button"
+                                                onClick={() => handleStatusChange("active")}
+                                                disabled={saving}
+                                            >
+                                                Approve User
+                                            </button>
+                                        )}
+
+                                        {selectedUser.status === "active" && (
+                                            <button
+                                                type="button"
+                                                className="warning-button"
+                                                onClick={() => handleStatusChange("blocked")}
+                                                disabled={saving}
+                                            >
+                                                Block User
+                                            </button>
+                                        )}
+
+                                        {selectedUser.status === "blocked" && (
+                                            <button
+                                                type="button"
+                                                className="secondary-button"
+                                                onClick={() => handleStatusChange("active")}
+                                                disabled={saving}
+                                            >
+                                                Unblock User
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+
                                 <button
                                     type="button"
                                     className="danger"
