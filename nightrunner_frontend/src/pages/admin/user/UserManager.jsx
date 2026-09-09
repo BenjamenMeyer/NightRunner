@@ -299,27 +299,28 @@ export default function UserManager() {
         }
     }
 
-    async function handleAssignStation(stationId) {
+    async function handleToggleStation(stationId, currentlyAssigned) {
         if (!selectedUser) return;
         try {
             setSaving(true);
             setError(null);
             setSuccess(null);
 
-            const updatedUser = await ApiService.userData.setStationStaff(
+            const action = currentlyAssigned ? "remove" : "add";
+            const updatedUser = await ApiService.userData.toggleStationStaff(
                 selectedUser.id,
                 stationId,
-                "staff"
+                action
             );
 
             setUsers(current =>
-                current.map(u => u.id === selectedUser.id ? (updatedUser || { ...u, assignedStationId: stationId }) : u)
+                current.map(u => u.id === selectedUser.id ? (updatedUser || u) : u)
             );
-            setSelectedUser(curr => curr ? (updatedUser || { ...curr, assignedStationId: stationId }) : null);
-            setSuccess(stationId ? "User assigned to station." : "Station assignment cleared.");
+            setSelectedUser(curr => curr ? (updatedUser || curr) : null);
+            setSuccess(currentlyAssigned ? "Station role removed." : "Station role assigned.");
         } catch (err) {
-            console.error("Failed to assign station:", err);
-            setError(err?.message ?? "Failed to assign user to station.");
+            console.error("Failed to update station assignment:", err);
+            setError(err?.message ?? "Failed to update station assignment.");
         } finally {
             setSaving(false);
         }
@@ -688,24 +689,29 @@ export default function UserManager() {
                                     </label>
                                 )}
 
-                                <label className="form-field">
-                                    <span>Station Assignment</span>
-                                    <select
-                                        value={
-                                            selectedUser.assignedStationId ||
-                                            (selectedUser.stationStaff && selectedUser.stationStaff[0]?.stationId) ||
-                                            ""
-                                        }
-                                        onChange={e => handleAssignStation(e.target.value)}
-                                    >
-                                        <option value="">No Station Assigned</option>
-                                        {stations.map(st => (
-                                            <option key={st.id} value={st.id}>
-                                                {st.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </label>
+                                <div className="form-field">
+                                    <span>Station Roles & Assignments</span>
+                                    <div className="station-checkbox-grid">
+                                        {stations.length === 0 ? (
+                                            <small className="no-stations-text">No stations created for this event.</small>
+                                        ) : (
+                                            stations.map(st => {
+                                                const assigned = (selectedUser.stationStaff ?? []).some(s => s.stationId === st.id);
+                                                return (
+                                                    <label key={st.id} className="station-checkbox-item">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={assigned}
+                                                            onChange={() => handleToggleStation(st.id, assigned)}
+                                                        />
+                                                        <span>{st.name}</span>
+                                                    </label>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                    <small>Users can be assigned staff roles at multiple stations simultaneously.</small>
+                                </div>
 
                                 <div className="event-restriction">
                                     <strong>Event</strong>

@@ -454,6 +454,15 @@ export default class UserService {
 
     }
 
+    async toggleStationStaff(userId, stationId, action = "add") {
+
+        return await this.updateUser(
+            userId,
+            { stationId, stationAction: action }
+        );
+
+    }
+
 
     //
     // User Access Management

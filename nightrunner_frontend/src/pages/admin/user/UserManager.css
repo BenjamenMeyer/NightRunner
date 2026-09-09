@@ -238,6 +238,27 @@
     cursor: pointer;
 }
 
+.station-checkbox-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.station-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
 
 /* ==========================================
    Main Layout

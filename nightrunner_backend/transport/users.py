@@ -160,12 +160,27 @@ class UserResource:
                 "status": status
             })
 
-        # Handle station staff assignment update if stationId is passed
+        # Handle station staff assignment update if stationId / stationIds is passed
+        station_ids = payload.get("stationIds")
         station_id = payload.get("stationId")
-        if station_id is not None:
+        station_action = payload.get("stationAction") # "add", "remove", or None
+
+        if station_ids is not None:
+            # Replace all station assignments with station_ids list
+            await self.db.execute("DELETE FROM station_staff WHERE user_id = :uid", {"uid": user_id})
+            for sid in station_ids:
+                if sid:
+                    await self.db.execute("""
+                        INSERT INTO station_staff (station_id, user_id, role)
+                        VALUES (:sid, :uid, 'staff')
+                    """, {"sid": sid, "uid": user_id})
+        elif station_id is not None:
             station_role = payload.get("stationRole") or "staff"
-            if station_id == "":
-                await self.db.execute("DELETE FROM station_staff WHERE user_id = :uid", {"uid": user_id})
+            if station_action == "remove" or station_id == "":
+                await self.db.execute("DELETE FROM station_staff WHERE user_id = :uid AND station_id = :sid", {
+                    "uid": user_id,
+                    "sid": station_id
+                })
             else:
                 await self.db.execute("DELETE FROM station_staff WHERE user_id = :uid AND station_id = :sid", {
                     "uid": user_id,
