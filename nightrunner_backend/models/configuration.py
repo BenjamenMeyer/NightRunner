@@ -27,6 +27,7 @@ class Configuration:
     value: str = ""
     description: Optional[str] = None
     tasks: list = field(default_factory=list)
+    station_weight: float = 1.0
 
     def to_api_dict(self) -> Dict[str, Any]:
         return {
@@ -38,4 +39,6 @@ class Configuration:
             "value": self.value,
             "description": self.description,
             "tasks": self.tasks,
+            "stationWeight": self.station_weight,
+            "station_weight": self.station_weight,
         }

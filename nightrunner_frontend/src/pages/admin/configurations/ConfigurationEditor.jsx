@@ -20,6 +20,7 @@ const EMPTY_CONFIGURATION = {
     groupId: "",
     name: "",
     description: "",
+    stationWeight: 1.0,
     tasks: []
 };
 
@@ -123,6 +124,7 @@ export default function ConfigurationEditor() {
                     groupId: targetGroupId,
                     name: `${copyFromStation.name || "Station"} Preset`,
                     description: copyFromStation.description || `Configuration created from station ${copyFromStation.name}`,
+                    stationWeight: copyFromStation.stationWeight ?? 1.0,
                     tasks: JSON.parse(JSON.stringify(stationTasks))
                 });
                 return;
@@ -158,6 +160,10 @@ export default function ConfigurationEditor() {
                 description:
                     loadedConfiguration?.description ??
                     "",
+                stationWeight:
+                    loadedConfiguration?.stationWeight ??
+                    loadedConfiguration?.station_weight ??
+                    1.0,
                 tasks:
                     loadedConfiguration?.tasks
                         ? JSON.parse(JSON.stringify(loadedConfiguration.tasks))
@@ -246,6 +252,8 @@ export default function ConfigurationEditor() {
                 description:
                     configuration.description.trim() ||
                     null,
+                stationWeight:
+                    Number(configuration.stationWeight) || 1.0,
                 tasks:
                     configuration.tasks ?? []
             };
@@ -597,6 +605,29 @@ export default function ConfigurationEditor() {
                             }
                             placeholder="Describe this configuration..."
                             rows={4}
+                            disabled={saving}
+                        />
+                    </div>
+
+                    <div className="configuration-editor-field">
+                        <label htmlFor="configuration-station-weight">
+                            Preset Station Weight (Multiplier)
+                        </label>
+
+                        <input
+                            id="configuration-station-weight"
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            value={
+                                configuration.stationWeight ?? 1.0
+                            }
+                            onChange={event =>
+                                updateField(
+                                    "stationWeight",
+                                    Number(event.target.value)
+                                )
+                            }
                             disabled={saving}
                         />
                     </div>
