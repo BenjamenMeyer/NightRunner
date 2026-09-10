@@ -147,35 +147,24 @@ export default function CheckInOut() {
 
     // Determine current status string and recommended action for chosen patrol & station
     const activeVisit = selectedPatrol && selectedStation ? getVisitRecord(selectedPatrol.id, selectedStation.id) : null;
-    const isCurrentlyCheckedIn = Boolean(activeVisit && activeVisit.checkedInAt && !activeVisit.checkedOutAt);
-    const isCurrentlyCheckedOut = Boolean(activeVisit && activeVisit.checkedOutAt);
+    const isScoringCompleted = Boolean(activeVisit && activeVisit.status === "completed");
+    const isCurrentlyCheckedIn = Boolean(activeVisit && activeVisit.checkedInAt && !activeVisit.checkedOutAt && activeVisit.status !== "completed");
+    const isCurrentlyCheckedOut = Boolean(activeVisit && activeVisit.checkedOutAt && activeVisit.status !== "completed");
 
     function handleActionChange(nextAction) {
         setAction(nextAction);
         setCompleted(false);
     }
 
-    function handlePatrolSelection(patrol) {
-        setSelectedPatrol(patrol);
-        setCompleted(false);
-        if (patrol && selectedStation) {
-            const v = getVisitRecord(patrol.id, selectedStation.id);
-            if (v && v.checkedInAt && !v.checkedOutAt) {
-                setAction(ACTIONS.CHECK_OUT);
-            } else {
-                setAction(ACTIONS.CHECK_IN);
-            }
-        }
-    }
-
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
 
     function handleStationSelection(station) {
         setSelectedStation(station);
         setCompleted(false);
         if (selectedPatrol && station) {
             const v = getVisitRecord(selectedPatrol.id, station.id);
-            if (v && v.checkedInAt && !v.checkedOutAt) {
+            if (v && v.checkedInAt && !v.checkedOutAt && v.status !== "completed") {
                 setAction(ACTIONS.CHECK_OUT);
             } else {
                 setAction(ACTIONS.CHECK_IN);
@@ -188,11 +177,37 @@ export default function CheckInOut() {
         setCompleted(false);
         if (patrol && selectedStation) {
             const v = getVisitRecord(patrol.id, selectedStation.id);
-            if (v && v.checkedInAt && !v.checkedOutAt) {
+            if (v && v.checkedInAt && !v.checkedOutAt && v.status !== "completed") {
                 setAction(ACTIONS.CHECK_OUT);
             } else {
                 setAction(ACTIONS.CHECK_IN);
             }
+        }
+    }
+
+    async function handleResetVisit() {
+        if (!selectedPatrol || !selectedStation) return;
+        const confirmMsg = "Are you sure you want to reopen/reset scoring for this station attempt?\n\nWithin 5 minutes of completion, volunteers can reopen scoring. Beyond 5 minutes, Station Leader / Admin authorization is required.";
+        if (!window.confirm(confirmMsg)) return;
+
+        try {
+            setIsResetting(true);
+            setError(null);
+            await ApiService.checkInData.resetVisit({
+                eventId,
+                patrolId: selectedPatrol.id,
+                stationId: selectedStation.id
+            });
+            alert("Station attempt reopened successfully.");
+            if (eventId) {
+                const vRes = await ApiService.checkInData.getVisits(eventId);
+                setVisits(vRes?.visits ?? []);
+            }
+        } catch (err) {
+            console.error("Failed to reset visit:", err);
+            setError(err?.message ?? "Failed to reopen station attempt.");
+        } finally {
+            setIsResetting(false);
         }
     }
 
@@ -238,6 +253,11 @@ export default function CheckInOut() {
             return;
         }
 
+        if (isScoringCompleted) {
+            setError("Station attempt is completed/locked. Reopen scoring below before re-checking in.");
+            return;
+        }
+
         // If the patrol has already checked out from this station and action is check-in, prompt for confirmation
         if (action === ACTIONS.CHECK_IN && isCurrentlyCheckedOut) {
             setShowConfirmModal(true);
@@ -260,7 +280,8 @@ export default function CheckInOut() {
 
     const canSubmit =
         selectedPatrol !== null &&
-        selectedStation !== null;
+        selectedStation !== null &&
+        !isScoringCompleted;
 
     return (
         <div className="checkin-page">
@@ -333,8 +354,13 @@ export default function CheckInOut() {
                                     {actionName}
                                 </h2>
 
-                                {canSubmit ? (
+                                {selectedPatrol && selectedStation ? (
                                     <>
+                                        {isScoringCompleted && (
+                                            <div className="visit-status-badge badge-locked" style={{ background: "#f8d7da", color: "#721c24", padding: "8px 12px", borderRadius: "4px", marginBottom: "12px" }}>
+                                                🔒 Station Attempt Completed & Locked. Patrols only get 1 attempt per station.
+                                            </div>
+                                        )}
                                         {isCurrentlyCheckedIn && (
                                             <div className="visit-status-badge badge-checked-in">
                                                 Status: Checked In (since {new Date(activeVisit.checkedInAt).toLocaleTimeString()})
@@ -345,7 +371,7 @@ export default function CheckInOut() {
                                                 Status: Checked Out (at {new Date(activeVisit.checkedOutAt).toLocaleTimeString()})
                                             </div>
                                         )}
-                                        {!isCurrentlyCheckedIn && !isCurrentlyCheckedOut && (
+                                        {!isCurrentlyCheckedIn && !isCurrentlyCheckedOut && !isScoringCompleted && (
                                             <div className="visit-status-badge badge-not-arrived">
                                                 Status: Not Arrived
                                             </div>
@@ -374,14 +400,27 @@ export default function CheckInOut() {
                                     </p>
                                 )}
 
-                                <button
-                                    type="button"
-                                    className="primary-button"
-                                    disabled={!canSubmit}
-                                    onClick={handleSubmit}
-                                >
-                                    {actionName}
-                                </button>
+                                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+                                    <button
+                                        type="button"
+                                        className="primary-button"
+                                        disabled={!canSubmit}
+                                        onClick={handleSubmit}
+                                    >
+                                        {actionName}
+                                    </button>
+
+                                    {isScoringCompleted && (
+                                        <button
+                                            type="button"
+                                            className="secondary-button"
+                                            onClick={handleResetVisit}
+                                            disabled={isResetting}
+                                        >
+                                            {isResetting ? "Reopening..." : "🔓 Reopen Station Attempt"}
+                                        </button>
+                                    )}
+                                </div>
 
                             </div>
                         </>

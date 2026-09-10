@@ -65,8 +65,20 @@ class ScoresResource:
             await store.create(score)
             created.append({"id": score.id})
 
+        # Mark station visit as completed
+        from nightrunner_backend.drivers.store.station_visits import StationVisitsStore
+        visit_store = StationVisitsStore(get_driver())
+        active_visit = await visit_store.get_active_visit(event_id, station_id, patrol_id)
+        if not active_visit:
+            active_visit = await visit_store.get_latest_visit(event_id, station_id, patrol_id)
+        if active_visit:
+            active_visit.status = "completed"
+            active_visit.tasks_completed_at = payload.get("completedAt") or active_visit.tasks_completed_at
+            await visit_store.update(active_visit)
+
         resp.status = falcon.HTTP_201
         resp.media = {"created": created}
+
 
 
 class ScoreResource:

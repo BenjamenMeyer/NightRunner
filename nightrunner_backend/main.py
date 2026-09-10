@@ -57,6 +57,8 @@ app = falcon.asgi.App(
 
 _routes_registered = False
 
+from nightrunner_backend.transport.visits import VisitCheckInResource, VisitCheckOutResource, VisitResetResource, VisitsResource
+
 def register_routes(app):
     global _routes_registered
     if _routes_registered:
@@ -70,6 +72,8 @@ def register_routes(app):
     app.add_route("/v1/visits", VisitsResource())
     app.add_route("/v1/visits/check-in", VisitCheckInResource())
     app.add_route("/v1/visits/check-out", VisitCheckOutResource())
+    app.add_route("/v1/visits/reset", VisitResetResource())
+
     app.add_route("/v1/reports/events/{eventId}", EventReportResource())
     app.add_route("/health", HealthResource())
     app.add_route("/v1/me", MeResource())

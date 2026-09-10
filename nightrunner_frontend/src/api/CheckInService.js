@@ -33,4 +33,16 @@ export default class CheckInService {
             timestamp: timestamp || new Date().toISOString()
         });
     }
+
+    async resetVisit({ eventId, patrolId, stationId }) {
+        if (!eventId || !patrolId || !stationId) {
+            throw new Error("eventId, patrolId, and stationId are required.");
+        }
+        return await BackendTransport.post("/visits/reset", {
+            eventId,
+            patrolId,
+            stationId
+        });
+    }
 }
+
