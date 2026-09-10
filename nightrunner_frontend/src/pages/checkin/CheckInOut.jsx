@@ -142,33 +142,28 @@ export default function CheckInOut() {
             return;
         }
 
-        /*
-         * Backend integration will go here.
-         *
-         * Example:
-         *
-         * if (action === ACTIONS.CHECK_IN) {
-         *
-         *     await ApiService.checkInData.checkIn({
-         *         eventId,
-         *         patrolId: selectedPatrol.id,
-         *         stationId: selectedStation.id,
-         *         timestamp: new Date().toISOString()
-         *     });
-         *
-         * } else {
-         *
-         *     await ApiService.checkInData.checkOut({
-         *         eventId,
-         *         patrolId: selectedPatrol.id,
-         *         stationId: selectedStation.id,
-         *         timestamp: new Date().toISOString()
-         *     });
-         *
-         * }
-         */
-
-        setCompleted(true);
+        try {
+            setError(null);
+            if (action === ACTIONS.CHECK_IN) {
+                await ApiService.checkInData.checkIn({
+                    eventId,
+                    patrolId: selectedPatrol.id,
+                    stationId: selectedStation.id,
+                    timestamp: new Date().toISOString()
+                });
+            } else {
+                await ApiService.checkInData.checkOut({
+                    eventId,
+                    patrolId: selectedPatrol.id,
+                    stationId: selectedStation.id,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            setCompleted(true);
+        } catch (err) {
+            console.error("Check-in/out error:", err);
+            setError(err?.message ?? `Failed to perform ${actionName.toLowerCase()}.`);
+        }
     }
 
     function reset() {
