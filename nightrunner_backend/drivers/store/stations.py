@@ -4,6 +4,7 @@ from nightrunner_backend.drivers.base import DatabaseDriver
 from nightrunner_backend.models.station import Station
 
 GET_STATIONS = "SELECT id, event_id, name, description, active_configuration_id, station_weight, tasks FROM stations"
+GET_STATIONS_BY_EVENT = "SELECT id, event_id, name, description, active_configuration_id, station_weight, tasks FROM stations WHERE event_id = :event_id"
 GET_STATION = "SELECT id, event_id, name, description, active_configuration_id, station_weight, tasks FROM stations WHERE id = :id"
 CREATE_STATION = """
     INSERT INTO stations (id, event_id, name, description, active_configuration_id, station_weight, tasks)
@@ -42,8 +43,11 @@ class StationsStore:
     def __init__(self, driver: DatabaseDriver):
         self.driver = driver
 
-    async def list(self) -> List[Station]:
-        rows = await self.driver.execute(GET_STATIONS)
+    async def list(self, event_id: Optional[str] = None) -> List[Station]:
+        if event_id:
+            rows = await self.driver.execute(GET_STATIONS_BY_EVENT, {"event_id": event_id})
+        else:
+            rows = await self.driver.execute(GET_STATIONS)
         return [_row_to_station(row) for row in rows]
 
     async def get(self, station_id: str) -> Optional[Station]:

@@ -45,7 +45,7 @@ async def test_api_patrols_lifecycle(client, dev_mode_enabled):
     assert len(created_patrol["members"]) == 2
 
     # List Patrols
-    resp = await client.simulate_get("/v1/patrols")
+    resp = await client.simulate_get(f"/v1/patrols?event={event_id}")
     assert resp.status_code == 200
     p = next(item for item in resp.json if item["id"] == patrol_id)
     assert p["phoneNumber"] == "555-867-5309"
@@ -93,10 +93,31 @@ async def test_api_patrols_lifecycle(client, dev_mode_enabled):
     assert resp.json["hasRadio"] is True
     assert resp.json["radioIdentifier"] == "Radio-99"
 
-    # Delete Patrol
+    # Verify Deleted
     resp = await client.simulate_delete(f"/v1/patrols/{patrol_id}")
     assert resp.status_code == 204
 
     # Verify Deleted
     resp = await client.simulate_get(f"/v1/patrols/{patrol_id}")
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_api_patrols_event_id_filtering(client, dev_mode_enabled):
+    ev_a = await client.simulate_post("/v1/events", json={"name": "Event A"})
+    ev_b = await client.simulate_post("/v1/events", json={"name": "Event B"})
+    id_a, id_b = ev_a.json["id"], ev_b.json["id"]
+
+    await client.simulate_post("/v1/patrols", json={"eventId": id_a, "name": "Patrol A"})
+    await client.simulate_post("/v1/patrols", json={"eventId": id_b, "name": "Patrol B"})
+
+    res_a = await client.simulate_get(f"/v1/patrols?event={id_a}")
+    assert res_a.status_code == 200
+    assert len(res_a.json) == 1
+    assert res_a.json[0]["name"] == "Patrol A"
+
+    res_b = await client.simulate_get(f"/v1/patrols?event={id_b}")
+    assert res_b.status_code == 200
+    assert len(res_b.json) == 1
+    assert res_b.json[0]["name"] == "Patrol B"
+

@@ -331,11 +331,19 @@ paths:
   /v1/patrols:
     get:
       summary: List Patrols
-      description: Retrieves a list of all patrols.
+      description: Retrieves a list of all patrols for a specific event.
       tags:
         - Patrols
       security:
         - bearerAuth: []
+      parameters:
+        - name: event
+          in: query
+          required: true
+          description: ID of the event whose patrols should be returned.
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: A list of patrols.
@@ -442,11 +450,19 @@ paths:
   /v1/stations:
     get:
       summary: List Stations
-      description: Retrieves a list of all stations.
+      description: Retrieves a list of all stations for a specific event.
       tags:
         - Stations
       security:
         - bearerAuth: []
+      parameters:
+        - name: event
+          in: query
+          required: true
+          description: ID of the event whose stations should be returned.
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: A list of stations.
@@ -1116,6 +1132,9 @@ components:
           example: ["uuid-string-patrol-1"]
     Patrol:
       type: object
+      required:
+        - eventId
+        - name
       properties:
         id:
           type: string
@@ -1172,6 +1191,9 @@ components:
           example: "GA-0594"
     Station:
       type: object
+      required:
+        - eventId
+        - name
       properties:
         id:
           type: string

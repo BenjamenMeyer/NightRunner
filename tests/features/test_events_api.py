@@ -113,7 +113,7 @@ async def test_api_users_management(client, dev_mode_enabled, test_database):
 
     # Assign to station
     # First create a station
-    st_resp = await client.simulate_post("/v1/stations", json={"name": "Pioneering Station"})
+    st_resp = await client.simulate_post("/v1/stations", json={"name": "Pioneering Station", "eventId": "evt-1"})
     st_id = st_resp.json["id"]
 
     assign_resp = await client.simulate_put("/v1/users/u-test-1", json={"stationId": st_id, "stationRole": "staff"})

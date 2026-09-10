@@ -49,7 +49,7 @@ class DummyBaseStore:
     def __init__(self, driver=None):
         pass
 
-    async def list(self):
+    async def list(self, *args, **kwargs):
         return []
     async def create(self, data):
         return None
@@ -102,13 +102,13 @@ async def test_transport_endpoints(test_client, dev_mode_enabled):
     assert isinstance(data["patrols"], list)
 
     # Test a CRUD resource (stations) – create then get list
-    create_body = {"name": "Station A"}
+    create_body = {"name": "Station A", "eventId": "e1"}
     resp = await test_client.simulate_post("/v1/stations", json=create_body)
     assert resp.status == falcon.HTTP_201
     created = json.loads(resp.text)
     assert created["name"] == "Station A"
 
-    resp = await test_client.simulate_get("/v1/stations")
+    resp = await test_client.simulate_get("/v1/stations?event=e1")
     assert resp.status == falcon.HTTP_200
     lst = json.loads(resp.text)
     assert isinstance(lst, list)

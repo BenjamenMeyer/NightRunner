@@ -282,6 +282,7 @@ describe('Live Backend & OIDC Integration Tests', () => {
 
     // 1. Create a station with multiple tasks
     const initialStationPayload = {
+      eventId: '01a022b8-45f0-7612-872e-201e8c8158db',
       name: `Station Task Isolation Test ${Date.now()}`,
       description: 'Testing station task update isolation',
       tasks: [

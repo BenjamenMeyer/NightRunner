@@ -10,7 +10,10 @@ class StationsResource:
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response):
         store = StationsStore(get_driver())
-        stations = await store.list()
+        event_id = req.params.get("event") or req.params.get("eventId")
+        if not event_id:
+            raise falcon.HTTPBadRequest(description="An 'event' or 'eventId' query parameter is required.")
+        stations = await store.list(event_id=event_id)
         resp.media = [s.to_api_dict() for s in stations]
 
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
@@ -18,10 +21,12 @@ class StationsResource:
         data = await req.get_media()
         if not isinstance(data, dict):
             raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
+        event_id = data.get("eventId")
+        if not event_id:
+            raise falcon.HTTPBadRequest(description="'eventId' is required when creating a station.")
         name = data.get("name") or ""
         description = data.get("description")
         active_config_id = data.get("activeConfigurationId")
-        event_id = data.get("eventId")
         stationWeight = data.get("stationWeight", 1.0)
         station = Station(
             id=str(uuid6.uuid7()),
