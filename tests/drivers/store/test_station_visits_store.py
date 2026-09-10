@@ -56,3 +56,18 @@ async def test_station_visits_crud(store):
     # List for event
     visits = await store.list_for_event("e1")
     assert len(visits) == 1
+
+    # Verify datetime object conversion in to_api_dict()
+    from datetime import datetime, timezone
+    visit_with_dt = StationVisit(
+        event_id="e1",
+        station_id="s1",
+        patrol_id="p1",
+        checked_in_at=datetime(2026, 9, 9, 20, 0, 0, tzinfo=timezone.utc),
+        created_at=datetime(2026, 9, 9, 19, 59, 0, tzinfo=timezone.utc)
+    )
+    api_dict = visit_with_dt.to_api_dict()
+    assert isinstance(api_dict["checkedInAt"], str)
+    assert api_dict["checkedInAt"].startswith("2026-09-09T20:00:00")
+    assert isinstance(api_dict["createdAt"], str)
+    assert api_dict["createdAt"].startswith("2026-09-09T19:59:00")

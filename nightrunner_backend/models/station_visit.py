@@ -18,15 +18,22 @@ class StationVisit:
     created_at: Optional[str] = None
 
     def to_api_dict(self) -> Dict[str, Any]:
+        def fmt_dt(val: Any) -> Optional[str]:
+            if val is None:
+                return None
+            if hasattr(val, "isoformat"):
+                return val.isoformat()
+            return str(val)
+
         return {
             "id": self.id,
             "eventId": self.event_id,
             "stationId": self.station_id,
             "patrolId": self.patrol_id,
-            "checkedInAt": self.checked_in_at,
-            "checkedOutAt": self.checked_out_at,
-            "tasksStartedAt": self.tasks_started_at,
-            "tasksCompletedAt": self.tasks_completed_at,
+            "checkedInAt": fmt_dt(self.checked_in_at),
+            "checkedOutAt": fmt_dt(self.checked_out_at),
+            "tasksStartedAt": fmt_dt(self.tasks_started_at),
+            "tasksCompletedAt": fmt_dt(self.tasks_completed_at),
             "entryMode": self.entry_mode,
-            "createdAt": self.created_at,
+            "createdAt": fmt_dt(self.created_at),
         }

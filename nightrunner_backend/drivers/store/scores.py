@@ -48,7 +48,7 @@ AGGREGATE_EVENT = """
         s.station_id,
         st.name           AS station_name,
         st.station_weight,
-        SUM(CASE WHEN s.active = 1 OR s.active IS TRUE THEN (s.score_value * s.score_weight * COALESCE(st.station_weight, 1.0)) ELSE 0.0 END) AS weighted_score
+        SUM(CASE WHEN s.active = TRUE OR s.active IS TRUE THEN (s.score_value * s.score_weight * COALESCE(st.station_weight, 1.0)) ELSE 0.0 END) AS weighted_score
     FROM scores s
     JOIN patrols p ON p.id = s.patrol_id
     LEFT JOIN stations st ON st.id = s.station_id
