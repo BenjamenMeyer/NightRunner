@@ -45,7 +45,7 @@ async def test_api_patrols_lifecycle(client, dev_mode_enabled):
     assert len(created_patrol["members"]) == 2
 
     # List Patrols
-    resp = await client.simulate_get("/v1/patrols")
+    resp = await client.simulate_get(f"/v1/patrols?event={event_id}")
     assert resp.status_code == 200
     p = next(item for item in resp.json if item["id"] == patrol_id)
     assert p["phoneNumber"] == "555-867-5309"
