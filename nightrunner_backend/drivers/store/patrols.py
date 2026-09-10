@@ -11,6 +11,16 @@ FROM patrols p
 LEFT JOIN patrol_members pm ON p.id = pm.patrol_id
 ORDER BY p.id
 """
+LIST_PATROLS_BATCH_BY_EVENT = """
+SELECT
+    p.id AS patrol_id, p.event_id, p.name AS patrol_name,
+    p.phone_number, p.radio_frequency, p.radio_channel, p.has_radio, p.radio_identifier,
+    pm.id AS member_id, pm.name AS member_name, pm.rank, pm.troop
+FROM patrols p
+LEFT JOIN patrol_members pm ON p.id = pm.patrol_id
+WHERE p.event_id = :event_id
+ORDER BY p.id
+"""
 GET_PATROL = "SELECT id, event_id, name, phone_number, radio_frequency, radio_channel, has_radio, radio_identifier FROM patrols WHERE id = :id"
 CREATE_PATROL = """
     INSERT INTO patrols (id, event_id, name, phone_number, radio_frequency, radio_channel, has_radio, radio_identifier)
@@ -37,9 +47,12 @@ class PatrolsStore:
     def __init__(self, driver: DatabaseDriver):
         self.driver = driver
 
-    async def list(self) -> List[Patrol]:
-        """Fetch all patrols and their members in a single batched JOIN query."""
-        rows = await self.driver.execute(LIST_PATROLS_BATCH)
+    async def list(self, event_id: Optional[str] = None) -> List[Patrol]:
+        """Fetch all patrols (or patrols filtered by event_id) and their members in a single batched JOIN query."""
+        if event_id:
+            rows = await self.driver.execute(LIST_PATROLS_BATCH_BY_EVENT, {"event_id": event_id})
+        else:
+            rows = await self.driver.execute(LIST_PATROLS_BATCH)
         patrols: dict[str, Patrol] = {}
         for row in rows:
             patrol_id = row["patrol_id"]

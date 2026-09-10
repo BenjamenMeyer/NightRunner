@@ -10,7 +10,8 @@ class PatrolsResource:
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response):
         store = PatrolsStore(get_driver())
-        patrols = await store.list()
+        event_id = req.params.get("event") or req.params.get("eventId")
+        patrols = await store.list(event_id=event_id)
         resp.media = [p.to_api_dict() for p in patrols]
 
     async def on_post(self, req: falcon.Request, resp: falcon.Response):

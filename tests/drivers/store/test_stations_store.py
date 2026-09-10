@@ -53,3 +53,24 @@ async def test_station_store_crud_and_tasks_persistence(stations_store: Stations
     # Test delete
     await stations_store.delete(station_id)
     assert await stations_store.get(station_id) is None
+
+
+@pytest.mark.asyncio
+async def test_station_store_list_filtered_by_event_id(stations_store: StationsStore):
+    st1 = Station(id=str(uuid6.uuid7()), event_id="evt-event-A", name="Station Event A")
+    st2 = Station(id=str(uuid6.uuid7()), event_id="evt-event-B", name="Station Event B")
+
+    await stations_store.create(st1)
+    await stations_store.create(st2)
+
+    stations_A = await stations_store.list(event_id="evt-event-A")
+    assert len(stations_A) == 1
+    assert stations_A[0].id == st1.id
+
+    stations_B = await stations_store.list(event_id="evt-event-B")
+    assert len(stations_B) == 1
+    assert stations_B[0].id == st2.id
+
+    stations_all = await stations_store.list()
+    assert len(stations_all) >= 2
+

@@ -56,19 +56,17 @@ export default class PatrolService {
      *     Array of patrol objects.
      */
     async getPatrols(
-        eventId
+        eventId = null
     ) {
 
-        if (!eventId) {
+        const resolvedEventId =
+            eventId ??
+            (this.userService ? (this.userService.eventId || null) : null);
 
-            throw new Error(
-                "An event ID is required."
-            );
-
-        }
+        const query = resolvedEventId ? `?event=${encodeURIComponent(resolvedEventId)}` : "";
 
         return await this.transport.get(
-            `/patrols?event=${encodeURIComponent(eventId)}`
+            `/patrols${query}`
         );
 
     }

@@ -10,7 +10,8 @@ class StationsResource:
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response):
         store = StationsStore(get_driver())
-        stations = await store.list()
+        event_id = req.params.get("event") or req.params.get("eventId")
+        stations = await store.list(event_id=event_id)
         resp.media = [s.to_api_dict() for s in stations]
 
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
