@@ -64,7 +64,53 @@ export default function StationEditor() {
 
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
-    const [editingTaskId, setEditingTaskId] = useState(null);
+    const [taskEditor, setTaskEditor] = useState(null);
+
+    function openCreateTask() {
+        setTaskEditor({
+            mode: "create",
+            index: station.tasks.length,
+            task: createTask()
+        });
+    }
+
+    function openEditTask(index) {
+        setTaskEditor({
+            mode: "edit",
+            index,
+            task: JSON.parse(JSON.stringify(station.tasks[index]))
+        });
+    }
+
+    function saveTask(taskToSave) {
+        if (!taskEditor) return;
+
+        setStation(current => {
+            const nextTasks = [...current.tasks];
+            if (taskEditor.mode === "create") {
+                nextTasks.push(taskToSave);
+            } else {
+                nextTasks[taskEditor.index] = taskToSave;
+            }
+            return {
+                ...current,
+                tasks: nextTasks
+            };
+        });
+
+        setTaskEditor(null);
+    }
+
+    function deleteTask(index) {
+        setStation(current => ({
+            ...current,
+            tasks: current.tasks.filter((_, i) => i !== index)
+        }));
+
+        if (taskEditor && taskEditor.index === index) {
+            setTaskEditor(null);
+        }
+    }
 
     useEffect(() => {
         const controller = new AbortController();
@@ -239,44 +285,6 @@ export default function StationEditor() {
             activeConfigurationId: configurationId || null,
             tasks: configTasks
         }));
-    }
-
-    function addTask() {
-        const task = createTask();
-
-        setStation(current => ({
-            ...current,
-            tasks: [
-                ...current.tasks,
-                task
-            ]
-        }));
-
-        setEditingTaskId(task.id);
-    }
-
-    function updateTask(updatedTask) {
-        setStation(current => ({
-            ...current,
-            tasks: current.tasks.map(task =>
-                task.id === updatedTask.id
-                    ? updatedTask
-                    : task
-            )
-        }));
-    }
-
-    function deleteTask(id) {
-        setStation(current => ({
-            ...current,
-            tasks: current.tasks.filter(
-                task => task.id !== id
-            )
-        }));
-
-        if (editingTaskId === id) {
-            setEditingTaskId(null);
-        }
     }
 
     async function saveStation() {
@@ -563,7 +571,7 @@ export default function StationEditor() {
                     <button
                         type="button"
                         className="primary-button"
-                        onClick={addTask}
+                        onClick={openCreateTask}
                     >
                         + Add Task
                     </button>
@@ -587,7 +595,7 @@ export default function StationEditor() {
                         <button
                             type="button"
                             className="secondary-button"
-                            onClick={addTask}
+                            onClick={openCreateTask}
                         >
                             Add First Task
                         </button>
@@ -597,12 +605,8 @@ export default function StationEditor() {
                         {station.tasks.map(
                             (task, index) => (
                                 <article
-                                    key={task.id}
-                                    className={
-                                        editingTaskId === task.id
-                                            ? "task-card editing"
-                                            : "task-card"
-                                    }
+                                    key={task.id || index}
+                                    className="task-card"
                                 >
                                     <div className="task-card-header">
                                         <div className="task-number">
@@ -625,27 +629,17 @@ export default function StationEditor() {
                                                 type="button"
                                                 className="secondary-button"
                                                 onClick={() =>
-                                                    setEditingTaskId(
-                                                        editingTaskId ===
-                                                        task.id
-                                                            ? null
-                                                            : task.id
-                                                    )
+                                                    openEditTask(index)
                                                 }
                                             >
-                                                {editingTaskId ===
-                                                task.id
-                                                    ? "Close"
-                                                    : "Edit"}
+                                                Edit
                                             </button>
 
                                             <button
                                                 type="button"
                                                 className="remove-button"
                                                 onClick={() =>
-                                                    deleteTask(
-                                                        task.id
-                                                    )
+                                                    deleteTask(index)
                                                 }
                                             >
                                                 Delete
@@ -658,23 +652,42 @@ export default function StationEditor() {
                                             {task.instructions}
                                         </p>
                                     )}
-
-                                    {editingTaskId === task.id && (
-                                        <div className="task-editor-container">
-                                            <TaskEditor
-                                                task={task}
-                                                taskTypes={
-                                                    TASK_TYPES
-                                                }
-                                                onChange={
-                                                    updateTask
-                                                }
-                                            />
-                                        </div>
-                                    )}
                                 </article>
                             )
                         )}
+                    </div>
+                )}
+
+                {taskEditor && (
+                    <div className="task-editor-container" style={{ marginTop: "1.5rem", padding: "1rem", background: "#ffffff", borderRadius: "8px", border: "2px solid #007bff" }}>
+                        <TaskEditor
+                            task={taskEditor.task}
+                            taskTypes={TASK_TYPES}
+                            onChange={updated =>
+                                setTaskEditor(current => ({
+                                    ...current,
+                                    task: updated
+                                }))
+                            }
+                        />
+
+                        <div className="task-editor-actions" style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "1rem" }}>
+                            <button
+                                type="button"
+                                className="secondary-button"
+                                onClick={() => setTaskEditor(null)}
+                            >
+                                Cancel Task Edit
+                            </button>
+
+                            <button
+                                type="button"
+                                className="primary-button"
+                                onClick={() => saveTask(taskEditor.task)}
+                            >
+                                {taskEditor.mode === "edit" ? "Save Task Changes" : "Add Task"}
+                            </button>
+                        </div>
                     </div>
                 )}
             </section>
