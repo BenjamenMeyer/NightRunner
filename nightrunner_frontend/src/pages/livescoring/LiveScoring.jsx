@@ -122,7 +122,7 @@ export default function LiveScoring() {
         );
     }
 
-    // Build lookup maps for scoring reports and check-in status
+    // Build lookup maps for scoring reports and visits data
     const scoredMap = {};
     if (data.scoresReport?.patrols) {
         for (const p of data.scoresReport.patrols) {
@@ -133,6 +133,14 @@ export default function LiveScoring() {
                     scoredMap[pid][stId] = true;
                 }
             }
+        }
+    }
+
+    const visitMap = {};
+    if (data.visits) {
+        for (const v of data.visits) {
+            const key = `${v.patrolId}_${v.stationId}`;
+            visitMap[key] = v;
         }
     }
 
@@ -231,17 +239,25 @@ export default function LiveScoring() {
                                     </td>
 
                                     {data.stations.map((station) => {
-                                        const isCheckedIn =
+                                        const visit = visitMap[`${patrol.id}_${station.id}`];
+
+                                        const isCheckedIn = Boolean(
+                                            visit?.checkedInAt ||
                                             patrol.currentStationId === station.id ||
-                                            patrol.status === "checked-in" && patrol.stationId === station.id;
+                                            (patrol.status === "checked-in" && patrol.stationId === station.id)
+                                        );
 
-                                        const isInProgress =
+                                        const isInProgress = Boolean(
+                                            visit?.tasksStartedAt ||
                                             patrol.inProgressStationId === station.id ||
-                                            (isCheckedIn && patrol.inProgress);
+                                            (isCheckedIn && patrol.inProgress)
+                                        );
 
-                                        const isCheckedOut =
+                                        const isCheckedOut = Boolean(
+                                            visit?.checkedOutAt ||
                                             patrol.completedStations?.includes(station.id) ||
-                                            patrol.completed?.[station.id];
+                                            patrol.completed?.[station.id]
+                                        );
 
                                         const isScored = Boolean(scoredMap[patrol.id]?.[station.id]);
 
