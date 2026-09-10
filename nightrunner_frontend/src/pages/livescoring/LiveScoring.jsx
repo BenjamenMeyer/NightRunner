@@ -138,9 +138,21 @@ export default function LiveScoring() {
 
     const visitMap = {};
     if (data.visits) {
-        for (const v of data.visits) {
-            const key = `${v.patrolId}_${v.stationId}`;
-            visitMap[key] = v;
+        // Sort visits by created_at / createdAt ascending so latest visit overrides earlier ones
+        const sortedVisits = [...data.visits].sort(
+            (a, b) => new Date(a.createdAt || a.created_at || a.checkedInAt || a.checked_in_at || 0) - new Date(b.createdAt || b.created_at || b.checkedInAt || b.checked_in_at || 0)
+        );
+        for (const v of sortedVisits) {
+            const pid = v.patrolId || v.patrol_id;
+            const sid = v.stationId || v.station_id;
+            if (pid && sid) {
+                visitMap[`${pid}_${sid}`] = {
+                    checkedInAt: v.checkedInAt || v.checked_in_at || null,
+                    checkedOutAt: v.checkedOutAt || v.checked_out_at || null,
+                    tasksStartedAt: v.tasksStartedAt || v.tasks_started_at || null,
+                    tasksCompletedAt: v.tasksCompletedAt || v.tasks_completed_at || null
+                };
+            }
         }
     }
 
