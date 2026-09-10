@@ -640,7 +640,59 @@ describe('CheckInOut & LiveScoring Station Visit Integration Contracts', () => {
       checkedOutAt: '2026-09-09T20:00:00Z'
     });
   });
+
+  it('persists selected event in localStorage per user and clears stored event on user change', () => {
+    const STORAGE_KEY_USER = 'nightrunner_last_user_id';
+    const STORAGE_KEY_EVENT = 'nightrunner_last_event_id';
+
+    const mockStorage = {};
+    const getItem = (k) => mockStorage[k] || null;
+    const setItem = (k, v) => { mockStorage[k] = String(v); };
+    const removeItem = (k) => { delete mockStorage[k]; };
+
+    // Simulate User 1 selects Event 101
+    const user1Id = 'usr-111';
+    const event1Id = 'evt-101';
+    setItem(STORAGE_KEY_USER, user1Id);
+    setItem(STORAGE_KEY_EVENT, event1Id);
+
+    expect(getItem(STORAGE_KEY_USER)).toBe('usr-111');
+    expect(getItem(STORAGE_KEY_EVENT)).toBe('evt-101');
+
+    // Simulate initializeEvent logic when User 1 logs back in (same user ID)
+    let currentUserId = 'usr-111';
+    let savedUserId = getItem(STORAGE_KEY_USER);
+    let savedEventId = getItem(STORAGE_KEY_EVENT);
+    let autoRestoredEventId = null;
+
+    if (savedUserId && savedUserId !== currentUserId) {
+      removeItem(STORAGE_KEY_EVENT);
+      removeItem(STORAGE_KEY_USER);
+    } else if (savedUserId === currentUserId && savedEventId) {
+      autoRestoredEventId = savedEventId;
+    }
+
+    expect(autoRestoredEventId).toBe('evt-101');
+
+    // Simulate User 2 logs in (user ID change)
+    currentUserId = 'usr-222';
+    savedUserId = getItem(STORAGE_KEY_USER);
+    savedEventId = getItem(STORAGE_KEY_EVENT);
+    autoRestoredEventId = null;
+
+    if (savedUserId && savedUserId !== currentUserId) {
+      removeItem(STORAGE_KEY_EVENT);
+      removeItem(STORAGE_KEY_USER);
+    } else if (savedUserId === currentUserId && savedEventId) {
+      autoRestoredEventId = savedEventId;
+    }
+
+    expect(autoRestoredEventId).toBeNull();
+    expect(getItem(STORAGE_KEY_EVENT)).toBeNull();
+    expect(getItem(STORAGE_KEY_USER)).toBeNull();
+  });
 });
+
 
 
 

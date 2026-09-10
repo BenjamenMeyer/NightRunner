@@ -93,10 +93,21 @@ export function EventProvider({ children }) {
                 Object.keys(roles);
 
 
+            const savedUserId = localStorage.getItem("nightrunner_last_user_id");
+            const savedEventId = localStorage.getItem("nightrunner_last_event_id");
+
+            // If user has changed, clear previously saved event selection
+            if (savedUserId && savedUserId !== String(user.id)) {
+                localStorage.removeItem("nightrunner_last_event_id");
+            }
+            localStorage.setItem("nightrunner_last_user_id", String(user.id));
+
+            const effectiveSavedEventId = (savedUserId === String(user.id)) ? savedEventId : null;
+
             //
             // SYSTEM ADMIN
             //
-            // System admins do not need an event assignment.
+            // System admins do not need an event assignment, but can restore a previously selected event.
             //
 
             if (isSystemAdmin) {
@@ -104,8 +115,17 @@ export function EventProvider({ children }) {
                 const events =
                     await loadSelectableEvents();
 
+                if (effectiveSavedEventId && events.some(e => String(e.id) === String(effectiveSavedEventId))) {
+                    try {
+                        await selectEvent(effectiveSavedEventId);
+                        return;
+                    } catch (e) {
+                        console.warn("Failed to restore saved event for admin:", e);
+                    }
+                }
+
                 /*
-                 * System admins start without an event selected.
+                 * System admins start without an event selected if no valid saved event.
                  */
                 setEvent(null);
                 setEventId(null);
@@ -131,6 +151,19 @@ export function EventProvider({ children }) {
                     "No event is currently assigned to your account."
                 );
 
+            }
+
+
+            //
+            // Restore saved event if accessible to user
+            //
+            if (effectiveSavedEventId && ApiService.userData.hasEventAccess(effectiveSavedEventId)) {
+                try {
+                    await selectEvent(effectiveSavedEventId);
+                    return;
+                } catch (e) {
+                    console.warn("Failed to restore saved event for user:", e);
+                }
             }
 
 
@@ -162,6 +195,7 @@ export function EventProvider({ children }) {
             );
 
         }
+
         catch (error) {
 
             console.error(
@@ -354,6 +388,8 @@ export function EventProvider({ children }) {
                 selectedEventData.theme || "night-ops"
             );
 
+            localStorage.setItem("nightrunner_last_event_id", String(selectedEventData.id));
+
             setShowEventSelector(false);
 
             return selectedEventData;
@@ -518,7 +554,9 @@ export function EventProvider({ children }) {
         setEventId(null);
         setShowEventSelector(false);
         setError(null);
+        localStorage.removeItem("nightrunner_last_event_id");
     }
+
 
 
     //
