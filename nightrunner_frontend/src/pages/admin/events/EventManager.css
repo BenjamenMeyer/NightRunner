@@ -334,6 +334,38 @@
     cursor: not-allowed;
 }
 
+.the-danger-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 130px;
+    padding: 10px 18px;
+    background: transparent;
+    color: var(--error);
+    border: 1px solid var(--error);
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.the-danger-button:hover:not(:disabled) {
+    background: var(--error);
+    color: var(--card-bg);
+    border-color: var(--error);
+}
+
+.the-danger-button:focus-visible {
+    outline: 2px solid var(--error);
+    outline-offset: 2px;
+}
+
+.the-danger-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
 /* =========================================================
    Messages
