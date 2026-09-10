@@ -7,6 +7,7 @@
     --sidebar-bg: #0d1520;
     --header-bg: #142235;
     --page-bg: #080d14;
+    --overlay-bg: rgba(0, 0, 0, 0.45);
 
     /* ==========================================
        Cards & Surfaces
@@ -52,6 +53,7 @@
     --input-border: #334155;
     --input-text: #F8FAFC;
     --input-focus: #14B8A6;
+    --focus-ring: rgba(20, 184, 166, 0.18);
 
     /* ==========================================
        Links
