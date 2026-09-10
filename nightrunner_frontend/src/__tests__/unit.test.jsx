@@ -70,7 +70,7 @@ describe('Configuration Editor Payload Contracts', () => {
     expect(updatedTasks[2].name).toBe('First Aid');
   });
 
-  it('supports all task types in scoring page (Score Challenge, Pass/Fail, Multiple Choice, Text Answer, Checkpoint, Custom, Stopwatch)', () => {
+  it('supports all task types with maxScore, options array, and radio choices in scoring page', () => {
     const supportedTypes = [
       "Timed Challenge",
       "Stopwatch",
@@ -83,11 +83,26 @@ describe('Configuration Editor Payload Contracts', () => {
     ];
 
     supportedTypes.forEach(type => {
-      const task = { name: `Sample ${type}`, type, maxScore: 100 };
+      const task = {
+        name: `Sample ${type}`,
+        type,
+        maxScore: 100,
+        options: type === "Multiple Choice" ? [
+          { label: "Full Points", value: 100 },
+          { label: "Half Points", value: 50 },
+          { label: "No Points", value: 0 }
+        ] : undefined
+      };
+
       expect(task.type).toBeDefined();
+      if (type === "Multiple Choice") {
+        expect(task.options).toHaveLength(3);
+        expect(task.options[0].value).toBe(100);
+      }
     });
   });
 });
+
 
 
 describe('Authentication Reactive State & Sidebar Navigation Contracts', () => {

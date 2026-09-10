@@ -226,44 +226,65 @@ export default function ScoreField({
 
         case "MultiChoice":
         case "Multiple Choice":
+            const optionsList = scoreValue.options || task.options || [
+                { label: "Option A (Full Points)", value: task.maxScore ?? 10 },
+                { label: "Option B (Partial Points)", value: Math.floor((task.maxScore ?? 10) / 2) },
+                { label: "Option C (No Points)", value: 0 }
+            ];
 
             return (
 
-                <div className="score-field">
+                <div className="score-field multiple-choice-field">
 
-                    <label>{taskTitle}</label>
+                    <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>{taskTitle}</label>
 
-                    <select
-                        value={value ?? ""}
-                        onChange={(e) =>
-                            onChange(Number(e.target.value))
-                        }
-                    >
+                    <div className="radio-options-list" style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "8px 0" }}>
 
-                        <option value="">
-                            Select...
-                        </option>
+                        {optionsList.map((option, idx) => {
+                            const optLabel = typeof option === "object" ? option.label : option;
+                            const optValue = typeof option === "object" ? option.value : option;
+                            const isChecked = value === optValue;
 
-                        {(scoreValue.options || task.options || [
-                            { label: "Option A (Full Points)", value: task.maxScore ?? 10 },
-                            { label: "Option B (Partial Points)", value: Math.floor((task.maxScore ?? 10) / 2) },
-                            { label: "Option C (No Points)", value: 0 }
-                        ])?.map(option => (
+                            return (
+                                <label
+                                    key={idx}
+                                    className={`radio-option-item ${isChecked ? "selected" : ""}`}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "10px",
+                                        padding: "8px 12px",
+                                        borderRadius: "6px",
+                                        border: isChecked ? "2px solid #007bff" : "1px solid #ced4da",
+                                        background: isChecked ? "#e7f1ff" : "#ffffff",
+                                        cursor: "pointer"
+                                    }}
+                                >
+                                    <input
+                                        type="radio"
+                                        name={`mc_${task.id || taskTitle}`}
+                                        value={optValue}
+                                        checked={isChecked}
+                                        onChange={() => onChange(Number(optValue))}
+                                    />
+                                    <span style={{ fontWeight: isChecked ? "600" : "normal" }}>
+                                        {optLabel}
+                                    </span>
+                                    {typeof optValue === "number" && (
+                                        <span style={{ marginLeft: "auto", fontSize: "0.85em", color: "#6c757d", background: "#f8f9fa", padding: "2px 8px", borderRadius: "12px", border: "1px solid #dee2e6" }}>
+                                            +{optValue} pts
+                                        </span>
+                                    )}
+                                </label>
+                            );
+                        })}
 
-                            <option
-                                key={option.label || option}
-                                value={option.value ?? option}
-                            >
-                                {option.label || option}
-                            </option>
-
-                        ))}
-
-                    </select>
+                    </div>
 
                 </div>
 
             );
+
 
         case "Text Answer":
 

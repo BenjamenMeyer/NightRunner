@@ -176,7 +176,10 @@ export default function ConfigurationTaskEditor({
                 </label>
 
                 {(task.type === "Score Challenge" ||
-                    task.type === "Timed Challenge") && (
+                    task.type === "Timed Challenge" ||
+                    task.type === "Text Answer" ||
+                    task.type === "Checkpoint" ||
+                    task.type === "Custom") && (
 
                     <label className="form-field">
 
@@ -188,7 +191,7 @@ export default function ConfigurationTaskEditor({
                             type="number"
                             min="0"
                             value={
-                                task.maxScore
+                                task.maxScore ?? ""
                             }
                             onChange={event =>
                                 update(
@@ -198,6 +201,7 @@ export default function ConfigurationTaskEditor({
                                     )
                                 )
                             }
+                            placeholder="e.g. 10"
                         />
 
                     </label>
@@ -242,26 +246,94 @@ export default function ConfigurationTaskEditor({
 
                 {task.type === "Multiple Choice" && (
 
-                    <label className="form-field">
+                    <div className="form-field" style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: "8px" }}>
 
                         <span>
-                            Correct Answer
+                            Multiple Choice Options & Point Values
                         </span>
 
-                        <input
-                            value={
-                                task.correctAnswer
-                            }
-                            onChange={event =>
-                                update(
-                                    "correctAnswer",
-                                    event.target.value
-                                )
-                            }
-                            placeholder="Correct answer"
-                        />
+                        <div className="options-editor-list" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
 
-                    </label>
+                            {(task.options || [
+                                { label: "Option A (Full Points)", value: task.maxScore || 10 },
+                                { label: "Option B (Partial Points)", value: Math.floor((task.maxScore || 10) / 2) },
+                                { label: "Option C (No Points)", value: 0 }
+                            ]).map((opt, idx) => (
+
+                                <div key={idx} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+
+                                    <input
+                                        type="text"
+                                        placeholder={`Option ${idx + 1} Label`}
+                                        value={opt.label || ""}
+                                        style={{ flex: "2", padding: "6px" }}
+                                        onChange={(e) => {
+                                            const newOpts = [...(task.options || [
+                                                { label: "Option A (Full Points)", value: task.maxScore || 10 },
+                                                { label: "Option B (Partial Points)", value: Math.floor((task.maxScore || 10) / 2) },
+                                                { label: "Option C (No Points)", value: 0 }
+                                            ])];
+                                            newOpts[idx] = { ...newOpts[idx], label: e.target.value };
+                                            update("options", newOpts);
+                                        }}
+                                    />
+
+                                    <input
+                                        type="number"
+                                        placeholder="Points"
+                                        value={opt.value ?? ""}
+                                        style={{ flex: "1", padding: "6px" }}
+                                        onChange={(e) => {
+                                            const newOpts = [...(task.options || [
+                                                { label: "Option A (Full Points)", value: task.maxScore || 10 },
+                                                { label: "Option B (Partial Points)", value: Math.floor((task.maxScore || 10) / 2) },
+                                                { label: "Option C (No Points)", value: 0 }
+                                            ])];
+                                            newOpts[idx] = { ...newOpts[idx], value: Number(e.target.value) };
+                                            update("options", newOpts);
+                                        }}
+                                    />
+
+                                    <button
+                                        type="button"
+                                        style={{ padding: "6px 10px", background: "#dc3545", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                                        onClick={() => {
+                                            const currentOpts = task.options || [
+                                                { label: "Option A (Full Points)", value: task.maxScore || 10 },
+                                                { label: "Option B (Partial Points)", value: Math.floor((task.maxScore || 10) / 2) },
+                                                { label: "Option C (No Points)", value: 0 }
+                                            ];
+                                            if (currentOpts.length <= 1) return;
+                                            const newOpts = currentOpts.filter((_, i) => i !== idx);
+                                            update("options", newOpts);
+                                        }}
+                                    >
+                                        ✕
+                                    </button>
+
+                                </div>
+
+                            ))}
+
+                            <button
+                                type="button"
+                                style={{ alignSelf: "flex-start", marginTop: "4px", padding: "6px 12px", background: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                                onClick={() => {
+                                    const currentOpts = task.options || [
+                                        { label: "Option A (Full Points)", value: task.maxScore || 10 },
+                                        { label: "Option B (Partial Points)", value: Math.floor((task.maxScore || 10) / 2) },
+                                        { label: "Option C (No Points)", value: 0 }
+                                    ];
+                                    const newOpts = [...currentOpts, { label: `Option ${currentOpts.length + 1}`, value: 0 }];
+                                    update("options", newOpts);
+                                }}
+                            >
+                                ➕ Add Choice Option
+                            </button>
+
+                        </div>
+
+                    </div>
 
                 )}
 
@@ -283,12 +355,13 @@ export default function ConfigurationTaskEditor({
                                     event.target.value
                                 )
                             }
-                            placeholder="Expected answer"
+                            placeholder="Expected answer / grading reference"
                         />
 
                     </label>
 
                 )}
+
 
                 {task.type === "Stopwatch" && (
 
