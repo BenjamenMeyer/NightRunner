@@ -1,180 +1,173 @@
 .event-selector-overlay {
-
     position: fixed;
-
     inset: 0;
-
     z-index: 1000;
-
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     padding: 20px;
-
-    background: rgba(0, 0, 0, 0.45);
-
+    background: var(--overlay-bg);
 }
 
 .event-selector {
-
     width: 100%;
-
     max-width: 480px;
-
+    box-sizing: border-box;
     padding: 28px;
-
     background: var(--card-bg);
-
     color: var(--text-primary);
-
     border: 1px solid var(--border);
-
     border-radius: 8px;
-
     box-shadow: var(--shadow);
-
 }
 
 .event-selector-header {
-
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
     margin-bottom: 24px;
-
 }
 
 .event-selector-header h2 {
-
     margin: 0 0 8px;
-
     color: var(--text-primary);
-
 }
 
 .event-selector-header p {
-
     margin: 0;
-
     color: var(--text-secondary);
-
     line-height: 1.5;
+}
 
+.event-selector-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font: inherit;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.event-selector-close:hover:not(:disabled) {
+    background: var(--page-bg);
+    color: var(--text-primary);
+    border-color: var(--input-focus);
+}
+
+.event-selector-close:focus-visible {
+    outline: 2px solid var(--input-focus);
+    outline-offset: 2px;
+}
+
+.event-selector-close:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .event-selector-field {
-
     display: flex;
-
     flex-direction: column;
-
     gap: 8px;
-
 }
 
 .event-selector-field label {
-
     font-weight: 600;
-
     color: var(--text-primary);
-
 }
 
 .event-selector-field select {
-
     width: 100%;
-
     box-sizing: border-box;
-
     padding: 10px 12px;
-
     background: var(--input-bg);
-
     color: var(--input-text);
-
     border: 1px solid var(--input-border);
-
     border-radius: 6px;
-
     font: inherit;
-
     cursor: pointer;
-
 }
 
 .event-selector-field select:focus {
-
     outline: none;
-
     border-color: var(--input-focus);
-
-    box-shadow: 0 0 0 2px rgba(139, 30, 35, 0.15);
-
+    box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 .event-selector-actions {
-
     display: flex;
-
     justify-content: flex-end;
-
+    gap: 10px;
     margin-top: 24px;
-
 }
 
 .event-selector-actions button {
-
     padding: 10px 18px;
-
-    background: var(--button-bg);
-
-    color: var(--button-text);
-
-    border: none;
-
     border-radius: 6px;
-
     font: inherit;
-
     font-weight: 600;
-
     cursor: pointer;
-
 }
 
-.event-selector-actions button:hover:not(:disabled) {
+.event-selector-clear {
+    background: var(--card-bg);
+    color: var(--error);
+    border: 1px solid var(--border);
+}
 
+.event-selector-clear:hover:not(:disabled) {
+    background: var(--page-bg);
+    border-color: var(--error);
+}
+
+.event-selector-submit {
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--button-bg);
+}
+
+.event-selector-submit:hover:not(:disabled) {
     background: var(--button-hover);
+    border-color: var(--button-hover);
+}
 
+.event-selector-actions button:focus-visible {
+    outline: 2px solid var(--input-focus);
+    outline-offset: 2px;
 }
 
 .event-selector-actions button:disabled {
-
     opacity: 0.5;
-
     cursor: not-allowed;
-
-}
-
-.event-selector-loading {
-
-    padding: 20px 0;
-
-    color: var(--text-secondary);
-
-    text-align: center;
-
 }
 
 .event-selector-error {
-
     padding: 12px 14px;
-
     background: var(--card-bg);
-
     color: var(--error);
-
     border: 1px solid var(--error);
-
     border-radius: 6px;
+}
 
+@media (max-width: 520px) {
+    .event-selector {
+        padding: 22px;
+    }
+
+    .event-selector-actions {
+        flex-direction: column-reverse;
+    }
+
+    .event-selector-actions button {
+        width: 100%;
+    }
 }

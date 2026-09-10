@@ -6,12 +6,12 @@ import {
 import "./EventSelector.css";
 
 export default function EventSelector({
-                                          events = [],
-                                          selectedEventId = null,
-                                          onSelect,
-                                          onClose
-                                      }) {
-
+    events = [],
+    selectedEventId = null,
+    onSelect,
+    onClear,
+    onClose
+}) {
     const [selectedEvent, setSelectedEvent] =
         useState(
             selectedEventId
@@ -25,30 +25,15 @@ export default function EventSelector({
     const [error, setError] =
         useState(null);
 
-
-    //
-    // Keep selector synchronized with current event
-    //
-
     useEffect(() => {
-
         setSelectedEvent(
             selectedEventId
                 ? String(selectedEventId)
                 : ""
         );
-
-    }, [
-        selectedEventId
-    ]);
-
-
-    //
-    // Submit selection
-    //
+    }, [selectedEventId]);
 
     async function handleSubmit(event) {
-
         event.preventDefault();
 
         if (!selectedEvent) {
@@ -63,27 +48,20 @@ export default function EventSelector({
             );
 
         if (!selected) {
-
             setError(
                 "The selected event could not be found."
             );
 
             return;
-
         }
 
         try {
-
             setLoading(true);
             setError(null);
 
-            await onSelect(
-                selected.id
-            );
-
+            await onSelect(selected.id);
         }
         catch (error) {
-
             console.error(
                 "Failed to select event:",
                 error
@@ -93,50 +71,61 @@ export default function EventSelector({
                 error?.message ??
                 "Unable to select the event."
             );
-
         }
         finally {
-
             setLoading(false);
-
         }
-
     }
 
+    async function handleClear() {
+        if (!onClear || loading) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            setError(null);
+
+            await onClear();
+
+            setSelectedEvent("");
+        }
+        catch (error) {
+            console.error(
+                "Failed to clear event:",
+                error
+            );
+
+            setError(
+                error?.message ??
+                "Unable to clear the event."
+            );
+        }
+        finally {
+            setLoading(false);
+        }
+    }
 
     return (
-
         <div
             className="event-selector-overlay"
-            onMouseDown={(event) => {
-
-                /*
-                 * Prevent accidental closing when clicking
-                 * inside the selector.
-                 */
+            onMouseDown={event => {
                 if (
                     event.target ===
                     event.currentTarget
                 ) {
-
                     onClose?.();
-
                 }
-
             }}
         >
-
             <div
                 className="event-selector"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="event-selector-title"
             >
-
                 <div className="event-selector-header">
-
                     <div>
-
                         <h2 id="event-selector-title">
                             Select an Event
                         </h2>
@@ -144,12 +133,9 @@ export default function EventSelector({
                         <p>
                             Select the event you want to work with.
                         </p>
-
                     </div>
 
-
-                    {selectedEventId && (
-
+                    {onClose && (
                         <button
                             type="button"
                             className="event-selector-close"
@@ -157,45 +143,28 @@ export default function EventSelector({
                             aria-label="Close event selector"
                             disabled={loading}
                         >
-                            ×
+                            <span aria-hidden="true">
+                                ×
+                            </span>
                         </button>
-
                     )}
-
                 </div>
 
-
                 {error && (
-
                     <div className="event-selector-error">
-
                         {error}
-
                     </div>
-
                 )}
 
-
-                {!error &&
-                    events.length === 0 && (
-
-                        <div className="event-selector-error">
-
-                            No events are available.
-
-                        </div>
-
-                    )}
-
+                {!error && events.length === 0 && (
+                    <div className="event-selector-error">
+                        No events are available.
+                    </div>
+                )}
 
                 {events.length > 0 && (
-
-                    <form
-                        onSubmit={handleSubmit}
-                    >
-
+                    <form onSubmit={handleSubmit}>
                         <div className="event-selector-field">
-
                             <label htmlFor="event-selector">
                                 Event
                             </label>
@@ -203,38 +172,43 @@ export default function EventSelector({
                             <select
                                 id="event-selector"
                                 value={selectedEvent}
-                                onChange={(event) =>
+                                onChange={event =>
                                     setSelectedEvent(
                                         event.target.value
                                     )
                                 }
                                 disabled={loading}
                             >
-
                                 <option value="">
                                     Select an event...
                                 </option>
 
                                 {events.map(event => (
-
                                     <option
                                         key={event.id}
                                         value={event.id}
                                     >
                                         {event.name}
                                     </option>
-
                                 ))}
-
                             </select>
-
                         </div>
 
-
                         <div className="event-selector-actions">
+                            {onClear && selectedEventId && (
+                                <button
+                                    type="button"
+                                    className="event-selector-clear"
+                                    onClick={handleClear}
+                                    disabled={loading}
+                                >
+                                    Clear Event
+                                </button>
+                            )}
 
                             <button
                                 type="submit"
+                                className="event-selector-submit"
                                 disabled={
                                     !selectedEvent ||
                                     loading
@@ -244,17 +218,10 @@ export default function EventSelector({
                                     ? "Loading..."
                                     : "Continue"}
                             </button>
-
                         </div>
-
                     </form>
-
                 )}
-
             </div>
-
         </div>
-
     );
-
 }
