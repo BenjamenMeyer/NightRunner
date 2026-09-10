@@ -168,6 +168,8 @@ export default function CheckInOut() {
         }
     }
 
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+
     function handleStationSelection(station) {
         setSelectedStation(station);
         setCompleted(false);
@@ -181,14 +183,20 @@ export default function CheckInOut() {
         }
     }
 
-    async function handleSubmit() {
-        if (
-            !selectedPatrol ||
-            !selectedStation
-        ) {
-            return;
+    function handlePatrolSelection(patrol) {
+        setSelectedPatrol(patrol);
+        setCompleted(false);
+        if (patrol && selectedStation) {
+            const v = getVisitRecord(patrol.id, selectedStation.id);
+            if (v && v.checkedInAt && !v.checkedOutAt) {
+                setAction(ACTIONS.CHECK_OUT);
+            } else {
+                setAction(ACTIONS.CHECK_IN);
+            }
         }
+    }
 
+    async function executeCheckInOrOut() {
         try {
             setError(null);
             let res;
@@ -217,13 +225,33 @@ export default function CheckInOut() {
         } catch (err) {
             console.error("Check-in/out error:", err);
             setError(err?.message ?? `Failed to perform ${actionName.toLowerCase()}.`);
+        } finally {
+            setShowConfirmModal(false);
         }
+    }
+
+    async function handleSubmit() {
+        if (
+            !selectedPatrol ||
+            !selectedStation
+        ) {
+            return;
+        }
+
+        // If the patrol has already checked out from this station and action is check-in, prompt for confirmation
+        if (action === ACTIONS.CHECK_IN && isCurrentlyCheckedOut) {
+            setShowConfirmModal(true);
+            return;
+        }
+
+        await executeCheckInOrOut();
     }
 
     function reset() {
         setSelectedPatrol(null);
         setSelectedStation(null);
         setCompleted(false);
+        setShowConfirmModal(false);
     }
 
     const actionName =
@@ -274,72 +302,19 @@ export default function CheckInOut() {
                 </div>
             ) : (
                 <>
-                    <div className="checkin-action-card">
-
-                        <h2>
-                            Action
-                        </h2>
-
-                        <div className="action-selector">
-
-                            <button
-                                type="button"
-                                className={
-                                    action === ACTIONS.CHECK_IN
-                                        ? "action-button active"
-                                        : "action-button"
-                                }
-                                onClick={() =>
-                                    handleActionChange(
-                                        ACTIONS.CHECK_IN
-                                    )
-                                }
-                            >
-                                <span className="action-icon">
-                                    ↓
-                                </span>
-
-                                <span>
-                                    Check In
-                                </span>
-
-                                <small>
-                                    Patrol arrives
-                                </small>
-                            </button>
-
-                            <button
-                                type="button"
-                                className={
-                                    action === ACTIONS.CHECK_OUT
-                                        ? "action-button active"
-                                        : "action-button"
-                                }
-                                onClick={() =>
-                                    handleActionChange(
-                                        ACTIONS.CHECK_OUT
-                                    )
-                                }
-                            >
-                                <span className="action-icon">
-                                    ↑
-                                </span>
-
-                                <span>
-                                    Check Out
-                                </span>
-
-                                <small>
-                                    Patrol leaves
-                                </small>
-                            </button>
-
-                        </div>
-
-                    </div>
-
                     {!completed ? (
                         <>
+                            <DataSelector
+                                title="Select Station"
+                                label="Station"
+                                items={stations}
+                                selected={selectedStation}
+                                onSelect={
+                                    handleStationSelection
+                                }
+                                displayField="name"
+                            />
+
                             <DataSelector
                                 title="Select Patrol"
                                 description="Scan the patrol QR code or select one manually."
@@ -351,17 +326,6 @@ export default function CheckInOut() {
                                 }
                                 displayField="name"
                                 allowScan
-                            />
-
-                            <DataSelector
-                                title="Select Station"
-                                label="Station"
-                                items={stations}
-                                selected={selectedStation}
-                                onSelect={
-                                    handleStationSelection
-                                }
-                                displayField="name"
                             />
 
                             <div className="checkin-submit-panel">
@@ -407,7 +371,7 @@ export default function CheckInOut() {
                                     </>
                                 ) : (
                                     <p>
-                                        Select a patrol and station to continue.
+                                        Select a station and patrol to continue.
                                     </p>
                                 )}
 
@@ -460,6 +424,36 @@ export default function CheckInOut() {
                         </div>
                     )}
                 </>
+            )}
+
+            {showConfirmModal && (
+                <div className="modal-overlay">
+                    <div className="modal-card warning-modal">
+                        <h2>⚠️ Warning: Re-Checking In Patrol</h2>
+                        <p>
+                            <strong>{selectedPatrol?.name}</strong> has already completed and checked out from <strong>{selectedStation?.name}</strong>.
+                        </p>
+                        <p>
+                            Are you sure you want to check them in again for another visit?
+                        </p>
+                        <div className="modal-actions">
+                            <button
+                                type="button"
+                                className="secondary-button"
+                                onClick={() => setShowConfirmModal(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="primary-button warning-button"
+                                onClick={executeCheckInOrOut}
+                            >
+                                Yes, Check In Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
         </div>

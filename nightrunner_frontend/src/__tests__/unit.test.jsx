@@ -551,6 +551,28 @@ describe('CheckInOut & LiveScoring Station Visit Integration Contracts', () => {
     expect(recommendedActionNew).toBe('check-in');
   });
 
+  it('identifies completed visits and flags re-check-in confirmation warning when checking in an already checked-out patrol', () => {
+    const visits = [
+      {
+        id: 'v-2',
+        eventId: 'evt-1',
+        patrolId: 'p-10',
+        stationId: 'st-5',
+        checkedInAt: '2026-09-09T20:00:00Z',
+        checkedOutAt: '2026-09-09T20:30:00Z',
+        createdAt: '2026-09-09T20:00:00Z'
+      }
+    ];
+
+    const activeVisit = visits[0];
+    const isCurrentlyCheckedOut = Boolean(activeVisit && activeVisit.checkedOutAt);
+    expect(isCurrentlyCheckedOut).toBe(true);
+
+    const action = 'check-in';
+    const shouldPromptWarning = action === 'check-in' && isCurrentlyCheckedOut;
+    expect(shouldPromptWarning).toBe(true);
+  });
+
   it('builds LiveScoring visitMap with snake_case and camelCase fallback support and sorts by timestamp', () => {
     const rawVisits = [
       {
