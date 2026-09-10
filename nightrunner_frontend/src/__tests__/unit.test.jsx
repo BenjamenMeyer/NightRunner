@@ -573,6 +573,31 @@ describe('CheckInOut & LiveScoring Station Visit Integration Contracts', () => {
     expect(shouldPromptWarning).toBe(true);
   });
 
+  it('preserves selectedStation when resetting check-in form for another patrol', () => {
+    let state = {
+      selectedPatrol: { id: 'p-1', name: 'Eagle Patrol' },
+      selectedStation: { id: 'st-5', name: 'Ropework' },
+      completed: true,
+      showConfirmModal: false
+    };
+
+    // Reset handler preserving selectedStation
+    const reset = () => {
+      state = {
+        ...state,
+        selectedPatrol: null,
+        completed: false,
+        showConfirmModal: false
+      };
+    };
+
+    reset();
+
+    expect(state.selectedPatrol).toBeNull();
+    expect(state.selectedStation).toEqual({ id: 'st-5', name: 'Ropework' });
+    expect(state.completed).toBe(false);
+  });
+
   it('builds LiveScoring visitMap with snake_case and camelCase fallback support and sorts by timestamp', () => {
     const rawVisits = [
       {
