@@ -49,7 +49,7 @@ class DummyBaseStore:
     def __init__(self, driver=None):
         pass
 
-    async def list(self):
+    async def list(self, *args, **kwargs):
         return []
     async def create(self, data):
         return None
