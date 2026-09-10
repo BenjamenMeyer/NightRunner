@@ -8,9 +8,9 @@ import "./index.css";
 import "./App.css";
 
 import App from "./App.jsx";
-import AuthServiceProvider from "./api/AuthServiceProvider.jsx";
+import AuthServiceProvider from "./api/auth/AuthServiceProvider.jsx";
 import BrandingProvider from "./branding/BrandingProvider.jsx";
-import {EventProvider} from "./api/helpers/EventContext.jsx";
+import {EventProvider} from "./api/helpers/event/EventContext.jsx";
 
 const authority =
     import.meta.env.VITE_OIDC_AUTHORITY ??
