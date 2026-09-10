@@ -55,8 +55,6 @@ describe('Live Backend & OIDC Integration Tests', () => {
       return;
     }
 
-
-
     const preconfiguredUsers = ['adminuser', 'scoreruser', 'leaderuser', 'organizeruser', 'memberuser'];
     for (const username of preconfiguredUsers) {
       const token = await getOidcToken(username);
@@ -88,8 +86,6 @@ describe('Live Backend & OIDC Integration Tests', () => {
       return;
     }
 
-
-
     // 1. Obtain OIDC tokens for preconfigured users
     const adminToken = await getOidcToken('adminuser');
     const scorerToken = await getOidcToken('scoreruser');
@@ -119,7 +115,6 @@ describe('Live Backend & OIDC Integration Tests', () => {
     expect([200, 201]).toContain(patrolRes.status);
     const patrolData = await patrolRes.json();
     const patrolId = patrolData.id;
-
 
     // 3. Scorer checks in patrol
     const checkInRes = await fetch(`${backendUrl}/v1/visits/check-in`, {
@@ -154,7 +149,6 @@ describe('Live Backend & OIDC Integration Tests', () => {
     }
     expect([200, 201]).toContain(scoreRes.status);
 
-
     // 5. Subsequent check-in attempt is locked (HTTP 409)
     const checkInBlockedRes = await fetch(`${backendUrl}/v1/visits/check-in`, {
       method: 'POST',
@@ -181,6 +175,90 @@ describe('Live Backend & OIDC Integration Tests', () => {
     });
     expect([200, 201]).toContain(reCheckInRes.status);
   }, 20000);
+
+  it('creates and fetches task configuration presets with all 8 supported task types', async () => {
+    let isDockerRunning = false;
+    try {
+      const oidcCheck = await fetch(`${oidcUrl}/.well-known/openid-configuration`).catch(() => null);
+      const backendCheck = await fetch(`${backendUrl}/health`).catch(() => null);
+      if (oidcCheck && oidcCheck.status === 200 && backendCheck && backendCheck.status === 200) {
+        isDockerRunning = true;
+      }
+    } catch (_) {
+      isDockerRunning = false;
+    }
+
+    if (!isDockerRunning) {
+      expect(true).toBe(true);
+      return;
+    }
+
+    // 1. Obtain admin token from mock OIDC provider
+    const token = await getOidcToken('adminuser');
+
+    // 2. Post a task configuration containing tasks for all 8 types
+    const configPayload = {
+      name: `Integration Test Full Preset ${Date.now()}`,
+      description: 'Comprehensive preset testing all 8 task types',
+      tasks: [
+        { id: 't-1', name: 'Timed Sprint', type: 'Timed Challenge', timeLimit: 120, maxScore: 100, notes: 'Sprint timer' },
+        { id: 't-2', name: 'Stopwatch Lashing', type: 'Stopwatch', notes: 'Stopwatch duration' },
+        { id: 't-3', name: 'Target Practice', type: 'Score Challenge', maxScore: 50, notes: 'Numeric raw score' },
+        { id: 't-4', name: 'Safety Inspection', type: 'Pass / Fail', notes: 'Binary check' },
+        {
+          id: 't-5',
+          name: 'First Aid Quiz',
+          type: 'Multiple Choice',
+          notes: 'Select option',
+          options: [
+            { label: 'Full', value: 10 },
+            { label: 'Partial', value: 5 },
+            { label: 'Zero', value: 0 }
+          ]
+        },
+        { id: 't-6', name: 'Morse Code', type: 'Text Answer', expectedAnswer: 'SOS', maxScore: 20, notes: 'Text answer' },
+        { id: 't-7', name: 'Waystation Check', type: 'Checkpoint', maxScore: 10, notes: 'Arrival check' },
+        { id: 't-8', name: 'Bonus Activity', type: 'Custom', maxScore: 200, notes: 'Custom task' }
+      ]
+    };
+
+    const postRes = await fetch(`${backendUrl}/v1/configurations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(configPayload)
+    });
+
+    expect(postRes.status).toBe(201);
+    const createdConfig = await postRes.json();
+    expect(createdConfig).toHaveProperty('id');
+    expect(createdConfig.tasks).toHaveLength(8);
+
+    const taskTypesPresent = createdConfig.tasks.map(t => t.type);
+    expect(taskTypesPresent).toContain('Timed Challenge');
+    expect(taskTypesPresent).toContain('Stopwatch');
+    expect(taskTypesPresent).toContain('Score Challenge');
+    expect(taskTypesPresent).toContain('Pass / Fail');
+    expect(taskTypesPresent).toContain('Multiple Choice');
+    expect(taskTypesPresent).toContain('Text Answer');
+    expect(taskTypesPresent).toContain('Checkpoint');
+    expect(taskTypesPresent).toContain('Custom');
+
+    // 3. Retrieve configurations list and verify presence
+    const listRes = await fetch(`${backendUrl}/v1/configurations`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    expect(listRes.status).toBe(200);
+    const configsList = await listRes.json();
+    const found = configsList.find(c => c.id === createdConfig.id);
+    expect(found).toBeDefined();
+    expect(found.tasks).toHaveLength(8);
+  }, 10000);
 });
 
 

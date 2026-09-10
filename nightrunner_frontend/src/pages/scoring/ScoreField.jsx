@@ -166,6 +166,29 @@ export default function ScoreField({
 
     const fieldType = scoreValue.type || task.type;
     const taskTitle = task.name || task.description || "Task";
+    const taskNotes = task.notes || task.scorer_notes || scoreValue.notes || null;
+
+    const renderNotesBubble = () => {
+        if (!taskNotes || !taskNotes.trim()) return null;
+        return (
+            <div
+                className="task-notes-bubble"
+                style={{
+                    marginBottom: "10px",
+                    padding: "10px 14px",
+                    background: "#e3f2fd",
+                    border: "1px solid #90caf9",
+                    borderRadius: "12px",
+                    position: "relative",
+                    fontSize: "0.88rem",
+                    color: "#0d47a1"
+                }}
+            >
+                <strong style={{ display: "block", marginBottom: "2px" }}>💡 Scorer Guidance / Note:</strong>
+                <span>{taskNotes}</span>
+            </div>
+        );
+    };
 
     switch (fieldType) {
 
@@ -176,6 +199,8 @@ export default function ScoreField({
             return (
 
                 <div className="score-field">
+
+                    {renderNotesBubble()}
 
                     <label>{taskTitle}</label>
 
@@ -206,6 +231,8 @@ export default function ScoreField({
 
                 <div className="score-field">
 
+                    {renderNotesBubble()}
+
                     <label className="checkbox-option">
 
                         <input
@@ -235,6 +262,8 @@ export default function ScoreField({
             return (
 
                 <div className="score-field multiple-choice-field">
+
+                    {renderNotesBubble()}
 
                     <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>{taskTitle}</label>
 
@@ -292,6 +321,8 @@ export default function ScoreField({
 
                 <div className="score-field">
 
+                    {renderNotesBubble()}
+
                     <label>{taskTitle}</label>
 
                     <input
@@ -312,6 +343,8 @@ export default function ScoreField({
             return (
 
                 <div className="score-field">
+
+                    {renderNotesBubble()}
 
                     <label>{taskTitle}</label>
 
@@ -337,6 +370,8 @@ export default function ScoreField({
             return (
 
                 <div className="score-field stopwatch-field">
+
+                    {renderNotesBubble()}
 
                     <label>{taskTitle}</label>
 
@@ -462,6 +497,8 @@ export default function ScoreField({
             return (
 
                 <div className="score-field">
+
+                    {renderNotesBubble()}
 
                     <label>{taskTitle}</label>
 

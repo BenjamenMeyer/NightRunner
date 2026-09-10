@@ -87,6 +87,7 @@ describe('Configuration Editor Payload Contracts', () => {
         name: `Sample ${type}`,
         type,
         maxScore: 100,
+        notes: "Remember safety goggles and gear inspection.",
         options: type === "Multiple Choice" ? [
           { label: "Full Points", value: 100 },
           { label: "Half Points", value: 50 },
@@ -95,10 +96,143 @@ describe('Configuration Editor Payload Contracts', () => {
       };
 
       expect(task.type).toBeDefined();
+      expect(task.notes).toBe("Remember safety goggles and gear inspection.");
       if (type === "Multiple Choice") {
         expect(task.options).toHaveLength(3);
         expect(task.options[0].value).toBe(100);
       }
+    });
+  });
+
+  it('verifies right sidebar guidance lookup for all 8 task types', () => {
+    const ALL_TASK_TYPES = [
+      "Timed Challenge",
+      "Stopwatch",
+      "Score Challenge",
+      "Pass / Fail",
+      "Multiple Choice",
+      "Text Answer",
+      "Checkpoint",
+      "Custom"
+    ];
+
+    const TASK_GUIDANCE = {
+      "Score Challenge": { title: "Score Challenge Guidance" },
+      "Timed Challenge": { title: "Timed Challenge Guidance" },
+      "Stopwatch": { title: "Stopwatch Guidance" },
+      "Pass / Fail": { title: "Pass / Fail Guidance" },
+      "Multiple Choice": { title: "Multiple Choice Guidance" },
+      "Text Answer": { title: "Text Answer Guidance" },
+      "Checkpoint": { title: "Checkpoint Guidance" },
+      "Custom": { title: "Custom Task Guidance" }
+    };
+
+    ALL_TASK_TYPES.forEach(type => {
+      expect(TASK_GUIDANCE[type]).toBeDefined();
+      expect(TASK_GUIDANCE[type].title).toContain(type);
+    });
+  });
+
+  describe('Task Type Specific Contracts', () => {
+    it('handles Timed Challenge task type with time limit, max score, and notes', () => {
+      const task = {
+        name: 'Speed Fire Building',
+        type: 'Timed Challenge',
+        timeLimit: 300,
+        maxScore: 100,
+        notes: 'Stop timer when flame burns string.'
+      };
+      expect(task.type).toBe('Timed Challenge');
+      expect(task.timeLimit).toBe(300);
+      expect(task.maxScore).toBe(100);
+      expect(task.notes).toBeDefined();
+    });
+
+    it('handles Stopwatch task type with elapsed duration tracking', () => {
+      const task = {
+        name: 'Lashing Speed Test',
+        type: 'Stopwatch',
+        notes: 'Record HH:MM:SS.MS duration.'
+      };
+      expect(task.type).toBe('Stopwatch');
+      expect(task.notes).toBeDefined();
+    });
+
+    it('handles Score Challenge task type with raw numeric score', () => {
+      const task = {
+        name: 'Target Shooting',
+        type: 'Score Challenge',
+        maxScore: 50,
+        scoreWeight: 1.5,
+        notes: 'Enter total bulls-eye points.'
+      };
+      expect(task.type).toBe('Score Challenge');
+      expect(task.maxScore).toBe(50);
+      expect(task.scoreWeight).toBe(1.5);
+    });
+
+    it('handles Pass / Fail task type binary boolean evaluation', () => {
+      const task = {
+        name: 'Uniform Inspection',
+        type: 'Pass / Fail',
+        notes: 'Check for patch alignment and neckerchief.'
+      };
+      expect(task.type).toBe('Pass / Fail');
+      expect(task.notes).toBeDefined();
+    });
+
+    it('handles Multiple Choice task type with options list and radio selection points', () => {
+      const task = {
+        name: 'First Aid Quiz',
+        type: 'Multiple Choice',
+        notes: 'Select the best response.',
+        options: [
+          { label: 'CPR Step 1', value: 10 },
+          { label: 'CPR Step 2', value: 5 },
+          { label: 'None', value: 0 }
+        ]
+      };
+      expect(task.type).toBe('Multiple Choice');
+      expect(task.options).toHaveLength(3);
+      expect(task.options[0].value).toBe(10);
+    });
+
+    it('handles Text Answer task type with expected answer reference', () => {
+      const task = {
+        name: 'Morse Code Cipher',
+        type: 'Text Answer',
+        expectedAnswer: 'SCOUTING',
+        maxScore: 20,
+        notes: 'Case insensitive text matching.'
+      };
+      expect(task.type).toBe('Text Answer');
+      expect(task.expectedAnswer).toBe('SCOUTING');
+      expect(task.maxScore).toBe(20);
+    });
+
+    it('handles Checkpoint task type arrival verification', () => {
+      const task = {
+        name: 'Waystation Checkpoint Alpha',
+        type: 'Checkpoint',
+        maxScore: 10,
+        notes: 'Stamp patrol logbook on arrival.'
+      };
+      expect(task.type).toBe('Checkpoint');
+      expect(task.maxScore).toBe(10);
+      expect(task.notes).toBeDefined();
+    });
+
+    it('handles Custom task type with custom max score bounds', () => {
+      const task = {
+        name: 'Obstacle Course Challenge',
+        type: 'Custom',
+        maxScore: 150,
+        scoreWeight: 2.0,
+        notes: 'Special bonus points awarded by station leader.'
+      };
+      expect(task.type).toBe('Custom');
+      expect(task.maxScore).toBe(150);
+      expect(task.scoreWeight).toBe(2.0);
     });
   });
 });

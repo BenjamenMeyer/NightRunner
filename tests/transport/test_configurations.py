@@ -158,13 +158,13 @@ async def test_configuration_endpoints(test_client, dev_mode_enabled):
     assert empty_cfg["groupId"] is None
     assert empty_cfg["group_id"] is None
 
-    # Create a configuration with tasks payload
+    # Create a configuration with tasks payload containing notes and multiple choice options
     tasks_body = {
         "groupId": group_id,
         "name": "config_with_tasks",
         "tasks": [
-            {"id": "t1", "name": "Stopwatch Challenge", "type": "Stopwatch"},
-            {"id": "t2", "name": "Knot Tying", "type": "Timed Challenge"}
+            {"id": "t1", "name": "Stopwatch Challenge", "type": "Stopwatch", "notes": "Use standard digital stopwatch."},
+            {"id": "t2", "name": "Multiple Choice Knot Test", "type": "Multiple Choice", "notes": "Check for correct bowline loop.", "options": [{"label": "Correct", "value": 10}, {"label": "Partial", "value": 5}, {"label": "Incorrect", "value": 0}]}
         ]
     }
     resp = await test_client.simulate_post("/v1/configurations", json=tasks_body)
@@ -172,4 +172,7 @@ async def test_configuration_endpoints(test_client, dev_mode_enabled):
     cfg_with_tasks = json.loads(resp.text)
     assert "tasks" in cfg_with_tasks
     assert len(cfg_with_tasks["tasks"]) == 2
-    assert cfg_with_tasks["tasks"][0]["name"] == "Stopwatch Challenge"
+    assert cfg_with_tasks["tasks"][0]["notes"] == "Use standard digital stopwatch."
+    assert cfg_with_tasks["tasks"][1]["type"] == "Multiple Choice"
+    assert len(cfg_with_tasks["tasks"][1]["options"]) == 3
+
