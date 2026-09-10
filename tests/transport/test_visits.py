@@ -1,7 +1,9 @@
+from datetime import datetime, timezone
 import falcon
 import pytest
 from unittest.mock import patch, AsyncMock
 from nightrunner_backend.main import app, register_routes
+
 
 
 @pytest.fixture
@@ -68,6 +70,15 @@ async def test_visits_endpoints(test_client, dev_mode_enabled):
 @patch("nightrunner_backend.transport.middleware.auth.AuthMiddleware.process_request", AsyncMock(return_value=None))
 @pytest.mark.asyncio
 async def test_completed_visit_lock_and_reset(test_client, dev_mode_enabled):
+    # 0. Initial check-in
+    checkin_body = {
+        "eventId": "e2",
+        "stationId": "s2",
+        "patrolId": "p2"
+    }
+    resp = await test_client.simulate_post("/v1/visits/check-in", json=checkin_body)
+    assert resp.status == falcon.HTTP_201
+
     # 1. Post score to mark visit as completed
     score_body = {
         "eventId": "e2",
@@ -80,11 +91,6 @@ async def test_completed_visit_lock_and_reset(test_client, dev_mode_enabled):
     assert resp.status == falcon.HTTP_201
 
     # 2. Check-in attempt on completed station visit should return HTTP 409 Conflict
-    checkin_body = {
-        "eventId": "e2",
-        "stationId": "s2",
-        "patrolId": "p2"
-    }
     resp = await test_client.simulate_post("/v1/visits/check-in", json=checkin_body)
     assert resp.status == falcon.HTTP_409
 
@@ -102,4 +108,5 @@ async def test_completed_visit_lock_and_reset(test_client, dev_mode_enabled):
     resp = await test_client.simulate_post("/v1/visits/check-in", json=checkin_body)
     assert resp.status == falcon.HTTP_200
     assert resp.json["status"] == "checked_in"
+
 
