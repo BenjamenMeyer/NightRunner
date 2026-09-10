@@ -249,7 +249,6 @@ export default function CheckInOut() {
 
     function reset() {
         setSelectedPatrol(null);
-        setSelectedStation(null);
         setCompleted(false);
         setShowConfirmModal(false);
     }
