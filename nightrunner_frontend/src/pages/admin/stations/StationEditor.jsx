@@ -5,6 +5,7 @@ import {
 } from "react-router-dom";
 
 import ApiService from "../../../api/ApiService.js";
+import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
 
 import TaskEditor from "./TaskEditor.jsx";
 
@@ -47,6 +48,7 @@ function createEmptyStation() {
 export default function StationEditor() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const { eventId, event } = useEventContext();
 
     const stationId = searchParams.get("stationId");
     const isEditing = Boolean(stationId);
@@ -126,8 +128,8 @@ export default function StationEditor() {
             setError(null);
 
             const requests = [
-                ApiService.configurationData.getGroups(),
-                ApiService.configurationData.getConfigurations()
+                await ApiService.configurationData.getGroups(),
+                await ApiService.configurationData.getConfigurations()
             ];
 
             if (isEditing) {
@@ -308,11 +310,10 @@ export default function StationEditor() {
 
             const data = {
                 ...station,
+                eventId: eventId,
                 name: station.name.trim(),
-                description:
-                    station.description?.trim() ?? "",
-                activeConfigurationId:
-                station.activeConfigurationId
+                description: station.description?.trim() ?? "",
+                activeConfigurationId: station.activeConfigurationId
             };
 
             if (isEditing) {
