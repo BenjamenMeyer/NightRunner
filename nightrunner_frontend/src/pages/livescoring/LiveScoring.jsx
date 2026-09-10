@@ -122,20 +122,6 @@ export default function LiveScoring() {
         );
     }
 
-    // Build lookup maps for scoring reports and visits data
-    const scoredMap = {};
-    if (data.scoresReport?.patrols) {
-        for (const p of data.scoresReport.patrols) {
-            const pid = p.patrolId || p.id;
-            if (p.stationTotals) {
-                scoredMap[pid] = {};
-                for (const stId of Object.keys(p.stationTotals)) {
-                    scoredMap[pid][stId] = true;
-                }
-            }
-        }
-    }
-
     const visitMap = {};
     if (data.visits) {
         // Sort visits by created_at / createdAt ascending so latest visit overrides earlier ones
@@ -271,21 +257,11 @@ export default function LiveScoring() {
                                             patrol.completed?.[station.id]
                                         );
 
-                                        const isScored = Boolean(scoredMap[patrol.id]?.[station.id]);
-
                                         let className = "not-arrived";
                                         let value = "";
                                         let title = "Not Arrived";
 
-                                        if (isScored && !isCheckedOut) {
-                                            className = "scored-only";
-                                            value = "📝";
-                                            title = "Scored (Not Checked Out)";
-                                        } else if (isCheckedOut && isScored) {
-                                            className = "completed-scored";
-                                            value = "✓📝";
-                                            title = "Checked Out & Scored";
-                                        } else if (isCheckedOut) {
+                                        if (isCheckedOut) {
                                             className = "completed";
                                             value = "✓";
                                             title = "Checked Out / Completed";
@@ -330,16 +306,6 @@ export default function LiveScoring() {
                     <span className="legend-item">
                         <span className="legend-box completed"></span>
                         Checked Out / Completed (✓)
-                    </span>
-
-                    <span className="legend-item">
-                        <span className="legend-box scored-only"></span>
-                        Scored (📝)
-                    </span>
-
-                    <span className="legend-item">
-                        <span className="legend-box completed-scored"></span>
-                        Checked Out & Scored (✓📝)
                     </span>
                 </div>
             </div>
