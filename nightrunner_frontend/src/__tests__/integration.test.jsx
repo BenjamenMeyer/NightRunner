@@ -259,7 +259,78 @@ describe('Live Backend & OIDC Integration Tests', () => {
     expect(found).toBeDefined();
     expect(found.tasks).toHaveLength(8);
   }, 10000);
+
+  it('creates station with preset tasks and updates individual tasks without mutating other station tasks', async () => {
+    let isDockerRunning = false;
+    try {
+      const oidcCheck = await fetch(`${oidcUrl}/.well-known/openid-configuration`).catch(() => null);
+      const backendCheck = await fetch(`${backendUrl}/health`).catch(() => null);
+      if (oidcCheck && oidcCheck.status === 200 && backendCheck && backendCheck.status === 200) {
+        isDockerRunning = true;
+      }
+    } catch (_) {
+      isDockerRunning = false;
+    }
+
+    if (!isDockerRunning) {
+      expect(true).toBe(true);
+      return;
+    }
+
+    const token = await getOidcToken('adminuser');
+    const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+    // 1. Create a station with multiple tasks
+    const initialStationPayload = {
+      name: `Station Task Isolation Test ${Date.now()}`,
+      description: 'Testing station task update isolation',
+      tasks: [
+        { id: 'st-t1', name: 'Original Task 1', type: 'Score Challenge', maxScore: 50 },
+        { id: 'st-t2', name: 'Original Task 2', type: 'Timed Challenge', timeLimit: 120 }
+      ]
+    };
+
+    const createRes = await fetch(`${backendUrl}/v1/stations`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(initialStationPayload)
+    });
+
+    expect([200, 201]).toContain(createRes.status);
+    const createdStation = await createRes.json();
+    const stationId = createdStation.id;
+    expect(createdStation.tasks).toHaveLength(2);
+
+    // 2. Update only task at index 1 in station.tasks array
+    const updatedTasks = [...createdStation.tasks];
+    updatedTasks[1] = {
+      ...updatedTasks[1],
+      name: 'Isolated Updated Task 2',
+      timeLimit: 300
+    };
+
+    const updateRes = await fetch(`${backendUrl}/v1/stations/${stationId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        ...createdStation,
+        tasks: updatedTasks
+      })
+    });
+
+    expect([200, 204]).toContain(updateRes.status);
+
+    // 3. Fetch station and verify task 0 remained unchanged while task 1 was updated
+    const getRes = await fetch(`${backendUrl}/v1/stations/${stationId}`, { headers });
+    expect(getRes.status).toBe(200);
+    const updatedStation = await getRes.json();
+
+    expect(updatedStation.tasks[0].name).toBe('Original Task 1');
+    expect(updatedStation.tasks[1].name).toBe('Isolated Updated Task 2');
+    expect(updatedStation.tasks[1].timeLimit).toBe(300);
+  }, 15000);
 });
+
 
 
 

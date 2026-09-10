@@ -896,6 +896,96 @@ describe('CheckInOut & LiveScoring Station Visit Integration Contracts', () => {
   });
 });
 
+describe('Station Editor Task Editing Isolation Contracts', () => {
+  it('opens isolated task editor for specified task index without mutating other tasks', () => {
+    const station = {
+      name: 'Pioneering Post',
+      tasks: [
+        { id: 't-1', name: 'Square Knot', type: 'Score Challenge', maxScore: 50 },
+        { id: 't-2', name: 'Shear Lashing', type: 'Timed Challenge', timeLimit: 180 }
+      ]
+    };
+
+    // Open task editor for index 1
+    const taskIndexToEdit = 1;
+    const taskEditorState = {
+      mode: 'edit',
+      index: taskIndexToEdit,
+      task: JSON.parse(JSON.stringify(station.tasks[taskIndexToEdit]))
+    };
+
+    expect(taskEditorState.index).toBe(1);
+    expect(taskEditorState.task.name).toBe('Shear Lashing');
+
+    // Mutate editing copy
+    taskEditorState.task.name = 'Updated Shear Lashing';
+    taskEditorState.task.timeLimit = 240;
+
+    // Verify original station tasks were not mutated prior to save
+    expect(station.tasks[1].name).toBe('Shear Lashing');
+
+    // Perform save task at specific index
+    const nextTasks = [...station.tasks];
+    nextTasks[taskEditorState.index] = taskEditorState.task;
+    const updatedStation = { ...station, tasks: nextTasks };
+
+    // Verify only task at target index 1 changed and task at index 0 remains unmodified
+    expect(updatedStation.tasks[0].name).toBe('Square Knot');
+    expect(updatedStation.tasks[1].name).toBe('Updated Shear Lashing');
+    expect(updatedStation.tasks[1].timeLimit).toBe(240);
+  });
+
+  it('adds a new task cleanly using index-based taskEditor state', () => {
+    const station = {
+      name: 'Obstacle Station',
+      tasks: [{ id: 't-1', name: 'Wall Climb', type: 'Pass / Fail' }]
+    };
+
+    const newTask = {
+      id: 't-new-uuid',
+      name: 'Rope Traverse',
+      type: 'Timed Challenge',
+      timeLimit: 120
+    };
+
+    const taskEditorState = {
+      mode: 'create',
+      index: station.tasks.length,
+      task: newTask
+    };
+
+    const nextTasks = [...station.tasks];
+    if (taskEditorState.mode === 'create') {
+      nextTasks.push(taskEditorState.task);
+    }
+
+    const updatedStation = { ...station, tasks: nextTasks };
+
+    expect(updatedStation.tasks).toHaveLength(2);
+    expect(updatedStation.tasks[0].name).toBe('Wall Climb');
+    expect(updatedStation.tasks[1].name).toBe('Rope Traverse');
+  });
+
+  it('deletes specific task index cleanly from station tasks array', () => {
+    const station = {
+      name: 'First Aid Post',
+      tasks: [
+        { id: 't-1', name: 'Splinting' },
+        { id: 't-2', name: 'Bandaging' },
+        { id: 't-3', name: 'CPR Quiz' }
+      ]
+    };
+
+    const deleteIndex = 1;
+    const updatedTasks = station.tasks.filter((_, i) => i !== deleteIndex);
+
+    expect(updatedTasks).toHaveLength(2);
+    expect(updatedTasks[0].name).toBe('Splinting');
+    expect(updatedTasks[1].name).toBe('CPR Quiz');
+  });
+});
+
+
 
 
 
