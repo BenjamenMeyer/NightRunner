@@ -11,6 +11,8 @@ class PatrolsResource:
     async def on_get(self, req: falcon.Request, resp: falcon.Response):
         store = PatrolsStore(get_driver())
         event_id = req.params.get("event") or req.params.get("eventId")
+        if not event_id:
+            raise falcon.HTTPBadRequest(description="An 'event' or 'eventId' query parameter is required.")
         patrols = await store.list(event_id=event_id)
         resp.media = [p.to_api_dict() for p in patrols]
 
@@ -19,6 +21,9 @@ class PatrolsResource:
         data = await req.get_media()
         if not isinstance(data, dict):
             raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
+        event_id = data.get("eventId")
+        if not event_id:
+            raise falcon.HTTPBadRequest(description="'eventId' is required when creating a patrol.")
         members_data = data.get("members", [])
         if not isinstance(members_data, list):
             raise falcon.HTTPBadRequest(description="'members' must be a list.")
