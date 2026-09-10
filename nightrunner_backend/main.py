@@ -98,5 +98,12 @@ def register_routes(app):
     app.add_route("/events/{event_id}", EventResource())
     app.add_route("/patrols", PatrolsResource())
     app.add_route("/patrols/{patrol_id}", PatrolResource())
+    app.add_route("/scores", ScoresResource())
+    app.add_route("/scores/{scoreId}", ScoreResource())
+    app.add_route("/visits", VisitsResource())
+    app.add_route("/visits/check-in", VisitCheckInResource())
+    app.add_route("/visits/check-out", VisitCheckOutResource())
+    app.add_route("/visits/reset", VisitResetResource())
     # login route moved to top level
 register_routes(app)
+
