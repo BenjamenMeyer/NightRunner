@@ -166,6 +166,17 @@ export default function Scoring() {
                     {!scoringStarted ? (
                         <>
                             <DataSelector
+                                title="Select Station"
+                                label="Station"
+                                items={stations}
+                                selected={selectedStation}
+                                onSelect={
+                                    handleStationSelection
+                                }
+                                displayField="name"
+                            />
+
+                            <DataSelector
                                 title="Select Patrol"
                                 description="Scan the patrol QR code or select one manually."
                                 label="Patrol"
@@ -177,18 +188,8 @@ export default function Scoring() {
                                 displayField="name"
                                 allowScan
                             />
-
-                            <DataSelector
-                                title="Select Station"
-                                label="Station"
-                                items={stations}
-                                selected={selectedStation}
-                                onSelect={
-                                    handleStationSelection
-                                }
-                                displayField="name"
-                            />
                         </>
+
                     ) : (
                         <div className="score-selection-card">
 

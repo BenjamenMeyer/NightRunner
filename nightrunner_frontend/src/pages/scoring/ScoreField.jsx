@@ -165,29 +165,33 @@ export default function ScoreField({
     }
 
     const fieldType = scoreValue.type || task.type;
+    const taskTitle = task.name || task.description || "Task";
 
     switch (fieldType) {
 
         case "RangeRated":
+        case "Score Challenge":
+        case "Custom":
 
             return (
 
                 <div className="score-field">
 
-                    <label>{task.description}</label>
+                    <label>{taskTitle}</label>
 
                     <input
                         type="number"
-                        min={scoreValue.min}
-                        max={scoreValue.max}
+                        min={scoreValue.min ?? 0}
+                        max={scoreValue.max ?? task.maxScore ?? 100}
                         value={value ?? ""}
+                        placeholder={`Score (0 - ${scoreValue.max ?? task.maxScore ?? 100})`}
                         onChange={(e) =>
                             onChange(Number(e.target.value))
                         }
                     />
 
                     <small>
-                        {scoreValue.min} - {scoreValue.max}
+                        Range: {scoreValue.min ?? 0} - {scoreValue.max ?? task.maxScore ?? 100}
                     </small>
 
                 </div>
@@ -195,6 +199,8 @@ export default function ScoreField({
             );
 
         case "Completed":
+        case "Pass / Fail":
+        case "Checkpoint":
 
             return (
 
@@ -210,7 +216,7 @@ export default function ScoreField({
                             }
                         />
 
-                        {task.description}
+                        {taskTitle} ({fieldType === "Pass / Fail" ? "Pass" : "Completed"})
 
                     </label>
 
@@ -219,12 +225,13 @@ export default function ScoreField({
             );
 
         case "MultiChoice":
+        case "Multiple Choice":
 
             return (
 
                 <div className="score-field">
 
-                    <label>{task.description}</label>
+                    <label>{taskTitle}</label>
 
                     <select
                         value={value ?? ""}
@@ -237,18 +244,43 @@ export default function ScoreField({
                             Select...
                         </option>
 
-                        {scoreValue.options?.map(option => (
+                        {(scoreValue.options || task.options || [
+                            { label: "Option A (Full Points)", value: task.maxScore ?? 10 },
+                            { label: "Option B (Partial Points)", value: Math.floor((task.maxScore ?? 10) / 2) },
+                            { label: "Option C (No Points)", value: 0 }
+                        ])?.map(option => (
 
                             <option
-                                key={option.label}
-                                value={option.value}
+                                key={option.label || option}
+                                value={option.value ?? option}
                             >
-                                {option.label}
+                                {option.label || option}
                             </option>
 
                         ))}
 
                     </select>
+
+                </div>
+
+            );
+
+        case "Text Answer":
+
+            return (
+
+                <div className="score-field">
+
+                    <label>{taskTitle}</label>
+
+                    <input
+                        type="text"
+                        value={value ?? ""}
+                        placeholder="Enter text answer or response..."
+                        onChange={(e) =>
+                            onChange(e.target.value)
+                        }
+                    />
 
                 </div>
 
@@ -260,7 +292,7 @@ export default function ScoreField({
 
                 <div className="score-field">
 
-                    <label>{task.description}</label>
+                    <label>{taskTitle}</label>
 
                     <input
                         type="number"
@@ -271,7 +303,7 @@ export default function ScoreField({
                     />
 
                     <small>
-                        {scoreValue.scalar} ms per point
+                        {scoreValue.scalar ?? 1} ms per point
                     </small>
 
                 </div>
@@ -285,7 +317,7 @@ export default function ScoreField({
 
                 <div className="score-field stopwatch-field">
 
-                    <label>{task.description}</label>
+                    <label>{taskTitle}</label>
 
                     <div className="stopwatch-card">
 
@@ -408,15 +440,18 @@ export default function ScoreField({
 
             return (
 
-                <div className="score-field unknown">
+                <div className="score-field">
 
-                    Unsupported scoring type:{" "}
+                    <label>{taskTitle}</label>
 
-                    <strong>
-
-                        {scoreValue.type ?? "Unknown"}
-
-                    </strong>
+                    <input
+                        type="number"
+                        value={value ?? ""}
+                        placeholder="Enter score..."
+                        onChange={(e) =>
+                            onChange(Number(e.target.value))
+                        }
+                    />
 
                 </div>
 

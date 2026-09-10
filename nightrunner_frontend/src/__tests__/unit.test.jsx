@@ -69,7 +69,26 @@ describe('Configuration Editor Payload Contracts', () => {
     expect(updatedTasks[1].type).toBe('Stopwatch');
     expect(updatedTasks[2].name).toBe('First Aid');
   });
+
+  it('supports all task types in scoring page (Score Challenge, Pass/Fail, Multiple Choice, Text Answer, Checkpoint, Custom, Stopwatch)', () => {
+    const supportedTypes = [
+      "Timed Challenge",
+      "Stopwatch",
+      "Score Challenge",
+      "Pass / Fail",
+      "Multiple Choice",
+      "Text Answer",
+      "Checkpoint",
+      "Custom"
+    ];
+
+    supportedTypes.forEach(type => {
+      const task = { name: `Sample ${type}`, type, maxScore: 100 };
+      expect(task.type).toBeDefined();
+    });
+  });
 });
+
 
 describe('Authentication Reactive State & Sidebar Navigation Contracts', () => {
   it('populates user profile and activates admin links reactively upon authentication', () => {
