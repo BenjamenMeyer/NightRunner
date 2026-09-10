@@ -8,10 +8,10 @@ GET_ACTIVE_VISIT = "SELECT * FROM station_visits WHERE event_id = :event_id AND 
 CREATE_VISIT = """
     INSERT INTO station_visits (
         id, event_id, station_id, patrol_id,
-        checked_in_at, checked_out_at, tasks_started_at, tasks_completed_at, entry_mode
+        checked_in_at, checked_out_at, tasks_started_at, tasks_completed_at, entry_mode, status, unlocked_by
     ) VALUES (
         :id, :event_id, :station_id, :patrol_id,
-        :checked_in_at, :checked_out_at, :tasks_started_at, :tasks_completed_at, :entry_mode
+        :checked_in_at, :checked_out_at, :tasks_started_at, :tasks_completed_at, :entry_mode, :status, :unlocked_by
     )
 """
 UPDATE_VISIT = """
@@ -20,9 +20,14 @@ UPDATE_VISIT = """
         checked_out_at = :checked_out_at,
         tasks_started_at = :tasks_started_at,
         tasks_completed_at = :tasks_completed_at,
-        entry_mode = :entry_mode
+        entry_mode = :entry_mode,
+        status = :status,
+        unlocked_by = :unlocked_by
     WHERE id = :id
 """
+
+
+GET_LATEST_VISIT = "SELECT * FROM station_visits WHERE event_id = :event_id AND station_id = :station_id AND patrol_id = :patrol_id ORDER BY created_at DESC LIMIT 1"
 
 
 class StationVisitsStore:
@@ -40,6 +45,8 @@ class StationVisitsStore:
             tasks_started_at=row.get("tasks_started_at"),
             tasks_completed_at=row.get("tasks_completed_at"),
             entry_mode=row.get("entry_mode") or "live",
+            status=row.get("status") or "checked_in",
+            unlocked_by=row.get("unlocked_by"),
             created_at=row.get("created_at"),
         )
 
@@ -59,6 +66,15 @@ class StationVisitsStore:
         })
         return self._row_to_visit(row) if row else None
 
+    async def get_latest_visit(self, event_id: str, station_id: str, patrol_id: str) -> Optional[StationVisit]:
+        row = await self.driver.fetch_one(GET_LATEST_VISIT, {
+            "event_id": event_id,
+            "station_id": station_id,
+            "patrol_id": patrol_id
+        })
+        return self._row_to_visit(row) if row else None
+
+
     async def create(self, visit: StationVisit) -> StationVisit:
         await self.driver.execute(CREATE_VISIT, {
             "id": visit.id,
@@ -70,6 +86,8 @@ class StationVisitsStore:
             "tasks_started_at": visit.tasks_started_at,
             "tasks_completed_at": visit.tasks_completed_at,
             "entry_mode": visit.entry_mode or "live",
+            "status": visit.status or "checked_in",
+            "unlocked_by": visit.unlocked_by,
         })
         return visit
 
@@ -81,5 +99,8 @@ class StationVisitsStore:
             "tasks_started_at": visit.tasks_started_at,
             "tasks_completed_at": visit.tasks_completed_at,
             "entry_mode": visit.entry_mode or "live",
+            "status": visit.status or "checked_in",
+            "unlocked_by": visit.unlocked_by,
         })
         return visit
+

@@ -239,47 +239,54 @@ export default function LiveScoring() {
                                     {data.stations.map((station) => {
                                         const visit = visitMap[`${patrol.id}_${station.id}`];
 
-                                        const isCheckedIn = Boolean(
-                                            visit?.checkedInAt ||
-                                            patrol.currentStationId === station.id ||
-                                            (patrol.status === "checked-in" && patrol.stationId === station.id)
-                                        );
+                                        const isCompletedScoring = visit?.status === "completed";
 
-                                        const isInProgress = Boolean(
-                                            visit?.tasksStartedAt ||
-                                            patrol.inProgressStationId === station.id ||
-                                            (isCheckedIn && patrol.inProgress)
-                                        );
+                                         const isCheckedIn = Boolean(
+                                             visit?.checkedInAt ||
+                                             patrol.currentStationId === station.id ||
+                                             (patrol.status === "checked-in" && patrol.stationId === station.id)
+                                         );
 
-                                        const isCheckedOut = Boolean(
-                                            visit?.checkedOutAt ||
-                                            patrol.completedStations?.includes(station.id) ||
-                                            patrol.completed?.[station.id]
-                                        );
+                                         const isInProgress = Boolean(
+                                             visit?.tasksStartedAt ||
+                                             patrol.inProgressStationId === station.id ||
+                                             (isCheckedIn && patrol.inProgress)
+                                         );
 
-                                        let className = "not-arrived";
-                                        let value = "";
-                                        let title = "Not Arrived";
+                                         const isCheckedOut = Boolean(
+                                             visit?.checkedOutAt ||
+                                             patrol.completedStations?.includes(station.id) ||
+                                             patrol.completed?.[station.id]
+                                         );
 
-                                        if (isCheckedOut) {
-                                            className = "completed";
-                                            value = "✓";
-                                            title = "Checked Out / Completed";
-                                        } else if (isInProgress) {
-                                            className = "in-progress";
-                                            value = "⚡";
-                                            title = "In Progress";
-                                        } else if (isCheckedIn) {
-                                            className = "checked-in";
-                                            value = "⏳";
-                                            title = "Checked In";
-                                        }
+                                         let className = "not-arrived";
+                                         let value = "";
+                                         let title = "Not Arrived";
 
-                                        return (
-                                            <td key={station.id} className={className} title={title}>
-                                                {value}
-                                            </td>
-                                        );
+                                         if (isCompletedScoring) {
+                                             className = "completed";
+                                             value = "★";
+                                             title = "Scoring Completed / Locked Attempt";
+                                         } else if (isCheckedOut) {
+                                             className = "completed";
+                                             value = "✓";
+                                             title = "Checked Out / Attempt Finished";
+                                         } else if (isInProgress) {
+                                             className = "in-progress";
+                                             value = "⚡";
+                                             title = "In Progress";
+                                         } else if (isCheckedIn) {
+                                             className = "checked-in";
+                                             value = "⏳";
+                                             title = "Checked In";
+                                         }
+
+                                         return (
+                                             <td key={station.id} className={className} title={title}>
+                                                 {value}
+                                             </td>
+                                         );
+
                                     })}
                                 </tr>
                             ))}

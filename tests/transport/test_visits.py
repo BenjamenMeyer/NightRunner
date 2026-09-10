@@ -63,3 +63,43 @@ async def test_visits_endpoints(test_client, dev_mode_enabled):
     assert serialized["checkedInAt"].startswith("2026-09-09T21:00:00")
     assert isinstance(serialized["createdAt"], str)
     assert serialized["createdAt"].startswith("2026-09-09T20:59:00")
+
+
+@patch("nightrunner_backend.transport.middleware.auth.AuthMiddleware.process_request", AsyncMock(return_value=None))
+@pytest.mark.asyncio
+async def test_completed_visit_lock_and_reset(test_client, dev_mode_enabled):
+    # 1. Post score to mark visit as completed
+    score_body = {
+        "eventId": "e2",
+        "stationId": "s2",
+        "patrolId": "p2",
+        "completedAt": datetime.now(timezone.utc).isoformat(),
+        "scores": [{"taskId": "t1", "scoreValue": 10.0}]
+    }
+    resp = await test_client.simulate_post("/v1/scores", json=score_body)
+    assert resp.status == falcon.HTTP_201
+
+    # 2. Check-in attempt on completed station visit should return HTTP 409 Conflict
+    checkin_body = {
+        "eventId": "e2",
+        "stationId": "s2",
+        "patrolId": "p2"
+    }
+    resp = await test_client.simulate_post("/v1/visits/check-in", json=checkin_body)
+    assert resp.status == falcon.HTTP_409
+
+    # 3. Reset visit within 5 minutes succeeds
+    reset_body = {
+        "eventId": "e2",
+        "stationId": "s2",
+        "patrolId": "p2"
+    }
+    resp = await test_client.simulate_post("/v1/visits/reset", json=reset_body)
+    assert resp.status == falcon.HTTP_200
+    assert resp.json["status"] == "checked_in"
+
+    # 4. Check-in after reset succeeds
+    resp = await test_client.simulate_post("/v1/visits/check-in", json=checkin_body)
+    assert resp.status == falcon.HTTP_200
+    assert resp.json["status"] == "checked_in"
+

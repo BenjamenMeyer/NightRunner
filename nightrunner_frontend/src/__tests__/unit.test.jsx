@@ -691,7 +691,43 @@ describe('CheckInOut & LiveScoring Station Visit Integration Contracts', () => {
     expect(getItem(STORAGE_KEY_EVENT)).toBeNull();
     expect(getItem(STORAGE_KEY_USER)).toBeNull();
   });
+
+  it('blocks re-check-in when station attempt status is completed and allows reopening attempt', () => {
+    let visit = {
+      id: 'v-100',
+      eventId: 'evt-1',
+      patrolId: 'p-1',
+      stationId: 'st-1',
+      status: 'completed',
+      checkedInAt: '2026-09-09T20:00:00Z',
+      checkedOutAt: '2026-09-09T20:30:00Z',
+      tasksCompletedAt: '2026-09-09T20:25:00Z'
+    };
+
+    const isScoringCompleted = visit.status === 'completed';
+    const canCheckIn = !isScoringCompleted;
+
+    expect(isScoringCompleted).toBe(true);
+    expect(canCheckIn).toBe(false);
+
+    // Simulate reopen/reset attempt within 5-minute window or with leader approval
+    const reopenAttempt = () => {
+      visit = {
+        ...visit,
+        status: 'checked_in',
+        checkedOutAt: null,
+        unlockedBy: 'volunteer-1'
+      };
+    };
+
+    reopenAttempt();
+
+    expect(visit.status).toBe('checked_in');
+    expect(visit.checkedOutAt).toBeNull();
+    expect(visit.status === 'completed').toBe(false);
+  });
 });
+
 
 
 

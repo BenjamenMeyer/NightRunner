@@ -42,10 +42,19 @@ class VisitCheckInResource:
         timestamp = payload.get("timestamp") or datetime.now(timezone.utc).isoformat()
         store = StationVisitsStore(get_driver())
 
+        # Verify whether the latest visit for this station attempt was marked completed
+        latest = await store.get_latest_visit(event_id, station_id, patrol_id)
+        if latest and latest.status == "completed":
+            raise falcon.HTTPConflict(
+                title="Station Attempt Completed",
+                description="This patrol has already completed scoring for this station. A station leader or admin must reopen the station attempt before re-checking in."
+            )
+
         # Check if an active visit already exists
         existing = await store.get_active_visit(event_id, station_id, patrol_id)
         if existing:
             existing.checked_in_at = timestamp
+            existing.status = "checked_in"
             updated = await store.update(existing)
             resp.media = updated.to_api_dict()
             resp.status = falcon.HTTP_200
@@ -58,6 +67,7 @@ class VisitCheckInResource:
             patrol_id=patrol_id,
             checked_in_at=timestamp,
             entry_mode=payload.get("entryMode", "live"),
+            status="checked_in",
         )
         created = await store.create(visit)
         resp.media = created.to_api_dict()
@@ -89,6 +99,9 @@ class VisitCheckOutResource:
         existing = await store.get_active_visit(event_id, station_id, patrol_id)
         if existing:
             existing.checked_out_at = timestamp
+            # Maintain status if completed, otherwise set to checked_out
+            if existing.status != "completed":
+                existing.status = "checked_out"
             updated = await store.update(existing)
             resp.media = updated.to_api_dict()
             resp.status = falcon.HTTP_200
@@ -101,7 +114,77 @@ class VisitCheckOutResource:
             patrol_id=patrol_id,
             checked_out_at=timestamp,
             entry_mode=payload.get("entryMode", "live"),
+            status="checked_out",
         )
         created = await store.create(visit)
         resp.media = created.to_api_dict()
         resp.status = falcon.HTTP_201
+
+
+class VisitResetResource:
+    """POST /v1/visits/reset — Reopen/reset a completed station attempt."""
+
+    async def on_post(self, req: falcon.Request, resp: falcon.Response):
+        payload = await req.get_media()
+        if not isinstance(payload, dict):
+            raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
+
+        event_id = payload.get("eventId")
+        station_id = payload.get("stationId")
+        patrol_id = payload.get("patrolId")
+
+        if not event_id:
+            raise falcon.HTTPBadRequest(description="'eventId' is required.")
+        if not station_id:
+            raise falcon.HTTPBadRequest(description="'stationId' is required.")
+        if not patrol_id:
+            raise falcon.HTTPBadRequest(description="'patrolId' is required.")
+
+        store = StationVisitsStore(get_driver())
+        latest = await store.get_latest_visit(event_id, station_id, patrol_id)
+
+        if not latest:
+            raise falcon.HTTPNotFound(description="No visit record found for this patrol and station.")
+
+        # Check authorization and time constraints
+        user = getattr(req.context, "user", None) or {}
+        user_roles = getattr(req.context, "roles", []) or []
+        is_admin = bool(user.get("isAdmin")) or "admin" in user_roles or "event-admin" in user_roles
+        
+        # Check if user has station-leader role for event or globally
+        event_role = None
+        if isinstance(user_roles, dict):
+            event_role = user_roles.get(event_id)
+        is_station_leader = is_admin or event_role in ("station-leader", "admin", "event-admin") or "station-leader" in user_roles
+
+        # Evaluate 5-minute volunteer window from tasks_completed_at / checked_out_at / created_at
+        completed_time_str = latest.tasks_completed_at or latest.checked_out_at or latest.created_at
+        within_5_minutes = False
+        if completed_time_str:
+            try:
+                # Handle ISO format strings
+                if completed_time_str.endswith("Z"):
+                    completed_time_str = completed_time_str[:-1] + "+00:00"
+                dt = datetime.fromisoformat(completed_time_str)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                now = datetime.now(timezone.utc)
+                within_5_minutes = (now - dt).total_seconds() <= 300
+            except Exception:
+                within_5_minutes = False
+
+        if not within_5_minutes and not is_station_leader:
+            raise falcon.HTTPForbidden(
+                title="Station Leader Required",
+                description="The 5-minute self-reset window has expired. Reopening this station attempt requires a Station Leader or Event Admin."
+            )
+
+        # Reopen attempt
+        latest.status = "checked_in"
+        latest.checked_out_at = None
+        latest.unlocked_by = user.get("id") or user.get("username") or "volunteer"
+        updated = await store.update(latest)
+
+        resp.media = updated.to_api_dict()
+        resp.status = falcon.HTTP_200
+

@@ -15,6 +15,8 @@ class StationVisit:
     tasks_started_at: Optional[str] = None
     tasks_completed_at: Optional[str] = None
     entry_mode: str = "live"
+    status: str = "checked_in"
+    unlocked_by: Optional[str] = None
     created_at: Optional[str] = None
 
     def to_api_dict(self) -> Dict[str, Any]:
@@ -35,5 +37,8 @@ class StationVisit:
             "tasksStartedAt": fmt_dt(self.tasks_started_at),
             "tasksCompletedAt": fmt_dt(self.tasks_completed_at),
             "entryMode": self.entry_mode,
+            "status": self.status,
+            "unlockedBy": self.unlocked_by,
             "createdAt": fmt_dt(self.created_at),
         }
+
