@@ -47,6 +47,7 @@ export default function StationDetails({
                 <div className="detail-buttons">
                     <button
                         type="button"
+                        className="secondary-button"
                         onClick={() => onEdit(station)}
                     >
                         Edit
@@ -55,6 +56,7 @@ export default function StationDetails({
                     {onCopyToTemplate && (
                         <button
                             type="button"
+                            className="secondary-button"
                             onClick={() => onCopyToTemplate(station)}
                         >
                             Copy as Template
