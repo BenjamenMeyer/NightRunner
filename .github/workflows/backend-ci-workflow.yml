@@ -1,16 +1,6 @@
 name: Backend CI
 
 on:
-  push:
-    branches: ["**"]
-    paths:
-      - "nightrunner_backend/**"
-      - "tests/**"
-      - "api/openapi.yaml"
-      - "pyproject.toml"
-      - "Dockerfile"
-      - "docker-compose.yaml"
-      - ".github/workflows/**"
   pull_request:
     branches: ["**"]
     paths:
