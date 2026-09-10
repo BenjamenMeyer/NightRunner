@@ -675,9 +675,7 @@ export default function EventManager() {
                     )}
                 </section>
 
-
                 <div className="form-actions">
-
                     <button
                         type="submit"
                         className="primary-button"
@@ -692,28 +690,18 @@ export default function EventManager() {
                         }
                     </button>
 
-
                     {isSystemAdmin && (
                         <button
                             type="button"
-                            className="danger-button"
+                            className="the-danger-button"
                             onClick={handleDelete}
-                            disabled={
-                                saving ||
-                                deleting
-                            }
+                            disabled={saving || deleting}
                         >
-                            {deleting
-                                ? "Deleting..."
-                                : "Delete Event"
-                            }
+                            {deleting ? "Deleting..." : "Delete Event"}
                         </button>
                     )}
-
                 </div>
-
             </form>
-
         </div>
     );
 }

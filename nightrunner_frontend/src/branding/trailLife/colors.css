@@ -2,6 +2,7 @@
 
     /* Backgrounds */
 
+    --overlay-bg: rgba(0, 0, 0, 0.45);
     --sidebar-bg: #2F343A;
     --header-bg: #79060D;
     --page-bg: #ECEFF1;
@@ -37,6 +38,7 @@
     --input-border: #D6D9DC;
     --input-text: #222222;
     --input-focus: #79060D;
+    --focus-ring: rgba(121, 6, 13, 0.18);
 
     --link: #79060D;
     --link-hover: #5e040a;
