@@ -47,8 +47,12 @@ class AuthMiddleware:
             req.context.roles = []
             return
 
-        # Validate Authorization header (support X-Forwarded-Authorization when proxied through Cloudflare IAM invoker)
-        auth_header = req.get_header("X-Forwarded-Authorization") or req.get_header("Authorization")
+        # Select token header based on environment: standard Authorization in dev/debug mode, X-Forwarded-Authorization in production (via Cloudflare IAM proxy)
+        if settings.dev_mode:
+            auth_header = req.get_header("Authorization") or req.get_header("X-Forwarded-Authorization")
+        else:
+            auth_header = req.get_header("X-Forwarded-Authorization")
+
         if not auth_header or not auth_header.startswith("Bearer "):
             raise falcon.HTTPUnauthorized(
                 title="Missing or invalid Authorization header",
