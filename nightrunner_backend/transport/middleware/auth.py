@@ -47,7 +47,8 @@ class AuthMiddleware:
             req.context.roles = []
             return
 
-        # Select token header based on environment: standard Authorization in dev/debug mode, X-Forwarded-Authorization in production (via Cloudflare IAM proxy)
+        # In production (non-dev mode), token is passed in X-Forwarded-Authorization via Cloudflare IAM proxy.
+        # In dev mode, allow standard Authorization header (or X-Forwarded-Authorization).
         if settings.dev_mode:
             auth_header = req.get_header("Authorization") or req.get_header("X-Forwarded-Authorization")
         else:

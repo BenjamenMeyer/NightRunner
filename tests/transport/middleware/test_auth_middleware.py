@@ -33,7 +33,7 @@ async def test_jit_user_auto_provisioning(client, rsa_keypair):
         "name": "Social User",
     }
     token = jwt.encode(payload, private_pem, algorithm="RS256")
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = {"X-Forwarded-Authorization": f"Bearer {token}"}
 
     # First request: User does not exist in DB yet
     result = await client.simulate_get('/me', headers=headers)
