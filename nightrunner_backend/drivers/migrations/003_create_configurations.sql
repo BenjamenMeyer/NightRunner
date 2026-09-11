@@ -16,14 +16,8 @@ CREATE TABLE IF NOT EXISTS configurations (
 CREATE TABLE IF NOT EXISTS station_tasks (
     id TEXT PRIMARY KEY,
     configuration_id TEXT REFERENCES configurations(id) ON DELETE CASCADE,
-    station_id TEXT REFERENCES stations(id) ON DELETE CASCADE,
-    name TEXT NOT NULL DEFAULT '',
     description TEXT,
-    type TEXT NOT NULL DEFAULT 'Timed Challenge',
-    instructions TEXT,
-    max_score REAL DEFAULT 100,
-    time_limit REAL DEFAULT 0,
-    score_value TEXT,
-    score_weight REAL NOT NULL DEFAULT 1.0,
+    score_value TEXT, -- JSON configuration string mapping to ScoreValue properties
+    score_weight REAL NOT NULL,
     active BOOLEAN NOT NULL DEFAULT TRUE
 );

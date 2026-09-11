@@ -56,8 +56,8 @@ class DatabaseDriver:
         """
         if self.is_sqlite:
             return sql # aiosqlite supports :param natively
-        # For Postgres, map :param to %(param)s and translate GROUP_CONCAT(DISTINCT ...) to string_agg(DISTINCT ..., ',')
-        sql = re.sub(r':(\w+)', r'%(\1)s', sql)
+        # For Postgres, map :param to %(param)s (ignoring PostgreSQL type casts like ::text) and translate GROUP_CONCAT
+        sql = re.sub(r'(?<!:):([a-zA-Z_]\w*)', r'%(\1)s', sql)
         # Case insensitive mapping of GROUP_CONCAT(DISTINCT ...) or GROUP_CONCAT(...)
         sql = re.sub(
             r'(?i)\bgroup_concat\s*\(\s*(distinct\s+)?([^)]+)\)',
