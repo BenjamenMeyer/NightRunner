@@ -223,33 +223,37 @@ class AuthMiddleware:
         loop = asyncio.get_event_loop()
         signing_key = None
 
+        unverified_header = jwt.get_unverified_header(token)
+        unverified_payload = jwt.decode(token, options={"verify_signature": False})
+
+        kid = unverified_header.get("kid")
+        candidates = [
+            unverified_payload.get("email"),
+            unverified_payload.get("sub"),
+            unverified_payload.get("iss")
+        ]
+        sa_email = next((c for c in candidates if c and "@" in c and not c.startswith("http")), None)
+
         try:
             jwks_client = jwt.PyJWKClient(settings.gcp_iam_jwks_url)
             signing_key = await loop.run_in_executor(
                 None, jwks_client.get_signing_key_from_jwt, token
             )
-            logger.info("GCP IAM token verified using default JWKS endpoint.")
+            logger.warning(f"GCP IAM token verified using default JWKS endpoint (kid: {kid}).")
         except Exception as err:
-            logger.info(f"Default GCP IAM JWKS lookup failed ({err}); attempting Service Account specific JWKS lookup.")
-            unverified_payload = jwt.decode(token, options={"verify_signature": False})
-            
-            # Find service account email address from claims (email, sub, or iss)
-            candidates = [
-                unverified_payload.get("email"),
-                unverified_payload.get("sub"),
-                unverified_payload.get("iss")
-            ]
-            sa_email = next((c for c in candidates if c and "@" in c and not c.startswith("http")), None)
+            logger.warning(
+                f"Default GCP IAM JWKS lookup failed for kid '{kid}' ({err}); attempting SA JWKS lookup for sa_email='{sa_email}'."
+            )
             
             if sa_email:
                 sa_jwks_url = f"https://www.googleapis.com/service_accounts/v1/jwk/{sa_email}"
-                logger.info(f"Attempting GCP IAM token verification via SA JWKS URL: {sa_jwks_url}")
+                logger.warning(f"Attempting GCP IAM token verification via SA JWKS URL: {sa_jwks_url} for kid: '{kid}'")
                 jwks_client = jwt.PyJWKClient(sa_jwks_url)
                 signing_key = await loop.run_in_executor(
                     None, jwks_client.get_signing_key_from_jwt, token
                 )
             else:
-                logger.error("Could not find valid Service Account email in IAM token payload claims.")
+                logger.error(f"Could not find valid Service Account email in IAM token payload claims: {unverified_payload}")
                 raise
 
         decode_kwargs = {
