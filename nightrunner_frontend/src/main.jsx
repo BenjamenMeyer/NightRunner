@@ -46,6 +46,10 @@ const oidcConfig = {
         }
     } : {}),
 
+    // Automatically renew access tokens in background before expiration
+    automaticSilentRenew: true,
+    silent_redirect_uri: `${window.location.origin}/callback`,
+
     // Store the session in localStorage so all tabs share the same OIDC session.
     // The default (sessionStorage) is tab-isolated, which breaks pages opened
     // in a new tab (e.g. /live) before the React auth context has initialised.
