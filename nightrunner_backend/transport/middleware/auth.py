@@ -216,13 +216,13 @@ class AuthMiddleware:
     async def _verify_iam_token(self, token: str) -> Dict[str, Any]:
         """
         Verifies the GCP IAM OIDC token signature and claims.
+        Supports both standard JWKS endpoints (e.g. /oauth2/v3/certs, /service_accounts/v1/jwk/...)
+        and Google x509 certificate dictionary endpoints (e.g. /oauth2/v1/certs).
         """
         if settings.dev_mode or not settings.gcp_iam_jwks_url:
             return jwt.decode(token, options={"verify_signature": False})
 
         loop = asyncio.get_event_loop()
-        signing_key = None
-
         unverified_header = jwt.get_unverified_header(token)
         unverified_payload = jwt.decode(token, options={"verify_signature": False})
 
@@ -234,27 +234,47 @@ class AuthMiddleware:
         ]
         sa_email = next((c for c in candidates if c and "@" in c and not c.startswith("http")), None)
 
-        try:
-            jwks_client = jwt.PyJWKClient(settings.gcp_iam_jwks_url)
-            signing_key = await loop.run_in_executor(
-                None, jwks_client.get_signing_key_from_jwt, token
-            )
-            logger.warning(f"GCP IAM token verified using default JWKS endpoint (kid: {kid}).")
-        except Exception as err:
-            logger.warning(
-                f"Default GCP IAM JWKS lookup failed for kid '{kid}' ({err}); attempting SA JWKS lookup for sa_email='{sa_email}'."
-            )
-            
+        def _fetch_key():
+            # 1. Try configured endpoint via PyJWKClient (standard JWKS)
+            try:
+                client = jwt.PyJWKClient(settings.gcp_iam_jwks_url)
+                return client.get_signing_key_from_jwt(token).key
+            except Exception as err:
+                logger.warning(f"PyJWKClient lookup failed for '{settings.gcp_iam_jwks_url}' (kid={kid}): {err}")
+
+            # 2. Try Google OAuth2 v1 certs endpoint (contains federated SA system keys like f10f8740...)
+            try:
+                import urllib.request
+                import json
+                from cryptography.x509 import load_pem_x509_certificate
+
+                v1_certs_url = "https://www.googleapis.com/oauth2/v1/certs"
+                logger.warning(f"Fetching Google x509 certs from {v1_certs_url} for kid: '{kid}'")
+                req = urllib.request.Request(v1_certs_url, headers={"User-Agent": "NightRunner-Backend"})
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    certs_data = json.loads(response.read().decode())
+
+                if kid in certs_data:
+                    cert_pem = certs_data[kid].encode("utf-8")
+                    cert = load_pem_x509_certificate(cert_pem)
+                    logger.warning(f"Successfully loaded x509 cert from v1/certs for kid '{kid}'.")
+                    return cert.public_key()
+            except Exception as err:
+                logger.warning(f"v1/certs x509 lookup failed for kid '{kid}': {err}")
+
+            # 3. Try SA specific JWKS endpoint if sa_email is present
             if sa_email:
                 sa_jwks_url = f"https://www.googleapis.com/service_accounts/v1/jwk/{sa_email}"
-                logger.warning(f"Attempting GCP IAM token verification via SA JWKS URL: {sa_jwks_url} for kid: '{kid}'")
-                jwks_client = jwt.PyJWKClient(sa_jwks_url)
-                signing_key = await loop.run_in_executor(
-                    None, jwks_client.get_signing_key_from_jwt, token
-                )
-            else:
-                logger.error(f"Could not find valid Service Account email in IAM token payload claims: {unverified_payload}")
-                raise
+                logger.warning(f"Attempting SA JWKS lookup at {sa_jwks_url} for kid '{kid}'")
+                try:
+                    client = jwt.PyJWKClient(sa_jwks_url)
+                    return client.get_signing_key_from_jwt(token).key
+                except Exception as err:
+                    logger.warning(f"SA JWKS lookup failed at {sa_jwks_url}: {err}")
+
+            raise jwt.PyJWTError(f"Unable to find signing key for kid '{kid}'.")
+
+        key = await loop.run_in_executor(None, _fetch_key)
 
         decode_kwargs = {
             "algorithms": ["RS256"],
@@ -265,6 +285,6 @@ class AuthMiddleware:
         else:
             decode_kwargs["options"]["verify_aud"] = False
 
-        return jwt.decode(token, signing_key.key, **decode_kwargs)
+        return jwt.decode(token, key, **decode_kwargs)
 
 

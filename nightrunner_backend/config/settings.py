@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     dev_mode: bool = False
     require_iam_proxy_auth: bool = False
-    gcp_iam_jwks_url: str = os.getenv("GCP_IAM_JWKS_URL", "https://www.googleapis.com/oauth2/3/certs")
+    gcp_iam_jwks_url: str = os.getenv("GCP_IAM_JWKS_URL", "https://www.googleapis.com/oauth2/v1/certs")
     gcp_iam_audience: str = os.getenv("GCP_IAM_AUDIENCE", "")
     oidc_issuer: str = ""
     oidc_client_id: str = "test-client"
