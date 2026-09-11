@@ -13,6 +13,7 @@ jobs:
   backend-checks:
     name: Backend Unit Tests & Linters
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -39,6 +40,7 @@ jobs:
   frontend-checks:
     name: Frontend Linters, Unit/Integration Tests & Build
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -94,6 +96,7 @@ jobs:
   terraform-checks:
     name: OpenTofu / Terraform Format & Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0

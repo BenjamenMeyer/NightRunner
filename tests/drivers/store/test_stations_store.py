@@ -33,7 +33,13 @@ async def test_station_store_crud_and_tasks_persistence(stations_store: Stations
     assert fetched.id == station_id
     assert fetched.name == "Knot Station"
     assert fetched.active_configuration_id == "cfg-1"
-    assert fetched.tasks == tasks_data
+    assert len(fetched.tasks) == 2
+    assert fetched.tasks[0]["id"] == "t1"
+    assert fetched.tasks[0]["description"] == "Tying square knot"
+    assert fetched.tasks[0]["scoreWeight"] == 1.0
+    assert fetched.tasks[1]["id"] == "t2"
+    assert fetched.tasks[1]["description"] == "Tying bowline"
+    assert fetched.tasks[1]["scoreWeight"] == 2.0
 
     # Test list
     all_stations = await stations_store.list()

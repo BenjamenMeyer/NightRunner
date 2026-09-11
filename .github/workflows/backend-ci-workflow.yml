@@ -20,6 +20,7 @@ jobs:
   unit-tests:
     name: Unit tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
@@ -60,6 +61,7 @@ jobs:
   openapi-contract:
     name: OpenAPI contract validation
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: unit-tests   # only run if unit tests pass
 
     steps:

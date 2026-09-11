@@ -66,7 +66,11 @@ class AuthService {
             return true;
         }
 
-        return Boolean(localStorage.getItem("firebase_id_token"));
+        if (Boolean(localStorage.getItem("firebase_id_token"))) {
+            return true;
+        }
+
+        return Boolean(this.getToken());
 
     }
 

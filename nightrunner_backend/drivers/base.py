@@ -56,8 +56,8 @@ class DatabaseDriver:
         """
         if self.is_sqlite:
             return sql # aiosqlite supports :param natively
-        # For Postgres, map :param to %(param)s and translate GROUP_CONCAT(DISTINCT ...) to string_agg(DISTINCT ..., ',')
-        sql = re.sub(r':(\w+)', r'%(\1)s', sql)
+        # For Postgres, map :param to %(param)s (ignoring PostgreSQL type casts like ::text) and translate GROUP_CONCAT
+        sql = re.sub(r'(?<!:):([a-zA-Z_]\w*)', r'%(\1)s', sql)
         # Case insensitive mapping of GROUP_CONCAT(DISTINCT ...) or GROUP_CONCAT(...)
         sql = re.sub(
             r'(?i)\bgroup_concat\s*\(\s*(distinct\s+)?([^)]+)\)',
@@ -143,20 +143,35 @@ class DatabaseDriver:
             try:
                 if self.is_sqlite:
                     # Use a fresh connection for migration scripts to avoid locking issues
+                    statements = [stmt.strip() for stmt in sql.split(";") if stmt.strip()]
                     if self.sqlite_path == ":memory:":
                         db = await self._get_sqlite_conn()
-                        await db.executescript(sql)
+                        for stmt in statements:
+                            try:
+                                await db.executescript(stmt)
+                            except Exception as stmt_err:
+                                if "duplicate column name" not in str(stmt_err).lower():
+                                    raise
                         await db.commit()
                     else:
                         async with aiosqlite.connect(self.sqlite_path) as db:
                             db.row_factory = aiosqlite.Row
-                            await db.executescript(sql)
+                            for stmt in statements:
+                                try:
+                                    await db.executescript(stmt)
+                                except Exception as stmt_err:
+                                    if "duplicate column name" not in str(stmt_err).lower():
+                                        raise
                             await db.commit()
                 else:
-                    # Postgres psycopg execute can handle multiple statements if they are separated by semicolons
-                    # but it's safer to execute as one script if psycopg supports it, 
-                    # or split them. For now, simple execute.
-                    await self.execute(sql)
+                    # Postgres psycopg executes multi-statement SQL files reliably when statements are split by semicolon
+                    statements = [stmt.strip() for stmt in sql.split(";") if stmt.strip()]
+                    for stmt in statements:
+                        try:
+                            await self.execute(stmt)
+                        except Exception as stmt_err:
+                            if "already exists" not in str(stmt_err).lower() and "duplicate column" not in str(stmt_err).lower():
+                                raise
                 
                 # Record migration
                 await self.execute("INSERT INTO _migrations (id) VALUES (:id)", {"id": filename})

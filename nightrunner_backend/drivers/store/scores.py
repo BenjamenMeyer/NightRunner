@@ -92,7 +92,7 @@ class ScoresStore:
             "task_id": score.task_id,
             "score_value": score.score_value,
             "score_weight": score.score_weight,
-            "active": int(score.active),
+            "active": bool(score.active),
             "started_at": score.started_at,
             "completed_at": score.completed_at,
             "entry_mode": score.entry_mode or "live",

@@ -215,18 +215,19 @@ export default function ScoreForm({
 
                 <h3>Station Tasks</h3>
 
-                {(station.tasks ?? []).map(task => (
-
-                    <ScoreField
-                        key={task.id}
-                        task={task}
-                        value={scores[task.id]}
-                        onChange={(value) =>
-                            updateScore(task.id, value)
-                        }
-                    />
-
-                ))}
+                {(station.tasks ?? []).map((task, idx) => {
+                    const taskId = task.id || task._id || `task-${idx}`;
+                    return (
+                        <ScoreField
+                            key={taskId}
+                            task={{ ...task, id: taskId }}
+                            value={scores[taskId]}
+                            onChange={(value) =>
+                                updateScore(taskId, value)
+                            }
+                        />
+                    );
+                })}
 
             </div>
 

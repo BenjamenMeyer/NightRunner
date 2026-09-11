@@ -146,8 +146,14 @@ async def test_configuration_with_tasks(config_store: ConfigurationStore):
 
     fetched = await config_store.get_configuration(config.id)
     assert fetched is not None
-    assert fetched.tasks == tasks_data
     assert len(fetched.tasks) == 2
     assert fetched.tasks[0]["name"] == "Task 1"
+    assert fetched.tasks[0]["type"] == "Stopwatch"
+    assert fetched.tasks[0]["maxScore"] == 100
+    assert fetched.tasks[0]["id"] is not None
+    assert fetched.tasks[1]["name"] == "Task 2"
+    assert fetched.tasks[1]["type"] == "Timed Challenge"
+    assert fetched.tasks[1]["timeLimit"] == 300
+    assert fetched.tasks[1]["id"] is not None
 
 

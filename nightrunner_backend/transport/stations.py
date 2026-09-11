@@ -38,7 +38,15 @@ class StationsResource:
             members=data.get("members", []),
             tasks=data.get("tasks", []),
         )
-        await store.create(station)
+        try:
+            await store.create(station)
+        except Exception as e:
+            if "foreign key" in str(e).lower() or "fk" in str(e).lower():
+                raise falcon.HTTPBadRequest(
+                    title="Invalid Event ID",
+                    description=f"Event ID '{event_id}' does not exist."
+                )
+            raise
         resp.status = falcon.HTTP_201
         resp.media = station.to_api_dict()
 
