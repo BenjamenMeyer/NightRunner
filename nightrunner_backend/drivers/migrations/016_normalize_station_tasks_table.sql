@@ -16,13 +16,13 @@ CREATE TABLE IF NOT EXISTS station_tasks (
 );
 
 -- Ensure all normalized columns exist if station_tasks table was created in an earlier migration step
-ALTER TABLE station_tasks ADD COLUMN IF NOT EXISTS configuration_id TEXT REFERENCES configurations(id) ON DELETE CASCADE;
-ALTER TABLE station_tasks ADD COLUMN IF NOT EXISTS station_id TEXT REFERENCES stations(id) ON DELETE CASCADE;
-ALTER TABLE station_tasks ADD COLUMN IF NOT EXISTS name TEXT NOT NULL DEFAULT '';
-ALTER TABLE station_tasks ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'Timed Challenge';
-ALTER TABLE station_tasks ADD COLUMN IF NOT EXISTS instructions TEXT;
-ALTER TABLE station_tasks ADD COLUMN IF NOT EXISTS max_score REAL DEFAULT 100;
-ALTER TABLE station_tasks ADD COLUMN IF NOT EXISTS time_limit REAL DEFAULT 0;
+ALTER TABLE station_tasks ADD COLUMN configuration_id TEXT REFERENCES configurations(id) ON DELETE CASCADE;
+ALTER TABLE station_tasks ADD COLUMN station_id TEXT REFERENCES stations(id) ON DELETE CASCADE;
+ALTER TABLE station_tasks ADD COLUMN name TEXT NOT NULL DEFAULT '';
+ALTER TABLE station_tasks ADD COLUMN type TEXT NOT NULL DEFAULT 'Timed Challenge';
+ALTER TABLE station_tasks ADD COLUMN instructions TEXT;
+ALTER TABLE station_tasks ADD COLUMN max_score REAL DEFAULT 100;
+ALTER TABLE station_tasks ADD COLUMN time_limit REAL DEFAULT 0;
 
 CREATE INDEX IF NOT EXISTS idx_station_tasks_config_id ON station_tasks(configuration_id);
 CREATE INDEX IF NOT EXISTS idx_station_tasks_station_id ON station_tasks(station_id);

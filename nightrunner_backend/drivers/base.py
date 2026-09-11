@@ -143,20 +143,35 @@ class DatabaseDriver:
             try:
                 if self.is_sqlite:
                     # Use a fresh connection for migration scripts to avoid locking issues
+                    statements = [stmt.strip() for stmt in sql.split(";") if stmt.strip()]
                     if self.sqlite_path == ":memory:":
                         db = await self._get_sqlite_conn()
-                        await db.executescript(sql)
+                        for stmt in statements:
+                            try:
+                                await db.executescript(stmt)
+                            except Exception as stmt_err:
+                                if "duplicate column name" not in str(stmt_err).lower():
+                                    raise
                         await db.commit()
                     else:
                         async with aiosqlite.connect(self.sqlite_path) as db:
                             db.row_factory = aiosqlite.Row
-                            await db.executescript(sql)
+                            for stmt in statements:
+                                try:
+                                    await db.executescript(stmt)
+                                except Exception as stmt_err:
+                                    if "duplicate column name" not in str(stmt_err).lower():
+                                        raise
                             await db.commit()
                 else:
                     # Postgres psycopg executes multi-statement SQL files reliably when statements are split by semicolon
                     statements = [stmt.strip() for stmt in sql.split(";") if stmt.strip()]
                     for stmt in statements:
-                        await self.execute(stmt)
+                        try:
+                            await self.execute(stmt)
+                        except Exception as stmt_err:
+                            if "already exists" not in str(stmt_err).lower() and "duplicate column" not in str(stmt_err).lower():
+                                raise
                 
                 # Record migration
                 await self.execute("INSERT INTO _migrations (id) VALUES (:id)", {"id": filename})
