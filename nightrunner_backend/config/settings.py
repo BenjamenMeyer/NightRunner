@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     dev_mode: bool = False
+    require_iam_proxy_auth: bool = False
     oidc_issuer: str = ""
     oidc_client_id: str = "test-client"
     oidc_redirect_uri: str = "http://localhost/callback"
