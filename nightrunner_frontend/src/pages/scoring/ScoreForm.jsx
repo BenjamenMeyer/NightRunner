@@ -61,8 +61,9 @@ export default function ScoreForm({
 
         try {
 
-            const missingTask = station.tasks.find(task => {
-                const value = scores[task.id];
+            const missingTask = station.tasks.find((task, idx) => {
+                const taskId = task.id || task._id || `task-${idx}`;
+                const value = scores[taskId];
 
                 switch (task.scoreValue?.type || task.type) {
                     case "Completed":
@@ -79,9 +80,11 @@ export default function ScoreForm({
                     case "Stopwatch":
                     case "Timed Challenge":
                         return (
-                            !value ||
+                            value === undefined ||
+                            value === null ||
                             typeof value !== "object" ||
-                            (value.elapsedSeconds === undefined && !value.startTime)
+                            !value.startTime ||
+                            !value.endTime
                         );
 
                     default:
@@ -96,33 +99,28 @@ export default function ScoreForm({
             }
 
             const submission = {
-
-                eventId,
-
+                eventId: eventId,
                 patrolId: patrol.id,
-
                 stationId: station.id,
-
                 configurationId,
-
                 timestamp: new Date().toISOString(),
-
                 entryMode,
-
                 startedAt: stationStartedAt,
-
                 completedAt: stationCompletedAt,
 
-                scores: (station.tasks ?? []).map(task => ({
+                scores: (station.tasks ?? []).map((task, idx) => {
+                    const taskId =
+                        task.id ||
+                        task._id ||
+                        `task-${idx}`;
 
-                    taskId: task.id,
-
-                    value: scores[task.id]
-
-                })),
+                    return {
+                        taskId,
+                        scoreValue: scores[taskId]
+                    };
+                }),
 
                 comments: comments?.trim() || "None."
-
             };
 
             await ApiService.backendTransport.post(

@@ -245,6 +245,7 @@ export default function Scoring() {
                             <ScoreForm
                                 patrol={selectedPatrol}
                                 station={selectedStation}
+                                eventId={eventId}
                             />
                         ) : (
                             <div className="ready-panel">
