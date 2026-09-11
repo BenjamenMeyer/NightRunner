@@ -153,10 +153,10 @@ class DatabaseDriver:
                             await db.executescript(sql)
                             await db.commit()
                 else:
-                    # Postgres psycopg execute can handle multiple statements if they are separated by semicolons
-                    # but it's safer to execute as one script if psycopg supports it, 
-                    # or split them. For now, simple execute.
-                    await self.execute(sql)
+                    # Postgres psycopg executes multi-statement SQL files reliably when statements are split by semicolon
+                    statements = [stmt.strip() for stmt in sql.split(";") if stmt.strip()]
+                    for stmt in statements:
+                        await self.execute(stmt)
                 
                 # Record migration
                 await self.execute("INSERT INTO _migrations (id) VALUES (:id)", {"id": filename})
