@@ -27,6 +27,13 @@ resource "google_cloud_run_v2_service" "backend" {
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
+  # Ignore out-of-band updates to APP_VERSION env variable made by CI/CD releases
+  lifecycle {
+    ignore_changes = [
+      template[0].containers[0].env[6].value
+    ]
+  }
+
   template {
     service_account = google_service_account.cloud_run_sa.email
 
