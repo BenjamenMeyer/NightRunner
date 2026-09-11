@@ -29,3 +29,24 @@ async def test_run_migrations(db):
     # Check if user_roles table exists (from 002_user_roles.sql)
     res = await db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='user_roles'")
     assert len(res) > 0
+
+@pytest.mark.asyncio
+async def test_migrate_tasks_dry_run(monkeypatch, tmp_path):
+    from scripts.migrate_tasks import migrate
+    db_file = tmp_path / "dry_run_test.db"
+    db_url = f"sqlite:///{db_file}"
+    monkeypatch.setenv("DATABASE_URL", db_url)
+
+    driver = DatabaseDriver(db_url)
+    await driver.run_migrations()
+    await driver.execute("INSERT INTO configurations (id, key, value) VALUES ('cfg-1', 'test_key', '{\"tasks\": [{\"id\": \"t-1\", \"name\": \"Knot Tying\"}]}')")
+
+    # Run in dry-run mode
+    await migrate(dry_run=True)
+
+    # Verify no tasks were written to station_tasks table
+    rows = await driver.execute("SELECT * FROM station_tasks")
+    assert len(rows) == 0
+    await driver.close()
+
+

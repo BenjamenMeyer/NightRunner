@@ -1,17 +1,22 @@
 """
 Migration script to populate station_tasks from legacy JSON blobs in stations and configurations tables.
 Supports both SQLite and PostgreSQL backends depending on DATABASE_URL.
+Includes --dry-run / DRY_RUN mode to preview migrations without writing database changes.
 """
-import os
-import json
+import argparse
 import asyncio
+import json
+import os
+import sys
 import uuid6
 from nightrunner_backend.drivers.base import DatabaseDriver
 
 
-async def migrate():
+async def migrate(dry_run: bool = False):
     db_url = os.getenv("DATABASE_URL", "sqlite:///nightrunner.db")
-    print(f"Connecting to database at: {db_url}")
+    mode_str = "[DRY-RUN] " if dry_run else ""
+    print(f"{mode_str}Connecting to database at: {db_url}")
+
     driver = DatabaseDriver(db_url)
     await driver.run_migrations()
 
@@ -31,26 +36,13 @@ async def migrate():
                     tasks = parsed
                 elif isinstance(parsed, dict) and "tasks" in parsed:
                     tasks = parsed["tasks"]
-                
+
                 for t in tasks:
                     if not isinstance(t, dict):
                         continue
                     task_id = t.get("id") or t.get("_id") or str(uuid6.uuid7())
                     score_val_str = json.dumps(t.get("scoreValue") or {})
-                    await driver.execute("""
-                        INSERT INTO station_tasks (id, configuration_id, station_id, name, description, type, instructions, max_score, time_limit, score_value, score_weight, active)
-                        VALUES (:id, :configuration_id, NULL, :name, :description, :type, :instructions, :max_score, :time_limit, :score_value, :score_weight, :active)
-                        ON CONFLICT(id) DO UPDATE SET
-                            name=EXCLUDED.name,
-                            description=EXCLUDED.description,
-                            type=EXCLUDED.type,
-                            instructions=EXCLUDED.instructions,
-                            max_score=EXCLUDED.max_score,
-                            time_limit=EXCLUDED.time_limit,
-                            score_value=EXCLUDED.score_value,
-                            score_weight=EXCLUDED.score_weight,
-                            active=EXCLUDED.active
-                    """, {
+                    params = {
                         "id": task_id,
                         "configuration_id": config_id,
                         "name": t.get("name") or t.get("description") or "Task",
@@ -62,7 +54,24 @@ async def migrate():
                         "score_value": score_val_str,
                         "score_weight": float(t.get("scoreWeight") if t.get("scoreWeight") is not None else 1.0),
                         "active": bool(t.get("active", True))
-                    })
+                    }
+                    if dry_run:
+                        print(f"[DRY-RUN] Would insert/update task '{params['name']}' (ID: {task_id}) for configuration {config_id}")
+                    else:
+                        await driver.execute("""
+                            INSERT INTO station_tasks (id, configuration_id, station_id, name, description, type, instructions, max_score, time_limit, score_value, score_weight, active)
+                            VALUES (:id, :configuration_id, NULL, :name, :description, :type, :instructions, :max_score, :time_limit, :score_value, :score_weight, :active)
+                            ON CONFLICT(id) DO UPDATE SET
+                                name=EXCLUDED.name,
+                                description=EXCLUDED.description,
+                                type=EXCLUDED.type,
+                                instructions=EXCLUDED.instructions,
+                                max_score=EXCLUDED.max_score,
+                                time_limit=EXCLUDED.time_limit,
+                                score_value=EXCLUDED.score_value,
+                                score_weight=EXCLUDED.score_weight,
+                                active=EXCLUDED.active
+                        """, params)
                     migrated_config_tasks += 1
             except Exception as err:
                 print(f"Error parsing tasks for configuration {config_id}: {err}")
@@ -84,20 +93,7 @@ async def migrate():
                             continue
                         task_id = t.get("id") or t.get("_id") or str(uuid6.uuid7())
                         score_val_str = json.dumps(t.get("scoreValue") or {})
-                        await driver.execute("""
-                            INSERT INTO station_tasks (id, configuration_id, station_id, name, description, type, instructions, max_score, time_limit, score_value, score_weight, active)
-                            VALUES (:id, NULL, :station_id, :name, :description, :type, :instructions, :max_score, :time_limit, :score_value, :score_weight, :active)
-                            ON CONFLICT(id) DO UPDATE SET
-                                name=EXCLUDED.name,
-                                description=EXCLUDED.description,
-                                type=EXCLUDED.type,
-                                instructions=EXCLUDED.instructions,
-                                max_score=EXCLUDED.max_score,
-                                time_limit=EXCLUDED.time_limit,
-                                score_value=EXCLUDED.score_value,
-                                score_weight=EXCLUDED.score_weight,
-                                active=EXCLUDED.active
-                        """, {
+                        params = {
                             "id": task_id,
                             "station_id": station_id,
                             "name": t.get("name") or t.get("description") or "Task",
@@ -109,14 +105,48 @@ async def migrate():
                             "score_value": score_val_str,
                             "score_weight": float(t.get("scoreWeight") if t.get("scoreWeight") is not None else 1.0),
                             "active": bool(t.get("active", True))
-                        })
+                        }
+                        if dry_run:
+                            print(f"[DRY-RUN] Would insert/update task '{params['name']}' (ID: {task_id}) for station {station_id}")
+                        else:
+                            await driver.execute("""
+                                INSERT INTO station_tasks (id, configuration_id, station_id, name, description, type, instructions, max_score, time_limit, score_value, score_weight, active)
+                                VALUES (:id, NULL, :station_id, :name, :description, :type, :instructions, :max_score, :time_limit, :score_value, :score_weight, :active)
+                                ON CONFLICT(id) DO UPDATE SET
+                                    name=EXCLUDED.name,
+                                    description=EXCLUDED.description,
+                                    type=EXCLUDED.type,
+                                    instructions=EXCLUDED.instructions,
+                                    max_score=EXCLUDED.max_score,
+                                    time_limit=EXCLUDED.time_limit,
+                                    score_value=EXCLUDED.score_value,
+                                    score_weight=EXCLUDED.score_weight,
+                                    active=EXCLUDED.active
+                            """, params)
                         migrated_station_tasks += 1
             except Exception as err:
                 print(f"Error parsing tasks for station {station_id}: {err}")
 
-    print(f"Migration completed cleanly! Migrated {migrated_config_tasks} configuration tasks and {migrated_station_tasks} station tasks to station_tasks table.")
+    if dry_run:
+        print(f"[DRY-RUN] Completed simulation! Found {migrated_config_tasks} configuration tasks and {migrated_station_tasks} station tasks that would be migrated.")
+    else:
+        print(f"Migration completed cleanly! Migrated {migrated_config_tasks} configuration tasks and {migrated_station_tasks} station tasks to station_tasks table.")
+
     await driver.close()
 
 
+def main():
+    env_dry_run = os.getenv("DRY_RUN", "").lower() in ("true", "1", "yes")
+    parser = argparse.ArgumentParser(description="Migrate legacy task JSON blobs to station_tasks table.")
+    parser.add_argument(
+        "--dry-run", "-n",
+        action="store_true",
+        default=env_dry_run,
+        help="Simulate migration without modifying database (or set DRY_RUN=true)"
+    )
+    args = parser.parse_args()
+    asyncio.run(migrate(dry_run=args.dry_run))
+
+
 if __name__ == "__main__":
-    asyncio.run(migrate())
+    main()

@@ -150,7 +150,8 @@ class DatabaseDriver:
                             try:
                                 await db.executescript(stmt)
                             except Exception as stmt_err:
-                                if "duplicate column name" not in str(stmt_err).lower():
+                                err_msg = str(stmt_err).lower()
+                                if "duplicate column name" not in err_msg and "already exists" not in err_msg:
                                     raise
                         await db.commit()
                     else:
@@ -160,7 +161,8 @@ class DatabaseDriver:
                                 try:
                                     await db.executescript(stmt)
                                 except Exception as stmt_err:
-                                    if "duplicate column name" not in str(stmt_err).lower():
+                                    err_msg = str(stmt_err).lower()
+                                    if "duplicate column name" not in err_msg and "already exists" not in err_msg:
                                         raise
                             await db.commit()
                 else:
