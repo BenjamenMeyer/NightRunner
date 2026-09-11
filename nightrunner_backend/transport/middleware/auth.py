@@ -48,6 +48,7 @@ class AuthMiddleware:
             return
 
         if settings.require_iam_proxy_auth and not settings.dev_mode:
+            logger.info("Enforcing strict dual IAM proxy authentication mode.")
             iam_header = req.get_header("Authorization")
             user_header = req.get_header("X-Forwarded-Authorization")
 
@@ -63,6 +64,7 @@ class AuthMiddleware:
                 )
 
             if not iam_header.startswith("Bearer "):
+                logger.warning("IAM proxy auth check failed: Authorization header does not start with 'Bearer '.")
                 raise falcon.HTTPUnauthorized(
                     title="Missing or invalid Authorization header",
                     description="A valid Bearer token is required."
@@ -71,6 +73,7 @@ class AuthMiddleware:
             iam_token = iam_header.split(" ")[1]
             try:
                 await self._verify_iam_token(iam_token)
+                logger.info("Successfully verified GCP IAM proxy token.")
             except Exception as e:
                 logger.warning(f"GCP IAM token validation failed: {e}")
                 raise falcon.HTTPUnauthorized(
@@ -80,9 +83,11 @@ class AuthMiddleware:
 
             auth_header = user_header
         else:
+            logger.debug("Standard auth mode (require_iam_proxy_auth=False). Resolving user auth header.")
             auth_header = req.get_header("X-Forwarded-Authorization") or req.get_header("Authorization")
 
         if not auth_header or not auth_header.startswith("Bearer "):
+            logger.warning("User auth check failed: missing or invalid user Bearer header.")
             raise falcon.HTTPUnauthorized(
                 title="Missing or invalid Authorization header",
                 description="A valid Bearer token is required."
@@ -223,17 +228,28 @@ class AuthMiddleware:
             signing_key = await loop.run_in_executor(
                 None, jwks_client.get_signing_key_from_jwt, token
             )
-        except Exception:
-            # Fall back to unverified payload inspection to fetch email for service-account specific JWKS URL
+            logger.info("GCP IAM token verified using default JWKS endpoint.")
+        except Exception as err:
+            logger.info(f"Default GCP IAM JWKS lookup failed ({err}); attempting Service Account specific JWKS lookup.")
             unverified_payload = jwt.decode(token, options={"verify_signature": False})
-            email = unverified_payload.get("email") or unverified_payload.get("iss") or unverified_payload.get("sub")
-            if email and "@" in email:
-                sa_jwks_url = f"https://www.googleapis.com/service_accounts/v1/jwk/{email}"
+            
+            # Find service account email address from claims (email, sub, or iss)
+            candidates = [
+                unverified_payload.get("email"),
+                unverified_payload.get("sub"),
+                unverified_payload.get("iss")
+            ]
+            sa_email = next((c for c in candidates if c and "@" in c and not c.startswith("http")), None)
+            
+            if sa_email:
+                sa_jwks_url = f"https://www.googleapis.com/service_accounts/v1/jwk/{sa_email}"
+                logger.info(f"Attempting GCP IAM token verification via SA JWKS URL: {sa_jwks_url}")
                 jwks_client = jwt.PyJWKClient(sa_jwks_url)
                 signing_key = await loop.run_in_executor(
                     None, jwks_client.get_signing_key_from_jwt, token
                 )
             else:
+                logger.error("Could not find valid Service Account email in IAM token payload claims.")
                 raise
 
         decode_kwargs = {
