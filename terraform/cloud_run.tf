@@ -89,6 +89,11 @@ resource "google_cloud_run_v2_service" "backend" {
         value = "v0.1.0"
       }
 
+      env {
+        name  = "GCP_IAM_JWKS_URL"
+        value = "https://www.googleapis.com/oauth2/v1/certs"
+      }
+
       ports {
         container_port = 8000
       }
