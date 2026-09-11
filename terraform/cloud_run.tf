@@ -27,6 +27,13 @@ resource "google_cloud_run_v2_service" "backend" {
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
+  # Ignore out-of-band updates to APP_VERSION env variable made by CI/CD releases
+  lifecycle {
+    ignore_changes = [
+      template[0].containers[0].env[6].value
+    ]
+  }
+
   template {
     service_account = google_service_account.cloud_run_sa.email
 
@@ -103,10 +110,22 @@ resource "google_cloud_run_v2_service" "backend" {
   }
 }
 
-# Allow unauthenticated invocations for Cloud Run backend
-resource "google_cloud_run_v2_service_iam_member" "public_access" {
+# Service Account for Cloudflare Worker to invoke Cloud Run securely
+resource "google_service_account" "cloudflare_invoker" {
+  account_id   = "cloudflare-run-invoker"
+  display_name = "Cloudflare Worker Cloud Run Invoker"
+  description  = "Service account used by Cloudflare Worker to generate OIDC ID tokens for Cloud Run invocation"
+}
+
+# Service Account Private Key for Cloudflare Worker RS256 JWT signing
+resource "google_service_account_key" "cloudflare_invoker_key" {
+  service_account_id = google_service_account.cloudflare_invoker.name
+}
+
+# Restrict Cloud Run invocation to the dedicated Cloudflare Invoker Service Account
+resource "google_cloud_run_v2_service_iam_member" "cloudflare_invoker_access" {
   location = google_cloud_run_v2_service.backend.location
   name     = google_cloud_run_v2_service.backend.name
   role     = "roles/run.invoker"
-  member   = "allUsers"
+  member   = "serviceAccount:${google_service_account.cloudflare_invoker.email}"
 }

@@ -33,7 +33,7 @@ async def test_jit_user_auto_provisioning(client, rsa_keypair):
         "name": "Social User",
     }
     token = jwt.encode(payload, private_pem, algorithm="RS256")
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = {"X-Forwarded-Authorization": f"Bearer {token}"}
 
     # First request: User does not exist in DB yet
     result = await client.simulate_get('/me', headers=headers)
@@ -50,3 +50,42 @@ async def test_jit_user_auto_provisioning(client, rsa_keypair):
     )
     assert len(rows) == 1
     assert rows[0]["email"] == "social_user@example.com"
+
+@pytest.mark.asyncio
+async def test_require_iam_proxy_auth(monkeypatch, rsa_keypair):
+    from nightrunner_backend.config.settings import settings
+    monkeypatch.setattr(settings, "dev_mode", False)
+    monkeypatch.setattr(settings, "require_iam_proxy_auth", True)
+
+    app = falcon.asgi.App(middleware=[AuthMiddleware()])
+    app.add_route('/me', MeResource())
+
+    private_pem, _ = rsa_keypair
+    payload = {
+        "sub": "proxy-user-123",
+        "iss": "http://test-issuer",
+        "aud": "test-audience",
+        "exp": int(time.time() + 3600),
+        "email": "proxy@example.com",
+    }
+    token = jwt.encode(payload, private_pem, algorithm="RS256")
+
+    iam_token = jwt.encode({"sub": "sa-cloud-runner@project.iam.gserviceaccount.com", "exp": int(time.time() + 3600)}, private_pem, algorithm="RS256")
+
+    async with falcon.testing.ASGITestClient(app) as client:
+        # Request missing standard Authorization header -> 401
+        res = await client.simulate_get('/me', headers={"X-Forwarded-Authorization": f"Bearer {token}"})
+        assert res.status == falcon.HTTP_401
+
+        # Request missing X-Forwarded-Authorization header -> 401
+        res = await client.simulate_get('/me', headers={"Authorization": f"Bearer {iam_token}"})
+        assert res.status == falcon.HTTP_401
+
+        # Both headers present -> 200
+        headers = {
+            "Authorization": f"Bearer {iam_token}",
+            "X-Forwarded-Authorization": f"Bearer {token}"
+        }
+        res = await client.simulate_get('/me', headers=headers)
+        assert res.status == falcon.HTTP_200
+

@@ -54,9 +54,9 @@ def mock_jwks(monkeypatch, rsa_keypair):
         def get_signing_key_from_jwt(self, token):
             return DummySigningKey(public_pem)
     monkeypatch.setattr('jwt.PyJWKClient', DummyPyJWKClient, raising=False)
-    # Ensure settings expect a JWKS URL but are not in dev mode
+    # Ensure settings expect a JWKS URL but are not in dev mode by default
     from nightrunner_backend.config.settings import settings
-    # dev_mode is set via enable_dev_mode fixture
+    monkeypatch.setattr(settings, "dev_mode", False)
     settings.jwks_url = "http://dummy/jwks"
     settings.oidc_issuer = "http://test-issuer"
     settings.oidc_audience = "test-audience"
@@ -76,7 +76,10 @@ def token_factory(rsa_keypair):
             "isAdmin": is_admin,
         }
         token = jwt.encode(payload, private_pem, algorithm="RS256")
-        return {"Authorization": f"Bearer {token}"}
+        return {
+            "Authorization": f"Bearer {token}",
+            "X-Forwarded-Authorization": f"Bearer {token}"
+        }
     return _factory
 
 # Fixture to enable dev_mode during tests (use as needed)
@@ -84,3 +87,4 @@ def token_factory(rsa_keypair):
 def dev_mode_enabled(monkeypatch):
     from nightrunner_backend.config.settings import settings
     monkeypatch.setattr(settings, "dev_mode", True)
+

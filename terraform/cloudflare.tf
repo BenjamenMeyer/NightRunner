@@ -60,7 +60,30 @@ async function handleRequest(request) {
     const cloudRunHost = "${replace(replace(google_cloud_run_v2_service.backend.uri, "https://", ""), "/", "")}"
     const targetPathname = url.pathname.startsWith('/api/') ? url.pathname.replace('/api', '') : url.pathname
     const backendUrl = new URL(targetPathname + url.search, "https://" + cloudRunHost)
-    const backendRequest = new Request(backendUrl.toString(), request)
+    
+    const headers = new Headers(request.headers)
+    const userAuth = request.headers.get("Authorization")
+    if (userAuth && !request.headers.has("X-Forwarded-Authorization")) {
+      headers.set("X-Forwarded-Authorization", userAuth)
+    }
+
+    // Generate GCP IAM OIDC token for Cloud Run Invoker SA if GCP_SA_KEY is configured
+    if (typeof GCP_SA_KEY !== 'undefined' && GCP_SA_KEY) {
+      try {
+        const idToken = await getGcpIdToken(GCP_SA_KEY, "https://" + cloudRunHost)
+        if (idToken) {
+          headers.set("Authorization", "Bearer " + idToken)
+        }
+      } catch (err) {
+        console.error("Failed to generate GCP IAM OIDC token:", err)
+      }
+    }
+
+    const backendRequest = new Request(backendUrl.toString(), {
+      method: request.method,
+      headers: headers,
+      body: request.body
+    })
     return fetch(backendRequest)
   }
 
@@ -125,11 +148,73 @@ async function handleRequest(request) {
 
   return response
 }
+
+async function getGcpIdToken(saKeyJson, targetAudience) {
+  const sa = typeof saKeyJson === 'string' ? JSON.parse(saKeyJson) : saKeyJson
+  const now = Math.floor(Date.now() / 1000)
+  
+  const header = { alg: "RS256", typ: "JWT", kid: sa.private_key_id }
+  const payload = {
+    iss: sa.client_email,
+    sub: sa.client_email,
+    aud: "https://oauth2.googleapis.com/token",
+    target_audience: targetAudience,
+    iat: now,
+    exp: now + 3600
+  }
+
+  const base64UrlEncode = str => btoa(str).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+  const encodedHeader = base64UrlEncode(JSON.stringify(header))
+  const encodedPayload = base64UrlEncode(JSON.stringify(payload))
+  const unsignedToken = encodedHeader + '.' + encodedPayload
+
+  const pemHeader = "-----BEGIN PRIVATE KEY-----"
+  const pemFooter = "-----END PRIVATE KEY-----"
+  const pemContents = sa.private_key.substring(sa.private_key.indexOf(pemHeader) + pemHeader.length, sa.private_key.indexOf(pemFooter)).replace(/\s/g, '')
+  const binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0))
+
+  const key = await crypto.subtle.importKey(
+    'pkcs8',
+    binaryDer.buffer,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    key,
+    new TextEncoder().encode(unsignedToken)
+  )
+
+  const jwtAssertion = unsignedToken + '.' + base64UrlEncode(String.fromCharCode(...new Uint8Array(signature)))
+
+  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion: jwtAssertion
+    })
+  })
+
+  if (!tokenRes.ok) {
+    throw new Error("GCP OAuth token request failed: HTTP " + tokenRes.status)
+  }
+
+  const data = await tokenRes.json()
+  return data.id_token
+}
 EOF
 
   secret_text_binding {
     name = "GCS_HMAC_SECRET"
     text = google_storage_hmac_key.cdn_hmac.secret
+  }
+
+  secret_text_binding {
+    name = "GCP_SA_KEY"
+    text = base64decode(google_service_account_key.cloudflare_invoker_key.private_key)
   }
 }
 
