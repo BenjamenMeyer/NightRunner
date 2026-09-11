@@ -215,11 +215,26 @@ class AuthMiddleware:
         if settings.dev_mode or not settings.gcp_iam_jwks_url:
             return jwt.decode(token, options={"verify_signature": False})
 
-        jwks_client = jwt.PyJWKClient(settings.gcp_iam_jwks_url)
         loop = asyncio.get_event_loop()
-        signing_key = await loop.run_in_executor(
-            None, jwks_client.get_signing_key_from_jwt, token
-        )
+        signing_key = None
+
+        try:
+            jwks_client = jwt.PyJWKClient(settings.gcp_iam_jwks_url)
+            signing_key = await loop.run_in_executor(
+                None, jwks_client.get_signing_key_from_jwt, token
+            )
+        except Exception:
+            # Fall back to unverified payload inspection to fetch email for service-account specific JWKS URL
+            unverified_payload = jwt.decode(token, options={"verify_signature": False})
+            email = unverified_payload.get("email") or unverified_payload.get("iss") or unverified_payload.get("sub")
+            if email and "@" in email:
+                sa_jwks_url = f"https://www.googleapis.com/service_accounts/v1/jwk/{email}"
+                jwks_client = jwt.PyJWKClient(sa_jwks_url)
+                signing_key = await loop.run_in_executor(
+                    None, jwks_client.get_signing_key_from_jwt, token
+                )
+            else:
+                raise
 
         decode_kwargs = {
             "algorithms": ["RS256"],
