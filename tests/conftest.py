@@ -54,9 +54,9 @@ def mock_jwks(monkeypatch, rsa_keypair):
         def get_signing_key_from_jwt(self, token):
             return DummySigningKey(public_pem)
     monkeypatch.setattr('jwt.PyJWKClient', DummyPyJWKClient, raising=False)
-    # Ensure settings expect a JWKS URL
+    # Ensure settings expect a JWKS URL but are not in dev mode by default
     from nightrunner_backend.config.settings import settings
-    monkeypatch.setattr(settings, "dev_mode", True)
+    monkeypatch.setattr(settings, "dev_mode", False)
     settings.jwks_url = "http://dummy/jwks"
     settings.oidc_issuer = "http://test-issuer"
     settings.oidc_audience = "test-audience"
