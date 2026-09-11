@@ -179,11 +179,17 @@ class ConfigurationStore:
         )
 
     async def create_configuration(self, config: Configuration) -> None:
-        # Guarantee every task has a UUIDv7 ID
+        # Guarantee every task has a unique UUIDv7 ID
         if config.tasks and isinstance(config.tasks, list):
+            new_tasks = []
             for t in config.tasks:
-                if isinstance(t, dict) and not t.get("id"):
-                    t["id"] = str(uuid6.uuid7())
+                if isinstance(t, dict):
+                    task_copy = dict(t)
+                    task_copy["id"] = str(uuid6.uuid7())
+                    new_tasks.append(task_copy)
+                else:
+                    new_tasks.append(t)
+            config.tasks = new_tasks
 
         val = json.dumps(config.tasks) if config.tasks else config.value
         await self.driver.execute(CREATE_CONFIG, {
@@ -198,11 +204,18 @@ class ConfigurationStore:
             await _sync_tasks_for_config(self.driver, config.id, config.tasks)
 
     async def update_configuration(self, config: Configuration) -> None:
-        # Guarantee every task has a UUIDv7 ID
+        # Guarantee every task has a unique UUIDv7 ID
         if config.tasks and isinstance(config.tasks, list):
+            new_tasks = []
             for t in config.tasks:
-                if isinstance(t, dict) and not t.get("id"):
-                    t["id"] = str(uuid6.uuid7())
+                if isinstance(t, dict):
+                    task_copy = dict(t)
+                    if not task_copy.get("id"):
+                        task_copy["id"] = str(uuid6.uuid7())
+                    new_tasks.append(task_copy)
+                else:
+                    new_tasks.append(t)
+            config.tasks = new_tasks
 
         val = json.dumps(config.tasks) if config.tasks else config.value
         await self.driver.execute(UPDATE_CONFIG, {

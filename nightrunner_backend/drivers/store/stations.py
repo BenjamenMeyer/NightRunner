@@ -135,9 +135,16 @@ class StationsStore:
 
     async def create(self, station: Station) -> None:
         if station.tasks and isinstance(station.tasks, list):
+            new_tasks = []
             for t in station.tasks:
-                if isinstance(t, dict) and not t.get("id"):
-                    t["id"] = str(uuid6.uuid7())
+                if isinstance(t, dict):
+                    task_copy = dict(t)
+                    if not task_copy.get("id"):
+                        task_copy["id"] = str(uuid6.uuid7())
+                    new_tasks.append(task_copy)
+                else:
+                    new_tasks.append(t)
+            station.tasks = new_tasks
 
         await self.driver.execute(CREATE_STATION, {
             "id": station.id,
@@ -153,9 +160,16 @@ class StationsStore:
 
     async def update(self, station: Station) -> None:
         if station.tasks and isinstance(station.tasks, list):
+            new_tasks = []
             for t in station.tasks:
-                if isinstance(t, dict) and not t.get("id"):
-                    t["id"] = str(uuid6.uuid7())
+                if isinstance(t, dict):
+                    task_copy = dict(t)
+                    if not task_copy.get("id"):
+                        task_copy["id"] = str(uuid6.uuid7())
+                    new_tasks.append(task_copy)
+                else:
+                    new_tasks.append(t)
+            station.tasks = new_tasks
 
         await self.driver.execute(UPDATE_STATION, {
             "id": station.id,
