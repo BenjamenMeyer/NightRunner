@@ -171,19 +171,7 @@ export default function ScoreField({
     const renderNotesBubble = () => {
         if (!taskNotes || !taskNotes.trim()) return null;
         return (
-            <div
-                className="task-notes-bubble"
-                style={{
-                    marginBottom: "10px",
-                    padding: "10px 14px",
-                    background: "#e3f2fd",
-                    border: "1px solid #90caf9",
-                    borderRadius: "12px",
-                    position: "relative",
-                    fontSize: "0.88rem",
-                    color: "#0d47a1"
-                }}
-            >
+            <div className="task-notes-bubble">
                 <strong style={{ display: "block", marginBottom: "2px" }}>💡 Scorer Guidance / Note:</strong>
                 <span>{taskNotes}</span>
             </div>
@@ -267,40 +255,30 @@ export default function ScoreField({
 
                     <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>{taskTitle}</label>
 
-                    <div className="radio-options-list" style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "8px 0" }}>
+                    <div className="radio-options-list">
 
                         {optionsList.map((option, idx) => {
                             const optLabel = typeof option === "object" ? option.label : option;
                             const optValue = typeof option === "object" ? option.value : option;
-                            const isChecked = value === optValue;
+                            const isChecked = value === optValue || (value !== undefined && value !== null && String(value) === String(optValue));
 
                             return (
                                 <label
                                     key={idx}
                                     className={`radio-option-item ${isChecked ? "selected" : ""}`}
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "10px",
-                                        padding: "8px 12px",
-                                        borderRadius: "6px",
-                                        border: isChecked ? "2px solid #007bff" : "1px solid #ced4da",
-                                        background: isChecked ? "#e7f1ff" : "#ffffff",
-                                        cursor: "pointer"
-                                    }}
                                 >
                                     <input
                                         type="radio"
                                         name={`mc_${task.id || taskTitle}`}
                                         value={optValue}
                                         checked={isChecked}
-                                        onChange={() => onChange(Number(optValue))}
+                                        onChange={() => onChange(optValue)}
                                     />
                                     <span style={{ fontWeight: isChecked ? "600" : "normal" }}>
                                         {optLabel}
                                     </span>
                                     {typeof optValue === "number" && (
-                                        <span style={{ marginLeft: "auto", fontSize: "0.85em", color: "#6c757d", background: "#f8f9fa", padding: "2px 8px", borderRadius: "12px", border: "1px solid #dee2e6" }}>
+                                        <span className="radio-option-pts">
                                             +{optValue} pts
                                         </span>
                                     )}

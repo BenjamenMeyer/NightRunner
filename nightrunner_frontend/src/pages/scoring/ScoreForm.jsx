@@ -54,6 +54,11 @@ export default function ScoreForm({
             return;
         }
 
+        if (!stationStartedAt || !stationCompletedAt) {
+            alert("Please record both Station Started At and Station Completed At times before submitting.");
+            return;
+        }
+
         try {
 
             const missingTask = station.tasks.find(task => {
@@ -68,6 +73,7 @@ export default function ScoreForm({
                         return typeof value !== "number" || Number.isNaN(value);
 
                     case "MultiChoice":
+                    case "Multiple Choice":
                         return value === undefined || value === null;
 
                     case "Stopwatch":
@@ -84,7 +90,8 @@ export default function ScoreForm({
             });
 
             if (missingTask) {
-                alert(`Please complete "${missingTask.description}" before submitting.`);
+                const taskName = missingTask.name || missingTask.description || missingTask.title || "Task";
+                alert(`Please complete "${taskName}" before submitting.`);
                 return;
             }
 
@@ -166,7 +173,7 @@ export default function ScoreForm({
 
             </div>
 
-            <div className="station-timing-section" style={{ background: "#f8f9fa", padding: "12px", borderRadius: "6px", marginBottom: "16px" }}>
+            <div className="station-timing-section">
                 <h4 style={{ margin: "0 0 8px 0" }}>Station Activity Timing</h4>
                 <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
                     <div>
