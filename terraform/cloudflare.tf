@@ -60,7 +60,18 @@ async function handleRequest(request) {
     const cloudRunHost = "${replace(replace(google_cloud_run_v2_service.backend.uri, "https://", ""), "/", "")}"
     const targetPathname = url.pathname.startsWith('/api/') ? url.pathname.replace('/api', '') : url.pathname
     const backendUrl = new URL(targetPathname + url.search, "https://" + cloudRunHost)
-    const backendRequest = new Request(backendUrl.toString(), request)
+    
+    const headers = new Headers(request.headers)
+    const userAuth = request.headers.get("Authorization")
+    if (userAuth && !request.headers.has("X-Forwarded-Authorization")) {
+      headers.set("X-Forwarded-Authorization", userAuth)
+    }
+
+    const backendRequest = new Request(backendUrl.toString(), {
+      method: request.method,
+      headers: headers,
+      body: request.body
+    })
     return fetch(backendRequest)
   }
 
