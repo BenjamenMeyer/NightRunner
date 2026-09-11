@@ -30,7 +30,7 @@ resource "google_cloud_run_v2_service" "backend" {
   # Ignore out-of-band updates to APP_VERSION env variable made by CI/CD releases
   lifecycle {
     ignore_changes = [
-      template[0].containers[0].env[6].value
+      template[0].containers[0].env[7].value
     ]
   }
 
@@ -57,6 +57,11 @@ resource "google_cloud_run_v2_service" "backend" {
       env {
         name  = "DEV_MODE"
         value = "false"
+      }
+
+      env {
+        name  = "REQUIRE_IAM_PROXY_AUTH"
+        value = "true"
       }
 
       env {
