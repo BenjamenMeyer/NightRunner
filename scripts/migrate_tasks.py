@@ -62,6 +62,7 @@ async def migrate(dry_run: bool = False):
                             INSERT INTO station_tasks (id, configuration_id, station_id, name, description, type, instructions, max_score, time_limit, score_value, score_weight, active)
                             VALUES (:id, :configuration_id, NULL, :name, :description, :type, :instructions, :max_score, :time_limit, :score_value, :score_weight, :active)
                             ON CONFLICT(id) DO UPDATE SET
+                                configuration_id=EXCLUDED.configuration_id,
                                 name=EXCLUDED.name,
                                 description=EXCLUDED.description,
                                 type=EXCLUDED.type,
@@ -113,6 +114,7 @@ async def migrate(dry_run: bool = False):
                                 INSERT INTO station_tasks (id, configuration_id, station_id, name, description, type, instructions, max_score, time_limit, score_value, score_weight, active)
                                 VALUES (:id, NULL, :station_id, :name, :description, :type, :instructions, :max_score, :time_limit, :score_value, :score_weight, :active)
                                 ON CONFLICT(id) DO UPDATE SET
+                                    station_id=EXCLUDED.station_id,
                                     name=EXCLUDED.name,
                                     description=EXCLUDED.description,
                                     type=EXCLUDED.type,
