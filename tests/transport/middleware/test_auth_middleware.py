@@ -70,18 +70,20 @@ async def test_require_iam_proxy_auth(monkeypatch, rsa_keypair):
     }
     token = jwt.encode(payload, private_pem, algorithm="RS256")
 
+    iam_token = jwt.encode({"sub": "sa-cloud-runner@project.iam.gserviceaccount.com", "exp": int(time.time() + 3600)}, private_pem, algorithm="RS256")
+
     async with falcon.testing.ASGITestClient(app) as client:
         # Request missing standard Authorization header -> 401
         res = await client.simulate_get('/me', headers={"X-Forwarded-Authorization": f"Bearer {token}"})
         assert res.status == falcon.HTTP_401
 
         # Request missing X-Forwarded-Authorization header -> 401
-        res = await client.simulate_get('/me', headers={"Authorization": f"Bearer gcp-iam-token"})
+        res = await client.simulate_get('/me', headers={"Authorization": f"Bearer {iam_token}"})
         assert res.status == falcon.HTTP_401
 
         # Both headers present -> 200
         headers = {
-            "Authorization": "Bearer gcp-iam-token",
+            "Authorization": f"Bearer {iam_token}",
             "X-Forwarded-Authorization": f"Bearer {token}"
         }
         res = await client.simulate_get('/me', headers=headers)

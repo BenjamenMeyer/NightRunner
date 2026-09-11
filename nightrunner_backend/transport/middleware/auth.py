@@ -62,6 +62,22 @@ class AuthMiddleware:
                     description="A valid Bearer token is required."
                 )
 
+            if not iam_header.startswith("Bearer "):
+                raise falcon.HTTPUnauthorized(
+                    title="Missing or invalid Authorization header",
+                    description="A valid Bearer token is required."
+                )
+
+            iam_token = iam_header.split(" ")[1]
+            try:
+                await self._verify_iam_token(iam_token)
+            except Exception as e:
+                logger.warning(f"GCP IAM token validation failed: {e}")
+                raise falcon.HTTPUnauthorized(
+                    title="Missing or invalid Authorization header",
+                    description="A valid Bearer token is required."
+                )
+
             auth_header = user_header
         else:
             auth_header = req.get_header("Authorization") or req.get_header("X-Forwarded-Authorization")
@@ -191,4 +207,29 @@ class AuthMiddleware:
             audience=settings.oidc_audience,
             issuer=settings.oidc_issuer
         )
+
+    async def _verify_iam_token(self, token: str) -> Dict[str, Any]:
+        """
+        Verifies the GCP IAM OIDC token signature and claims.
+        """
+        if settings.dev_mode or not settings.gcp_iam_jwks_url:
+            return jwt.decode(token, options={"verify_signature": False})
+
+        jwks_client = jwt.PyJWKClient(settings.gcp_iam_jwks_url)
+        loop = asyncio.get_event_loop()
+        signing_key = await loop.run_in_executor(
+            None, jwks_client.get_signing_key_from_jwt, token
+        )
+
+        decode_kwargs = {
+            "algorithms": ["RS256"],
+            "options": {"verify_iss": False}
+        }
+        if settings.gcp_iam_audience:
+            decode_kwargs["audience"] = settings.gcp_iam_audience
+        else:
+            decode_kwargs["options"]["verify_aud"] = False
+
+        return jwt.decode(token, signing_key.key, **decode_kwargs)
+
 
