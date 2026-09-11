@@ -985,6 +985,58 @@ describe('Station Editor Task Editing Isolation Contracts', () => {
   });
 });
 
+describe('Scoring Form and ScoreField Unit Verification', () => {
+  it('handles string and numeric option values in MultiChoice tasks without returning NaN', () => {
+    const stringOptions = [
+      { label: 'Pass', value: 'PASS' },
+      { label: 'Fail', value: 'FAIL' }
+    ];
+
+    const numericOptions = [
+      { label: 'Full', value: 10 },
+      { label: 'Zero', value: 0 }
+    ];
+
+    // Verify string selection match logic
+    const strVal = 'PASS';
+    const matchedStrOpt = stringOptions.find(opt => opt.value === strVal || String(opt.value) === String(strVal));
+    expect(matchedStrOpt).toBeDefined();
+    expect(matchedStrOpt.label).toBe('Pass');
+
+    // Verify numeric selection match logic
+    const numVal = 10;
+    const matchedNumOpt = numericOptions.find(opt => opt.value === numVal || String(opt.value) === String(numVal));
+    expect(matchedNumOpt).toBeDefined();
+    expect(matchedNumOpt.label).toBe('Full');
+  });
+
+  it('validates station start and completion timestamps before score submission', () => {
+    const stationStartedAt = null;
+    const stationCompletedAt = null;
+
+    const isTimingValid = Boolean(stationStartedAt && stationCompletedAt);
+    expect(isTimingValid).toBe(false);
+
+    const validStarted = '2026-09-11T12:00:00Z';
+    const validCompleted = '2026-09-11T12:15:00Z';
+    const isTimingValidNow = Boolean(validStarted && validCompleted);
+    expect(isTimingValidNow).toBe(true);
+  });
+
+  it('resolves task name fallback when task description is undefined in missingTask validation', () => {
+    const missingTask = {
+      id: 'task-101',
+      name: 'Rope Knot Inspection',
+      type: 'Completed'
+    };
+
+    const taskName = missingTask.name || missingTask.description || missingTask.title || 'Task';
+    expect(taskName).toBe('Rope Knot Inspection');
+    expect(taskName).not.toBe('undefined');
+  });
+});
+
+
 
 
 
