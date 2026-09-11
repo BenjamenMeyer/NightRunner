@@ -1,18 +1,5 @@
--- drivers/migrations/007_create_configurations.sql
-CREATE TABLE IF NOT EXISTS configuration_groups (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    description TEXT
-);
-
-CREATE TABLE IF NOT EXISTS configurations (
-    id TEXT PRIMARY KEY,
-    group_id TEXT REFERENCES configuration_groups(id) ON DELETE CASCADE,
-    key TEXT,
-    value TEXT,
-    description TEXT
-);
-
+-- drivers/migrations/016_normalize_station_tasks_table.sql
+-- Create relational station_tasks table supporting both configurations and stations
 CREATE TABLE IF NOT EXISTS station_tasks (
     id TEXT PRIMARY KEY,
     configuration_id TEXT REFERENCES configurations(id) ON DELETE CASCADE,
@@ -27,3 +14,6 @@ CREATE TABLE IF NOT EXISTS station_tasks (
     score_weight REAL NOT NULL DEFAULT 1.0,
     active BOOLEAN NOT NULL DEFAULT TRUE
 );
+
+CREATE INDEX IF NOT EXISTS idx_station_tasks_config_id ON station_tasks(configuration_id);
+CREATE INDEX IF NOT EXISTS idx_station_tasks_station_id ON station_tasks(station_id);
