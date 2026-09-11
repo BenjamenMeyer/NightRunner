@@ -80,7 +80,7 @@ class AuthMiddleware:
 
             auth_header = user_header
         else:
-            auth_header = req.get_header("Authorization") or req.get_header("X-Forwarded-Authorization")
+            auth_header = req.get_header("X-Forwarded-Authorization") or req.get_header("Authorization")
 
         if not auth_header or not auth_header.startswith("Bearer "):
             raise falcon.HTTPUnauthorized(
