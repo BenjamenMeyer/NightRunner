@@ -22,6 +22,9 @@ services:
       FRONT_END_URL: "${FRONT_END_URL:-http://localhost:3000}"
       DATABASE_URL: postgresql://nightrunner:nightrunner_password@db:5432/nightrunner
       DEV_MODE: "${DEV_MODE:-false}"
+      REQUIRE_IAM_PROXY_AUTH: "${REQUIRE_IAM_PROXY_AUTH:-false}"
+      GCP_IAM_JWKS_URL: "${GCP_IAM_JWKS_URL:-https://www.googleapis.com/oauth2/3/certs}"
+      GCP_IAM_AUDIENCE: "${GCP_IAM_AUDIENCE:-}"
       OIDC_ISSUER: "${OIDC_ISSUER:-http://localhost:4000}"
       OIDC_AUDIENCE: "${OIDC_AUDIENCE:-client-id}"
       JWKS_URL: "${JWKS_URL:-http://localhost:4000/.well-known/openid-configuration/jwks}"
