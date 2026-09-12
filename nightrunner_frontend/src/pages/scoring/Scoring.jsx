@@ -285,6 +285,15 @@ export default function Scoring() {
 
                             </div>
 
+                            {selectedStation.description && (
+                                <div className="station-scenario-card" style={{ marginTop: "16px", padding: "12px 16px", background: "var(--input-bg)", border: "1px solid var(--button-bg)", borderRadius: "8px", textAlign: "left" }}>
+                                    <strong style={{ display: "block", marginBottom: "4px", color: "var(--text-primary)" }}>📋 Station Scenario / Instructions:</strong>
+                                    <p style={{ margin: "0", whiteSpace: "pre-wrap", color: "var(--text-primary)", fontSize: "0.95rem", lineHeight: "1.5" }}>
+                                        {selectedStation.description}
+                                    </p>
+                                </div>
+                            )}
+
                         </div>
                     )}
 

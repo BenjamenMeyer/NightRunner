@@ -85,6 +85,7 @@ class StationResource:
             evt_val = data.get("eventId")
             station.event_id = str(evt_val) if evt_val is not None else station.event_id
         await store.update(station)
+        resp.status = falcon.HTTP_200
         resp.media = station.to_api_dict()
 
     async def on_delete(self, req: falcon.Request, resp: falcon.Response, stationId: str):
