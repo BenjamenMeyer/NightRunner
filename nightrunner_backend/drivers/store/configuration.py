@@ -60,12 +60,14 @@ async def _load_tasks_for_config(driver: DatabaseDriver, config_id: str, fallbac
                         extra = parsed_sv
                 except Exception:
                     pass
+            notes_val = extra.get("notes") or extra.get("scorer_notes") or ""
             t = {
                 "id": r["id"],
                 "name": r.get("name") or r.get("description") or "",
                 "description": r.get("description") or r.get("name") or "",
                 "type": r.get("type") or "Timed Challenge",
                 "instructions": r.get("instructions") or "",
+                "notes": notes_val,
                 "maxScore": float(r.get("max_score") if r.get("max_score") is not None else 100),
                 "timeLimit": float(r.get("time_limit") if r.get("time_limit") is not None else 0),
                 "scoreValue": extra,
@@ -94,7 +96,11 @@ async def _sync_tasks_for_config(driver: DatabaseDriver, config_id: str, tasks: 
     for t in tasks:
         task_id = t.get("id") or t.get("_id") or str(uuid6.uuid7())
         t["id"] = task_id
-        score_val_str = json.dumps(t.get("scoreValue") or {})
+        score_val_dict = dict(t.get("scoreValue") or {})
+        notes_val = t.get("notes") or t.get("scorer_notes")
+        if notes_val:
+            score_val_dict["notes"] = notes_val
+        score_val_str = json.dumps(score_val_dict)
         await driver.execute(INSERT_STATION_TASK, {
             "id": task_id,
             "configuration_id": config_id,
