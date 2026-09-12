@@ -242,9 +242,9 @@ export default function ScoreField({
         case "MultiChoice":
         case "Multiple Choice":
             const optionsList = scoreValue.options || task.options || [
-                { label: "Option A (Full Points)", value: task.maxScore ?? 10 },
-                { label: "Option B (Partial Points)", value: Math.floor((task.maxScore ?? 10) / 2) },
-                { label: "Option C (No Points)", value: 0 }
+                { label: "Option A", value: task.maxScore ?? 10 },
+                { label: "Option B", value: Math.floor((task.maxScore ?? 10) / 2) },
+                { label: "Option C", value: 0 }
             ];
 
             return (
@@ -269,7 +269,7 @@ export default function ScoreField({
                                 >
                                     <input
                                         type="radio"
-                                        name={`mc_${task.id || taskTitle}`}
+                                        name={`mc_${task.id}`}
                                         value={optValue}
                                         checked={isChecked}
                                         onChange={() => onChange(optValue)}
@@ -277,11 +277,6 @@ export default function ScoreField({
                                     <span style={{ fontWeight: isChecked ? "600" : "normal" }}>
                                         {optLabel}
                                     </span>
-                                    {typeof optValue === "number" && (
-                                        <span className="radio-option-pts">
-                                            +{optValue} pts
-                                        </span>
-                                    )}
                                 </label>
                             );
                         })}
@@ -333,10 +328,6 @@ export default function ScoreField({
                             onChange(Number(e.target.value))
                         }
                     />
-
-                    <small>
-                        {scoreValue.scalar ?? 1} ms per point
-                    </small>
 
                 </div>
 
