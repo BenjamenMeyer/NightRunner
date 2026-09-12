@@ -268,22 +268,24 @@ export default function ScoreField({
                                 (value !== undefined && value !== null && optValue !== undefined && optValue !== null && String(value) === String(optValue));
 
                             const selectedVal = optValue !== undefined ? optValue : option;
+                            const radioName = `mc_${task.id || (taskTitle ? taskTitle.replace(/\s+/g, '_') : idx)}`;
 
                             return (
-                                <label
+                                <div
                                     key={idx}
                                     className={`radio-option-item ${isChecked ? "selected" : ""}`}
+                                    onClick={() => onChange(selectedVal)}
                                 >
                                     <input
                                         type="radio"
-                                        name={`mc_${task.id || taskTitle || idx}`}
+                                        name={radioName}
                                         checked={isChecked}
                                         onChange={() => onChange(selectedVal)}
                                     />
                                     <span style={{ fontWeight: isChecked ? "600" : "normal" }}>
                                         {optLabel}
                                     </span>
-                                </label>
+                                </div>
                             );
                         })}
 
