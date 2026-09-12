@@ -147,3 +147,33 @@ class ScoresStore:
         """
         rows = await self.driver.execute(AGGREGATE_EVENT, {"event_id": event_id})
         return rows
+
+    async def save_finalized_results(self, event_id: str, results: List[Dict[str, Any]]) -> None:
+        """Replace stored finalized results for an event."""
+        import uuid6
+        await self.driver.execute("DELETE FROM event_finalized_results WHERE event_id = :event_id", {"event_id": event_id})
+        for r in results:
+            res_id = str(uuid6.uuid7())
+            await self.driver.execute(
+                """
+                INSERT INTO event_finalized_results (id, event_id, patrol_id, station_id, score_type, score_value, scoring_mode)
+                VALUES (:id, :event_id, :patrol_id, :station_id, :score_type, :score_value, :scoring_mode)
+                """,
+                {
+                    "id": res_id,
+                    "event_id": event_id,
+                    "patrol_id": r["patrolId"],
+                    "station_id": r.get("stationId"),
+                    "score_type": r.get("scoreType", "final"),
+                    "score_value": float(r.get("scoreValue", 0.0)),
+                    "scoring_mode": r.get("scoringMode", "absolute")
+                }
+            )
+
+    async def list_finalized_results(self, event_id: str) -> List[Dict[str, Any]]:
+        """List all stored finalized results for an event."""
+        rows = await self.driver.execute(
+            "SELECT id, event_id AS eventId, patrol_id AS patrolId, station_id AS stationId, score_type AS scoreType, score_value AS scoreValue, scoring_mode AS scoringMode, calculated_at AS calculatedAt FROM event_finalized_results WHERE event_id = :event_id",
+            {"event_id": event_id}
+        )
+        return rows if isinstance(rows, list) else []

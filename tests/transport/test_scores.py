@@ -115,3 +115,40 @@ async def test_score_to_dict_datetime_handling():
     assert score_dict["completedAt"] == now.isoformat()
 
 
+@pytest.mark.asyncio
+async def test_finalized_scores_endpoint(test_client, dev_mode_enabled):
+    # 1. Post finalized results
+    payload = {
+        "eventId": "event-final-1",
+        "results": [
+            {
+                "patrolId": "patrol-1",
+                "stationId": "station-1",
+                "scoreType": "station",
+                "scoreValue": 9.5,
+                "scoringMode": "relative"
+            },
+            {
+                "patrolId": "patrol-1",
+                "stationId": None,
+                "scoreType": "final",
+                "scoreValue": 9.5,
+                "scoringMode": "overall"
+            }
+        ]
+    }
+    resp_post = await test_client.simulate_post("/v1/scores/finalized", json=payload)
+    assert resp_post.status == falcon.HTTP_200
+    assert resp_post.json["status"] == "saved"
+    assert resp_post.json["count"] == 2
+
+    # 2. Get finalized results
+    resp_get = await test_client.simulate_get("/v1/scores/finalized?eventId=event-final-1")
+    assert resp_get.status == falcon.HTTP_200
+    results = resp_get.json
+    assert len(results) == 2
+    assert results[0]["patrolId"] == "patrol-1"
+    assert results[0]["scoreValue"] == 9.5
+
+
+

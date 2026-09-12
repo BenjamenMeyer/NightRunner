@@ -179,3 +179,32 @@ class ScoreResource:
             resp.media = existing.to_dict()
 
         resp.status = falcon.HTTP_200
+
+
+class FinalizedResultsResource:
+    """GET/POST /v1/scores/finalized?eventId={eventId}
+    Get or save finalized calculation results for an event.
+    """
+
+    async def on_get(self, req: falcon.Request, resp: falcon.Response):
+        event_id = req.get_param("eventId")
+        if not event_id:
+            raise falcon.HTTPBadRequest(description="eventId query parameter is required.")
+        store = ScoresStore(get_driver())
+        results = await store.list_finalized_results(event_id)
+        resp.status = falcon.HTTP_200
+        resp.media = results
+
+    async def on_post(self, req: falcon.Request, resp: falcon.Response):
+        store = ScoresStore(get_driver())
+        payload = await req.get_media()
+        if not isinstance(payload, dict):
+            raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
+        event_id = payload.get("eventId")
+        results = payload.get("results")
+        if not event_id or not isinstance(results, list):
+            raise falcon.HTTPBadRequest(description="eventId string and results list are required.")
+        await store.save_finalized_results(event_id, results)
+        resp.status = falcon.HTTP_200
+        resp.media = {"status": "saved", "count": len(results)}
+

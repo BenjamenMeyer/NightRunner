@@ -12,7 +12,7 @@ from nightrunner_backend.transport.patrols import PatrolsResource, PatrolResourc
 from nightrunner_backend.transport.configuration_groups import ConfigurationGroupsResource, ConfigurationGroupResource
 from nightrunner_backend.transport.configurations import ConfigurationsResource, ConfigurationResource
 from nightrunner_backend.transport.stations import StationsResource, StationResource
-from nightrunner_backend.transport.scores import ScoresResource, ScoreResource
+from nightrunner_backend.transport.scores import ScoresResource, ScoreResource, FinalizedResultsResource
 from nightrunner_backend.transport.reports_event import EventReportResource
 from nightrunner_backend.transport.reports_station import StationReportResource
 from nightrunner_backend.transport.login import LoginResource
@@ -80,6 +80,7 @@ def register_routes(app):
     app.add_route("/auth/login", LoginResource())
     app.add_route("/v1/auth/login", LoginResource())
     app.add_route("/v1/scores", ScoresResource())
+    app.add_route("/v1/scores/finalized", FinalizedResultsResource())
     app.add_route("/v1/scores/{scoreId}", ScoreResource())
     app.add_route("/v1/visits", VisitsResource())
     app.add_route("/v1/visits/check-in", VisitCheckInResource())
@@ -111,6 +112,7 @@ def register_routes(app):
     app.add_route("/patrols", PatrolsResource())
     app.add_route("/patrols/{patrol_id}", PatrolResource())
     app.add_route("/scores", ScoresResource())
+    app.add_route("/scores/finalized", FinalizedResultsResource())
     app.add_route("/scores/{scoreId}", ScoreResource())
     app.add_route("/visits", VisitsResource())
     app.add_route("/visits/check-in", VisitCheckInResource())

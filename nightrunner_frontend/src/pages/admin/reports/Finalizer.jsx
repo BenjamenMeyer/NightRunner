@@ -53,25 +53,38 @@ export default function Finalizer() {
         loadData();
     }, [eventId, eventLoading, eventError]);
 
+    const [mismatchWarnings, setMismatchWarnings] = useState([]);
+    const [storedResultsMap, setStoredResultsMap] = useState(null);
+
     async function loadData() {
         try {
             setLoading(true);
             setError(null);
             setSaveMessage(null);
 
-            const [fetchedStations, fetchedPatrols, fetchedConfigs] = await Promise.all([
+            const [fetchedStations, fetchedPatrols, fetchedConfigs, fetchedStoredResults] = await Promise.all([
                 ApiService.stationData.getStations(eventId),
                 ApiService.patrolData.getPatrols(eventId),
-                ApiService.configurationData.getConfigurations()
+                ApiService.configurationData.getConfigurations(),
+                ApiService.backendTransport.get(`/scores/finalized?eventId=${encodeURIComponent(eventId)}`).catch(() => [])
             ]);
 
             const loadedStations = fetchedStations || [];
             const loadedPatrols = fetchedPatrols || [];
             const loadedConfigs = fetchedConfigs || [];
+            const storedList = Array.isArray(fetchedStoredResults) ? fetchedStoredResults : [];
 
             setStations(loadedStations);
             setPatrols(loadedPatrols);
             setConfigurations(loadedConfigs);
+
+            // Map stored results: { [`${patrolId}_${stationId || 'final'}`]: { scoreValue, scoringMode } }
+            const resultMap = {};
+            storedList.forEach((r) => {
+                const key = r.stationId ? `${r.patrolId}_${r.stationId}` : `${r.patrolId}_final`;
+                resultMap[key] = r;
+            });
+            setStoredResultsMap(resultMap);
 
             const reports = {};
             await Promise.all(
@@ -306,13 +319,104 @@ export default function Finalizer() {
         return summary;
     }, [stations, patrols, stationCalculations, stationStates]);
 
-    if (loading && stations.length === 0) {
-        return (
-            <div className="finalizer-page">
-                <h2>Event Score Finalizer</h2>
-                <p>Loading event scoring data...</p>
-            </div>
-        );
+    // Validate calculated results against stored database results
+    useEffect(() => {
+        if (!storedResultsMap || Object.keys(storedResultsMap).length === 0) {
+            setMismatchWarnings([]);
+            return;
+        }
+
+        const warnings = [];
+
+        patrols.forEach((p) => {
+            const pName = p.name || p.programName || `Patrol ${p.id}`;
+
+            // Check overall final score
+            const calcFinal = summaryCalculations[p.id]?.finalScore;
+            const storedFinalRecord = storedResultsMap[`${p.id}_final`];
+            if (storedFinalRecord && calcFinal !== undefined) {
+                const diff = Math.abs(calcFinal - Number(storedFinalRecord.scoreValue));
+                if (diff > 0.01) {
+                    warnings.push(`Final score mismatch for "${pName}": Stored=${Number(storedFinalRecord.scoreValue).toFixed(2)}, Calculated=${calcFinal.toFixed(2)}.`);
+                }
+            }
+
+            // Check station scores
+            stations.forEach((st) => {
+                const stName = st.name || `Station ${st.id}`;
+                const calcStation = stationCalculations[st.id]?.patrolTotals?.[p.id]?.relativeScore;
+                const storedStationRecord = storedResultsMap[`${p.id}_${st.id}`];
+                if (storedStationRecord && calcStation !== undefined) {
+                    const diff = Math.abs(calcStation - Number(storedStationRecord.scoreValue));
+                    if (diff > 0.01) {
+                        warnings.push(`Station "${stName}" score mismatch for "${pName}": Stored=${Number(storedStationRecord.scoreValue).toFixed(2)}, Calculated=${calcStation.toFixed(2)}.`);
+                    }
+                }
+            });
+        });
+
+        setMismatchWarnings(warnings);
+    }, [storedResultsMap, summaryCalculations, stationCalculations, patrols, stations]);
+
+    async function saveFinalizedResults() {
+        if (!eventId) return;
+
+        try {
+            setSaving(true);
+            setSaveMessage(null);
+            setError(null);
+
+            const payloadResults = [];
+
+            // Add station scores for each patrol
+            stations.forEach((st) => {
+                const stMode = stationStates[st.id]?.mode || "absolute";
+                patrols.forEach((p) => {
+                    const val = stationCalculations[st.id]?.patrolTotals?.[p.id]?.relativeScore || 0;
+                    payloadResults.push({
+                        patrolId: p.id,
+                        stationId: st.id,
+                        scoreType: "station",
+                        scoreValue: val,
+                        scoringMode: stMode
+                    });
+                });
+            });
+
+            // Add final overall score for each patrol
+            patrols.forEach((p) => {
+                const val = summaryCalculations[p.id]?.finalScore || 0;
+                payloadResults.push({
+                    patrolId: p.id,
+                    stationId: null,
+                    scoreType: "final",
+                    scoreValue: val,
+                    scoringMode: "overall"
+                });
+            });
+
+            await ApiService.backendTransport.post("/scores/finalized", {
+                eventId,
+                results: payloadResults
+            });
+
+            setSaveMessage("Successfully finalized and stored event scores into database.");
+            setMismatchWarnings([]);
+
+            // Refresh stored results map
+            const newMap = {};
+            payloadResults.forEach((r) => {
+                const key = r.stationId ? `${r.patrolId}_${r.stationId}` : `${r.patrolId}_final`;
+                newMap[key] = r;
+            });
+            setStoredResultsMap(newMap);
+
+        } catch (err) {
+            console.error("Failed to save finalized results:", err);
+            setError(err?.message || "Failed to store finalized scores.");
+        } finally {
+            setSaving(false);
+        }
     }
 
     return (
@@ -322,14 +426,39 @@ export default function Finalizer() {
                     <h1>Event Score Finalizer</h1>
                     <p>Adjust task inclusion, task weights, scoring mode (Absolute vs Relative), and calculate final standings.</p>
                 </div>
-                <button type="button" className="secondary-button" onClick={loadData} disabled={loading}>
-                    🔄 Refresh Data
-                </button>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                    <button type="button" className="primary-button" onClick={saveFinalizedResults} disabled={saving || loading}>
+                        {saving ? "Saving..." : "💾 Save & Finalize Scores to DB"}
+                    </button>
+                    <button type="button" className="secondary-button" onClick={loadData} disabled={loading}>
+                        🔄 Refresh Data
+                    </button>
+                </div>
             </div>
 
             {error && (
                 <div className="finalizer-alert finalizer-alert--error">
                     <strong>Error:</strong> {error}
+                </div>
+            )}
+
+            {mismatchWarnings.length > 0 && (
+                <div className="finalizer-alert finalizer-alert--warning" style={{
+                    background: "rgba(245, 158, 11, 0.15)",
+                    border: "1px solid rgba(245, 158, 11, 0.5)",
+                    color: "#fcd34d",
+                    borderRadius: "8px",
+                    padding: "1rem"
+                }}>
+                    <strong style={{ fontSize: "1.05rem" }}>⚠️ Stored Calculation Mismatch Warning:</strong>
+                    <p style={{ margin: "0.25rem 0 0.5rem 0", fontSize: "0.9rem" }}>
+                        The calculated scores based on current station settings do not match the finalized scores currently stored in the database.
+                    </p>
+                    <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.85rem" }}>
+                        {mismatchWarnings.map((warn, i) => (
+                            <li key={i}>{warn}</li>
+                        ))}
+                    </ul>
                 </div>
             )}
 
