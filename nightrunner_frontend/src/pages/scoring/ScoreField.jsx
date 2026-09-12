@@ -261,30 +261,24 @@ export default function ScoreField({
                             const optLabel = typeof option === "object" && option !== null ? (option.label ?? option.name ?? String(option)) : option;
                             const optValue = typeof option === "object" && option !== null && "value" in option ? option.value : option;
                             
-                            // Check equality for numbers, strings, or full objects
                             const isChecked = 
                                 value === optValue ||
                                 value === option ||
                                 (value !== undefined && value !== null && typeof value === "object" && JSON.stringify(value) === JSON.stringify(option)) ||
                                 (value !== undefined && value !== null && optValue !== undefined && optValue !== null && String(value) === String(optValue));
 
-                            const handleSelect = (e) => {
-                                e.stopPropagation();
-                                onChange(optValue !== undefined ? optValue : option);
-                            };
+                            const selectedVal = optValue !== undefined ? optValue : option;
 
                             return (
                                 <label
                                     key={idx}
                                     className={`radio-option-item ${isChecked ? "selected" : ""}`}
-                                    onClick={handleSelect}
                                 >
                                     <input
                                         type="radio"
-                                        name={`mc_${task.id || idx}`}
-                                        value={typeof optValue === "object" ? JSON.stringify(optValue) : optValue}
+                                        name={`mc_${task.id || taskTitle || idx}`}
                                         checked={isChecked}
-                                        onChange={handleSelect}
+                                        onChange={() => onChange(selectedVal)}
                                     />
                                     <span style={{ fontWeight: isChecked ? "600" : "normal" }}>
                                         {optLabel}
