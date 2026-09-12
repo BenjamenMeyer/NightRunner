@@ -94,6 +94,16 @@ class ScoresStore:
             }
         )
 
+    async def deactivate_all_active_scores_for_patrol_station(self, event_id: str, station_id: str, patrol_id: str) -> None:
+        await self.driver.execute(
+            "UPDATE scores SET active = FALSE WHERE event_id = :event_id AND station_id = :station_id AND patrol_id = :patrol_id AND (active = TRUE OR active IS TRUE)",
+            {
+                "event_id": event_id,
+                "station_id": station_id,
+                "patrol_id": patrol_id,
+            }
+        )
+
     async def get_active_scores_for_patrol_station(self, event_id: str, station_id: str, patrol_id: str) -> List[Score]:
         rows = await self.driver.execute(
             "SELECT * FROM scores WHERE event_id = :event_id AND station_id = :station_id AND patrol_id = :patrol_id AND (active = TRUE OR active IS TRUE)",
