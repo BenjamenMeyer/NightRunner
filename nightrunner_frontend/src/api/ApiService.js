@@ -8,6 +8,7 @@ import ReportService from "./ReportService.js";
 import StationService from "./StationService.js";
 import ConfigurationService from "@/api/ConfigurationService.js";
 import CheckInService from "./CheckInService.js";
+import RosterService from "./RosterService.js";
 
 
 class ApiService {
@@ -73,6 +74,13 @@ class ApiService {
     checkInData;
 
     /**
+     * Attendee roster, sheet import, and gate arrivals.
+     *
+     * @type {RosterService}
+     */
+    rosterData;
+
+    /**
      * Direct backend transport.
      *
      * @type {BackendTransport}
@@ -116,6 +124,9 @@ class ApiService {
 
         this.checkInData =
             new CheckInService();
+
+        this.rosterData =
+            new RosterService();
 
     }
 

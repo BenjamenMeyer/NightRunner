@@ -10,6 +10,7 @@ import {
 
 import ApiService from "../../../api/ApiService.js";
 import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
+import TroopMemberPicker from "./TroopMemberPicker.jsx";
 
 import QRCodeModal from "./QRCodeModal.jsx";
 
@@ -839,6 +840,15 @@ export default function PatrolEditor({
 
 
                     <div className="editor-card-body">
+
+                        <TroopMemberPicker
+                            eventId={eventId}
+                            members={patrol.members}
+                            onAdd={added => setPatrol(current => ({
+                                ...current,
+                                members: [...current.members, ...added]
+                            }))}
+                        />
 
                         {patrol.members.length > 0 ? (
 
