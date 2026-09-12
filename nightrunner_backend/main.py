@@ -21,7 +21,10 @@ from nightrunner_backend.transport.users import UsersResource, UserResource
 from nightrunner_backend.transport.visits import VisitsResource, VisitCheckInResource, VisitCheckOutResource
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG if settings.dev_mode else logging.INFO)
+_log_level_str = (settings.log_level or "INFO").upper()
+_default_level = logging.DEBUG if settings.dev_mode else logging.INFO
+_log_level = getattr(logging, _log_level_str, _default_level)
+logging.basicConfig(level=_log_level)
 logger = logging.getLogger(__name__)
 
 class MigrationMiddleware:
@@ -49,9 +52,18 @@ def createMiddleware():
     ]
 
 
+async def handle_uncaught_exception(req: falcon.Request, resp: falcon.Response, ex: Exception, params: dict):
+    logger.exception(f"Unhandled exception processing {req.method} {req.path}: {ex}")
+    raise falcon.HTTPInternalServerError(
+        title="Internal Server Error",
+        description="An unexpected error occurred."
+    )
+
+
 app = falcon.asgi.App(
     middleware=createMiddleware(),
 )
+app.add_error_handler(Exception, handle_uncaught_exception)
 
 
 

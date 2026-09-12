@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     jwks_url: str = ""
     app_version: str = os.getenv("APP_VERSION", "v0.1.0-dev")
     front_end_url: str = os.getenv("FRONT_END_URL", "http://localhost:3000")
+    log_level: str = os.getenv("LOG_LEVEL", "INFO")
     
     # Database settings might be needed by the middleware to fetch user roles
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///nightrunner.db")
