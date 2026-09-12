@@ -33,13 +33,26 @@ export function EventProvider({ children }) {
 
 
     //
-    // Initialize event context when authentication changes.
+    // Initialize event context when authentication or user data changes.
     //
 
     useEffect(() => {
+        const unsubscribe = ApiService.userData.subscribe((user) => {
+            if (user) {
+                initializeEvent();
+            } else {
+                setEvent(null);
+                setEventId(null);
+                setSelectableEvents([]);
+                setShowEventSelector(false);
+                setError(null);
+                setLoading(false);
+                changeBranding("night-ops");
+            }
+        });
 
         if (auth.isLoading && !isAuthenticated) {
-            return;
+            return () => unsubscribe();
         }
 
         if (!isAuthenticated) {
@@ -53,10 +66,12 @@ export function EventProvider({ children }) {
 
             changeBranding("night-ops");
 
-            return;
+            return () => unsubscribe();
         }
 
         initializeEvent();
+
+        return () => unsubscribe();
 
     }, [
         auth.isLoading,

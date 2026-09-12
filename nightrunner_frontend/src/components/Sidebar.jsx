@@ -5,13 +5,14 @@ import { useAuth } from "react-oidc-context";
 import "./Sidebar.css";
 import AuthService from "../api/auth/AuthService.js";
 import ApiService from "../api/ApiService.js";
+import { useEventContext } from "../api/helpers/event/EventContext.jsx";
 import {
     ACCESS,
     AppRoutes
 } from "../AppRoutes.jsx";
 
 
-function canAccess(route) {
+function canAccess(route, eventId = null) {
 
     if (
         route.access === ACCESS.PUBLIC
@@ -42,7 +43,7 @@ function canAccess(route) {
         route.access === ACCESS.ADMIN
     ) {
         return ApiService.userData
-            .isAdmin();
+            .isAdmin(eventId);
     }
 
     if (
@@ -60,6 +61,8 @@ function Sidebar({ open, close }) {
 
     const auth =
         useAuth();
+
+    const { eventId } = useEventContext();
 
     const [user, setUser] = useState(() => ApiService.userData.getCached());
 
@@ -79,14 +82,14 @@ function Sidebar({ open, close }) {
 
     const isAdmin =
         user &&
-        ApiService.userData.isAdmin();
+        ApiService.userData.isAdmin(eventId);
 
 
     const links =
         AppRoutes.filter(
             route =>
                 route.name &&
-                canAccess(route) &&
+                canAccess(route, eventId) &&
                 (
                     loggedIn ||
                     route.access === ACCESS.PUBLIC
