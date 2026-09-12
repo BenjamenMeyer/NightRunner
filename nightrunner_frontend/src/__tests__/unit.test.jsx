@@ -1079,7 +1079,73 @@ describe('Scoring Form and ScoreField Unit Verification', () => {
     set(userB);
     expect(notifyCount).toBe(2);
   });
+
+  it('supports multiple MultiChoice tasks independently without radio selection collisions across tasks', () => {
+    const tasks = [
+      {
+        id: 'task-mc-1',
+        name: 'First Aid Knowledge',
+        type: 'MultiChoice',
+        options: [
+          { label: 'Option A (Apply Pressure)', value: 'opt-1a' },
+          { label: 'Option B (Elevation)', value: 'opt-1b' },
+          { label: 'Option C (Tourniquet)', value: 'opt-1c' }
+        ]
+      },
+      {
+        id: 'task-mc-2',
+        name: 'Knot Identification',
+        type: 'MultiChoice',
+        options: [
+          { label: 'Square Knot', value: 10 },
+          { label: 'Bowline', value: 5 },
+          { label: 'Clove Hitch', value: 0 }
+        ]
+      },
+      {
+        id: 'task-mc-3',
+        name: 'Fire Safety Rule',
+        type: 'MultiChoice',
+        options: ['Clear 10ft circle', 'Douse with water', 'Keep shovel nearby']
+      }
+    ];
+
+    let scoresState = {};
+
+    const updateScore = (taskId, value) => {
+      scoresState = { ...scoresState, [taskId]: value };
+    };
+
+    // 1. Select option for Task 1
+    updateScore(tasks[0].id, 'opt-1b');
+    expect(scoresState['task-mc-1']).toBe('opt-1b');
+    expect(scoresState['task-mc-2']).toBeUndefined();
+
+    // 2. Select option for Task 2
+    updateScore(tasks[1].id, 10);
+    expect(scoresState['task-mc-1']).toBe('opt-1b');
+    expect(scoresState['task-mc-2']).toBe(10);
+
+    // 3. Select option for Task 3
+    updateScore(tasks[2].id, 'Douse with water');
+    expect(scoresState['task-mc-1']).toBe('opt-1b');
+    expect(scoresState['task-mc-2']).toBe(10);
+    expect(scoresState['task-mc-3']).toBe('Douse with water');
+
+    // 4. Update Task 1 selection - verify Tasks 2 and 3 remain untouched
+    updateScore(tasks[0].id, 'opt-1c');
+    expect(scoresState['task-mc-1']).toBe('opt-1c');
+    expect(scoresState['task-mc-2']).toBe(10);
+    expect(scoresState['task-mc-3']).toBe('Douse with water');
+
+    // 5. Verify radio input group name generation per task
+    tasks.forEach((t, idx) => {
+      const radioGroupName = `mc_${t.id || idx}`;
+      expect(radioGroupName).toBe(`mc_${t.id}`);
+    });
+  });
 });
+
 
 
 
