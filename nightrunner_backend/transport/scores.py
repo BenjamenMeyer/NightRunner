@@ -59,10 +59,13 @@ class ScoresResource:
         if event_id and station_id and patrol_id:
             scores = await store.get_active_scores_for_patrol_station(event_id, station_id, patrol_id)
             resp.status = falcon.HTTP_200
+            last_scored_at = scores[0].submitted_at if scores else None
+            if hasattr(last_scored_at, "isoformat"):
+                last_scored_at = last_scored_at.isoformat()
             resp.media = {
                 "scores": [s.to_dict() for s in scores],
                 "isAlreadyScored": len(scores) > 0,
-                "lastScoredAt": scores[0].submitted_at if scores else None
+                "lastScoredAt": last_scored_at
             }
             return
 
