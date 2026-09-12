@@ -19,6 +19,8 @@ export default function Finalizer() {
     const [stationStates, setStationStates] = useState({});
     const [summaryCollapsed, setSummaryCollapsed] = useState(false);
 
+    const [isAuthorized, setIsAuthorized] = useState(true);
+
     useEffect(() => {
         if (eventLoading) return;
         if (eventError) {
@@ -30,6 +32,22 @@ export default function Finalizer() {
             setError("No event is currently selected.");
             setLoading(false);
             return;
+        }
+
+        const user = ApiService.userData.getCached();
+        if (user) {
+            const isSysAdmin = ApiService.userData.isSystemAdmin();
+            const isEvtAdmin = ApiService.userData.isEventAdmin(eventId);
+            const eventRole = ApiService.userData.getEventRole(eventId);
+            const rolesList = Array.isArray(eventRole) ? eventRole : [eventRole, ...(user.roles ? Object.values(user.roles) : [])];
+            const isStationLead = rolesList.some(r => r === "station_leader" || r === "station_member" || r === "scorer" || r === "scoring-center" || r === "event-admin" || r === "admin");
+            
+            if (!isSysAdmin && !isEvtAdmin && !isStationLead) {
+                setIsAuthorized(false);
+                setError("Access Denied: The Event Score Finalizer is restricted to System Administrators, Event Administrators, and Scoring Station Lead roles.");
+                setLoading(false);
+                return;
+            }
         }
 
         loadData();

@@ -40,6 +40,17 @@ function canAccess(route, eventId = null) {
     }
 
     if (
+        route.path === "/admin/finalizer"
+    ) {
+        if (ApiService.userData.isSystemAdmin() || ApiService.userData.isAdmin(eventId)) {
+            return true;
+        }
+        const eventRole = ApiService.userData.getEventRole(eventId);
+        const rolesList = Array.isArray(eventRole) ? eventRole : [eventRole, ...(cachedUser.roles ? Object.values(cachedUser.roles) : [])];
+        return rolesList.some(r => r === "station_leader" || r === "station_member" || r === "scorer" || r === "scoring-center" || r === "event-admin" || r === "admin");
+    }
+
+    if (
         route.access === ACCESS.ADMIN
     ) {
         return ApiService.userData
