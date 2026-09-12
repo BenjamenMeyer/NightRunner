@@ -85,7 +85,7 @@ class ScoresStore:
 
     async def deactivate_previous_scores(self, event_id: str, station_id: str, patrol_id: str, task_id: str) -> None:
         await self.driver.execute(
-            "UPDATE scores SET active = 0 WHERE event_id = :event_id AND station_id = :station_id AND patrol_id = :patrol_id AND task_id = :task_id AND (active = 1 OR active = TRUE)",
+            "UPDATE scores SET active = FALSE WHERE event_id = :event_id AND station_id = :station_id AND patrol_id = :patrol_id AND task_id = :task_id AND (active = TRUE OR active IS TRUE)",
             {
                 "event_id": event_id,
                 "station_id": station_id,
@@ -96,7 +96,7 @@ class ScoresStore:
 
     async def get_active_scores_for_patrol_station(self, event_id: str, station_id: str, patrol_id: str) -> List[Score]:
         rows = await self.driver.execute(
-            "SELECT * FROM scores WHERE event_id = :event_id AND station_id = :station_id AND patrol_id = :patrol_id AND (active = 1 OR active = TRUE)",
+            "SELECT * FROM scores WHERE event_id = :event_id AND station_id = :station_id AND patrol_id = :patrol_id AND (active = TRUE OR active IS TRUE)",
             {
                 "event_id": event_id,
                 "station_id": station_id,

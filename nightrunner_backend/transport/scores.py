@@ -1,7 +1,37 @@
+from typing import Any
+
 import falcon
 from nightrunner_backend.app_context import get_driver
 from nightrunner_backend.drivers.store.scores import ScoresStore
 from nightrunner_backend.models.score import Score
+
+
+def _parse_numeric_score_value(val: Any) -> float:
+    """Helper to convert complex task score values into a float.
+    Handles dicts (stopwatch timestamps / elapsedSeconds), booleans, numeric strings, and text inputs.
+    """
+    if isinstance(val, (int, float)):
+        return float(val)
+    if isinstance(val, bool):
+        return 1.0 if val else 0.0
+    if isinstance(val, dict):
+        if "elapsedSeconds" in val and isinstance(val["elapsedSeconds"], (int, float)):
+            return float(val["elapsedSeconds"])
+        if "startTime" in val and "endTime" in val:
+            try:
+                from datetime import datetime
+                st = datetime.fromisoformat(str(val["startTime"]).replace("Z", "+00:00"))
+                et = datetime.fromisoformat(str(val["endTime"]).replace("Z", "+00:00"))
+                return (et - st).total_seconds()
+            except Exception:
+                return 0.0
+        return 0.0
+    if isinstance(val, str):
+        try:
+            return float(val)
+        except ValueError:
+            return 1.0 if val.strip() else 0.0
+    return 0.0
 
 
 class ScoresResource:
@@ -14,7 +44,7 @@ class ScoresResource:
             "stationId": "<str>",
             "patrolId":  "<str>",
             "scores": [
-                {"taskId": "<str>", "scoreValue": <float>, "scoreWeight": <float>, "active": <bool>},
+                {"taskId": "<str>", "scoreValue": <float|dict|bool|str>, "scoreWeight": <float>, "active": <bool>},
                 ...
             ]
         }
@@ -69,8 +99,8 @@ class ScoresResource:
         created = []
         for s in scores_data:
             task_id = s.get("taskId")
-            score_value = s.get("scoreValue")
-            if task_id is None or score_value is None:
+            raw_score_value = s.get("scoreValue")
+            if task_id is None or raw_score_value is None:
                 raise falcon.HTTPBadRequest(
                     description="Each score entry must include 'taskId' and 'scoreValue'."
                 )
@@ -79,7 +109,7 @@ class ScoresResource:
                 station_id=station_id,
                 patrol_id=patrol_id,
                 task_id=task_id,
-                score_value=float(score_value),
+                score_value=_parse_numeric_score_value(raw_score_value),
                 score_weight=float(s.get("scoreWeight", 1.0)),
                 active=bool(s.get("active", True)),
                 started_at=s.get("startedAt") or payload.get("startedAt"),
