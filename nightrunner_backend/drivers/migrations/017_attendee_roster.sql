@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS event_attendees (
     troop_id TEXT REFERENCES troops(id) ON DELETE CASCADE,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
-    -- Youth | Adult | Non-participant Youth. 'Staff' from the sheet maps to
-    -- 'Adult'; the raw value is preserved in source_category.
+    -- Youth, Adult, or Non-participant Youth. A 'Staff' value from the sheet
+    -- maps to Adult, and the raw value is preserved in source_category.
     category TEXT NOT NULL DEFAULT 'Youth',
     source_category TEXT,
     phone TEXT,
@@ -43,7 +43,7 @@ CREATE INDEX IF NOT EXISTS idx_event_attendees_event_troop
 CREATE TABLE IF NOT EXISTS arrivals (
     id TEXT PRIMARY KEY, -- UUIDv7
     event_id TEXT REFERENCES events(id) ON DELETE CASCADE,
-    -- One arrival per person; re-checking in is a no-op, not a duplicate row.
+    -- One arrival per person. Re-checking in is a no-op, not a duplicate row.
     attendee_id TEXT NOT NULL UNIQUE REFERENCES event_attendees(id) ON DELETE CASCADE,
     arrived_at TEXT NOT NULL,
     recorded_by TEXT REFERENCES users(id)
