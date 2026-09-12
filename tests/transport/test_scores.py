@@ -94,3 +94,24 @@ async def test_scores_complex_payloads(test_client, dev_mode_enabled):
     assert scores_by_task["task-text"] == 1.0
     assert scores_by_task["task-numeric"] == 42.5
 
+
+@pytest.mark.asyncio
+async def test_score_to_dict_datetime_handling():
+    from datetime import datetime, timezone
+    from nightrunner_backend.models.score import Score
+    now = datetime.now(timezone.utc)
+    score = Score(
+        event_id="e1",
+        station_id="s1",
+        patrol_id="p1",
+        task_id="t1",
+        submitted_at=now,
+        started_at=now,
+        completed_at=now
+    )
+    score_dict = score.to_dict()
+    assert score_dict["submittedAt"] == now.isoformat()
+    assert score_dict["startedAt"] == now.isoformat()
+    assert score_dict["completedAt"] == now.isoformat()
+
+

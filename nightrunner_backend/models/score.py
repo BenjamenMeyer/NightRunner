@@ -21,18 +21,23 @@ class Score:
     entry_mode: str = "live"
 
     def to_dict(self) -> dict:
+        def _to_iso(val):
+            if hasattr(val, "isoformat"):
+                return val.isoformat()
+            return str(val) if val is not None else None
+
         return {
-            "id": self.id,
-            "eventId": self.event_id,
-            "stationId": self.station_id,
-            "patrolId": self.patrol_id,
-            "taskId": self.task_id,
+            "id": str(self.id) if self.id is not None else "",
+            "eventId": str(self.event_id) if self.event_id is not None else "",
+            "stationId": str(self.station_id) if self.station_id is not None else "",
+            "patrolId": str(self.patrol_id) if self.patrol_id is not None else "",
+            "taskId": str(self.task_id) if self.task_id is not None else "",
             "scoreValue": self.score_value,
             "scoreWeight": self.score_weight,
-            "active": self.active,
-            "submittedAt": self.submitted_at,
-            "startedAt": self.started_at,
-            "completedAt": self.completed_at,
+            "active": bool(self.active),
+            "submittedAt": _to_iso(self.submitted_at),
+            "startedAt": _to_iso(self.started_at),
+            "completedAt": _to_iso(self.completed_at),
             "entryMode": self.entry_mode
         }
 
