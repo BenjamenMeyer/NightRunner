@@ -90,6 +90,11 @@ resource "google_cloud_run_v2_service" "backend" {
       }
 
       env {
+        name  = "LOG_LEVEL"
+        value = var.log_level
+      }
+
+      env {
         name  = "GCP_IAM_JWKS_URL"
         value = "https://www.googleapis.com/oauth2/v1/certs"
       }

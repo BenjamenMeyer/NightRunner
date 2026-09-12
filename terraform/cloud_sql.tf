@@ -23,11 +23,8 @@ resource "google_sql_database_instance" "main" {
 
     ip_configuration {
       ipv4_enabled = true
-      # Restrict IP ranges in production as appropriate
-      authorized_networks {
-        name  = "allow-all-temporary"
-        value = "0.0.0.0/0"
-      }
+      # Database connection is secured via Cloud SQL Auth Proxy Unix sockets (Cloud Run)
+      # and GCP IAM credentials (Cloud SQL Studio). Public TCP port 5432 is restricted.
     }
 
     backup_configuration {
