@@ -41,6 +41,12 @@ variable "backend_image" {
   default     = ""
 }
 
+variable "log_level" {
+  type        = string
+  description = "Log level for the backend application (e.g. DEBUG, INFO, WARNING, ERROR)."
+  default     = "DEBUG"
+}
+
 # ------------------------------------------------------------------------------
 # Social Auth Credentials (Firebase / Identity Platform)
 # ------------------------------------------------------------------------------
