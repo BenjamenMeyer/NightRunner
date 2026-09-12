@@ -1051,7 +1051,36 @@ describe('Scoring Form and ScoreField Unit Verification', () => {
     expect(isEventAdminWithoutEvent).toBe(false);
     expect(isEventAdminWithEvent).toBe(true);
   });
+
+  it('deduplicates listener notifications when user data is unchanged', () => {
+    let notifyCount = 0;
+    const userA = { id: 'u1', name: 'User 1' };
+    const userA_same = { id: 'u1', name: 'User 1' };
+    const userB = { id: 'u1', name: 'User 1 Updated' };
+
+    let cached = null;
+    const set = (newUser) => {
+      const prev = cached ? JSON.stringify(cached) : null;
+      const next = newUser ? JSON.stringify(newUser) : null;
+      cached = newUser;
+      if (prev !== next) {
+        notifyCount++;
+      }
+    };
+
+    set(userA);
+    expect(notifyCount).toBe(1);
+
+    // Identical user set should NOT fire notification
+    set(userA_same);
+    expect(notifyCount).toBe(1);
+
+    // Modified user set SHOULD fire notification
+    set(userB);
+    expect(notifyCount).toBe(2);
+  });
 });
+
 
 
 

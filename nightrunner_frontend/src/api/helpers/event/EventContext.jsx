@@ -39,7 +39,7 @@ export function EventProvider({ children }) {
     useEffect(() => {
         const unsubscribe = ApiService.userData.subscribe((user) => {
             if (user) {
-                initializeEvent();
+                initializeEvent(user);
             } else {
                 setEvent(null);
                 setEventId(null);
@@ -69,7 +69,8 @@ export function EventProvider({ children }) {
             return () => unsubscribe();
         }
 
-        initializeEvent();
+        const cachedUser = ApiService.userData.getCached();
+        initializeEvent(cachedUser);
 
         return () => unsubscribe();
 
@@ -83,7 +84,7 @@ export function EventProvider({ children }) {
     // Determine initial event state.
     //
 
-    async function initializeEvent() {
+    async function initializeEvent(providedUser = null) {
 
         try {
 
@@ -91,6 +92,8 @@ export function EventProvider({ children }) {
             setError(null);
 
             const user =
+                providedUser ||
+                ApiService.userData.getCached() ||
                 await ApiService.userData.get();
 
             if (!user) {
