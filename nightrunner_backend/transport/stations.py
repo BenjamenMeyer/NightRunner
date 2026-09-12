@@ -68,15 +68,22 @@ class StationResource:
             raise falcon.HTTPNotFound()
         data = await req.get_media()
         station.name = data.get("name", station.name)
-        station.description = data.get("description", station.description)
-        station.active_configuration_id = data.get("activeConfigurationId", station.active_configuration_id)
-        station.members = data.get("members", station.members)
+        if "description" in data:
+            desc_val = data.get("description")
+            station.description = str(desc_val) if desc_val is not None else None
+        if "activeConfigurationId" in data:
+            cfg_val = data.get("activeConfigurationId")
+            station.active_configuration_id = str(cfg_val) if cfg_val is not None else None
+        if "members" in data:
+            station.members = data.get("members", station.members)
         if "stationWeight" in data:
-            station.station_weight = float(data.get("stationWeight") if data.get("stationWeight") is not None else 1.0)
+            weight_val = data.get("stationWeight")
+            station.station_weight = float(weight_val) if weight_val is not None else 1.0
         if "tasks" in data:
             station.tasks = data.get("tasks", [])
         if "eventId" in data:
-            station.event_id = data.get("eventId")
+            evt_val = data.get("eventId")
+            station.event_id = str(evt_val) if evt_val is not None else station.event_id
         await store.update(station)
         resp.media = station.to_api_dict()
 

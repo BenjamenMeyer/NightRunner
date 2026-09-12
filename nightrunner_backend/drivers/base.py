@@ -107,7 +107,7 @@ class DatabaseDriver:
                                 return cur.rowcount
                             return await cur.fetchall()
         except Exception as e:
-            logger.error(f"SQL Error: {e}\nSQL: {mapped_sql}\nParams: {params}")
+            logger.exception(f"SQL Error ({type(e).__name__}): {e}\nSQL: {mapped_sql}\nParams: {params}")
             raise
 
     async def run_migrations(self):
