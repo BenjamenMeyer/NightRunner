@@ -155,6 +155,18 @@ export default function Scoring() {
             if (!confirmed) {
                 return;
             }
+
+            try {
+                await ApiService.backendTransport.post("/scores", {
+                    action: "deactivate",
+                    eventId,
+                    stationId: selectedStation.id,
+                    patrolId: selectedPatrol.id
+                });
+                setIsAlreadyScored(false);
+            } catch (err) {
+                console.error("Failed to deactivate previous scores:", err);
+            }
         }
 
         setScoringStarted(true);

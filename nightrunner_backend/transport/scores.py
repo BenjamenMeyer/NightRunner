@@ -84,6 +84,17 @@ class ScoresResource:
         if not isinstance(payload, dict):
             raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
 
+        if payload.get("action") == "deactivate":
+            event_id = payload.get("eventId")
+            station_id = payload.get("stationId")
+            patrol_id = payload.get("patrolId")
+            if not event_id or not station_id or not patrol_id:
+                raise falcon.HTTPBadRequest(description="'eventId', 'stationId', and 'patrolId' are required to deactivate scores.")
+            await store.deactivate_all_active_scores_for_patrol_station(event_id, station_id, patrol_id)
+            resp.status = falcon.HTTP_200
+            resp.media = {"status": "deactivated"}
+            return
+
         event_id = payload.get("eventId")
         station_id = payload.get("stationId")
         patrol_id = payload.get("patrolId")
