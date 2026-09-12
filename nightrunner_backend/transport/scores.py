@@ -20,6 +20,30 @@ class ScoresResource:
         }
     """
 
+    async def on_get(self, req: falcon.Request, resp: falcon.Response):
+        store = ScoresStore(get_driver())
+        event_id = req.get_param("eventId")
+        station_id = req.get_param("stationId")
+        patrol_id = req.get_param("patrolId")
+
+        if event_id and station_id and patrol_id:
+            scores = await store.get_active_scores_for_patrol_station(event_id, station_id, patrol_id)
+            resp.status = falcon.HTTP_200
+            resp.media = {
+                "scores": [s.to_dict() for s in scores],
+                "isAlreadyScored": len(scores) > 0,
+                "lastScoredAt": scores[0].submitted_at if scores else None
+            }
+            return
+
+        if event_id:
+            scores = await store.list_for_event(event_id)
+            resp.status = falcon.HTTP_200
+            resp.media = [s.to_dict() for s in scores]
+            return
+
+        raise falcon.HTTPBadRequest(description="'eventId' query parameter is required.")
+
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
         store = ScoresStore(get_driver())
         payload = await req.get_media()
@@ -62,6 +86,8 @@ class ScoresResource:
                 completed_at=s.get("completedAt") or payload.get("completedAt"),
                 entry_mode=payload.get("entryMode", "live"),
             )
+            # Deactivate previous active score for this same task to avoid double counting while preserving history
+            await store.deactivate_previous_scores(event_id, station_id, patrol_id, task_id)
             await store.create(score)
             created.append({"id": score.id})
 

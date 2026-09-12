@@ -26,6 +26,8 @@ export default function Scoring() {
     const [selectedStation, setSelectedStation] = useState(null);
 
     const [scoringStarted, setScoringStarted] = useState(false);
+    const [isAlreadyScored, setIsAlreadyScored] = useState(false);
+    const [lastScoredAt, setLastScoredAt] = useState(null);
 
     useEffect(() => {
         if (eventLoading) {
@@ -57,9 +59,39 @@ export default function Scoring() {
         setSelectedPatrol(null);
         setSelectedStation(null);
         setScoringStarted(false);
+        setIsAlreadyScored(false);
+        setLastScoredAt(null);
 
         loadData(eventId);
     }, [eventId, eventLoading, eventError]);
+
+    useEffect(() => {
+        if (!selectedPatrol || !selectedStation || !eventId) {
+            setIsAlreadyScored(false);
+            setLastScoredAt(null);
+            return;
+        }
+
+        let isMounted = true;
+        ApiService.backendTransport
+            .get(`/scores?eventId=${eventId}&stationId=${selectedStation.id}&patrolId=${selectedPatrol.id}`)
+            .then((res) => {
+                if (isMounted && res) {
+                    setIsAlreadyScored(Boolean(res.isAlreadyScored));
+                    setLastScoredAt(res.lastScoredAt || null);
+                }
+            })
+            .catch(() => {
+                if (isMounted) {
+                    setIsAlreadyScored(false);
+                    setLastScoredAt(null);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [eventId, selectedPatrol, selectedStation]);
 
     async function loadData(selectedEventId) {
         try {
@@ -113,13 +145,17 @@ export default function Scoring() {
             return;
         }
 
-        // TODO:
-        // await ApiService.scoreData.start({
-        //     patrolId: selectedPatrol.id,
-        //     stationId: selectedStation.id,
-        //     eventId,
-        //     timestamp: new Date().toISOString()
-        // });
+        if (isAlreadyScored) {
+            const confirmed = window.confirm(
+                `⚠️ WARNING: Patrol "${selectedPatrol.name}" was already scored at station "${selectedStation.name}".\n\n` +
+                `Are you sure you want to restart scoring for this patrol?\n\n` +
+                `This will deactivate the previous score and record a new score entry. This action cannot be undone.`
+            );
+
+            if (!confirmed) {
+                return;
+            }
+        }
 
         setScoringStarted(true);
     }
@@ -247,6 +283,44 @@ export default function Scoring() {
                                 station={selectedStation}
                                 eventId={eventId}
                             />
+                        ) : isAlreadyScored ? (
+                            <div className="ready-panel warning-panel" style={{ border: "2px solid #ef4444", background: "var(--card-bg)" }}>
+
+                                <h2 style={{ color: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                                    <span>⚠️</span> Patrol Already Scored
+                                </h2>
+
+                                <p style={{ margin: "0" }}>
+
+                                    <strong>
+                                        Patrol:
+                                    </strong>{" "}
+                                    {selectedPatrol.name}
+
+                                    <br />
+
+                                    <strong>
+                                        Station:
+                                    </strong>{" "}
+                                    {selectedStation.name}
+
+                                </p>
+
+                                <div style={{ background: "rgba(239, 68, 68, 0.12)", border: "1px solid #ef4444", padding: "12px 16px", borderRadius: "8px", color: "var(--text-primary)", fontSize: "0.9rem", textAlign: "center", maxWidth: "500px" }}>
+                                    <strong>Notice:</strong> This patrol has already been scored at this station{lastScoredAt ? ` (last scored ${new Date(lastScoredAt).toLocaleTimeString()})` : ""}.
+                                    <br /><br />
+                                    Starting a new score session will <strong>deactivate the previous score</strong> and record new scores for this patrol.
+                                </div>
+
+                                <button
+                                    className="primary-button"
+                                    style={{ background: "#dc2626", borderColor: "#b91c1c", color: "#ffffff" }}
+                                    onClick={startScoring}
+                                >
+                                    Restart Scoring (Re-Score Patrol)
+                                </button>
+
+                            </div>
                         ) : (
                             <div className="ready-panel">
 
