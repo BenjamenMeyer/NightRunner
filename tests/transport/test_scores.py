@@ -49,3 +49,48 @@ async def test_scores_endpoint_and_rescore_deactivation(test_client, dev_mode_en
     assert data_get2["isAlreadyScored"] is True
     assert len(data_get2["scores"]) == 1
     assert data_get2["scores"][0]["scoreValue"] == 100.0
+
+
+@pytest.mark.asyncio
+async def test_scores_complex_payloads(test_client, dev_mode_enabled):
+    payload = {
+        "eventId": "01a08c71-8529-7455-96e0-633e781d047b",
+        "patrolId": "01a08ee6-fb8f-7fd0-8aa4-d2c56ea53f6f",
+        "stationId": "01a08efc-1d04-73aa-88d1-ea640e224661",
+        "timestamp": "2026-09-12T02:53:31.304Z",
+        "entryMode": "live",
+        "startedAt": "2026-09-12T02:52:07.179Z",
+        "completedAt": "2026-09-12T02:53:28.569Z",
+        "scores": [
+            {
+                "taskId": "task-stopwatch",
+                "scoreValue": {
+                    "startTime": "2026-09-12T02:52:48.474Z",
+                    "endTime": "2026-09-12T02:52:49.785Z"
+                }
+            },
+            {
+                "taskId": "task-boolean",
+                "scoreValue": True
+            },
+            {
+                "taskId": "task-text",
+                "scoreValue": "23fasdfwa"
+            },
+            {
+                "taskId": "task-numeric",
+                "scoreValue": 42.5
+            }
+        ]
+    }
+    resp = await test_client.simulate_post("/v1/scores", json=payload)
+    assert resp.status == falcon.HTTP_201
+
+    resp_get = await test_client.simulate_get("/v1/scores?eventId=01a08c71-8529-7455-96e0-633e781d047b&stationId=01a08efc-1d04-73aa-88d1-ea640e224661&patrolId=01a08ee6-fb8f-7fd0-8aa4-d2c56ea53f6f")
+    assert resp_get.status == falcon.HTTP_200
+    scores_by_task = {s["taskId"]: s["scoreValue"] for s in resp_get.json["scores"]}
+    assert pytest.approx(scores_by_task["task-stopwatch"], 0.01) == 1.311
+    assert scores_by_task["task-boolean"] == 1.0
+    assert scores_by_task["task-text"] == 1.0
+    assert scores_by_task["task-numeric"] == 42.5
+
