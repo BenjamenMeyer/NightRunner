@@ -282,6 +282,12 @@ export default function Scoring() {
                                 patrol={selectedPatrol}
                                 station={selectedStation}
                                 eventId={eventId}
+                                onScoreSubmitted={() => {
+                                    setSelectedPatrol(null);
+                                    setScoringStarted(false);
+                                    setIsAlreadyScored(false);
+                                    setLastScoredAt(null);
+                                }}
                             />
                         ) : isAlreadyScored ? (
                             <div className="ready-panel warning-panel" style={{ border: "2px solid #ef4444", background: "var(--card-bg)" }}>

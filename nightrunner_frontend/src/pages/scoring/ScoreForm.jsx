@@ -10,7 +10,8 @@ export default function ScoreForm({
                                       patrol,
                                       station,
                                       eventId,
-                                      configurationId
+                                      configurationId,
+                                      onScoreSubmitted
                                   }) {
 
     const [scores, setScores] = useState({});
@@ -134,6 +135,10 @@ export default function ScoreForm({
             setComments("");
             setStationStartedAt(null);
             setStationCompletedAt(null);
+
+            if (onScoreSubmitted) {
+                onScoreSubmitted();
+            }
 
         }
         catch (error) {
