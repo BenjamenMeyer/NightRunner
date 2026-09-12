@@ -167,12 +167,17 @@ export default class UserService {
 
         }
 
+        const prevValue = localStorage.getItem(USER_KEY);
+        const nextValue = JSON.stringify(user);
+
         localStorage.setItem(
             USER_KEY,
-            JSON.stringify(user)
+            nextValue
         );
 
-        this.notifyListeners(user);
+        if (prevValue !== nextValue) {
+            this.notifyListeners(user);
+        }
 
     }
 
