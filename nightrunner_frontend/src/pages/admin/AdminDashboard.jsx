@@ -247,6 +247,12 @@ export default function AdminDashboard() {
                                 path="/admin/stations"
                             />
 
+                            <AdminAction
+                                title="Score Finalizer"
+                                description="Finalize scores, adjust weights, and set station modes."
+                                path="/admin/finalizer"
+                            />
+
                             {ApiService.userData.isSystemAdmin() && (
                                 <AdminAction
                                     title="Configurations"

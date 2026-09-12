@@ -580,9 +580,67 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ScoreSubmission'
+  /v1/scores/finalized:
+    get:
+      summary: Get Finalized Scores
+      description: Retrieves stored finalized results for an event.
+      tags:
+        - Scoring
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '201':
-          description: Scores submitted successfully.
+        '200':
+          description: List of stored finalized score records.
+    post:
+      summary: Save Finalized Scores
+      description: Persists calculated finalized station and overall scores for an event.
+      tags:
+        - Scoring
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - eventId
+                - results
+              properties:
+                eventId:
+                  type: string
+                  format: uuid
+                results:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      patrolId:
+                        type: string
+                        format: uuid
+                      stationId:
+                        type: string
+                        format: uuid
+                        nullable: true
+                      scoreType:
+                        type: string
+                        enum: [station, final]
+                      scoreValue:
+                        type: number
+                      scoringMode:
+                        type: string
+                        enum: [absolute, relative]
+      responses:
+        '200':
+          description: Finalized results saved successfully.
 
   /v1/visits:
     get:

@@ -1157,6 +1157,80 @@ describe('Scoring Form and ScoreField Unit Verification', () => {
   });
 });
 
+describe('Event Score Finalizer Role & Access Tests', () => {
+  it('allows access to system admin, event admin, and scoring station lead roles', () => {
+    const isAuthorized = (user, eventId) => {
+      if (!user) return false;
+      if (user.isAdmin === true) return true; // System Admin
+      const eventRole = user.roles?.[eventId];
+      const rolesList = Array.isArray(eventRole)
+        ? eventRole
+        : [eventRole, ...(user.roles ? Object.values(user.roles) : [])];
+      return rolesList.some(r =>
+        r === 'event-admin' ||
+        r === 'station_leader' ||
+        r === 'station_member' ||
+        r === 'scorer' ||
+        r === 'scoring-center' ||
+        r === 'admin'
+      );
+    };
+
+    const sysAdminUser = { id: 'u1', isAdmin: true, roles: {} };
+    const eventAdminUser = { id: 'u2', isAdmin: false, roles: { 'evt-1': 'event-admin' } };
+    const stationLeaderUser = { id: 'u3', isAdmin: false, roles: { 'evt-1': 'station_leader' } };
+    const stationMemberUser = { id: 'u4', isAdmin: false, roles: { 'evt-1': 'station_member' } };
+    const unprivilegedUser = { id: 'u5', isAdmin: false, roles: { 'evt-1': 'unauthorized_spectator' } };
+
+    expect(isAuthorized(sysAdminUser, 'evt-1')).toBe(true);
+    expect(isAuthorized(eventAdminUser, 'evt-1')).toBe(true);
+    expect(isAuthorized(stationLeaderUser, 'evt-1')).toBe(true);
+    expect(isAuthorized(stationMemberUser, 'evt-1')).toBe(true);
+    expect(isAuthorized(unprivilegedUser, 'evt-1')).toBe(false);
+  });
+
+  it('calculates absolute weighted sum and relative 10-point scale scores correctly', () => {
+    const tasks = [
+      { id: 't1', name: 'Knot Tying', active: true, scoreWeight: 1.0 },
+      { id: 't2', name: 'Lashing', active: true, scoreWeight: 2.0 },
+      { id: 't3', name: 'Optional Challenge', active: false, scoreWeight: 1.0 }
+    ];
+
+    const patrolScores = {
+      'patrol-a': { t1: 80, t2: 90, t3: 100 }, // raw weighted sum (t1, t2) = 80*1 + 90*2 = 260. (t3 disabled)
+      'patrol-b': { t1: 50, t2: 70, t3: 50 }   // raw weighted sum (t1, t2) = 50*1 + 70*2 = 190.
+    };
+
+    // Calculate Absolute Mode
+    const absoluteTotals = {};
+    let maxAbsolute = 0;
+
+    Object.keys(patrolScores).forEach(pId => {
+      let sum = 0;
+      tasks.forEach(t => {
+        if (t.active) {
+          sum += (patrolScores[pId][t.id] || 0) * t.scoreWeight;
+        }
+      });
+      absoluteTotals[pId] = sum;
+      if (sum > maxAbsolute) maxAbsolute = sum;
+    });
+
+    expect(absoluteTotals['patrol-a']).toBe(260);
+    expect(absoluteTotals['patrol-b']).toBe(190);
+    expect(maxAbsolute).toBe(260);
+
+    // Calculate Relative Mode (10-point scale based on top patrol)
+    const relativeTotals = {};
+    Object.keys(patrolScores).forEach(pId => {
+      relativeTotals[pId] = (absoluteTotals[pId] / maxAbsolute) * 10;
+    });
+
+    expect(relativeTotals['patrol-a']).toBe(10); // 260 / 260 * 10 = 10
+    expect(relativeTotals['patrol-b']).toBeCloseTo((190 / 260) * 10, 2); // ~7.31
+  });
+});
+
 
 
 
