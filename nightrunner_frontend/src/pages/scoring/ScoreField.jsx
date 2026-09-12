@@ -164,16 +164,73 @@ export default function ScoreField({
 
     }
 
-    const fieldType = scoreValue.type || task.type;
-    const taskTitle = task.name || task.description || "Task";
-    const taskNotes = task.notes || task.scorer_notes || scoreValue.notes || null;
+    const [isNotesCollapsed, setIsNotesCollapsed] = useState(false);
+    const [isInstCollapsed, setIsInstCollapsed] = useState(false);
+
+    const taskInstructions = task.instructions || null;
+
+    const renderInstructionsBubble = () => {
+        if (!taskInstructions || !taskInstructions.trim()) return null;
+        return (
+            <div className="task-instructions-bubble" style={{
+                marginBottom: "8px",
+                padding: "8px 12px",
+                background: "var(--card-bg, #1e293b)",
+                border: "1px dashed var(--button-bg, #3b82f6)",
+                borderRadius: "6px"
+            }}>
+                <div
+                    onClick={() => setIsInstCollapsed(!isInstCollapsed)}
+                    style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        cursor: "pointer",
+                        userSelect: "none"
+                    }}
+                >
+                    <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>📋 Task Instructions:</strong>
+                    <button
+                        type="button"
+                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)" }}
+                    >
+                        {isInstCollapsed ? "Show" : "Hide"}
+                    </button>
+                </div>
+                {!isInstCollapsed && (
+                    <span style={{ display: "block", marginTop: "4px", fontSize: "0.9rem", whiteSpace: "pre-wrap", color: "var(--text-secondary)" }}>
+                        {taskInstructions}
+                    </span>
+                )}
+            </div>
+        );
+    };
 
     const renderNotesBubble = () => {
         if (!taskNotes || !taskNotes.trim()) return null;
         return (
             <div className="task-notes-bubble">
-                <strong style={{ display: "block", marginBottom: "2px" }}>💡 Scorer Guidance / Note:</strong>
-                <span>{taskNotes}</span>
+                <div
+                    onClick={() => setIsNotesCollapsed(!isNotesCollapsed)}
+                    style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        cursor: "pointer",
+                        userSelect: "none"
+                    }}
+                >
+                    <strong style={{ marginBottom: "2px" }}>💡 Scorer Guidance / Note:</strong>
+                    <button
+                        type="button"
+                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)" }}
+                    >
+                        {isNotesCollapsed ? "Show" : "Hide"}
+                    </button>
+                </div>
+                {!isNotesCollapsed && (
+                    <span style={{ display: "block", marginTop: "4px" }}>{taskNotes}</span>
+                )}
             </div>
         );
     };
@@ -203,6 +260,7 @@ export default function ScoreField({
 
                 <div className="score-field">
 
+                    {renderInstructionsBubble()}
                     {renderNotesBubble()}
 
                     <label>{taskTitle}</label>
@@ -232,6 +290,7 @@ export default function ScoreField({
 
                 <div className="score-field">
 
+                    {renderInstructionsBubble()}
                     {renderNotesBubble()}
 
                     <label className="checkbox-option">
@@ -294,6 +353,7 @@ export default function ScoreField({
 
                 <div className="score-field multiple-choice-field">
 
+                    {renderInstructionsBubble()}
                     {renderNotesBubble()}
 
                     <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>{taskTitle}</label>
@@ -328,6 +388,7 @@ export default function ScoreField({
 
                 <div className="score-field">
 
+                    {renderInstructionsBubble()}
                     {renderNotesBubble()}
 
                     <label>{taskTitle}</label>
@@ -351,6 +412,7 @@ export default function ScoreField({
 
                 <div className="score-field">
 
+                    {renderInstructionsBubble()}
                     {renderNotesBubble()}
 
                     <label>{taskTitle}</label>
@@ -374,6 +436,7 @@ export default function ScoreField({
 
                 <div className="score-field stopwatch-field">
 
+                    {renderInstructionsBubble()}
                     {renderNotesBubble()}
 
                     <label>{taskTitle}</label>
@@ -501,6 +564,7 @@ export default function ScoreField({
 
                 <div className="score-field">
 
+                    {renderInstructionsBubble()}
                     {renderNotesBubble()}
 
                     <label>{taskTitle}</label>

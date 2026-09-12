@@ -1266,9 +1266,18 @@ components:
           format: uuid
           example: "uuid-string-task-1"
           readOnly: true
+        name:
+          type: string
+          example: "Tripod Lashing"
         description:
           type: string
           example: "Tripod lashing is secure and stable."
+        instructions:
+          type: string
+          example: "Explain the knot-tying scenario to the patrol before timing."
+        notes:
+          type: string
+          example: "Ensure staves are flush before checking stability."
         scoreValue:
           oneOf:
             - $ref: '#/components/schemas/ScoreValueRange'

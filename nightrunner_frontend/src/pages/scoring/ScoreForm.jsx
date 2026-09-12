@@ -149,6 +149,8 @@ export default function ScoreForm({
 
     }
 
+    const [isDescCollapsed, setIsDescCollapsed] = useState(false);
+
     return (
 
         <div className="score-card">
@@ -175,6 +177,43 @@ export default function ScoreForm({
                 )}
 
             </div>
+
+            {station.description && station.description.trim() !== "" && (
+                <div className="station-scenario-section" style={{
+                    marginBottom: "16px",
+                    padding: "12px 16px",
+                    background: "var(--card-bg, #1e293b)",
+                    border: "1px solid var(--border, #334155)",
+                    borderRadius: "8px"
+                }}>
+                    <div
+                        onClick={() => setIsDescCollapsed(!isDescCollapsed)}
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            cursor: "pointer",
+                            userSelect: "none"
+                        }}
+                    >
+                        <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                            📜 Station Scenario / Description
+                        </h4>
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            style={{ padding: "2px 8px", fontSize: "0.8rem" }}
+                        >
+                            {isDescCollapsed ? "Show" : "Hide"}
+                        </button>
+                    </div>
+                    {!isDescCollapsed && (
+                        <p style={{ marginTop: "8px", marginBottom: 0, whiteSpace: "pre-wrap", color: "var(--text-secondary, #cbd5e1)" }}>
+                            {station.description}
+                        </p>
+                    )}
+                </div>
+            )}
 
             <div className="station-timing-section">
                 <h4 style={{ margin: "0 0 8px 0" }}>Station Activity Timing</h4>
