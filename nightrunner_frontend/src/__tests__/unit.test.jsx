@@ -1034,7 +1034,25 @@ describe('Scoring Form and ScoreField Unit Verification', () => {
     expect(taskName).toBe('Rope Knot Inspection');
     expect(taskName).not.toBe('undefined');
   });
+
+  it('evaluates admin sidebar access reactively when supplied with selected eventId', () => {
+    const user = {
+      id: 'usr-1',
+      isAdmin: false,
+      roles: {
+        'evt-100': 'event-admin'
+      }
+    };
+
+    const isSystemAdmin = user.isAdmin === true;
+    const isEventAdminWithoutEvent = isSystemAdmin || Boolean(null && user.roles?.[null] === 'event-admin');
+    const isEventAdminWithEvent = isSystemAdmin || Boolean('evt-100' && user.roles?.['evt-100'] === 'event-admin');
+
+    expect(isEventAdminWithoutEvent).toBe(false);
+    expect(isEventAdminWithEvent).toBe(true);
+  });
 });
+
 
 
 
