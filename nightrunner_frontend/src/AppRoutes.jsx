@@ -13,6 +13,7 @@ import PatrolEditor from "./pages/admin/patrols/PatrolEditor.jsx";
 import StationsAdmin from "./pages/admin/stations/Stations.jsx";
 import StationEditor from "./pages/admin/stations/StationEditor.jsx";
 import UserManager from "./pages/admin/user/UserManager.jsx";
+import Finalizer from "./pages/admin/reports/Finalizer.jsx";
 import Reports from "./pages/admin/reports/Reports.jsx";
 import PrintReport from "./pages/admin/reports/PrintReport.jsx";
 import Configurations from "./pages/admin/configurations/Configurations.jsx";
@@ -197,6 +198,12 @@ export const AppRoutes = [
         path: "/admin/reports",
         element: Reports,
         name: "Event Reports",
+        access: ACCESS.ADMIN
+    },
+    {
+        path: "/admin/finalizer",
+        element: Finalizer,
+        name: "Score Finalizer",
         access: ACCESS.ADMIN
     },
     {
