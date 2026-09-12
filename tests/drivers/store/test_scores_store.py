@@ -50,3 +50,28 @@ async def test_scores_aggregation(store):
     assert station_agg[0]["patrol_id"] == "p1"
     assert station_agg[0]["score_value"] == 10.0
 
+@pytest.mark.asyncio
+async def test_deactivate_previous_scores(store):
+    score1 = Score(event_id="e1", station_id="s1", patrol_id="p1", task_id="t1", score_value=50.0, active=True)
+    await store.create(score1)
+
+    active_before = await store.get_active_scores_for_patrol_station("e1", "s1", "p1")
+    assert len(active_before) == 1
+    assert active_before[0].score_value == 50.0
+
+    # Deactivate previous score for t1
+    await store.deactivate_previous_scores("e1", "s1", "p1", "t1")
+
+    score2 = Score(event_id="e1", station_id="s1", patrol_id="p1", task_id="t1", score_value=95.0, active=True)
+    await store.create(score2)
+
+    active_after = await store.get_active_scores_for_patrol_station("e1", "s1", "p1")
+    assert len(active_after) == 1
+    assert active_after[0].score_value == 95.0
+
+    # Ensure previous score1 still exists in database but active is False
+    old_score = await store.get(score1.id)
+    assert old_score is not None
+    assert not bool(old_score.active)
+
+
