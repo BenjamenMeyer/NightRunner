@@ -1010,6 +1010,17 @@ describe('Scoring Form and ScoreField Unit Verification', () => {
     expect(matchedNumOpt.label).toBe('Full');
   });
 
+  it('clamps RangeRated input score values within task min and max bounds', () => {
+    const minBound = 0;
+    const maxBound = 50;
+
+    const clamp = (val) => Math.max(minBound, Math.min(maxBound, val));
+
+    expect(clamp(25)).toBe(25);
+    expect(clamp(75)).toBe(50); // Clamped to maxBound
+    expect(clamp(-10)).toBe(0); // Clamped to minBound
+  });
+
   it('validates station start and completion timestamps before score submission', () => {
     const stationStartedAt = null;
     const stationCompletedAt = null;

@@ -183,6 +183,21 @@ export default function ScoreField({
         case "RangeRated":
         case "Score Challenge":
         case "Custom":
+            const minBound = scoreValue.min ?? 0;
+            const maxBound = scoreValue.max ?? task.maxScore ?? 100;
+
+            const handleRangeChange = (e) => {
+                const rawVal = e.target.value;
+                if (rawVal === "") {
+                    onChange("");
+                    return;
+                }
+                const numVal = Number(rawVal);
+                if (Number.isNaN(numVal)) return;
+                // Clamp within bounds [minBound, maxBound]
+                const clampedVal = Math.max(minBound, Math.min(maxBound, numVal));
+                onChange(clampedVal);
+            };
 
             return (
 
@@ -194,17 +209,15 @@ export default function ScoreField({
 
                     <input
                         type="number"
-                        min={scoreValue.min ?? 0}
-                        max={scoreValue.max ?? task.maxScore ?? 100}
+                        min={minBound}
+                        max={maxBound}
                         value={value ?? ""}
-                        placeholder={`Score (0 - ${scoreValue.max ?? task.maxScore ?? 100})`}
-                        onChange={(e) =>
-                            onChange(Number(e.target.value))
-                        }
+                        placeholder={`Score (${minBound} - ${maxBound})`}
+                        onChange={handleRangeChange}
                     />
 
                     <small>
-                        Range: {scoreValue.min ?? 0} - {scoreValue.max ?? task.maxScore ?? 100}
+                        Range: {minBound} - {maxBound}
                     </small>
 
                 </div>
@@ -247,6 +260,36 @@ export default function ScoreField({
                 { label: "Option C", value: 0 }
             ];
 
+            const handleSelectChange = (e) => {
+                const selectedRaw = e.target.value;
+                if (!selectedRaw) {
+                    onChange(null);
+                    return;
+                }
+
+                // Try parsing JSON object or numeric/string value
+                try {
+                    const parsed = JSON.parse(selectedRaw);
+                    onChange(parsed);
+                } catch {
+                    if (!Number.isNaN(Number(selectedRaw))) {
+                        onChange(Number(selectedRaw));
+                    } else {
+                        onChange(selectedRaw);
+                    }
+                }
+            };
+
+            // Calculate current selected value string representation for <select>
+            let currentSelectVal = "";
+            if (value !== undefined && value !== null) {
+                if (typeof value === "object") {
+                    currentSelectVal = JSON.stringify(value);
+                } else {
+                    currentSelectVal = String(value);
+                }
+            }
+
             return (
 
                 <div className="score-field multiple-choice-field">
@@ -255,41 +298,24 @@ export default function ScoreField({
 
                     <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>{taskTitle}</label>
 
-                    <div className="radio-options-list">
-
+                    <select
+                        value={currentSelectVal}
+                        onChange={handleSelectChange}
+                        style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card-bg)", color: "var(--text-primary)", width: "100%", fontSize: "1rem" }}
+                    >
+                        <option value="">-- Select Option --</option>
                         {optionsList.map((option, idx) => {
                             const optLabel = typeof option === "object" && option !== null ? (option.label ?? option.name ?? String(option)) : option;
                             const optValue = typeof option === "object" && option !== null && "value" in option ? option.value : option;
-                            
-                            const isChecked = 
-                                value === optValue ||
-                                value === option ||
-                                (value !== undefined && value !== null && typeof value === "object" && JSON.stringify(value) === JSON.stringify(option)) ||
-                                (value !== undefined && value !== null && optValue !== undefined && optValue !== null && String(value) === String(optValue));
-
-                            const selectedVal = optValue !== undefined ? optValue : option;
-                            const radioName = `mc_${task.id || (taskTitle ? taskTitle.replace(/\s+/g, '_') : idx)}`;
+                            const optionValString = typeof optValue === "object" ? JSON.stringify(optValue) : String(optValue !== undefined ? optValue : option);
 
                             return (
-                                <div
-                                    key={idx}
-                                    className={`radio-option-item ${isChecked ? "selected" : ""}`}
-                                    onClick={() => onChange(selectedVal)}
-                                >
-                                    <input
-                                        type="radio"
-                                        name={radioName}
-                                        checked={isChecked}
-                                        onChange={() => onChange(selectedVal)}
-                                    />
-                                    <span style={{ fontWeight: isChecked ? "600" : "normal" }}>
-                                        {optLabel}
-                                    </span>
-                                </div>
+                                <option key={idx} value={optionValString}>
+                                    {optLabel}
+                                </option>
                             );
                         })}
-
-                    </div>
+                    </select>
 
                 </div>
 
