@@ -43,6 +43,7 @@ const mockOidcConfig = {
 };
 
 import ApiService from '../src/api/ApiService.js';
+import BackendTransport from '../src/api/BackendTransport.js';
 
 const FAKE_EVENT = {
   id: 'storybook-demo-event-id',
@@ -70,11 +71,34 @@ if (typeof window !== 'undefined') {
   localStorage.setItem('nightrunner_last_event_id', FAKE_EVENT.id);
   ApiService.userData.set(FAKE_USER);
 
-  // Mock API methods for Storybook isolation
-  const originalGetEvent = ApiService.eventData.getEvent.bind(ApiService.eventData);
-  ApiService.eventData.getEvent = async (id) => FAKE_EVENT;
+  // Mock BackendTransport calls to avoid CORS/401 fetch errors in Storybook
+  BackendTransport.get = async (url) => {
+    if (url === '/me') return FAKE_USER;
+    if (url === '/events') return [FAKE_EVENT];
+    if (url.startsWith('/events/')) return FAKE_EVENT;
+    if (url.includes('/arrivals')) {
+      return {
+        troopsArrived: 8,
+        troopsExpected: 10,
+        totalParticipantsArrived: 64,
+        totalParticipantsExpected: 80,
+        troops: [
+          { id: 'troop-1', name: 'Troop 101 - Eagle Patrol', arrived: true, memberCount: 8, checkedInCount: 8 },
+          { id: 'troop-2', name: 'Troop 404 - Pathfinder Troop', arrived: false, memberCount: 12, checkedInCount: 0 },
+        ],
+      };
+    }
+    return {};
+  };
 
-  const originalGetEvents = ApiService.eventData.getEvents.bind(ApiService.eventData);
+  // Mock UserService.get to return fake admin user synchronously/resolving
+  ApiService.userData.get = async () => {
+    ApiService.userData.set(FAKE_USER);
+    return FAKE_USER;
+  };
+
+  // Mock EventService methods for Storybook isolation
+  ApiService.eventData.getEvent = async () => FAKE_EVENT;
   ApiService.eventData.getEvents = async () => [FAKE_EVENT];
 
   if (ApiService.rosterData) {
