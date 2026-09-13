@@ -2,11 +2,12 @@
     max-width: 60rem;
     margin: 0 auto;
     padding: 1.25rem;
+    color: var(--text-primary);
 }
 
 .dashboard__status {
     padding: 1.5rem;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
 }
 
 .dashboard__header {
@@ -21,26 +22,28 @@
 .dashboard__header h1 {
     margin: 0 0 0.2rem;
     font-size: 1.5rem;
+    color: var(--text-primary);
 }
 
 .dashboard__updated {
     margin: 0;
     font-size: 0.8rem;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
 }
 
 .dashboard__gate-link {
-    color: var(--color-primary, #2b6cb0);
+    color: var(--button-bg);
     font-size: 0.9rem;
+    font-weight: 600;
 }
 
 .dashboard__error {
     padding: 0.7rem 1rem;
     border-radius: 6px;
     margin-bottom: 1rem;
-    background: var(--color-warning-bg, #fffaf0);
-    border: 1px solid var(--color-warning, #dd6b20);
-    color: var(--color-warning-text, #9c4221);
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
     font-size: 0.9rem;
 }
 
@@ -50,10 +53,10 @@
     gap: 1rem;
     align-items: center;
     padding: 1.1rem 1.25rem;
-    border: 1px solid var(--color-border, #e2e8f0);
+    border: 1px solid var(--border);
     border-radius: 10px;
     margin-bottom: 1.75rem;
-    background: var(--color-surface, #fff);
+    background: var(--card-bg);
 }
 
 .dashboard__stat {
@@ -66,17 +69,18 @@
     font-weight: 700;
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
 }
 
 .dashboard__stat-label {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
 }
 
 .dashboard__stat--missing .dashboard__stat-value {
-    color: var(--color-warning-text, #9c4221);
+    color: var(--text-secondary);
 }
 
 .dashboard__overall {
@@ -90,7 +94,8 @@
     flex: 1;
     height: 0.65rem;
     border-radius: 999px;
-    background: var(--color-surface-muted, #edf2f7);
+    background: var(--input-bg);
+    border: 1px solid var(--border);
     overflow: hidden;
 }
 
@@ -98,7 +103,7 @@
     display: block;
     height: 100%;
     border-radius: 999px;
-    background: var(--color-primary, #2b6cb0);
+    background: var(--button-bg);
     transition: width 0.3s ease;
 }
 
@@ -107,6 +112,7 @@
     font-weight: 600;
     min-width: 3rem;
     text-align: right;
+    color: var(--text-primary);
 }
 
 .dashboard__section-title {
@@ -115,25 +121,27 @@
     gap: 0.75rem;
     margin: 0 0 0.75rem;
     font-size: 1.1rem;
+    color: var(--text-primary);
 }
 
 .dashboard__hint {
     font-size: 0.78rem;
     font-weight: 400;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
 }
 
 .dashboard__troops {
     list-style: none;
     margin: 0;
     padding: 0;
-    border: 1px solid var(--color-border, #e2e8f0);
+    border: 1px solid var(--border);
     border-radius: 10px;
     overflow: hidden;
+    background: var(--card-bg);
 }
 
 .dashboard__troop {
-    border-bottom: 1px solid var(--color-border, #edf2f7);
+    border-bottom: 1px solid var(--border);
 }
 
 .dashboard__troop:last-child {
@@ -143,7 +151,7 @@
 /* Fully arrived troops recede — nothing left to chase there. */
 .dashboard__troop--complete .dashboard__troop-number,
 .dashboard__troop--complete .dashboard__troop-counts {
-    color: var(--color-text-muted, #777);
+    color: var(--text-secondary);
 }
 
 .dashboard__troop-row {
@@ -155,45 +163,48 @@
     padding: 0.8rem 0.9rem;
     border: none;
     background: transparent;
-    color: inherit;
+    color: var(--text-primary);
     font: inherit;
     text-align: left;
     cursor: pointer;
 }
 
 .dashboard__troop-row:hover {
-    background: var(--color-surface-muted, #f7fafc);
+    background: var(--input-bg);
 }
 
 .dashboard__chevron {
-    color: var(--color-text-muted, #888);
+    color: var(--text-secondary);
 }
 
 .dashboard__troop-number {
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
 }
 
 .dashboard__troop-counts {
     font-variant-numeric: tabular-nums;
     text-align: right;
+    color: var(--text-primary);
 }
 
 .dashboard__troop-missing {
     font-size: 0.82rem;
     text-align: right;
-    color: var(--color-warning-text, #9c4221);
+    color: var(--text-secondary);
 }
 
 .dashboard__troop--complete .dashboard__troop-missing {
-    color: var(--color-success, #2f855a);
+    color: var(--button-bg);
 }
 
 .dashboard__people {
     list-style: none;
     margin: 0;
     padding: 0 0 0.5rem;
-    background: var(--color-surface-muted, #f7fafc);
+    background: var(--input-bg);
+    border-top: 1px solid var(--border);
 }
 
 .dashboard__person {
@@ -203,21 +214,22 @@
     gap: 0.75rem;
     padding: 0.4rem 0.9rem;
     font-size: 0.9rem;
+    color: var(--text-primary);
 }
 
 .dashboard__tick {
     text-align: center;
-    color: var(--color-text-muted, #aaa);
+    color: var(--text-secondary);
 }
 
 .dashboard__person--arrived .dashboard__tick {
-    color: var(--color-success, #2f855a);
+    color: var(--button-bg);
 }
 
 .dashboard__person-category,
 .dashboard__person-time {
     font-size: 0.8rem;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
 }
 
 .dashboard__person-time {
