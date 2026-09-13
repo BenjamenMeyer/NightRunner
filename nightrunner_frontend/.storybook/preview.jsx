@@ -1,4 +1,5 @@
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import BrandingProvider from '../src/branding/BrandingProvider.jsx';
 import '../src/index.css';
 
@@ -29,7 +30,7 @@ export const globalTypes = {
   },
 };
 
-const withTheme = (Story, context) => {
+const withProviders = (Story, context) => {
   const selectedTheme = context.globals.theme || 'night-ops';
 
   React.useEffect(() => {
@@ -38,12 +39,14 @@ const withTheme = (Story, context) => {
   }, [selectedTheme]);
 
   return (
-    <BrandingProvider>
-      <div className="app-layout" style={{ display: 'block', height: 'auto', padding: '20px' }}>
-        <Story />
-      </div>
-    </BrandingProvider>
+    <MemoryRouter>
+      <BrandingProvider>
+        <div className="app-layout" style={{ display: 'block', height: 'auto', padding: '20px' }}>
+          <Story />
+        </div>
+      </BrandingProvider>
+    </MemoryRouter>
   );
 };
 
-export const decorators = [withTheme];
+export const decorators = [withProviders];
