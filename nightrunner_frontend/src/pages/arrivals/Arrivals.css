@@ -1,0 +1,261 @@
+.arrivals {
+    max-width: 55rem;
+    margin: 0 auto;
+    padding: 1.25rem;
+}
+
+.arrivals__header h1 {
+    margin: 0 0 0.35rem;
+    font-size: 1.5rem;
+}
+
+.arrivals__totals {
+    margin: 0 0 1.25rem;
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+    color: var(--color-text-muted, #666);
+}
+
+.arrivals__totals strong {
+    font-size: 1.3rem;
+    color: inherit;
+}
+
+.arrivals__missing {
+    font-size: 0.85rem;
+}
+
+.arrivals__status {
+    padding: 1.5rem;
+    color: var(--color-text-muted, #666);
+}
+
+.arrivals__error,
+.arrivals__backdate-warning {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.arrivals__error {
+    background: var(--color-danger-bg, #fff5f5);
+    border: 1px solid var(--color-danger, #c53030);
+    color: var(--color-danger, #c53030);
+}
+
+/*
+ * Back-dating is easy to leave switched on by accident, which would
+ * mis-stamp a live arrival. It is deliberately loud.
+ */
+.arrivals__backdate-warning {
+    background: var(--color-warning-bg, #fffaf0);
+    border: 1px solid var(--color-warning, #dd6b20);
+    color: var(--color-warning-text, #9c4221);
+}
+
+.arrivals__error button,
+.arrivals__backdate-warning button {
+    padding: 0.3rem 0.7rem;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.arrivals__controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.arrivals__control {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.arrivals__control span {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.arrivals__control select,
+.arrivals__control input {
+    padding: 0.6rem;
+    border: 1px solid var(--color-border, #cbd5e0);
+    border-radius: 6px;
+    font: inherit;
+    background: var(--color-surface, #fff);
+    color: inherit;
+}
+
+.arrivals__section {
+    margin-bottom: 2rem;
+}
+
+.arrivals__section h2 {
+    margin: 0 0 0.6rem;
+    font-size: 1.1rem;
+}
+
+.arrivals__troop-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+}
+
+.arrivals__troop-count {
+    margin-left: 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--color-text-muted, #666);
+}
+
+.arrivals__all {
+    padding: 0.55rem 0.9rem;
+    border: 1px solid var(--color-primary, #2b6cb0);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-primary, #2b6cb0);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.arrivals__all:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.arrivals__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.arrivals__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 0.9rem;
+    border-bottom: 1px solid var(--color-border, #edf2f7);
+}
+
+.arrivals__row:last-child {
+    border-bottom: none;
+}
+
+/*
+ * Arrived people stay visible rather than disappearing: staff need to see who
+ * is accounted for, not only who is left.
+ */
+.arrivals__row--arrived {
+    background: var(--color-success-bg, #f0fff4);
+}
+
+.arrivals__who {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.arrivals__name {
+    font-weight: 600;
+}
+
+.arrivals__meta {
+    font-size: 0.8rem;
+    color: var(--color-text-muted, #666);
+}
+
+/* Big enough to hit on a phone, in the dark, wearing gloves. */
+.arrivals__checkin,
+.arrivals__undo {
+    flex-shrink: 0;
+    min-width: 6rem;
+    padding: 0.7rem 1rem;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.arrivals__checkin {
+    border: none;
+    background: var(--color-primary, #2b6cb0);
+    color: #fff;
+}
+
+.arrivals__undo {
+    border: 1px solid var(--color-border, #cbd5e0);
+    background: transparent;
+    color: var(--color-text-muted, #666);
+    font-weight: 400;
+}
+
+.arrivals__checkin:disabled,
+.arrivals__undo:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.arrivals__troops {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.6rem;
+}
+
+.arrivals__troops button {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.9rem;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 8px;
+    background: var(--color-surface, #fff);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.arrivals__troop-number {
+    font-weight: 700;
+}
+
+.arrivals__troop-progress {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-muted, #666);
+}
+
+.arrivals__troop-missing {
+    font-size: 0.8rem;
+    color: var(--color-warning-text, #9c4221);
+}
+
+@media (max-width: 30rem) {
+    .arrivals__row {
+        align-items: stretch;
+    }
+}
