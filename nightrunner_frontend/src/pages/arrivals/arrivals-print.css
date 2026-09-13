@@ -144,6 +144,20 @@
         margin: 0.5in;
     }
 
+    /*
+     * index.css sets html/body/#root to height:100% with overflow:hidden,
+     * which clips everything past the first page when printing — the preview
+     * comes out blank. Printing has to flow, so height and overflow are
+     * released here.
+     */
+    html,
+    body,
+    #root {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
     html,
     body {
         margin: 0;
