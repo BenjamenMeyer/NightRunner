@@ -69,9 +69,9 @@ export default function Finalizer() {
                 ApiService.backendTransport.get(`/scores/finalized?eventId=${encodeURIComponent(eventId)}`).catch(() => [])
             ]);
 
-            const loadedStations = fetchedStations || [];
-            const loadedPatrols = fetchedPatrols || [];
-            const loadedConfigs = fetchedConfigs || [];
+            const loadedStations = Array.isArray(fetchedStations) ? fetchedStations : [];
+            const loadedPatrols = Array.isArray(fetchedPatrols) ? fetchedPatrols : [];
+            const loadedConfigs = Array.isArray(fetchedConfigs) ? fetchedConfigs : [];
             const storedList = Array.isArray(fetchedStoredResults) ? fetchedStoredResults : [];
 
             setStations(loadedStations);
@@ -143,6 +143,22 @@ export default function Finalizer() {
         }));
     }
 
+    const [globalScoringMode, setGlobalScoringMode] = useState("absolute");
+
+    // Handlers for modifying task enabled status, task weight, and station weight
+    function handleTaskEnabledChange(stationId, taskId, checked) {
+        setStationStates((prev) => ({
+            ...prev,
+            [stationId]: {
+                ...prev[stationId],
+                enabledTasks: {
+                    ...prev[stationId].enabledTasks,
+                    [taskId]: checked
+                }
+            }
+        }));
+    }
+
     function handleTaskWeightChange(stationId, taskId, val) {
         const numVal = parseFloat(val);
         const weight = Number.isNaN(numVal) ? 0 : numVal;
@@ -154,16 +170,6 @@ export default function Finalizer() {
                     ...prev[stationId].taskWeights,
                     [taskId]: weight
                 }
-            }
-        }));
-    }
-
-    function handleModeChange(stationId, mode) {
-        setStationStates((prev) => ({
-            ...prev,
-            [stationId]: {
-                ...prev[stationId],
-                mode
             }
         }));
     }
@@ -236,7 +242,7 @@ export default function Finalizer() {
         const calcs = {};
 
         stations.forEach((st) => {
-            const stState = stationStates[st.id] || { enabledTasks: {}, taskWeights: {}, mode: "absolute" };
+            const stState = stationStates[st.id] || { enabledTasks: {}, taskWeights: {} };
             const tasks = st.tasks || [];
             const stReport = stationReports[st.id] || { patrols: [] };
 
@@ -275,7 +281,7 @@ export default function Finalizer() {
             patrols.forEach((p) => {
                 const rawTotal = patrolTotals[p.id].total;
                 let relScore = 0;
-                if (stState.mode === "relative") {
+                if (globalScoringMode === "relative") {
                     relScore = maxAbsoluteAchieved > 0 ? (rawTotal / maxAbsoluteAchieved) * 10 : 0;
                 } else {
                     relScore = rawTotal;
@@ -290,7 +296,7 @@ export default function Finalizer() {
         });
 
         return calcs;
-    }, [stations, patrols, stationReports, stationStates]);
+    }, [stations, patrols, stationReports, stationStates, globalScoringMode]);
 
     const summaryCalculations = useMemo(() => {
         const summary = {};
@@ -300,7 +306,7 @@ export default function Finalizer() {
             const stationBreakdown = {};
 
             stations.forEach((st) => {
-                const stState = stationStates[st.id] || { mode: "absolute", stationWeight: 1.0 };
+                const stState = stationStates[st.id] || { stationWeight: 1.0 };
                 const stCalc = stationCalculations[st.id]?.patrolTotals?.[p.id];
                 const baseScore = stCalc ? stCalc.relativeScore : 0;
                 const stationWeight = stState.stationWeight !== undefined ? stState.stationWeight : 1.0;
@@ -424,9 +430,20 @@ export default function Finalizer() {
             <div className="finalizer-header">
                 <div>
                     <h1>Event Score Finalizer</h1>
-                    <p>Adjust task inclusion, task weights, scoring mode (Absolute vs Relative), and calculate final standings.</p>
+                    <p>Adjust task inclusion, task weights, global scoring mode (Absolute vs Relative), and calculate final standings.</p>
                 </div>
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <div className="finalizer-header-actions" style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+                    <div className="mode-selector">
+                        <label style={{ fontWeight: "bold" }}>Scoring Mode:</label>
+                        <select
+                            value={globalScoringMode}
+                            onChange={(e) => setGlobalScoringMode(e.target.value)}
+                            className="finalizer-select"
+                        >
+                            <option value="absolute">Absolute Score (Weighted Sum)</option>
+                            <option value="relative">Relative to Max Patrol (10pt Scale)</option>
+                        </select>
+                    </div>
                     <button type="button" className="primary-button" onClick={saveFinalizedResults} disabled={saving || loading}>
                         {saving ? "Saving..." : "💾 Save & Finalize Scores to DB"}
                     </button>
@@ -498,18 +515,6 @@ export default function Finalizer() {
                             </div>
 
                             <div className="station-bubble-controls">
-                                <div className="mode-selector">
-                                    <label>Scoring Mode:</label>
-                                    <select
-                                        value={stState.mode}
-                                        onChange={(e) => handleModeChange(st.id, e.target.value)}
-                                        className="finalizer-select"
-                                    >
-                                        <option value="absolute">Absolute Score</option>
-                                        <option value="relative">Relative to Max Patrol (10pt Scale)</option>
-                                    </select>
-                                </div>
-
                                 <button
                                     type="button"
                                     className="secondary-button save-station-btn"
@@ -542,17 +547,17 @@ export default function Finalizer() {
                                                 </th>
                                             ))}
                                             <th className="col-total">
-                                                {stState.mode === "relative" ? "Total Score (10pt Relative)" : "Total Score (Weighted Sum)"}
+                                                {globalScoringMode === "relative" ? "Total Score (10pt Relative)" : "Total Score (Weighted Sum)"}
                                             </th>
                                         </tr>
 
                                         <tr className="header-row-checkboxes">
-                                            <td className="col-patrol-label">Used for Scoring?</td>
+                                            <th className="col-patrol-label">Used for Scoring?</th>
                                             {tasks.map((t) => {
                                                 const taskId = t.id || t._id;
                                                 const checked = stState.enabledTasks[taskId] !== false;
                                                 return (
-                                                    <td key={taskId} className="col-task-center">
+                                                    <th key={taskId} className="col-task-center">
                                                         <label className="checkbox-label">
                                                             <input
                                                                 type="checkbox"
@@ -563,21 +568,21 @@ export default function Finalizer() {
                                                             />
                                                             Include
                                                         </label>
-                                                    </td>
+                                                    </th>
                                                 );
                                             })}
-                                            <td className="col-total-label">
-                                                {stState.mode === "relative" ? `Max Patrol Raw: ${stCalc.maxAbsoluteAchieved.toFixed(1)}` : "Sum"}
-                                            </td>
+                                            <th className="col-total-label">
+                                                {globalScoringMode === "relative" ? `Max Patrol Raw: ${stCalc.maxAbsoluteAchieved.toFixed(1)}` : "Sum"}
+                                            </th>
                                         </tr>
 
                                         <tr className="header-row-weights">
-                                            <td className="col-patrol-label">Task Weight Multiplier</td>
+                                            <th className="col-patrol-label">Task Weight Multiplier</th>
                                             {tasks.map((t) => {
                                                 const taskId = t.id || t._id;
                                                 const weight = stState.taskWeights[taskId] !== undefined ? stState.taskWeights[taskId] : 1.0;
                                                 return (
-                                                    <td key={taskId} className="col-task-center">
+                                                    <th key={taskId} className="col-task-center">
                                                         <input
                                                             type="number"
                                                             step="0.1"
@@ -588,10 +593,10 @@ export default function Finalizer() {
                                                                 handleTaskWeightChange(st.id, taskId, e.target.value)
                                                             }
                                                         />
-                                                    </td>
+                                                    </th>
                                                 );
                                             })}
-                                            <td className="col-total-label">Subtotal</td>
+                                            <th className="col-total-label">Subtotal</th>
                                         </tr>
                                     </thead>
 
@@ -689,25 +694,22 @@ export default function Finalizer() {
                                 </tr>
 
                                 <tr className="header-row-checkboxes">
-                                    <td className="col-patrol-label">Scoring Mode</td>
-                                    {stations.map((st) => {
-                                        const stState = stationStates[st.id] || { mode: "absolute" };
-                                        return (
-                                            <td key={st.id} className="col-task-center font-sm">
-                                                {stState.mode === "relative" ? "Relative (10pt)" : "Absolute Sum"}
-                                            </td>
-                                        );
-                                    })}
-                                    <td className="col-total-label">Final Weighted Sum</td>
+                                    <th className="col-patrol-label">Scoring Mode</th>
+                                    {stations.map((st) => (
+                                        <th key={st.id} className="col-task-center font-sm">
+                                            {globalScoringMode === "relative" ? "Relative (10pt)" : "Absolute Sum"}
+                                        </th>
+                                    ))}
+                                    <th className="col-total-label">Final Weighted Sum</th>
                                 </tr>
 
                                 <tr className="header-row-weights">
-                                    <td className="col-patrol-label">Station Weight Multiplier</td>
+                                    <th className="col-patrol-label">Station Weight Multiplier</th>
                                     {stations.map((st) => {
                                         const stState = stationStates[st.id] || { stationWeight: 1.0 };
                                         const weight = stState.stationWeight !== undefined ? stState.stationWeight : 1.0;
                                         return (
-                                            <td key={st.id} className="col-task-center">
+                                            <th key={st.id} className="col-task-center">
                                                 <input
                                                     type="number"
                                                     step="0.1"
@@ -716,10 +718,10 @@ export default function Finalizer() {
                                                     value={weight}
                                                     onChange={(e) => handleStationWeightChange(st.id, e.target.value)}
                                                 />
-                                            </td>
+                                            </th>
                                         );
                                     })}
-                                    <td className="col-total-label">Grand Total</td>
+                                    <th className="col-total-label">Grand Total</th>
                                 </tr>
                             </thead>
 

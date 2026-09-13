@@ -167,7 +167,10 @@ export default function ScoreField({
     const [isNotesCollapsed, setIsNotesCollapsed] = useState(false);
     const [isInstCollapsed, setIsInstCollapsed] = useState(false);
 
+    const fieldType = task.type || task.fieldType || "Custom";
+    const taskTitle = task.name || task.title || "Task";
     const taskInstructions = task.instructions || null;
+    const taskNotes = task.notes || null;
 
     const renderInstructionsBubble = () => {
         if (!taskInstructions || !taskInstructions.trim()) return null;

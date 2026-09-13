@@ -18,7 +18,8 @@ import "./PatrolEditor.css";
 
 const RANKS = [
     "Navigator",
-    "Adventurer"
+    "Adventurer",
+    "Freedom"
 ];
 
 const EMPTY_MEMBER = {
