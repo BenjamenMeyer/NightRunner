@@ -2,11 +2,13 @@
     max-width: 55rem;
     margin: 0 auto;
     padding: 1.25rem;
+    color: var(--text-primary);
 }
 
 .arrivals__header h1 {
     margin: 0 0 0.35rem;
     font-size: 1.5rem;
+    color: var(--text-primary);
 }
 
 .arrivals__totals {
@@ -14,21 +16,22 @@
     display: flex;
     gap: 1rem;
     align-items: baseline;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
 }
 
 .arrivals__totals strong {
     font-size: 1.3rem;
-    color: inherit;
+    color: var(--text-primary);
 }
 
 .arrivals__missing {
     font-size: 0.85rem;
+    color: var(--text-secondary);
 }
 
 .arrivals__status {
     padding: 1.5rem;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
 }
 
 .arrivals__error,
@@ -43,9 +46,9 @@
 }
 
 .arrivals__error {
-    background: var(--color-danger-bg, #fff5f5);
-    border: 1px solid var(--color-danger, #c53030);
-    color: var(--color-danger, #c53030);
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
 }
 
 /*
@@ -53,9 +56,9 @@
  * mis-stamp a live arrival. It is deliberately loud.
  */
 .arrivals__backdate-warning {
-    background: var(--color-warning-bg, #fffaf0);
-    border: 1px solid var(--color-warning, #dd6b20);
-    color: var(--color-warning-text, #9c4221);
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
 }
 
 .arrivals__error button,
@@ -87,16 +90,17 @@
 .arrivals__control span {
     font-size: 0.8rem;
     font-weight: 600;
+    color: var(--text-primary);
 }
 
 .arrivals__control select,
 .arrivals__control input {
     padding: 0.6rem;
-    border: 1px solid var(--color-border, #cbd5e0);
+    border: 1px solid var(--input-border);
     border-radius: 6px;
     font: inherit;
-    background: var(--color-surface, #fff);
-    color: inherit;
+    background: var(--input-bg);
+    color: var(--input-text);
 }
 
 .arrivals__section {
@@ -106,6 +110,7 @@
 .arrivals__section h2 {
     margin: 0 0 0.6rem;
     font-size: 1.1rem;
+    color: var(--text-primary);
 }
 
 .arrivals__troop-header {
@@ -121,15 +126,15 @@
     margin-left: 0.6rem;
     font-size: 0.85rem;
     font-weight: 400;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
 }
 
 .arrivals__all {
     padding: 0.55rem 0.9rem;
-    border: 1px solid var(--color-primary, #2b6cb0);
+    border: 1px solid var(--button-bg);
     border-radius: 6px;
-    background: transparent;
-    color: var(--color-primary, #2b6cb0);
+    background: var(--button-bg);
+    color: var(--button-text);
     font: inherit;
     font-weight: 600;
     cursor: pointer;
@@ -144,9 +149,10 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    border: 1px solid var(--color-border, #e2e8f0);
+    border: 1px solid var(--border);
     border-radius: 8px;
     overflow: hidden;
+    background: var(--card-bg);
 }
 
 .arrivals__row {
@@ -155,19 +161,16 @@
     justify-content: space-between;
     gap: 1rem;
     padding: 0.75rem 0.9rem;
-    border-bottom: 1px solid var(--color-border, #edf2f7);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
 }
 
 .arrivals__row:last-child {
     border-bottom: none;
 }
 
-/*
- * Arrived people stay visible rather than disappearing: staff need to see who
- * is accounted for, not only who is left.
- */
 .arrivals__row--arrived {
-    background: var(--color-success-bg, #f0fff4);
+    background: var(--input-bg);
 }
 
 .arrivals__who {
@@ -179,11 +182,12 @@
 
 .arrivals__name {
     font-weight: 600;
+    color: var(--text-primary);
 }
 
 .arrivals__meta {
     font-size: 0.8rem;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
 }
 
 /* Big enough to hit on a phone, in the dark, wearing gloves. */
@@ -200,14 +204,14 @@
 
 .arrivals__checkin {
     border: none;
-    background: var(--color-primary, #2b6cb0);
-    color: #fff;
+    background: var(--button-bg);
+    color: var(--button-text);
 }
 
 .arrivals__undo {
-    border: 1px solid var(--color-border, #cbd5e0);
+    border: 1px solid var(--border);
     background: transparent;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
     font-weight: 400;
 }
 
@@ -232,9 +236,10 @@
     flex-direction: column;
     gap: 0.2rem;
     padding: 0.9rem;
-    border: 1px solid var(--color-border, #e2e8f0);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: var(--color-surface, #fff);
+    background: var(--card-bg);
+    color: var(--text-primary);
     font: inherit;
     text-align: left;
     cursor: pointer;
@@ -242,16 +247,17 @@
 
 .arrivals__troop-number {
     font-weight: 700;
+    color: var(--text-primary);
 }
 
 .arrivals__troop-progress {
     font-variant-numeric: tabular-nums;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
 }
 
 .arrivals__troop-missing {
     font-size: 0.8rem;
-    color: var(--color-warning-text, #9c4221);
+    color: var(--text-secondary);
 }
 
 @media (max-width: 30rem) {
@@ -269,5 +275,5 @@
 }
 
 .arrivals__print-links a {
-    color: var(--color-primary, #2b6cb0);
+    color: var(--button-bg);
 }
