@@ -126,7 +126,7 @@ export const AppRoutes = [
     {
         path: "/live",
         element: LiveScoring,
-        name: "Live Scoring",
+        name: "Live Status",
         access: ACCESS.USER,
         layout: false,
         newTab: true
