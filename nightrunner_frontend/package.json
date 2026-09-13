@@ -11,7 +11,9 @@
     "test": "vitest run",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "test-storybook": "test-storybook",
+    "test-storybook:ci": "concurrently -k -s first 'http-server storybook-static -p 6006' 'test-storybook'"
   },
   "dependencies": {
     "env-cmd": "^11.0.0",
@@ -31,11 +33,15 @@
     "@storybook/addon-links": "^8.6.18",
     "@storybook/react": "^8.6.18",
     "@storybook/react-vite": "^8.6.18",
+    "@storybook/test-runner": "^0.24.5",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "chromatic": "^18.8.1",
+    "concurrently": "^10.0.5",
+    "http-server": "^14.1.1",
     "jsdom": "^30.0.1",
     "oxlint": "^1.82.0",
     "storybook": "^8.6.18",
