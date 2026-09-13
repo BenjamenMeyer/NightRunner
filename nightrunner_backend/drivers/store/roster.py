@@ -40,6 +40,12 @@ COUNT_ATTENDEES_BY_KEY = """
     WHERE event_id = :event_id AND source_key = :source_key
 """
 
+LIST_ORDINALS_BY_KEY = """
+    SELECT key_ordinal FROM event_attendees
+    WHERE event_id = :event_id AND source_key = :source_key
+    ORDER BY key_ordinal ASC
+"""
+
 CREATE_ATTENDEE = """
     INSERT INTO event_attendees (
         id, event_id, troop_id, first_name, last_name, category, source_category,
@@ -179,6 +185,27 @@ class RosterStore:
         if not row:
             return 0
         return int(row.get("total") or 0)
+
+    async def next_free_ordinal(self, event_id: str, source_key: str) -> int:
+        """
+        The lowest ordinal not already used for this match key.
+
+        Ordinals exist to separate two real people who share a name, so they
+        should be contiguous: 1, then 2. Trusting a caller-supplied ordinal
+        lets a record land at 3 with nothing at 1 or 2 — which happens when an
+        operator approves only some of a set of duplicate sheet rows. Harmless,
+        but it makes "person 3 of 3" show against somebody who is the only one.
+        """
+        rows = await self.driver.execute(LIST_ORDINALS_BY_KEY, {
+            "event_id": event_id,
+            "source_key": source_key,
+        })
+        taken = {int(row["key_ordinal"]) for row in rows or []}
+
+        candidate = 1
+        while candidate in taken:
+            candidate += 1
+        return candidate
 
     async def create_attendee(self, attendee: EventAttendee) -> EventAttendee:
         await self.driver.execute(CREATE_ATTENDEE, {

@@ -28,6 +28,7 @@ import LiveScoring from "./pages/livescoring/LiveScoring.jsx";
 import CheckInOut from "@/pages/checkin/CheckInOut.jsx";
 import RosterImport from "./pages/admin/roster/RosterImport.jsx";
 import Arrivals from "./pages/arrivals/Arrivals.jsx";
+import ArrivalsPrint from "./pages/arrivals/ArrivalsPrint.jsx";
 
 
 export const ACCESS = {
@@ -167,6 +168,12 @@ export const AppRoutes = [
         element: Arrivals,
         name: "Gate Check-In",
         access: ACCESS.USER
+    },
+    {
+        path: "/arrivals/print",
+        element: ArrivalsPrint,
+        access: ACCESS.USER,
+        layout: false
     },
     {
         path: "/admin/patrols/create",

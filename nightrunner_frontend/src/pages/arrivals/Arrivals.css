@@ -259,3 +259,15 @@
         align-items: stretch;
     }
 }
+
+.arrivals__print-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.85rem;
+}
+
+.arrivals__print-links a {
+    color: var(--color-primary, #2b6cb0);
+}

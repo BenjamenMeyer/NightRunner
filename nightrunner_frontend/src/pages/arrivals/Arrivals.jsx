@@ -170,6 +170,23 @@ export default function Arrivals() {
         }
     }
 
+    /**
+     * Link to a printable roster. Opened in a new tab so the gate screen is
+     * not navigated away from mid-check-in.
+     */
+    function printUrl(mode, onlyTroopId = null) {
+
+        const params = new URLSearchParams({ eventId, mode });
+
+        if (onlyTroopId) {
+            params.set("troopId", onlyTroopId);
+        }
+
+        return `/arrivals/print?${params.toString()}`;
+
+    }
+
+
     function formatTime(iso) {
         if (!iso) {
             return "";
@@ -195,7 +212,9 @@ export default function Arrivals() {
         <div className="arrivals">
 
             <header className="arrivals__header">
+
                 <h1>Gate check-in</h1>
+
                 {summary && (
                     <p className="arrivals__totals">
                         <strong>{summary.arrived}</strong> of {summary.expected} arrived
@@ -204,6 +223,37 @@ export default function Arrivals() {
                         </span>
                     </p>
                 )}
+
+                <div className="arrivals__print-links">
+                    {/*
+                      * The blank checklist is the outage fallback and is meant
+                      * to be printed before the event, so it is offered first.
+                      */}
+                    <a
+                        href={printUrl("blank")}
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        Print blank checklists
+                    </a>
+                    <a
+                        href={printUrl("status")}
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        Print current status
+                    </a>
+                    {troopId && (
+                        <a
+                            href={printUrl("blank", troopId)}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Print this troop only
+                        </a>
+                    )}
+                </div>
+
             </header>
 
             {error && (

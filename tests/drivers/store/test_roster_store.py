@@ -298,3 +298,47 @@ class TestAttendeeAssignments:
         await store.update(loaded)
 
         assert (await store.get("p9")).number == 7
+
+
+class TestOrdinalAllocation:
+    """
+    Ordinals separate two real people who share a name, so they should be
+    contiguous. A lone record at ordinal 3 means "person 3 of 3" shows against
+    somebody who is the only one.
+    """
+
+    async def _troop(self, store):
+        return await store.ensure_troop("GA-0594")
+
+    async def test_first_person_with_a_name_gets_ordinal_one(self):
+        store = RosterStore(get_driver())
+        key = build_source_key("GA-0594", "Smith", "John")
+
+        assert await store.next_free_ordinal("event-1", key) == 1
+
+    async def test_second_person_with_the_same_name_gets_two(self):
+        store = RosterStore(get_driver())
+        troop = await self._troop(store)
+        first = make_attendee("event-1", troop.id, "GA-0594", "John", "Smith", ordinal=1)
+        await store.create_attendee(first)
+
+        assert await store.next_free_ordinal("event-1", first.source_key) == 2
+
+    async def test_fills_a_gap_rather_than_climbing(self):
+        """A record at 3 with 1 and 2 free must not push the next one to 4."""
+        store = RosterStore(get_driver())
+        troop = await self._troop(store)
+        stray = make_attendee("event-1", troop.id, "GA-0594", "John", "Smith", ordinal=3)
+        await store.create_attendee(stray)
+
+        assert await store.next_free_ordinal("event-1", stray.source_key) == 1
+
+    async def test_ordinals_are_scoped_per_name_and_event(self):
+        store = RosterStore(get_driver())
+        troop = await self._troop(store)
+        taken = make_attendee("event-1", troop.id, "GA-0594", "John", "Smith", ordinal=1)
+        await store.create_attendee(taken)
+
+        other_name = build_source_key("GA-0594", "Doe", "Jane")
+        assert await store.next_free_ordinal("event-1", other_name) == 1
+        assert await store.next_free_ordinal("event-2", taken.source_key) == 1

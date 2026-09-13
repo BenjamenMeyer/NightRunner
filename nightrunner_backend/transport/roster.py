@@ -134,8 +134,8 @@ class EventAttendeesResource:
         source_key = build_source_key(number, last_name, first_name)
 
         # A manually added person may share a name with somebody already on the
-        # roster; give them the next ordinal rather than colliding.
-        ordinal = await store.count_by_key(event_id, source_key) + 1
+        # roster; give them the next free ordinal rather than colliding.
+        ordinal = await store.next_free_ordinal(event_id, source_key)
 
         attendee = EventAttendee(
             id=str(uuid6.uuid7()),
@@ -257,6 +257,11 @@ class RosterImportApplyResource:
                     updated += 1
                     continue
 
+            # Use the next free ordinal rather than the one the client
+            # suggested. Approving only some of a set of duplicate rows would
+            # otherwise leave a lone record at ordinal 3.
+            create_ordinal = await store.next_free_ordinal(event_id, source_key)
+
             attendee = EventAttendee(
                 id=str(uuid6.uuid7()),
                 event_id=event_id,
@@ -269,7 +274,7 @@ class RosterImportApplyResource:
                 emergency_contact_1=parsed["emergencyContact1"],
                 emergency_contact_2=parsed["emergencyContact2"],
                 source_key=source_key,
-                key_ordinal=ordinal,
+                key_ordinal=create_ordinal,
                 created_at=_now(),
                 updated_at=_now(),
             )

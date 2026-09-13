@@ -1,0 +1,194 @@
+.arrivals-print {
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 1rem;
+    background: #ffffff;
+    color: #111111;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.arrivals-print__status {
+    padding: 2rem;
+    color: #555555;
+}
+
+.arrivals-print__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #dddddd;
+    color: #555555;
+    font-size: 0.85rem;
+}
+
+.arrivals-print__toolbar button {
+    padding: 0.55rem 1.1rem;
+    border: none;
+    border-radius: 6px;
+    background: #2b6cb0;
+    color: #ffffff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.arrivals-print__sheet {
+    margin-bottom: 2.5rem;
+}
+
+.arrivals-print__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 2px solid #111111;
+}
+
+.arrivals-print__header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    letter-spacing: 0.02em;
+}
+
+.arrivals-print__event {
+    margin: 0.15rem 0 0;
+    color: #444444;
+    font-size: 0.9rem;
+}
+
+.arrivals-print__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    font-size: 0.8rem;
+    color: #444444;
+    text-align: right;
+}
+
+.arrivals-print__note {
+    margin: 0.6rem 0 0.8rem;
+    font-size: 0.85rem;
+    color: #444444;
+}
+
+.arrivals-print__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.arrivals-print__table th {
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid #111111;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.arrivals-print__table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #cccccc;
+}
+
+.arrivals-print__tick {
+    width: 2.2rem;
+    text-align: center;
+}
+
+.arrivals-print__time {
+    width: 8rem;
+}
+
+/* An empty box to tick by hand on the pre-event sheet. */
+.arrivals-print__box {
+    display: inline-block;
+    width: 0.95rem;
+    height: 0.95rem;
+    border: 1.5px solid #111111;
+    border-radius: 2px;
+}
+
+/* A line to write the arrival time on. */
+.arrivals-print__rule {
+    display: block;
+    height: 0.9rem;
+    border-bottom: 1px solid #999999;
+}
+
+.arrivals-print__row--missing td {
+    color: #777777;
+}
+
+.arrivals-print__missing-note,
+.arrivals-print__footer-note {
+    margin: 0.75rem 0 0;
+    font-size: 0.8rem;
+    color: #444444;
+}
+
+.arrivals-print__footer-note {
+    padding-top: 0.5rem;
+    border-top: 1px solid #dddddd;
+    font-style: italic;
+}
+
+@media print {
+
+    @page {
+        size: portrait;
+        margin: 0.5in;
+    }
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        background: #ffffff;
+    }
+
+    .arrivals-print {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* The Print button is not part of the sheet. */
+    .arrivals-print__toolbar {
+        display: none;
+    }
+
+    /*
+     * One troop per page, so each sheet can be handed to a different person
+     * or clipped to its own board. The last sheet must not force a trailing
+     * blank page.
+     */
+    .arrivals-print__sheet {
+        margin-bottom: 0;
+        break-after: page;
+        page-break-after: always;
+    }
+
+    .arrivals-print__sheet:last-child {
+        break-after: auto;
+        page-break-after: auto;
+    }
+
+    /* Keep a person's row from splitting across a page break. */
+    .arrivals-print__table tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .arrivals-print__table thead {
+        display: table-header-group;
+    }
+
+    .arrivals-print__row--missing td {
+        color: #000000;
+    }
+}
