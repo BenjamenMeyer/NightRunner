@@ -103,6 +103,7 @@ jobs:
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           workingDir: nightrunner_frontend
+          onlyChanged: true
           exitZeroOnChanges: true
         if: ${{ secrets.CHROMATIC_PROJECT_TOKEN != '' }}
 
