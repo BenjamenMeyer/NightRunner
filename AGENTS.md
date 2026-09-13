@@ -185,6 +185,7 @@ async def test_my_endpoint(test_client):
 - **`req.context.roles` is a list, not a dict.** The token carries roles as a dict, but the middleware may transform them. Check the middleware if you add role-based access control.
 - **Always write unit tests and integration tests** for all new features, endpoints, and components before submitting a PR.
 - **Always add or update Storybook stories** in `nightrunner_frontend/src/stories/` whenever creating new frontend UI components or pages.
+- **Always integrate new frontend components with theme CSS variables** (`var(--card-bg)`, `var(--page-bg)`, `var(--border)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--button-bg)`, `var(--button-text)`, `var(--input-bg)`, etc.) to guarantee seamless theme switching when the user changes themes (`night-ops`, `trail-life`, `ahg`).
 
 ---
 
