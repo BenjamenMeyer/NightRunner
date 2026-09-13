@@ -110,6 +110,52 @@ export default function TroopMemberPicker({
 
     }
 
+
+    /**
+     * The patrol this attendee already belongs to, if it is a different one.
+     *
+     * A person can only be in one patrol. The server reports the assignment;
+     * anyone assigned elsewhere is shown with that patrol and cannot be
+     * selected, so the same child is never placed twice.
+     */
+    function assignedElsewhere(attendee) {
+
+        const assignment = attendee.assignment;
+
+        if (!assignment) {
+            return null;
+        }
+
+        if (alreadyAdded(attendee)) {
+            return null;
+        }
+
+        return assignment;
+
+    }
+
+
+    /**
+     * How a patrol is named in the picker. Prefers the number, which is what
+     * people actually call a patrol at an event.
+     */
+    function describePatrol(assignment) {
+
+        if (assignment.patrolNumber) {
+            return `Patrol ${assignment.patrolNumber}`;
+        }
+
+        return assignment.patrolName || "another patrol";
+
+    }
+
+
+    function unavailable(attendee) {
+
+        return alreadyAdded(attendee) || Boolean(assignedElsewhere(attendee));
+
+    }
+
     function toggle(attendeeId) {
 
         setSelected(current => ({
@@ -124,7 +170,7 @@ export default function TroopMemberPicker({
         const chosen = youth.filter(
             attendee =>
                 selected[attendee.id] &&
-                !alreadyAdded(attendee)
+                !unavailable(attendee)
         );
 
         if (chosen.length === 0) {
@@ -146,10 +192,10 @@ export default function TroopMemberPicker({
     }
 
     const selectedCount = youth.filter(
-        attendee => selected[attendee.id] && !alreadyAdded(attendee)
+        attendee => selected[attendee.id] && !unavailable(attendee)
     ).length;
 
-    const available = youth.filter(attendee => !alreadyAdded(attendee));
+    const available = youth.filter(attendee => !unavailable(attendee));
 
     return (
 
@@ -202,12 +248,14 @@ export default function TroopMemberPicker({
                         {youth.map(attendee => {
 
                             const added = alreadyAdded(attendee);
+                            const elsewhere = assignedElsewhere(attendee);
+                            const blocked = added || Boolean(elsewhere);
 
                             return (
                                 <li
                                     key={attendee.id}
                                     className={
-                                        added
+                                        blocked
                                             ? "troop-member-picker__item troop-member-picker__item--added"
                                             : "troop-member-picker__item"
                                     }
@@ -215,13 +263,18 @@ export default function TroopMemberPicker({
                                     <label>
                                         <input
                                             type="checkbox"
-                                            checked={Boolean(selected[attendee.id]) && !added}
-                                            disabled={added}
+                                            checked={Boolean(selected[attendee.id]) && !blocked}
+                                            disabled={blocked}
                                             onChange={() => toggle(attendee.id)}
                                         />
                                         <span>{attendee.fullName}</span>
                                         {added && (
                                             <em>already on this patrol</em>
+                                        )}
+                                        {!added && elsewhere && (
+                                            <em className="troop-member-picker__elsewhere">
+                                                on {describePatrol(elsewhere)}
+                                            </em>
                                         )}
                                     </label>
                                 </li>
@@ -243,7 +296,7 @@ export default function TroopMemberPicker({
 
                     {available.length === 0 && (
                         <p className="troop-member-picker__empty">
-                            Everyone from this troop is already on this patrol.
+                            Everyone from this troop is already assigned.
                         </p>
                     )}
                 </>

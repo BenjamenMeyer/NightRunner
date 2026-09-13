@@ -5,6 +5,7 @@ import falcon
 import uuid6
 
 from nightrunner_backend.app_context import get_driver
+from nightrunner_backend.drivers.store.patrols import PatrolsStore
 from nightrunner_backend.drivers.store.roster import RosterStore
 from nightrunner_backend.models.roster import (
     CATEGORIES,
@@ -92,6 +93,10 @@ class EventAttendeesResource:
         arrivals = {a.attendee_id: a for a in await store.list_arrivals(event_id)}
         troop_numbers = await _troop_number_map(store)
 
+        # Which patrol each person is already on, so the picker can stop the
+        # same child being placed in two patrols.
+        assignments = await PatrolsStore(get_driver()).attendee_assignments(event_id)
+
         resp.media = {
             "eventId": event_id,
             "attendees": [
@@ -99,6 +104,7 @@ class EventAttendeesResource:
                     **a.to_api_dict(),
                     "troopNumber": troop_numbers.get(a.troop_id or "", None),
                     "arrival": arrivals[a.id].to_api_dict() if a.id in arrivals else None,
+                    "assignment": assignments.get(a.id),
                 }
                 for a in attendees
             ],

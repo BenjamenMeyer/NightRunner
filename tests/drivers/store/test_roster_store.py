@@ -176,3 +176,107 @@ class TestMigration:
 
         rows = await driver.execute("SELECT attendee_id FROM patrol_members WHERE id = 'm2'")
         assert rows[0]["attendee_id"] is None
+
+
+class TestPatrolNumbering:
+    """Patrols need a short number to be called by at an event."""
+
+    async def test_numbers_start_at_one_per_event(self):
+        from nightrunner_backend.drivers.store.patrols import PatrolsStore
+
+        store = PatrolsStore(get_driver())
+        assert await store.next_number("event-1") == 1
+
+    async def test_numbers_increment_within_an_event(self):
+        from nightrunner_backend.drivers.store.patrols import PatrolsStore
+        from nightrunner_backend.models.patrol import Patrol
+
+        store = PatrolsStore(get_driver())
+        await store.create(Patrol(id="p1", event_id="event-1", name="Wolves", number=1))
+        await store.create(Patrol(id="p2", event_id="event-1", name="Bears", number=2))
+
+        assert await store.next_number("event-1") == 3
+
+    async def test_numbering_is_scoped_to_the_event(self):
+        """Patrol 1 exists at every event."""
+        from nightrunner_backend.drivers.store.patrols import PatrolsStore
+        from nightrunner_backend.models.patrol import Patrol
+
+        store = PatrolsStore(get_driver())
+        await store.create(Patrol(id="p1", event_id="event-1", name="Wolves", number=1))
+
+        assert await store.next_number("event-2") == 1
+
+
+class TestAttendeeAssignments:
+    """Nobody may be placed in two patrols."""
+
+    async def _seed_attendee(self, store, event_id="event-1"):
+        troop = await store.ensure_troop("GA-0594")
+        attendee = make_attendee(event_id, troop.id, "GA-0594", "John", "Smith")
+        await store.create_attendee(attendee)
+        return attendee
+
+    async def test_reports_the_patrol_an_attendee_is_on(self):
+        from nightrunner_backend.drivers.store.patrols import PatrolsStore
+        from nightrunner_backend.models.patrol import Patrol, PatrolMember
+
+        roster = RosterStore(get_driver())
+        attendee = await self._seed_attendee(roster)
+
+        patrols = PatrolsStore(get_driver())
+        await patrols.create(Patrol(
+            id="p1",
+            event_id="event-1",
+            name="Wolves",
+            number=3,
+            members=[PatrolMember(
+                id="m1", name="John Smith", troop="GA-0594", attendee_id=attendee.id
+            )],
+        ))
+
+        assignments = await patrols.attendee_assignments("event-1")
+        assert assignments[attendee.id]["patrolNumber"] == 3
+        assert assignments[attendee.id]["patrolName"] == "Wolves"
+
+    async def test_attendee_id_survives_a_patrol_save(self):
+        """
+        PatrolStore.update deletes and re-inserts every member, so the link is
+        only kept because it is written back. Without this the picker silently
+        loses the roster link on every edit.
+        """
+        from nightrunner_backend.drivers.store.patrols import PatrolsStore
+        from nightrunner_backend.models.patrol import Patrol, PatrolMember
+
+        roster = RosterStore(get_driver())
+        attendee = await self._seed_attendee(roster)
+
+        patrols = PatrolsStore(get_driver())
+        patrol = Patrol(
+            id="p1",
+            event_id="event-1",
+            name="Wolves",
+            number=1,
+            members=[PatrolMember(
+                id="m1", name="John Smith", troop="GA-0594", attendee_id=attendee.id
+            )],
+        )
+        await patrols.create(patrol)
+
+        reloaded = await patrols.get("p1")
+        assert reloaded.members[0].attendee_id == attendee.id
+
+        reloaded.name = "Renamed"
+        await patrols.update(reloaded)
+
+        again = await patrols.get("p1")
+        assert again.members[0].attendee_id == attendee.id
+
+    async def test_unassigned_attendees_are_absent_from_the_map(self):
+        from nightrunner_backend.drivers.store.patrols import PatrolsStore
+
+        roster = RosterStore(get_driver())
+        attendee = await self._seed_attendee(roster)
+
+        assignments = await PatrolsStore(get_driver()).attendee_assignments("event-1")
+        assert attendee.id not in assignments
