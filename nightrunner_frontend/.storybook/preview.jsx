@@ -132,29 +132,54 @@ if (typeof window !== 'undefined') {
   }
 }
 
+import brandings from '../src/branding/index.js';
+
+const ThemeSwitcher = ({ children, theme }) => {
+  React.useEffect(() => {
+    const branding = brandings[theme] || brandings['night-ops'];
+    localStorage.setItem('night-runner-branding', theme);
+
+    let link = document.getElementById('branding-theme');
+    if (!link) {
+      link = document.createElement('link');
+      link.id = 'branding-theme';
+      link.rel = 'stylesheet';
+      document.head.appendChild(link);
+    }
+    if (branding?.colors) {
+      link.href = branding.colors;
+    }
+  }, [theme]);
+
+  return children;
+};
+
 const withProviders = (Story, context) => {
   const selectedTheme = context.globals.theme || 'night-ops';
 
-  React.useEffect(() => {
-    localStorage.setItem('night-runner-branding', selectedTheme);
-    window.dispatchEvent(new Event('storage'));
-  }, [selectedTheme]);
-
   return (
-    <MemoryRouter>
-      <AuthProvider {...mockOidcConfig}>
-        <AuthServiceProvider>
-          <BrandingProvider>
-            <EventProvider>
-              <div className="app-layout" style={{ display: 'block', height: 'auto', padding: '20px' }}>
-                <Story />
-              </div>
-            </EventProvider>
-          </BrandingProvider>
-        </AuthServiceProvider>
-      </AuthProvider>
-    </MemoryRouter>
+    <ThemeSwitcher theme={selectedTheme}>
+      <MemoryRouter>
+        <AuthProvider {...mockOidcConfig}>
+          <AuthServiceProvider>
+            <BrandingProviderKeyed theme={selectedTheme}>
+              <EventProvider>
+                <div className="app-layout" style={{ display: 'block', height: 'auto', padding: '20px' }}>
+                  <Story />
+                </div>
+              </EventProvider>
+            </BrandingProviderKeyed>
+          </AuthServiceProvider>
+        </AuthProvider>
+      </MemoryRouter>
+    </ThemeSwitcher>
   );
 };
+
+const BrandingProviderKeyed = ({ theme, children }) => (
+  <BrandingProvider key={theme}>
+    {children}
+  </BrandingProvider>
+);
 
 export const decorators = [withProviders];
