@@ -117,16 +117,22 @@ function Sidebar({ open, close }) {
                 route.path !== "/scoring" &&
                 route.path !== "/live" &&
                 route.path !== "/login" &&
-                route.path !== "/checkin"
+                route.path !== "/checkin" &&
+                route.path !== "/arrivals"
         );
 
 
+    // Screens used while the event is running. Grouped together because this
+    // section renders for admins and ordinary users alike — the "Main" section
+    // shows only the dashboard to admins, so an event-day screen placed there
+    // would be invisible to the people running the event.
     const scoringLinks =
         links.filter(
             route =>
                 route.path === "/scoring" ||
                 route.path === "/live" ||
-                route.path === "/checkin"
+                route.path === "/checkin" ||
+                route.path === "/arrivals"
         );
 
 
