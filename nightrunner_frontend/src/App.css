@@ -40,6 +40,8 @@
   display: flex;
   flex-direction: column;
 
+  background: var(--page-bg);
+
 }
 
 .page-content-inner {
