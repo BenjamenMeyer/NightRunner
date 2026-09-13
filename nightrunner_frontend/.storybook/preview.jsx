@@ -75,23 +75,45 @@ if (typeof window !== 'undefined') {
 
   AuthService.isAuthenticated = () => true;
 
+  const mockArrivalsData = {
+    arrivedPeople: 18,
+    expectedPeople: 22,
+    arrivedTroops: 1,
+    totalTroops: 2,
+    troops: [
+      {
+        troopId: 'troop-1',
+        troopNumber: 'TX-0101',
+        arrived: 8,
+        expected: 8,
+        missing: 0,
+        attendees: [
+          { id: 'att-1', fullName: 'Alice Smith', category: 'youth', arrival: { arrivedAt: new Date().toISOString() } },
+          { id: 'att-2', fullName: 'Bob Johnson', category: 'youth', arrival: { arrivedAt: new Date().toISOString() } },
+          { id: 'att-3', fullName: 'Charlie Brown', category: 'adult', arrival: { arrivedAt: new Date().toISOString() } },
+        ],
+      },
+      {
+        troopId: 'troop-2',
+        troopNumber: 'TX-0404',
+        arrived: 10,
+        expected: 14,
+        missing: 4,
+        attendees: [
+          { id: 'att-4', fullName: 'David Lee', category: 'youth', arrival: { arrivedAt: new Date().toISOString() } },
+          { id: 'att-5', fullName: 'Emma Wilson', category: 'youth', arrival: null },
+          { id: 'att-6', fullName: 'Frank Miller', category: 'adult', arrival: null },
+        ],
+      },
+    ],
+  };
+
   // Mock BackendTransport calls to avoid CORS/401 fetch errors in Storybook
   BackendTransport.get = async (url) => {
     if (url === '/me') return FAKE_USER;
     if (url === '/events') return [FAKE_EVENT];
     if (url.startsWith('/events/')) return FAKE_EVENT;
-    if (url.includes('/arrivals')) {
-      return {
-        troopsArrived: 8,
-        troopsExpected: 10,
-        totalParticipantsArrived: 64,
-        totalParticipantsExpected: 80,
-        troops: [
-          { id: 'troop-1', name: 'Troop 101 - Eagle Patrol', arrived: true, memberCount: 8, checkedInCount: 8 },
-          { id: 'troop-2', name: 'Troop 404 - Pathfinder Troop', arrived: false, memberCount: 12, checkedInCount: 0 },
-        ],
-      };
-    }
+    if (url.includes('/arrivals')) return mockArrivalsData;
     return {};
   };
 
@@ -106,16 +128,7 @@ if (typeof window !== 'undefined') {
   ApiService.eventData.getEvents = async () => [FAKE_EVENT];
 
   if (ApiService.rosterData) {
-    ApiService.rosterData.getArrivals = async () => ({
-      troopsArrived: 8,
-      troopsExpected: 10,
-      totalParticipantsArrived: 64,
-      totalParticipantsExpected: 80,
-      troops: [
-        { id: 'troop-1', name: 'Troop 101 - Eagle Patrol', arrived: true, memberCount: 8, checkedInCount: 8 },
-        { id: 'troop-2', name: 'Troop 404 - Pathfinder Troop', arrived: false, memberCount: 12, checkedInCount: 0 },
-      ],
-    });
+    ApiService.rosterData.getArrivals = async () => mockArrivalsData;
   }
 }
 
