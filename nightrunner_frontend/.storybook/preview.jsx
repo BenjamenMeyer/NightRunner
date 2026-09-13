@@ -43,6 +43,7 @@ const mockOidcConfig = {
 };
 
 import ApiService from '../src/api/ApiService.js';
+import AuthService from '../src/api/auth/AuthService.js';
 import BackendTransport from '../src/api/BackendTransport.js';
 
 const FAKE_EVENT = {
@@ -69,7 +70,10 @@ const FAKE_USER = {
 // Pre-seed mock user and fake event into ApiService and localStorage
 if (typeof window !== 'undefined') {
   localStorage.setItem('nightrunner_last_event_id', FAKE_EVENT.id);
+  localStorage.setItem('firebase_id_token', 'storybook-mock-token');
   ApiService.userData.set(FAKE_USER);
+
+  AuthService.isAuthenticated = () => true;
 
   // Mock BackendTransport calls to avoid CORS/401 fetch errors in Storybook
   BackendTransport.get = async (url) => {
