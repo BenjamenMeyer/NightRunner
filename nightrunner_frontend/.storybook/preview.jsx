@@ -173,6 +173,11 @@ const ThemeSwitcher = ({ children, theme }) => {
     if (branding?.colors) {
       link.href = branding.colors;
     }
+
+    // Ensure the iframe body background matches the theme's page background
+    document.body.style.background = 'var(--page-bg)';
+    document.body.style.color = 'var(--text-primary)';
+    document.body.style.minHeight = '100vh';
   }, [theme]);
 
   return children;
@@ -188,7 +193,7 @@ const withProviders = (Story, context) => {
           <AuthServiceProvider>
             <BrandingProviderKeyed theme={selectedTheme}>
               <EventProvider>
-                <div className="app-layout" style={{ display: 'block', height: 'auto', padding: '20px' }}>
+                <div className="app-layout" style={{ display: 'block', minHeight: '100vh', background: 'var(--page-bg)', color: 'var(--text-primary)', padding: '20px' }}>
                   <Story />
                 </div>
               </EventProvider>
