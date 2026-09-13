@@ -88,13 +88,6 @@ body {
 
 }
 
-.header {
-
-    background: var(--header-bg);
-    color: var(--header-text);
-
-}
-
 .page-content {
 
     background: var(--page-bg);
