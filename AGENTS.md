@@ -183,6 +183,8 @@ async def test_my_endpoint(test_client):
 - **`asyncio_mode = "auto"`** means you don't need to explicitly mark tests with `@pytest.mark.asyncio`, but having it doesn't hurt.
 - **Pydantic settings are a singleton.** Mutations (e.g., `settings.dev_mode = True`) persist across tests unless you use `monkeypatch`. Always use the `dev_mode_enabled` fixture rather than mutating `settings` directly.
 - **`req.context.roles` is a list, not a dict.** The token carries roles as a dict, but the middleware may transform them. Check the middleware if you add role-based access control.
+- **Always write unit tests and integration tests** for all new features, endpoints, and components before submitting a PR.
+- **Always add or update Storybook stories** in `nightrunner_frontend/src/stories/` whenever creating new frontend UI components or pages.
 
 ---
 
