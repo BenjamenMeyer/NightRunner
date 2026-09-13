@@ -55,6 +55,82 @@ export const MultipleChoiceField = () => (
   </div>
 );
 
+export const PassFailField = () => (
+  <div style={{ maxWidth: '600px' }}>
+    <ScoreField
+      task={{
+        id: 'task-3',
+        name: 'Gear Inspection Checkpoint',
+        type: 'Pass / Fail',
+        instructions: 'Verify all patrol members carry mandatory headlamps and whistle.',
+        notes: 'Must have working batteries.',
+      }}
+      value={true}
+      onChange={(val) => console.log('Pass/Fail changed:', val)}
+    />
+  </div>
+);
+
+export const CheckpointCompletedField = () => (
+  <div style={{ maxWidth: '600px' }}>
+    <ScoreField
+      task={{
+        id: 'task-4',
+        name: 'Navigation Waypoint Alpha',
+        type: 'Checkpoint',
+        instructions: 'Check in at Waypoint Alpha post.',
+      }}
+      value={true}
+      onChange={(val) => console.log('Checkpoint changed:', val)}
+    />
+  </div>
+);
+
+export const TextAnswerField = () => (
+  <div style={{ maxWidth: '600px' }}>
+    <ScoreField
+      task={{
+        id: 'task-5',
+        name: 'Morse Code Decryption',
+        type: 'Text Answer',
+        instructions: 'Decode the intercepted signal and enter message text.',
+      }}
+      value="BE PREPARED"
+      onChange={(val) => console.log('Text answer changed:', val)}
+    />
+  </div>
+);
+
+export const DeltaTimeField = () => (
+  <div style={{ maxWidth: '600px' }}>
+    <ScoreField
+      task={{
+        id: 'task-6',
+        name: 'Obstacle Course Time Penalty (seconds)',
+        type: 'DeltaTime',
+        instructions: 'Record penalty seconds accrued during obstacle run.',
+      }}
+      value={15}
+      onChange={(val) => console.log('Delta time changed:', val)}
+    />
+  </div>
+);
+
+export const StopwatchTimedChallengeField = () => (
+  <div style={{ maxWidth: '600px' }}>
+    <ScoreField
+      task={{
+        id: 'task-7',
+        name: 'Fire Starting Sprint',
+        type: 'Stopwatch',
+        instructions: 'Time until string is burned through by natural flame.',
+      }}
+      value={{ startTime: new Date(Date.now() - 125000).toISOString(), endTime: new Date().toISOString() }}
+      onChange={(val) => console.log('Stopwatch changed:', val)}
+    />
+  </div>
+);
+
 const mockPatrol = {
   id: 'patrol-101',
   programName: 'Eagle Patrol 101',
