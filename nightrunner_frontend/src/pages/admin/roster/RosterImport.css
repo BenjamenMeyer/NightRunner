@@ -78,6 +78,7 @@
 
 .roster-import__counts {
     list-style: none;
+}
 
 .roster-import__row:last-child {
     border-bottom: none;

@@ -25,6 +25,10 @@ export default defineConfig(({ mode }) => {
       __API_BACKEND_URL__: JSON.stringify('http://localhost:8000'),
     },
 
+    build: {
+      cssMinify: 'esbuild',
+    },
+
     // 3. Development Server Configurations
     server: {
       port: 3000, // Changes the default port from 5173 to 3000

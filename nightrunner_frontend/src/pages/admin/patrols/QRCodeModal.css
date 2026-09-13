@@ -323,12 +323,12 @@
    Printing
    ========================================================= */
 
-@media print {
+@page {
+    size: 8.5in 11in;
+    margin: 10mm;
+}
 
-    @page {
-        size: 8.5in 11in;
-        margin: 10mm;
-    }
+@media print {
 
     html,
     body {

@@ -143,12 +143,12 @@
     font-style: italic;
 }
 
-@media print {
+@page {
+    size: portrait;
+    margin: 0.5in;
+}
 
-    @page {
-        size: portrait;
-        margin: 0.5in;
-    }
+@media print {
 
     /*
      * index.css sets html/body/#root to height:100% with overflow:hidden,
