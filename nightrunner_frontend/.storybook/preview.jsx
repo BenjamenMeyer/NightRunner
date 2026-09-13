@@ -108,13 +108,33 @@ if (typeof window !== 'undefined') {
     ],
   };
 
+  const mockStationsData = [
+    {
+      id: 'station-knot',
+      name: 'Knot Tying Challenge Station',
+      description: 'Patrols must construct tripod lashing.',
+      station_weight: 1.0,
+      tasks: [
+        { id: 'task-1', name: 'Bowline Knot', active: true, scoreWeight: 1.0, maxScore: 100 },
+        { id: 'task-2', name: 'First Aid Safety', active: true, scoreWeight: 1.5, maxScore: 20 },
+      ],
+    },
+  ];
+
+  const mockPatrolsData = [
+    { id: 'patrol-101', name: 'Eagle Patrol 101', number: 101 },
+  ];
+
   // Mock BackendTransport calls to avoid CORS/401 fetch errors in Storybook
   BackendTransport.get = async (url) => {
     if (url === '/me') return FAKE_USER;
     if (url === '/events') return [FAKE_EVENT];
     if (url.startsWith('/events/')) return FAKE_EVENT;
     if (url.includes('/arrivals')) return mockArrivalsData;
-    return {};
+    if (url.includes('/stations')) return mockStationsData;
+    if (url.includes('/patrols')) return mockPatrolsData;
+    if (url.includes('/scores/finalized')) return [];
+    return [];
   };
 
   // Mock UserService.get to return fake admin user synchronously/resolving
@@ -123,9 +143,13 @@ if (typeof window !== 'undefined') {
     return FAKE_USER;
   };
 
-  // Mock EventService methods for Storybook isolation
+  // Mock EventService & data methods for Storybook isolation
   ApiService.eventData.getEvent = async () => FAKE_EVENT;
   ApiService.eventData.getEvents = async () => [FAKE_EVENT];
+  ApiService.stationData.getStations = async () => mockStationsData;
+  ApiService.patrolData.getPatrols = async () => mockPatrolsData;
+  ApiService.configurationData.getConfigurations = async () => [];
+  ApiService.reportData.getStationReport = async (stId) => ({ stationId: stId, patrols: [] });
 
   if (ApiService.rosterData) {
     ApiService.rosterData.getArrivals = async () => mockArrivalsData;

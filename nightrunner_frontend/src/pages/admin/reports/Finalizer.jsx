@@ -69,9 +69,9 @@ export default function Finalizer() {
                 ApiService.backendTransport.get(`/scores/finalized?eventId=${encodeURIComponent(eventId)}`).catch(() => [])
             ]);
 
-            const loadedStations = fetchedStations || [];
-            const loadedPatrols = fetchedPatrols || [];
-            const loadedConfigs = fetchedConfigs || [];
+            const loadedStations = Array.isArray(fetchedStations) ? fetchedStations : [];
+            const loadedPatrols = Array.isArray(fetchedPatrols) ? fetchedPatrols : [];
+            const loadedConfigs = Array.isArray(fetchedConfigs) ? fetchedConfigs : [];
             const storedList = Array.isArray(fetchedStoredResults) ? fetchedStoredResults : [];
 
             setStations(loadedStations);
