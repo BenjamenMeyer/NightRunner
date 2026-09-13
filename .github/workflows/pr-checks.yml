@@ -104,7 +104,7 @@ jobs:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           workingDir: nightrunner_frontend
           exitZeroOnChanges: true
-        if: env.CHROMATIC_PROJECT_TOKEN != ''
+        if: ${{ secrets.CHROMATIC_PROJECT_TOKEN != '' }}
 
       - name: Tear Down Stack
         if: always()
