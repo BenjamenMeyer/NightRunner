@@ -41,10 +41,20 @@ class AuthMiddleware:
         if req.path.startswith("/auth/login") or req.path.startswith("/v1/auth/login"):
             return
 
-        # In development mode, bypass authentication entirely
+        # In development mode, bypass authentication entirely.
+        # The dev user is an admin so the UI is reachable locally: without it
+        # the event selector never appears, because a non-admin with no event
+        # assignment has nothing to select. Dev mode already skips all token
+        # verification, so this grants nothing that was not already granted.
         if settings.dev_mode:
-            req.context.user = {"id": "dev", "username": "dev_user", "email": "dev@example.com", "display_name": "Dev User"}
-            req.context.roles = []
+            req.context.user = {
+                "id": "dev",
+                "username": "dev_user",
+                "email": "dev@example.com",
+                "display_name": "Dev User",
+                "is_admin": True,
+            }
+            req.context.roles = ["admin"]
             return
 
         if settings.require_iam_proxy_auth and not settings.dev_mode:
