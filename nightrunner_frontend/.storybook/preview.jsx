@@ -185,6 +185,7 @@ const ThemeSwitcher = ({ children, theme }) => {
 
 const withProviders = (Story, context) => {
   const selectedTheme = context.globals.theme || 'night-ops';
+  FAKE_EVENT.theme = selectedTheme;
 
   return (
     <ThemeSwitcher theme={selectedTheme}>
