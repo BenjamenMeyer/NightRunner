@@ -315,6 +315,7 @@ export default function Patrols() {
                         <table className="patrol-table">
                             <thead>
                             <tr>
+                                <th className="patrol-number-column">#</th>
                                 <th>Patrol</th>
                                 <th>Troop</th>
                                 <th>Communication Info</th>
@@ -329,6 +330,10 @@ export default function Patrols() {
                             <tbody>
                             {filteredPatrols.map(patrol => (
                                 <tr key={patrol.id}>
+                                    <td className="patrol-number-column">
+                                        {patrol.number ?? "—"}
+                                    </td>
+
                                     <td>
                                         <div className="patrol-name">
                                             <strong>

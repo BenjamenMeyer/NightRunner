@@ -280,3 +280,21 @@ class TestAttendeeAssignments:
 
         assignments = await PatrolsStore(get_driver()).attendee_assignments("event-1")
         assert attendee.id not in assignments
+
+    async def test_number_survives_an_update_that_does_not_mention_it(self):
+        """
+        The editor shows the number read-only and omits it from the save
+        payload. UPDATE still writes the column, so the value has to be carried
+        on the model or a plain rename would wipe it.
+        """
+        from nightrunner_backend.drivers.store.patrols import PatrolsStore
+        from nightrunner_backend.models.patrol import Patrol
+
+        store = PatrolsStore(get_driver())
+        await store.create(Patrol(id="p9", event_id="event-1", name="Wolves", number=7))
+
+        loaded = await store.get("p9")
+        loaded.name = "Renamed"
+        await store.update(loaded)
+
+        assert (await store.get("p9")).number == 7
