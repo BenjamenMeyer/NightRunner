@@ -2,31 +2,34 @@
     max-width: 60rem;
     margin: 0 auto;
     padding: 1.5rem;
+    color: var(--text-primary);
 }
 
 .roster-import__header h1 {
     margin: 0 0 0.5rem;
     font-size: 1.5rem;
+    color: var(--text-primary);
 }
 
 .roster-import__header p {
     margin: 0 0 1.5rem;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
 }
 
 .roster-import__file {
     display: block;
     padding: 1.25rem;
-    border: 2px dashed var(--color-border, #cbd5e0);
+    border: 2px dashed var(--border);
     border-radius: 8px;
     margin-bottom: 1rem;
-    background: var(--color-surface, #fff);
+    background: var(--card-bg);
+    color: var(--text-primary);
 }
 
 .roster-import__filename,
 .roster-import__status {
     margin: 0 0 1rem;
-    color: var(--color-text-muted, #666);
+    color: var(--text-secondary);
     font-size: 0.9rem;
 }
 
@@ -34,18 +37,18 @@
     padding: 0.85rem 1rem;
     border-radius: 6px;
     margin-bottom: 1rem;
-    background: var(--color-danger-bg, #fff5f5);
-    border: 1px solid var(--color-danger, #c53030);
-    color: var(--color-danger, #c53030);
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
 }
 
 .roster-import__done {
     padding: 0.85rem 1rem;
     border-radius: 6px;
     margin-bottom: 1rem;
-    background: var(--color-success-bg, #f0fff4);
-    border: 1px solid var(--color-success, #2f855a);
-    color: var(--color-success, #2f855a);
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
 }
 
 .roster-import__summary,
@@ -58,83 +61,23 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin: 0 0 0.5rem;
-    font-size: 1.05rem;
-}
-
-.roster-import__group-count {
-    padding: 0.1rem 0.5rem;
-    border-radius: 999px;
-    background: var(--color-surface-muted, #edf2f7);
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.roster-import__hint {
     margin: 0 0 0.75rem;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.roster-import__badge {
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
     font-size: 0.85rem;
-    color: var(--color-text-muted, #666);
+    font-weight: 600;
 }
 
 .roster-import__counts {
     list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-    gap: 0.5rem;
-}
-
-.roster-import__counts li {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    padding: 0.6rem 0.75rem;
-    border: 1px solid var(--color-border, #e2e8f0);
-    border-radius: 6px;
-    font-size: 0.85rem;
-}
-
-.roster-import__count {
-    font-size: 1.2rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-}
-
-.roster-import__troops {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-}
-
-.roster-import__troops th,
-.roster-import__troops td {
-    padding: 0.45rem 0.6rem;
-    border-bottom: 1px solid var(--color-border, #e2e8f0);
-    text-align: left;
-}
-
-.roster-import__troops td:not(:first-child) {
-    font-variant-numeric: tabular-nums;
-}
-
-.roster-import__rows {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    border: 1px solid var(--color-border, #e2e8f0);
-    border-radius: 6px;
-    max-height: 24rem;
-    overflow-y: auto;
-}
-
-.roster-import__row {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.6rem 0.75rem;
-    border-bottom: 1px solid var(--color-border, #edf2f7);
-}
 
 .roster-import__row:last-child {
     border-bottom: none;
