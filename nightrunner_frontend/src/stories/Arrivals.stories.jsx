@@ -22,8 +22,17 @@ export const GateCheckInScreen = () => (
   </div>
 );
 
-export const PrintableRosterSheet = () => (
-  <div style={{ padding: '24px' }}>
-    <ArrivalsPrint />
-  </div>
-);
+export const PrintableRosterSheet = () => {
+  React.useEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('eventId', 'storybook-demo-event-id');
+    url.searchParams.set('troopId', 'troop-1');
+    window.history.replaceState({}, '', url.toString());
+  }, []);
+
+  return (
+    <div style={{ padding: '24px' }}>
+      <ArrivalsPrint />
+    </div>
+  );
+};
