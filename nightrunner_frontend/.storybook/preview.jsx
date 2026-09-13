@@ -42,6 +42,55 @@ const mockOidcConfig = {
   skipUserInfo: true,
 };
 
+import ApiService from '../src/api/ApiService.js';
+
+const FAKE_EVENT = {
+  id: 'storybook-demo-event-id',
+  name: 'NightRunner Demo Championship 2026',
+  description: 'Annual Night Operations Scouting Championship & Scoring Challenge',
+  theme: 'night-ops',
+  active: true,
+  startDate: '2026-10-15',
+  endDate: '2026-10-17',
+};
+
+const FAKE_USER = {
+  id: 'storybook-admin-user',
+  username: 'storybook_admin',
+  displayName: 'Storybook Demo Admin',
+  email: 'admin@storybook.local',
+  isAdmin: true,
+  roles: {
+    'storybook-demo-event-id': 'event-admin',
+  },
+};
+
+// Pre-seed mock user and fake event into ApiService and localStorage
+if (typeof window !== 'undefined') {
+  localStorage.setItem('nightrunner_last_event_id', FAKE_EVENT.id);
+  ApiService.userData.set(FAKE_USER);
+
+  // Mock API methods for Storybook isolation
+  const originalGetEvent = ApiService.eventData.getEvent.bind(ApiService.eventData);
+  ApiService.eventData.getEvent = async (id) => FAKE_EVENT;
+
+  const originalGetEvents = ApiService.eventData.getEvents.bind(ApiService.eventData);
+  ApiService.eventData.getEvents = async () => [FAKE_EVENT];
+
+  if (ApiService.rosterData) {
+    ApiService.rosterData.getArrivals = async () => ({
+      troopsArrived: 8,
+      troopsExpected: 10,
+      totalParticipantsArrived: 64,
+      totalParticipantsExpected: 80,
+      troops: [
+        { id: 'troop-1', name: 'Troop 101 - Eagle Patrol', arrived: true, memberCount: 8, checkedInCount: 8 },
+        { id: 'troop-2', name: 'Troop 404 - Pathfinder Troop', arrived: false, memberCount: 12, checkedInCount: 0 },
+      ],
+    });
+  }
+}
+
 const withProviders = (Story, context) => {
   const selectedTheme = context.globals.theme || 'night-ops';
 
