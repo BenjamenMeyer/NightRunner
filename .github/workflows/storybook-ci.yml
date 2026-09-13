@@ -4,9 +4,6 @@ on:
   pull_request:
     branches: ["**"]
     types: [opened, synchronize, reopened]
-    paths:
-      - "nightrunner_frontend/**"
-      - ".github/workflows/storybook-ci.yml"
   workflow_dispatch:
 
 jobs:
