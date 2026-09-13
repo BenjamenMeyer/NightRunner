@@ -95,7 +95,6 @@ function Sidebar({ open, close }) {
         user &&
         ApiService.userData.isAdmin(eventId);
 
-
     const links =
         AppRoutes.filter(
             route =>
@@ -110,40 +109,58 @@ function Sidebar({ open, close }) {
     const dashboardLink =
         links.find(route => route.path === "/dashboard");
 
-    const mainLinks =
-        links.filter(
-            route =>
-                !route.path.startsWith("/admin") &&
-                route.path !== "/scoring" &&
-                route.path !== "/live" &&
-                route.path !== "/login" &&
-                route.path !== "/checkin" &&
-                route.path !== "/arrivals" &&
-                route.path !== "/arrivals/dashboard"
-        );
+    // Group definitions
+    const groupsConfig = [
+        {
+            key: "operations",
+            title: "Event Operations",
+            paths: ["/arrivals/dashboard", "/arrivals"]
+        },
+        {
+            key: "scoring",
+            title: "Scoring",
+            paths: ["/scoring", "/live", "/checkin"]
+        },
+        {
+            key: "administration",
+            title: "Administration",
+            paths: [
+                "/admin",
+                "/admin/events",
+                "/admin/stations",
+                "/admin/patrols",
+                "/admin/roster",
+                "/admin/users",
+                "/admin/configurations"
+            ],
+            adminOnly: true
+        },
+        {
+            key: "reports",
+            title: "Reports & Finalization",
+            paths: ["/admin/reports", "/admin/finalizer"],
+            adminOnly: true
+        }
+    ];
 
+    // Determine initial collapsed state: auto-expand group if current pathname matches any item in it
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
 
-    // Screens used while the event is running. Grouped together because this
-    // section renders for admins and ordinary users alike — the "Main" section
-    // shows only the dashboard to admins, so an event-day screen placed there
-    // would be invisible to the people running the event.
-    const scoringLinks =
-        links.filter(
-            route =>
-                route.path === "/scoring" ||
-                route.path === "/live" ||
-                route.path === "/checkin" ||
-                route.path === "/arrivals" ||
-                route.path === "/arrivals/dashboard"
-        );
+    const [collapsedGroups, setCollapsedGroups] = useState(() => {
+        const initialState = {};
+        groupsConfig.forEach(group => {
+            const hasActiveRoute = group.paths.some(p => p === currentPath);
+            initialState[group.key] = !hasActiveRoute;
+        });
+        return initialState;
+    });
 
-
-    const adminLinks =
-        links.filter(
-            route =>
-                route.path.startsWith("/admin")
-        );
-
+    const toggleGroup = (groupKey) => {
+        setCollapsedGroups(prev => ({
+            ...prev,
+            [groupKey]: !prev[groupKey]
+        }));
+    };
 
     function renderLink(route) {
 
@@ -250,52 +267,59 @@ function Sidebar({ open, close }) {
 
                 <nav className="sidebar-nav">
 
-                    {isAdmin && dashboardLink && (
-                        <section className="sidebar-section">
-                            <div className="sidebar-section-title">
-                                Main
-                            </div>
+                    {dashboardLink && (
+                        <section className="sidebar-section sidebar-section-dashboard">
                             {renderLink(dashboardLink)}
                         </section>
                     )}
 
-                    {!isAdmin && mainLinks.length > 0 && (
-                        <section className="sidebar-section">
+                    {groupsConfig.map(group => {
+                        if (group.adminOnly && !isAdmin) {
+                            return null;
+                        }
 
-                            <div className="sidebar-section-title">
-                                Main
-                            </div>
+                        const groupRoutes = group.paths
+                            .map(path => links.find(l => l.path === path))
+                            .filter(Boolean);
 
-                            {mainLinks.map(renderLink)}
+                        if (groupRoutes.length === 0) {
+                            return null;
+                        }
 
-                        </section>
-                    )}
+                        const isCollapsed = !!collapsedGroups[group.key];
 
+                        return (
+                            <section key={group.key} className="sidebar-section">
+                                <button
+                                    type="button"
+                                    className="sidebar-section-title sidebar-section-toggle"
+                                    onClick={() => toggleGroup(group.key)}
+                                    aria-expanded={!isCollapsed}
+                                >
+                                    <span>{group.title}</span>
+                                    <svg
+                                        className={`sidebar-chevron ${isCollapsed ? "collapsed" : ""}`}
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <polyline points="6 9 12 15 18 9" />
+                                    </svg>
+                                </button>
 
-                    {scoringLinks.length > 0 && (
-                        <section className="sidebar-section">
-
-                            <div className="sidebar-section-title">
-                                Scoring
-                            </div>
-
-                            {scoringLinks.map(renderLink)}
-
-                        </section>
-                    )}
-
-
-                    {isAdmin && adminLinks.length > 0 && (
-                        <section className="sidebar-section sidebar-section-admin">
-
-                            <div className="sidebar-section-title">
-                                Administration
-                            </div>
-
-                            {adminLinks.map(renderLink)}
-
-                        </section>
-                    )}
+                                {!isCollapsed && (
+                                    <div className="sidebar-group-links">
+                                        {groupRoutes.map(renderLink)}
+                                    </div>
+                                )}
+                            </section>
+                        );
+                    })}
 
                 </nav>
 
