@@ -1,6 +1,8 @@
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from 'react-oidc-context';
 import BrandingProvider from '../src/branding/BrandingProvider.jsx';
+import AuthServiceProvider from '../src/api/auth/AuthServiceProvider.jsx';
 import { EventProvider } from '../src/api/helpers/event/EventContext.jsx';
 import '../src/index.css';
 
@@ -31,33 +33,13 @@ export const globalTypes = {
   },
 };
 
-// Mock Auth context state for components that check auth/event context
-const mockEventContextValue = {
-  event: { id: 'demo-event-id', name: 'Demo Night Operations Event', theme: 'night-ops' },
-  eventId: 'demo-event-id',
-  loading: false,
-  error: null,
-  isSelected: true,
-  getCurrentEvent: async () => ({ id: 'demo-event-id', name: 'Demo Night Operations Event' }),
-  selectEvent: async () => {},
-  changeEvent: async () => {},
-  clearEvent: async () => {},
-  openEventSelector: async () => {},
-  closeEventSelector: () => {},
-  canChangeEvent: true,
-  isSystemAdmin: true,
-};
-
-// We import React's createContext indirectly or export a wrapper
-const MockEventProvider = ({ children }) => {
-  // Use React.createElement to bypass full auth initialization in Storybook
-  const EventContextModule = require('../src/api/helpers/event/EventContext.jsx');
-  // Return wrapper using EventProvider or mock
-  return (
-    <EventProvider>
-      {children}
-    </EventProvider>
-  );
+const mockOidcConfig = {
+  authority: 'http://localhost:4000',
+  client_id: 'storybook-client-id',
+  redirect_uri: 'http://localhost:6006/callback',
+  response_type: 'code',
+  scope: 'openid profile email',
+  skipUserInfo: true,
 };
 
 const withProviders = (Story, context) => {
@@ -70,13 +52,17 @@ const withProviders = (Story, context) => {
 
   return (
     <MemoryRouter>
-      <BrandingProvider>
-        <EventProvider>
-          <div className="app-layout" style={{ display: 'block', height: 'auto', padding: '20px' }}>
-            <Story />
-          </div>
-        </EventProvider>
-      </BrandingProvider>
+      <AuthProvider {...mockOidcConfig}>
+        <AuthServiceProvider>
+          <BrandingProvider>
+            <EventProvider>
+              <div className="app-layout" style={{ display: 'block', height: 'auto', padding: '20px' }}>
+                <Story />
+              </div>
+            </EventProvider>
+          </BrandingProvider>
+        </AuthServiceProvider>
+      </AuthProvider>
     </MemoryRouter>
   );
 };
