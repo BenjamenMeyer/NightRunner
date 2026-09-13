@@ -6,13 +6,13 @@ import {
 
 import {
     useEventContext
-} from "../../api/helpers/event/EventContext.jsx";
+} from "../../../api/helpers/event/EventContext.jsx";
 
-import { getLiveScoring } from "./LiveScoringService";
+import { getLiveScoring } from "./LiveStatusService.js";
 
-import "./LiveScoring.css";
+import "./LiveStatus.css";
 
-export default function LiveScoring() {
+export default function LiveStatus() {
     const {
         event,
         eventId,

@@ -24,7 +24,7 @@ import Register from "./pages/login/Register.jsx";
 import Callback from "./pages/Callback.jsx";
 import PendingApproval from "./pages/PendingApproval.jsx";
 
-import LiveScoring from "./pages/livescoring/LiveScoring.jsx";
+import LiveStatus from "./pages/scoring/live/LiveStatus.jsx";
 import CheckInOut from "@/pages/checkin/CheckInOut.jsx";
 import RosterImport from "./pages/admin/roster/RosterImport.jsx";
 import Arrivals from "./pages/arrivals/Arrivals.jsx";
@@ -125,7 +125,7 @@ export const AppRoutes = [
 
     {
         path: "/live",
-        element: LiveScoring,
+        element: LiveStatus,
         name: "Live Status",
         access: ACCESS.USER,
         layout: false,
