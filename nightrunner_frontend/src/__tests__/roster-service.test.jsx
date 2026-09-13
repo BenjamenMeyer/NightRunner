@@ -165,3 +165,54 @@ describe('patrol troop column', () => {
     });
 
 });
+
+describe('arrivals dashboard ordering', () => {
+
+    /**
+     * Mirrors the sort in ArrivalsDashboard: troops with the most people
+     * outstanding first, because those are the ones somebody has to chase.
+     */
+    function sortTroops(troops) {
+        return [...troops].sort((a, b) => {
+            if (b.missing !== a.missing) {
+                return b.missing - a.missing;
+            }
+            return (a.troopNumber || '').localeCompare(b.troopNumber || '');
+        });
+    }
+
+    it('puts the troop with the most missing people first', () => {
+        const sorted = sortTroops([
+            { troopNumber: 'GA-0100', missing: 2 },
+            { troopNumber: 'GA-0200', missing: 28 },
+            { troopNumber: 'GA-0300', missing: 9 }
+        ]);
+        expect(sorted.map(t => t.troopNumber)).toEqual(['GA-0200', 'GA-0300', 'GA-0100']);
+    });
+
+    it('sinks fully arrived troops to the bottom', () => {
+        const sorted = sortTroops([
+            { troopNumber: 'GA-0100', missing: 0 },
+            { troopNumber: 'GA-0200', missing: 1 }
+        ]);
+        expect(sorted[0].troopNumber).toBe('GA-0200');
+    });
+
+    it('breaks ties by troop number so the order is stable', () => {
+        const sorted = sortTroops([
+            { troopNumber: 'SC-0110', missing: 5 },
+            { troopNumber: 'GA-0594', missing: 5 }
+        ]);
+        expect(sorted.map(t => t.troopNumber)).toEqual(['GA-0594', 'SC-0110']);
+    });
+
+    it('does not mutate the array it was given', () => {
+        const troops = [
+            { troopNumber: 'GA-0100', missing: 0 },
+            { troopNumber: 'GA-0200', missing: 5 }
+        ];
+        sortTroops(troops);
+        expect(troops[0].troopNumber).toBe('GA-0100');
+    });
+
+});

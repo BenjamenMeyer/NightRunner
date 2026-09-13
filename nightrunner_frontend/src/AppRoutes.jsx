@@ -29,6 +29,7 @@ import CheckInOut from "@/pages/checkin/CheckInOut.jsx";
 import RosterImport from "./pages/admin/roster/RosterImport.jsx";
 import Arrivals from "./pages/arrivals/Arrivals.jsx";
 import ArrivalsPrint from "./pages/arrivals/ArrivalsPrint.jsx";
+import ArrivalsDashboard from "./pages/arrivals/ArrivalsDashboard.jsx";
 
 
 export const ACCESS = {
@@ -174,6 +175,12 @@ export const AppRoutes = [
         element: ArrivalsPrint,
         access: ACCESS.USER,
         layout: false
+    },
+    {
+        path: "/arrivals/dashboard",
+        element: ArrivalsDashboard,
+        name: "Arrivals Dashboard",
+        access: ACCESS.USER
     },
     {
         path: "/admin/patrols/create",

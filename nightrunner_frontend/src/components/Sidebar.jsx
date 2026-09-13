@@ -118,7 +118,8 @@ function Sidebar({ open, close }) {
                 route.path !== "/live" &&
                 route.path !== "/login" &&
                 route.path !== "/checkin" &&
-                route.path !== "/arrivals"
+                route.path !== "/arrivals" &&
+                route.path !== "/arrivals/dashboard"
         );
 
 
@@ -132,7 +133,8 @@ function Sidebar({ open, close }) {
                 route.path === "/scoring" ||
                 route.path === "/live" ||
                 route.path === "/checkin" ||
-                route.path === "/arrivals"
+                route.path === "/arrivals" ||
+                route.path === "/arrivals/dashboard"
         );
 
 
