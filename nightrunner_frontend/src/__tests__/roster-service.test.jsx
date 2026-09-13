@@ -125,3 +125,43 @@ describe('RosterService', () => {
     });
 
 });
+
+describe('patrol troop column', () => {
+
+    /**
+     * Mirrors patrolTroops() in Patrols.jsx — the troops represented in a
+     * patrol, taken from its members.
+     */
+    function patrolTroops(patrol) {
+        const troops = (patrol.members ?? [])
+            .map(member => (member.troop || '').trim().toUpperCase())
+            .filter(Boolean);
+        return [...new Set(troops)].sort();
+    }
+
+    it('shows the troop for a single-troop patrol', () => {
+        const patrol = { members: [{ troop: 'GA-0594' }, { troop: 'GA-0594' }] };
+        expect(patrolTroops(patrol)).toEqual(['GA-0594']);
+    });
+
+    it('lists every troop in a mixed patrol rather than just the first', () => {
+        const patrol = { members: [{ troop: 'GA-0594' }, { troop: 'GA-0122' }] };
+        expect(patrolTroops(patrol)).toEqual(['GA-0122', 'GA-0594']);
+    });
+
+    it('normalises case and whitespace before de-duplicating', () => {
+        const patrol = { members: [{ troop: ' ga-0594 ' }, { troop: 'GA-0594' }] };
+        expect(patrolTroops(patrol)).toEqual(['GA-0594']);
+    });
+
+    it('ignores members with no troop', () => {
+        const patrol = { members: [{ troop: 'GA-0594' }, { troop: '' }, { name: 'No troop' }] };
+        expect(patrolTroops(patrol)).toEqual(['GA-0594']);
+    });
+
+    it('returns nothing for an empty patrol', () => {
+        expect(patrolTroops({ members: [] })).toEqual([]);
+        expect(patrolTroops({})).toEqual([]);
+    });
+
+});

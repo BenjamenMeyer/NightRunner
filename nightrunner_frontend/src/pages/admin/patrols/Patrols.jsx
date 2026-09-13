@@ -95,6 +95,24 @@ export default function Patrols() {
         };
     }, [eventId, eventLoading, eventError]);
 
+    /**
+     * The troops represented in a patrol, taken from its members.
+     *
+     * A patrol is normally drawn from one troop, but nothing enforces that, so
+     * every distinct troop is listed rather than just the first member's —
+     * showing one troop for a mixed patrol would be quietly wrong.
+     */
+    function patrolTroops(patrol) {
+
+        const troops = (patrol.members ?? [])
+            .map(member => (member.troop || "").trim().toUpperCase())
+            .filter(Boolean);
+
+        return [...new Set(troops)].sort();
+
+    }
+
+
     async function deletePatrol(id) {
         const patrol = patrols.find(
             patrol => patrol.id === id
@@ -298,6 +316,7 @@ export default function Patrols() {
                             <thead>
                             <tr>
                                 <th>Patrol</th>
+                                <th>Troop</th>
                                 <th>Communication Info</th>
                                 <th>Members</th>
                                 <th>Event</th>
@@ -316,6 +335,12 @@ export default function Patrols() {
                                                 {patrol.name}
                                             </strong>
                                         </div>
+                                    </td>
+
+                                    <td>
+                                        {patrolTroops(patrol).length > 0
+                                            ? patrolTroops(patrol).join(", ")
+                                            : "—"}
                                     </td>
 
                                     <td>
