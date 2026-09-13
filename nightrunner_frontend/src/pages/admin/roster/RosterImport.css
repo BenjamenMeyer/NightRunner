@@ -1,0 +1,214 @@
+.roster-import {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.roster-import__header h1 {
+    margin: 0 0 0.5rem;
+    font-size: 1.5rem;
+}
+
+.roster-import__header p {
+    margin: 0 0 1.5rem;
+    color: var(--color-text-muted, #666);
+}
+
+.roster-import__file {
+    display: block;
+    padding: 1.25rem;
+    border: 2px dashed var(--color-border, #cbd5e0);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    background: var(--color-surface, #fff);
+}
+
+.roster-import__filename,
+.roster-import__status {
+    margin: 0 0 1rem;
+    color: var(--color-text-muted, #666);
+    font-size: 0.9rem;
+}
+
+.roster-import__error {
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    background: var(--color-danger-bg, #fff5f5);
+    border: 1px solid var(--color-danger, #c53030);
+    color: var(--color-danger, #c53030);
+}
+
+.roster-import__done {
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    background: var(--color-success-bg, #f0fff4);
+    border: 1px solid var(--color-success, #2f855a);
+    color: var(--color-success, #2f855a);
+}
+
+.roster-import__summary,
+.roster-import__group {
+    margin-bottom: 2rem;
+}
+
+.roster-import__summary h2,
+.roster-import__group h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+}
+
+.roster-import__group-count {
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: var(--color-surface-muted, #edf2f7);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.roster-import__hint {
+    margin: 0 0 0.75rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted, #666);
+}
+
+.roster-import__counts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 0.5rem;
+}
+
+.roster-import__counts li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.roster-import__count {
+    font-size: 1.2rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.roster-import__troops {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.roster-import__troops th,
+.roster-import__troops td {
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+    text-align: left;
+}
+
+.roster-import__troops td:not(:first-child) {
+    font-variant-numeric: tabular-nums;
+}
+
+.roster-import__rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 6px;
+    max-height: 24rem;
+    overflow-y: auto;
+}
+
+.roster-import__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--color-border, #edf2f7);
+}
+
+.roster-import__row:last-child {
+    border-bottom: none;
+}
+
+.roster-import__row input[type="checkbox"] {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+.roster-import__row-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.roster-import__who {
+    font-weight: 600;
+}
+
+.roster-import__meta {
+    font-size: 0.8rem;
+    color: var(--color-text-muted, #666);
+}
+
+.roster-import__row-error {
+    font-size: 0.8rem;
+    color: var(--color-danger, #c53030);
+}
+
+.roster-import__choice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.35rem;
+    font-size: 0.85rem;
+}
+
+.roster-import__choice label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+}
+
+.roster-import__actions {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 0;
+    background: var(--color-bg, #fff);
+    border-top: 1px solid var(--color-border, #e2e8f0);
+}
+
+.roster-import__actions button {
+    padding: 0.65rem 1.1rem;
+    border: 1px solid var(--color-border, #cbd5e0);
+    border-radius: 6px;
+    background: var(--color-surface, #fff);
+    font: inherit;
+    cursor: pointer;
+}
+
+.roster-import__apply {
+    border-color: transparent !important;
+    background: var(--color-primary, #2b6cb0) !important;
+    color: #fff;
+    font-weight: 600;
+}
+
+.roster-import__apply:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

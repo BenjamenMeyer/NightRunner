@@ -42,6 +42,7 @@ class PatrolsResource:
                     name=str(name_val),
                     rank=str(rank_val) if rank_val is not None and not isinstance(rank_val, str) else rank_val,
                     troop=str(troop_val) if troop_val is not None and not isinstance(troop_val, str) else troop_val,
+                    attendee_id=m.get("attendeeId") or m.get("attendee_id"),
                 )
             )
         patrol_name = data.get("name") or "Trail Life"
@@ -62,6 +63,16 @@ class PatrolsResource:
             has_radio=has_radio,
             radio_identifier=str(radio_identifier) if radio_identifier is not None and not isinstance(radio_identifier, str) else radio_identifier,
         )
+
+        # Number the patrol automatically so organisers do not have to track
+        # what is taken. An explicitly supplied number wins.
+        requested_number = data.get("number")
+        patrol.number = (
+            int(requested_number)
+            if requested_number is not None
+            else await store.next_number(patrol.event_id)
+        )
+
         await store.create(patrol)
         resp.status = falcon.HTTP_201
         resp.media = patrol.to_api_dict()
@@ -92,6 +103,8 @@ class PatrolResource:
             patrol.radio_frequency = data.get("radioFrequency")
         if "radioChannel" in data:
             patrol.radio_channel = data.get("radioChannel")
+        if "number" in data:
+            patrol.number = int(data["number"]) if data.get("number") is not None else None
         if "hasRadio" in data:
             patrol.has_radio = bool(data.get("hasRadio"))
         if "radioIdentifier" in data:
@@ -103,6 +116,7 @@ class PatrolResource:
                     name=m["name"],
                     rank=m.get("rank"),
                     troop=m.get("troop"),
+                    attendee_id=m.get("attendeeId") or m.get("attendee_id"),
                 )
                 for m in data["members"]
             ]

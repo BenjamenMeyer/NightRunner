@@ -67,7 +67,20 @@ class TestMeEndpoint:
         assert data["username"] == "dev_user"
         assert data["email"] == "dev@example.com"
         assert data["displayName"] == "Dev User"
-        assert data["roles"] == []
+
+    async def test_dev_mode_user_is_an_admin(self, test_client, dev_mode_enabled):
+        """
+        The dev user is an admin so the UI is usable locally.
+
+        Without this the event selector never appears: a non-admin with no
+        event assignment has nothing to select, and every event-scoped screen
+        is unreachable. Dev mode already skips token verification entirely, so
+        this grants nothing that was not already granted.
+        """
+        resp = await test_client.simulate_get("/v1/me")
+
+        assert resp.json["isAdmin"] is True
+        assert "admin" in resp.json["roles"]
 
     async def test_user_with_no_roles(self, test_client, test_database, token_factory):
         """A user with no assigned roles gets an empty roles list."""

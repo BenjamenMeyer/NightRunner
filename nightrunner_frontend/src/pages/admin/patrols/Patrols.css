@@ -419,3 +419,17 @@
     }
 
 }
+/*
+ * Patrol number: a short identifier people call a patrol by on a radio, so it
+ * is kept narrow and tabular rather than competing with the patrol name.
+ */
+.patrol-table .patrol-number-column {
+    width: 3.5rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.patrol-table td.patrol-number-column {
+    font-weight: 600;
+}

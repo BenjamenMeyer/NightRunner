@@ -19,6 +19,15 @@ from nightrunner_backend.transport.login import LoginResource
 
 from nightrunner_backend.transport.users import UsersResource, UserResource
 from nightrunner_backend.transport.visits import VisitsResource, VisitCheckInResource, VisitCheckOutResource
+from nightrunner_backend.transport.roster import (
+    TroopsResource,
+    EventAttendeesResource,
+    EventAttendeeResource,
+    RosterImportPreviewResource,
+    RosterImportApplyResource,
+    ArrivalsResource,
+    ArrivalResource,
+)
 
 # Configure logging
 _log_level_str = (settings.log_level or "INFO").upper()
@@ -102,6 +111,13 @@ def register_routes(app):
     app.add_route("/v1/stations/{stationId}", StationResource())
     app.add_route("/v1/reports/stations/{stationId}", StationReportResource())
     app.add_route("/v1/reports/events/{eventId}", EventReportResource())
+    app.add_route("/v1/troops", TroopsResource())
+    app.add_route("/v1/events/{event_id}/attendees", EventAttendeesResource())
+    app.add_route("/v1/events/{event_id}/attendees/{attendee_id}", EventAttendeeResource())
+    app.add_route("/v1/events/{event_id}/roster/preview", RosterImportPreviewResource())
+    app.add_route("/v1/events/{event_id}/roster/apply", RosterImportApplyResource())
+    app.add_route("/v1/events/{event_id}/arrivals", ArrivalsResource())
+    app.add_route("/v1/events/{event_id}/arrivals/{attendee_id}", ArrivalResource())
     app.add_route("/v1/users", UsersResource())
     app.add_route("/v1/users/{user_id}", UserResource())
     app.add_route("/users", UsersResource())

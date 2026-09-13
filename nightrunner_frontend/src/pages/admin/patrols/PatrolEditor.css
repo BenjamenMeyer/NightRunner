@@ -580,3 +580,40 @@
     }
 
 }
+/*
+ * Patrol number sits beside the name: it identifies the patrol but is
+ * assigned by the system, so it is shown rather than edited.
+ */
+.patrol-identity {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+.patrol-number-value {
+    display: flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border, #d0d0d0);
+    border-radius: 4px;
+    background: var(--color-surface-muted, #f4f4f5);
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: inherit;
+}
+
+.patrol-number-pending {
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--color-text-muted, #777);
+}
+
+@media (max-width: 32rem) {
+    .patrol-identity {
+        grid-template-columns: 1fr;
+    }
+}

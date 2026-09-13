@@ -10,6 +10,7 @@ import {
 
 import ApiService from "../../../api/ApiService.js";
 import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
+import TroopMemberPicker from "./TroopMemberPicker.jsx";
 
 import QRCodeModal from "./QRCodeModal.jsx";
 
@@ -28,6 +29,7 @@ const EMPTY_MEMBER = {
 
 const EMPTY_PATROL = {
     name: "",
+    number: null,
     phoneNumber: "",
     radioFrequency: "",
     radioChannel: "",
@@ -687,27 +689,52 @@ export default function PatrolEditor({
 
                     <div className="editor-card-body">
 
-                        <label className="form-field">
+                        <div className="patrol-identity">
 
-                            <span>
-                                Patrol Name
-                            </span>
+                            <div className="form-field patrol-number-field">
 
-                            <input
-                                value={
-                                    patrol.name
-                                }
-                                onChange={event =>
-                                    updatePatrol(
-                                        "name",
-                                        event.target.value
-                                    )
-                                }
-                                placeholder="Enter patrol name"
-                                autoFocus
-                            />
+                                <span>
+                                    Patrol #
+                                </span>
 
-                        </label>
+                                {/*
+                                  * Read-only. The number is assigned by the
+                                  * system, per event, and is what people call
+                                  * the patrol by on a radio.
+                                  */}
+                                <output className="patrol-number-value">
+                                    {patrol.number ?? (
+                                        <span className="patrol-number-pending">
+                                            Assigned on save
+                                        </span>
+                                    )}
+                                </output>
+
+                            </div>
+
+                            <label className="form-field">
+
+                                <span>
+                                    Patrol Name
+                                </span>
+
+                                <input
+                                    value={
+                                        patrol.name
+                                    }
+                                    onChange={event =>
+                                        updatePatrol(
+                                            "name",
+                                            event.target.value
+                                        )
+                                    }
+                                    placeholder="Enter patrol name"
+                                    autoFocus
+                                />
+
+                            </label>
+
+                        </div>
 
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
                             <label className="form-field">
@@ -839,6 +866,15 @@ export default function PatrolEditor({
 
 
                     <div className="editor-card-body">
+
+                        <TroopMemberPicker
+                            eventId={eventId}
+                            members={patrol.members}
+                            onAdd={added => setPatrol(current => ({
+                                ...current,
+                                members: [...current.members, ...added]
+                            }))}
+                        />
 
                         {patrol.members.length > 0 ? (
 

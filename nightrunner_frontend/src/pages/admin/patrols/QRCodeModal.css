@@ -343,7 +343,15 @@
         background: #FFFFFF !important;
     }
 
-    #root {
+    /*
+     * The QR modal is portalled to document.body, outside #root, so printing
+     * it means hiding the app behind it.
+     *
+     * Scoped to when the modal is actually open. Unconditionally this hid
+     * #root for EVERY print in the app — this stylesheet is global once
+     * loaded — so any other printable page came out blank.
+     */
+    body:has(.qr-code-overlay) #root {
         display: none !important;
     }
 
