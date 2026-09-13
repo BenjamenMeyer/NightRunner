@@ -1,0 +1,51 @@
+name: Storybook CI
+
+on:
+  pull_request:
+    branches: ["**"]
+    types: [opened, synchronize, reopened]
+    paths:
+      - "nightrunner_frontend/**"
+      - ".github/workflows/storybook-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  storybook-checks:
+    name: Storybook Build & Visual Regression Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Dependencies
+        working-directory: nightrunner_frontend
+        run: corepack enable && yarn install --frozen-lockfile
+
+      - name: Storybook Level 1: Build Gate
+        working-directory: nightrunner_frontend
+        run: STORYBOOK_DISABLE_TELEMETRY=1 yarn build-storybook
+
+      - name: Install Playwright Browsers for Storybook Test Runner
+        working-directory: nightrunner_frontend
+        run: npx playwright install --with-deps chromium
+        if: ${{ secrets.CHROMATIC_PROJECT_TOKEN != '' }}
+
+      - name: Storybook Level 2A: Headless Story Execution Tests
+        working-directory: nightrunner_frontend
+        run: yarn test-storybook:ci
+        if: ${{ secrets.CHROMATIC_PROJECT_TOKEN != '' }}
+
+      - name: Storybook Level 2B: Chromatic Visual Regression Testing
+        uses: chromaui/action@v1
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          workingDir: nightrunner_frontend
+          onlyChanged: true
+          exitZeroOnChanges: true
+        if: ${{ secrets.CHROMATIC_PROJECT_TOKEN != '' }}

@@ -86,29 +86,6 @@ jobs:
         working-directory: nightrunner_frontend
         run: yarn build
 
-      - name: Storybook Level 1: Build Gate
-        working-directory: nightrunner_frontend
-        run: STORYBOOK_DISABLE_TELEMETRY=1 yarn build-storybook
-
-      - name: Install Playwright Browsers for Storybook Test Runner
-        working-directory: nightrunner_frontend
-        run: npx playwright install --with-deps chromium
-        if: ${{ secrets.CHROMATIC_PROJECT_TOKEN != '' }}
-
-      - name: Storybook Level 2A: Headless Story Execution Tests
-        working-directory: nightrunner_frontend
-        run: yarn test-storybook:ci
-        if: ${{ secrets.CHROMATIC_PROJECT_TOKEN != '' }}
-
-      - name: Storybook Level 2B: Chromatic Visual Regression Testing
-        uses: chromaui/action@v1
-        with:
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-          workingDir: nightrunner_frontend
-          onlyChanged: true
-          exitZeroOnChanges: true
-        if: ${{ secrets.CHROMATIC_PROJECT_TOKEN != '' }}
-
       - name: Tear Down Stack
         if: always()
         run: docker compose down
