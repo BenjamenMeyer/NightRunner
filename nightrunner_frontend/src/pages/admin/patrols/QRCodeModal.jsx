@@ -7,12 +7,17 @@ import {
 import { createPortal } from "react-dom";
 import QRCode from "qrcode";
 
+import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
+import { buildPatrolQRPayload } from "@/api/helpers/qr/qrUtils.js";
+
 import "./QRCodeModal.css";
 
 export default function QRCodeModal({
                                         patrol,
                                         onClose
                                     }) {
+
+    const { event } = useEventContext();
 
     const canvasRef =
         useRef(null);
@@ -37,9 +42,10 @@ export default function QRCodeModal({
                 setError(null);
 
                 const payload =
-                    JSON.stringify({
-                        id: patrol.id
-                    });
+                    buildPatrolQRPayload(
+                        patrol.id,
+                        event?.name
+                    );
 
                 if (!canvasRef.current) {
                     return;
@@ -155,18 +161,73 @@ export default function QRCodeModal({
 
                         <div className="qr-code-information">
 
-                            <h3>
-                                {patrolName}
-                            </h3>
+                            <div className="qr-print-event-header">
+                                {(event?.name ?? "Event Patrol Badges").toUpperCase()}
+                            </div>
 
-                            <p className="qr-code-description">
-                                Scan this code to identify
-                                this patrol.
+                            <h2>
+                                {patrolName}
+                            </h2>
+
+                            <div className="qr-print-patrol-number">
+                                Patrol #{patrol?.number ?? "____"}
+                            </div>
+
+                            <p className="qr-code-description no-print">
+                                Scan this code to identify this patrol.
                             </p>
 
-                            <code>
+                            <code className="no-print">
                                 {patrol.id}
                             </code>
+
+                        </div>
+
+                        <div className="qr-members-table-wrapper">
+
+                            <table className="qr-members-table">
+
+                                <thead>
+
+                                    <tr>
+                                        <th>Member Name</th>
+                                        <th>Rank</th>
+                                        <th>Troop / Identifier</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    {patrol?.members && patrol.members.length > 0 ? (
+
+                                        patrol.members.map((m, idx) => (
+
+                                            <tr key={m.id || idx}>
+                                                <td>{m.name || "—"}</td>
+                                                <td>{m.rank || "—"}</td>
+                                                <td>{m.troop || "—"}</td>
+                                            </tr>
+
+                                        ))
+
+                                    ) : (
+
+                                        [1, 2, 3, 4, 5, 6].map(num => (
+
+                                            <tr key={num}>
+                                                <td>Member #{num}: __________________</td>
+                                                <td>___________</td>
+                                                <td>___________</td>
+                                            </tr>
+
+                                        ))
+
+                                    )}
+
+                                </tbody>
+
+                            </table>
 
                         </div>
 

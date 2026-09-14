@@ -13,6 +13,8 @@ dependencies = [
     "uuid6",
     "python-dotenv",
     "httpx",
+    "reportlab",
+    "qrcode[pil]",
 ]
 
 [project.optional-dependencies]

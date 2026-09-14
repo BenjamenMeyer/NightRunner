@@ -103,6 +103,24 @@ export default function Reports() {
     }
 
 
+    function handleDownloadPatrolsPdf() {
+
+        if (!eventId) {
+            return;
+        }
+
+        const pdfUrl = ApiService.reportData.getPatrolsPdfUrl(eventId);
+
+        window.open(
+            pdfUrl,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+    }
+
+
+
     function formatDate(date) {
 
         if (!date) {
@@ -358,6 +376,15 @@ export default function Reports() {
                         }
                     </button>
 
+
+                    <button
+                        type="button"
+                        className="reports-button"
+                        onClick={handleDownloadPatrolsPdf}
+                        disabled={!eventId}
+                    >
+                        Patrol QR Sheets (PDF)
+                    </button>
 
                     <button
                         type="button"

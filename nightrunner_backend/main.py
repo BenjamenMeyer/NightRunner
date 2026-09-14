@@ -14,6 +14,7 @@ from nightrunner_backend.transport.configurations import ConfigurationsResource,
 from nightrunner_backend.transport.stations import StationsResource, StationResource
 from nightrunner_backend.transport.scores import ScoresResource, ScoreResource, FinalizedResultsResource
 from nightrunner_backend.transport.reports_event import EventReportResource
+from nightrunner_backend.transport.reports_patrol_pdf import EventPatrolsPdfReportResource
 from nightrunner_backend.transport.reports_station import StationReportResource
 from nightrunner_backend.transport.login import LoginResource
 
@@ -97,6 +98,7 @@ def register_routes(app):
     app.add_route("/v1/visits/reset", VisitResetResource())
 
     app.add_route("/v1/reports/events/{eventId}", EventReportResource())
+    app.add_route("/v1/reports/events/{eventId}/patrols-pdf", EventPatrolsPdfReportResource())
     app.add_route("/health", HealthResource())
     app.add_route("/v1/me", MeResource())
     app.add_route("/v1/events", EventsResource())
