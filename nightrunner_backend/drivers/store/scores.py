@@ -53,7 +53,7 @@ AGGREGATE_EVENT = """
     JOIN patrols p ON p.id = s.patrol_id
     LEFT JOIN stations st ON st.id = s.station_id
     WHERE s.event_id = :event_id
-    GROUP BY s.patrol_id, s.station_id;
+    GROUP BY s.patrol_id, p.name, s.station_id, st.name, st.station_weight;
 """
 
 class ScoresStore:
