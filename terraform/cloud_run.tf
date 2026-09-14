@@ -99,6 +99,11 @@ resource "google_cloud_run_v2_service" "backend" {
         value = "https://www.googleapis.com/oauth2/v1/certs"
       }
 
+      env {
+        name  = "GCS_REPORTS_BUCKET"
+        value = google_storage_bucket.reports.name
+      }
+
       ports {
         container_port = 8000
       }

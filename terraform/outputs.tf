@@ -23,6 +23,11 @@ output "frontend_bucket_name" {
   description = "GCS Bucket name for frontend static deployment"
 }
 
+output "reports_bucket_name" {
+  value       = google_storage_bucket.reports.name
+  description = "GCS Bucket name for private compiled report artifact storage"
+}
+
 output "active_cdn_provider" {
   value       = var.cdn_provider
   description = "The active CDN provider configuration ('none', 'cloudflare', or 'gcp')"

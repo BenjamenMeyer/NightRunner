@@ -63,7 +63,12 @@ resource "google_service_account" "cdn_gcs_reader" {
   display_name = "NightRunner Cloud CDN GCS Reader Service Account"
 }
 
-# Grant Object Viewer on Private GCS Bucket ONLY to CDN Service Account
+# Grant Storage Object Admin on Private Reports Bucket ONLY to Cloud Run Service Account
+resource "google_storage_bucket_iam_member" "backend_reports_storage_admin" {
+  bucket = google_storage_bucket.reports.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+}
 resource "google_storage_bucket_iam_member" "cdn_private_reader" {
   bucket = google_storage_bucket.frontend.name
   role   = "roles/storage.objectViewer"
