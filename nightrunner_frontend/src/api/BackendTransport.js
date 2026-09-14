@@ -6,6 +6,10 @@ const API_BASE =
 
 class BackendTransport {
 
+    getApiBaseUrl() {
+        return API_BASE;
+    }
+
     //
     // Headers
     //
