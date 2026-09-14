@@ -6,6 +6,18 @@ class ReportsStore:
     def __init__(self, driver: DatabaseDriver):
         self.driver = driver
 
+    def _format_row(self, row: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        if not row:
+            return None
+        formatted = dict(row)
+        for key in ("created_at", "completed_at"):
+            val = formatted.get(key)
+            if hasattr(val, "isoformat"):
+                formatted[key] = val.isoformat()
+            elif val is not None:
+                formatted[key] = str(val)
+        return formatted
+
     async def list_reports(self, event_id: str) -> List[Dict[str, Any]]:
         sql = """
         SELECT id, event_id, report_type, name, status, file_key, content_type, size_bytes, error_message, created_at, completed_at
@@ -14,7 +26,7 @@ class ReportsStore:
         ORDER BY created_at DESC, id DESC
         """
         rows = await self.driver.execute(sql, {"event_id": event_id})
-        return rows or []
+        return [self._format_row(r) for r in (rows or [])]
 
     async def get_report(self, report_id: str) -> Optional[Dict[str, Any]]:
         sql = """
@@ -22,7 +34,8 @@ class ReportsStore:
         FROM compiled_reports
         WHERE id = :id
         """
-        return await self.driver.fetch_one(sql, {"id": report_id})
+        row = await self.driver.fetch_one(sql, {"id": report_id})
+        return self._format_row(row)
 
     async def create_report_job(self, report_id: str, event_id: str, report_type: str, name: str) -> Dict[str, Any]:
         sql = """
