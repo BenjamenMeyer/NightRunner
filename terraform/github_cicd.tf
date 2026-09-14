@@ -77,80 +77,84 @@ resource "google_service_account_iam_member" "github_oidc_impersonation" {
 # (Created when var.github_repo_name is set)
 # ------------------------------------------------------------------------------
 
+locals {
+  secret_prefix = var.is_production_environment ? "GCP_PROD_" : "GCP_"
+}
+
 resource "github_actions_secret" "gcp_project_id" {
   count           = var.github_repo_name != "" ? 1 : 0
   repository      = var.github_repo_name
-  secret_name     = "GCP_PROJECT_ID"
+  secret_name     = "${local.secret_prefix}PROJECT_ID"
   plaintext_value = var.project_id
 }
 
 resource "github_actions_secret" "gcp_region" {
   count           = var.github_repo_name != "" ? 1 : 0
   repository      = var.github_repo_name
-  secret_name     = "GCP_REGION"
+  secret_name     = "${local.secret_prefix}REGION"
   plaintext_value = var.region
 }
 
 resource "github_actions_secret" "gcp_workload_identity_provider" {
   count           = var.github_repo_name != "" ? 1 : 0
   repository      = var.github_repo_name
-  secret_name     = "GCP_WORKLOAD_IDENTITY_PROVIDER"
+  secret_name     = "${local.secret_prefix}WORKLOAD_IDENTITY_PROVIDER"
   plaintext_value = google_iam_workload_identity_pool_provider.github_provider.name
 }
 
 resource "github_actions_secret" "gcp_service_account" {
   count           = var.github_repo_name != "" ? 1 : 0
   repository      = var.github_repo_name
-  secret_name     = "GCP_SERVICE_ACCOUNT"
+  secret_name     = "${local.secret_prefix}SERVICE_ACCOUNT"
   plaintext_value = google_service_account.github_cicd.email
 }
 
 resource "github_actions_secret" "gcp_artifact_registry_url" {
   count           = var.github_repo_name != "" ? 1 : 0
   repository      = var.github_repo_name
-  secret_name     = "GCP_ARTIFACT_REGISTRY_URL"
+  secret_name     = "${local.secret_prefix}ARTIFACT_REGISTRY_URL"
   plaintext_value = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.backend_repo.name}/backend"
 }
 
 resource "github_actions_secret" "gcp_cloud_run_service" {
   count           = var.github_repo_name != "" ? 1 : 0
   repository      = var.github_repo_name
-  secret_name     = "GCP_CLOUD_RUN_SERVICE"
+  secret_name     = "${local.secret_prefix}CLOUD_RUN_SERVICE"
   plaintext_value = google_cloud_run_v2_service.backend.name
 }
 
 resource "github_actions_secret" "gcp_frontend_bucket" {
   count           = var.github_repo_name != "" ? 1 : 0
   repository      = var.github_repo_name
-  secret_name     = "GCP_FRONTEND_BUCKET"
+  secret_name     = "${local.secret_prefix}FRONTEND_BUCKET"
   plaintext_value = google_storage_bucket.frontend.name
 }
 
 resource "github_actions_secret" "gcp_google_client_id" {
   count           = var.github_repo_name != "" && var.google_client_id != "" ? 1 : 0
   repository      = var.github_repo_name
-  secret_name     = "GCP_GOOGLE_CLIENT_ID"
+  secret_name     = "${local.secret_prefix}GOOGLE_CLIENT_ID"
   plaintext_value = var.google_client_id
 }
 
 resource "github_actions_secret" "gcp_firebase_api_key" {
   count           = var.github_repo_name != "" ? 1 : 0
   repository      = var.github_repo_name
-  secret_name     = "GCP_FIREBASE_API_KEY"
+  secret_name     = "${local.secret_prefix}FIREBASE_API_KEY"
   plaintext_value = google_apikeys_key.firebase_api_key.key_string
 }
 
 resource "github_actions_secret" "gcp_backend_url" {
   count           = var.github_repo_name != "" ? 1 : 0
   repository      = var.github_repo_name
-  secret_name     = "GCP_BACKEND_URL"
+  secret_name     = "${local.secret_prefix}BACKEND_URL"
   plaintext_value = google_cloud_run_v2_service.backend.uri
 }
 
 resource "github_actions_secret" "gcp_domain_name" {
   count           = var.github_repo_name != "" && var.domain_name != "" ? 1 : 0
   repository      = var.github_repo_name
-  secret_name     = "GCP_DOMAIN_NAME"
+  secret_name     = "${local.secret_prefix}DOMAIN_NAME"
   plaintext_value = var.domain_name
 }
 
