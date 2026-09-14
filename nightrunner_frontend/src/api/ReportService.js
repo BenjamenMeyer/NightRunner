@@ -96,7 +96,7 @@ export default class ReportService {
             return "";
         }
 
-        const baseUrl = BackendTransport.defaults.baseURL || "";
+        const baseUrl = BackendTransport.getApiBaseUrl() || "";
         return `${baseUrl}/compiled-reports/${reportId}/download`;
 
     }
