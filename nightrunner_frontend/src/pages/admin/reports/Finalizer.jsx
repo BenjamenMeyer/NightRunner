@@ -417,6 +417,15 @@ export default function Finalizer() {
             });
             setStoredResultsMap(newMap);
 
+            // Ask user if they want to generate a compiled report artifact
+            const confirmGenerate = window.confirm(
+                "Scores finalized! Would you like to generate a compiled 'Final Scoring Report' artifact for this event now?"
+            );
+            if (confirmGenerate) {
+                await ApiService.reportData.generateReportJob(eventId, "event-scoring");
+                window.location.href = "/admin/reports";
+            }
+
         } catch (err) {
             console.error("Failed to save finalized results:", err);
             setError(err?.message || "Failed to store finalized scores.");

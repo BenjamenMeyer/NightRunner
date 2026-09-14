@@ -16,6 +16,7 @@ import UserManager from "./pages/admin/user/UserManager.jsx";
 import Finalizer from "./pages/admin/reports/Finalizer.jsx";
 import Reports from "./pages/admin/reports/Reports.jsx";
 import PrintReport from "./pages/admin/reports/PrintReport.jsx";
+import ViewFinalReport from "./pages/admin/reports/ViewFinalReport.jsx";
 import Configurations from "./pages/admin/configurations/Configurations.jsx";
 import ConfigurationEditor from "./pages/admin/configurations/ConfigurationEditor.jsx";
 
@@ -226,6 +227,11 @@ export const AppRoutes = [
         path: "/admin/reports",
         element: Reports,
         name: "Event Reports",
+        access: ACCESS.ADMIN
+    },
+    {
+        path: "/admin/reports/view",
+        element: ViewFinalReport,
         access: ACCESS.ADMIN
     },
     {
