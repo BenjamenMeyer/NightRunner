@@ -252,11 +252,24 @@ export default function ScoreField({
                     onChange("");
                     return;
                 }
+                // Allow entering negative sign or partial valid numbers
+                if (rawVal === "-") {
+                    onChange("-");
+                    return;
+                }
                 const numVal = Number(rawVal);
                 if (Number.isNaN(numVal)) return;
-                // Clamp within bounds [minBound, maxBound]
-                const clampedVal = Math.max(minBound, Math.min(maxBound, numVal));
-                onChange(clampedVal);
+                onChange(numVal);
+            };
+
+            const handleRangeBlur = (e) => {
+                const rawVal = e.target.value;
+                if (rawVal === "" || rawVal === "-") return;
+                const numVal = Number(rawVal);
+                if (!Number.isNaN(numVal)) {
+                    const clampedVal = Math.max(minBound, Math.min(maxBound, numVal));
+                    onChange(clampedVal);
+                }
             };
 
             return (
@@ -275,6 +288,7 @@ export default function ScoreField({
                         value={value ?? ""}
                         placeholder={`Score (${minBound} - ${maxBound})`}
                         onChange={handleRangeChange}
+                        onBlur={handleRangeBlur}
                     />
 
                     <small>
