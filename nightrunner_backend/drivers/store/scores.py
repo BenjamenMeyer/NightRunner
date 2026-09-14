@@ -28,7 +28,7 @@ AGGREGATE_STATION = """
         s.patrol_id,
         p.name            AS patrol_name,
         s.task_id,
-        COALESCE(t.description, s.task_id) AS task_name,
+        COALESCE(NULLIF(t.name, ''), t.description, s.task_id) AS task_name,
         s.score_value,
         s.score_weight,
         (s.score_value * s.score_weight) AS weighted_score,
