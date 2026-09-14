@@ -108,7 +108,7 @@ def generate_patrol_qr_pdf(patrols: list, event_name: str = "Event Patrol Badges
         
         # 1. Event Header
         page_elements.append(Paragraph(event_name.upper(), header_style))
-        page_elements.append(Spacer(1, 4))
+        page_elements.append(Spacer(1, 2))
         
         # 2. Patrol Name
         p_name = patrol.name if getattr(patrol, "name", None) else "________________________"
@@ -117,7 +117,7 @@ def generate_patrol_qr_pdf(patrols: list, event_name: str = "Event Patrol Badges
         # 3. Patrol Number
         p_num = str(patrol.number) if getattr(patrol, "number", None) is not None else "____"
         page_elements.append(Paragraph(f"Patrol #{p_num}", patrol_meta_style))
-        page_elements.append(Spacer(1, 8))
+        page_elements.append(Spacer(1, 4))
         
         # 4. QR Code Generation (JSON payload with id and event matching frontend scanner)
         qr_payload = {
@@ -130,11 +130,11 @@ def generate_patrol_qr_pdf(patrols: list, event_name: str = "Event Patrol Badges
         qr_img.save(img_buffer, format="PNG")
         img_buffer.seek(0)
         
-        # Prominent QR Code sizing (~ 3.5 inches x 3.5 inches)
-        qr_element = RLImage(img_buffer, width=3.5 * inch, height=3.5 * inch)
+        # Compact QR Code sizing (~ 2.3 inches x 2.3 inches) to fit up to 8 members cleanly on 1 page
+        qr_element = RLImage(img_buffer, width=2.3 * inch, height=2.3 * inch)
         qr_element.hAlign = "CENTER"
         page_elements.append(qr_element)
-        page_elements.append(Spacer(1, 14))
+        page_elements.append(Spacer(1, 6))
         
         # 5. Members Table
         members = getattr(patrol, "members", []) or []
@@ -157,8 +157,8 @@ def generate_patrol_qr_pdf(patrols: list, event_name: str = "Event Patrol Badges
                     Paragraph(m_troop, table_cell_style),
                 ])
         else:
-            # Provide blank member lines if no roster assigned yet
-            for i in range(1, 7):
+            # Provide 8 blank member lines if no roster assigned yet
+            for i in range(1, 9):
                 table_data.append([
                     Paragraph(f"Member #{i}: __________________", table_cell_style),
                     Paragraph("___________", table_cell_style),
@@ -172,8 +172,8 @@ def generate_patrol_qr_pdf(patrols: list, event_name: str = "Event Patrol Badges
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2b6cb0")),
             ("ALIGN", (0, 0), (-1, -1), "LEFT"),
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-            ("TOPPADDING", (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 3.5),
+            ("TOPPADDING", (0, 0), (-1, -1), 3.5),
             ("LEFTPADDING", (0, 0), (-1, -1), 6),
             ("RIGHTPADDING", (0, 0), (-1, -1), 6),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e0")),
