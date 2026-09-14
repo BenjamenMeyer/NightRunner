@@ -17,7 +17,11 @@ def upload_report_bytes(file_key: str, data: bytes, content_type: str = "applica
     if bucket_name:
         try:
             from google.cloud import storage
-            client = storage.Client()
+            if os.environ.get("STORAGE_EMULATOR_HOST"):
+                from google.auth.credentials import AnonymousCredentials
+                client = storage.Client(credentials=AnonymousCredentials(), project="test-project")
+            else:
+                client = storage.Client()
             bucket = client.bucket(bucket_name)
             blob = bucket.blob(file_key)
             blob.upload_from_string(data, content_type=content_type)
@@ -37,7 +41,11 @@ def download_report_bytes(file_key: str) -> Optional[bytes]:
     if bucket_name:
         try:
             from google.cloud import storage
-            client = storage.Client()
+            if os.environ.get("STORAGE_EMULATOR_HOST"):
+                from google.auth.credentials import AnonymousCredentials
+                client = storage.Client(credentials=AnonymousCredentials(), project="test-project")
+            else:
+                client = storage.Client()
             bucket = client.bucket(bucket_name)
             blob = bucket.blob(file_key)
             if blob.exists():
@@ -56,7 +64,11 @@ def delete_report_bytes(file_key: str) -> None:
     if bucket_name:
         try:
             from google.cloud import storage
-            client = storage.Client()
+            if os.environ.get("STORAGE_EMULATOR_HOST"):
+                from google.auth.credentials import AnonymousCredentials
+                client = storage.Client(credentials=AnonymousCredentials(), project="test-project")
+            else:
+                client = storage.Client()
             bucket = client.bucket(bucket_name)
             blob = bucket.blob(file_key)
             if blob.exists():
