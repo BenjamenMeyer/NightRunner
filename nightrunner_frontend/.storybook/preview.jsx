@@ -194,7 +194,7 @@ const withProviders = (Story, context) => {
           <AuthServiceProvider>
             <BrandingProviderKeyed theme={selectedTheme}>
               <EventProvider>
-                <div className="app-layout" style={{ display: 'block', minHeight: '100vh', background: 'var(--page-bg)', color: 'var(--text-primary)', padding: '20px' }}>
+                <div className="app-layout" style={{ display: 'block', minHeight: '100vh', background: 'var(--page-bg)', color: 'var(--text-primary)', padding: '20px', overflowY: 'auto' }}>
                   <Story />
                 </div>
               </EventProvider>
