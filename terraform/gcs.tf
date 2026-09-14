@@ -39,12 +39,38 @@ resource "google_storage_bucket" "reports" {
 
   public_access_prevention = "enforced"
 
+  # Lifecycle rules for tiered storage lifecycle management:
+  # 0-90 days: STANDARD storage (default)
+  # 90 days: Transition to NEARLINE storage
+  # 180 days: Transition to COLDLINE storage
+  # 365 days: Transition to ARCHIVE storage
   lifecycle_rule {
     action {
-      type = "Delete"
+      type          = "SetStorageClass"
+      storage_class = "NEARLINE"
     }
     condition {
-      age = 30
+      age = 90
+    }
+  }
+
+  lifecycle_rule {
+    action {
+      type          = "SetStorageClass"
+      storage_class = "COLDLINE"
+    }
+    condition {
+      age = 180
+    }
+  }
+
+  lifecycle_rule {
+    action {
+      type          = "SetStorageClass"
+      storage_class = "ARCHIVE"
+    }
+    condition {
+      age = 365
     }
   }
 }
