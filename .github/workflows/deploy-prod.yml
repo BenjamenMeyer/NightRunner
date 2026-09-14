@@ -3,8 +3,12 @@ name: Deploy to GCP Production
 on:
   workflow_dispatch: # Allows manual trigger from GitHub Actions Web UI
     inputs:
+      target_version:
+        description: "Existing release version / tag to deploy (e.g., v0.1.5 or 0.1.5). Leave blank to build from main."
+        required: false
+        default: ""
       version_bump:
-        description: "Semantic version bump type (default: patch)"
+        description: "Semantic version bump type if target_version is empty (default: patch)"
         required: true
         default: "patch"
         type: choice
@@ -24,6 +28,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.target_version != '' && inputs.target_version || github.ref }}
 
       - name: Filter Changed Paths
         id: filter
@@ -38,59 +44,75 @@ jobs:
             frontend:
               - 'nightrunner_frontend/**'
 
-  # Generate semantic version for release and deployments
+  # Resolve release version (use target_version if specified, else calculate & tag new version)
   version:
-    name: Generate Release Version
+    name: Resolve Release Version
     runs-on: ubuntu-latest
     permissions:
       contents: write
     outputs:
       version: ${{ steps.semver.outputs.version }}
       version_tag: ${{ steps.semver.outputs.version_tag }}
+      is_existing: ${{ steps.semver.outputs.is_existing }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
 
-      - name: Calculate Semantic Version
+      - name: Calculate or Resolve Version
         id: semver
         run: |
-          BUMP_TYPE="${{ inputs.version_bump || 'patch' }}"
+          TARGET_VERSION="${{ inputs.target_version }}"
           
-          # Fetch all tags
-          git fetch --tags || true
-          
-          # Find latest tag matching v*.*.* or default to initial release v0.1.0
-          LATEST_TAG=$(git tag -l "v*" --sort=-v:refname | head -n 1)
-          if [ -z "$LATEST_TAG" ]; then
-            NEW_VERSION="v0.1.0-prod-${{ github.run_number }}"
-            RELEASE_TAG="v0.1.0"
-          else
-            BASE_VERSION="${LATEST_TAG#v}"
-            BASE_NUMERIC="${BASE_VERSION%%-*}"
-            IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_NUMERIC"
-            
-            if [ "$BUMP_TYPE" = "major" ]; then
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-            elif [ "$BUMP_TYPE" = "minor" ]; then
-              MINOR=$((MINOR + 1))
-              PATCH=0
+          if [ -n "$TARGET_VERSION" ]; then
+            # Format clean version tag
+            if [[ "$TARGET_VERSION" =~ ^v ]]; then
+              RELEASE_TAG="$TARGET_VERSION"
             else
-              PATCH=$((PATCH + 1))
+              RELEASE_TAG="v${TARGET_VERSION}"
             fi
             
-            NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}-prod-${{ github.run_number }}"
-            RELEASE_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+            echo "version=${RELEASE_TAG}" >> $GITHUB_OUTPUT
+            echo "version_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
+            echo "is_existing=true" >> $GITHUB_OUTPUT
+            echo "Using specified existing target version: ${RELEASE_TAG}"
+          else
+            BUMP_TYPE="${{ inputs.version_bump || 'patch' }}"
+            git fetch --tags || true
+            
+            LATEST_TAG=$(git tag -l "v*" --sort=-v:refname | head -n 1)
+            if [ -z "$LATEST_TAG" ]; then
+              NEW_VERSION="v0.1.0-prod-${{ github.run_number }}"
+              RELEASE_TAG="v0.1.0"
+            else
+              BASE_VERSION="${LATEST_TAG#v}"
+              BASE_NUMERIC="${BASE_VERSION%%-*}"
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_NUMERIC"
+              
+              if [ "$BUMP_TYPE" = "major" ]; then
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=0
+              elif [ "$BUMP_TYPE" = "minor" ]; then
+                MINOR=$((MINOR + 1))
+                PATCH=0
+              else
+                PATCH=$((PATCH + 1))
+              fi
+              
+              NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}-prod-${{ github.run_number }}"
+              RELEASE_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+            fi
+            
+            echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+            echo "version_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
+            echo "is_existing=false" >> $GITHUB_OUTPUT
+            echo "Calculated new version (${BUMP_TYPE} bump): ${NEW_VERSION}, Tag: ${RELEASE_TAG}"
           fi
-          
-          echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
-          echo "version_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
-          echo "Calculated Version (${BUMP_TYPE} bump): ${NEW_VERSION}, Release Tag: ${RELEASE_TAG}"
 
-      - name: Create and Push Git Tag
+      - name: Create and Push Git Tag (if new version)
+        if: ${{ steps.semver.outputs.is_existing == 'false' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -100,12 +122,14 @@ jobs:
   # Verify backend unit tests before deploying
   test-backend:
     name: Run Backend Unit Tests
-    needs: changes
+    needs: [changes, version]
     if: ${{ needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ needs.version.outputs.version_tag }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -136,6 +160,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ needs.version.outputs.version_tag }}
 
       - name: Authenticate to Google Cloud via OIDC (Production)
         uses: google-github-actions/auth@v2
@@ -149,16 +175,23 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_PROD_REGION || secrets.GCP_REGION }}-docker.pkg.dev
 
-      - name: Build & Push Docker Image
+      - name: Ensure Container Image Exists (Build if Missing)
         run: |
           IMAGE_URL="${{ secrets.GCP_PROD_ARTIFACT_REGISTRY_URL || secrets.GCP_ARTIFACT_REGISTRY_URL }}"
           IMAGE_TAG="${IMAGE_URL}:${{ needs.version.outputs.version }}"
           SHA_TAG="${IMAGE_URL}:${{ github.sha }}"
           LATEST_TAG="${IMAGE_URL}:latest"
-          docker build -t $IMAGE_TAG -t $SHA_TAG -t $LATEST_TAG .
-          docker push $IMAGE_TAG
-          docker push $SHA_TAG
-          docker push $LATEST_TAG
+
+          echo "Checking if container image ${IMAGE_TAG} exists in production Artifact Registry..."
+          if gcloud container images describe "$IMAGE_TAG" > /dev/null 2>&1; then
+            echo "Image ${IMAGE_TAG} already exists in Artifact Registry."
+          else
+            echo "Image ${IMAGE_TAG} not found in production registry. Building container image for tagged release..."
+            docker build -t $IMAGE_TAG -t $SHA_TAG -t $LATEST_TAG .
+            docker push $IMAGE_TAG
+            docker push $SHA_TAG
+            docker push $LATEST_TAG
+          fi
 
       - name: Deploy to Cloud Run (Production)
         run: |
@@ -171,12 +204,14 @@ jobs:
 
   lint-frontend:
     name: Run Frontend Linter
-    needs: changes
+    needs: [changes, version]
     if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ needs.version.outputs.version_tag }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -193,12 +228,14 @@ jobs:
 
   test-frontend:
     name: Run Frontend Integration Tests & Build Gate
-    needs: changes
+    needs: [changes, version]
     if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ needs.version.outputs.version_tag }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -250,6 +287,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ needs.version.outputs.version_tag }}
 
       - name: Authenticate to Google Cloud via OIDC (Production)
         uses: google-github-actions/auth@v2
@@ -262,7 +301,7 @@ jobs:
         with:
           node-version: 24
 
-      - name: Install & Build Frontend
+      - name: Install & Build Frontend for Tagged Version
         working-directory: nightrunner_frontend
         run: |
           corepack enable
@@ -294,6 +333,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ needs.version.outputs.version_tag }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
