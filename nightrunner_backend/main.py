@@ -16,6 +16,7 @@ from nightrunner_backend.transport.scores import ScoresResource, ScoreResource, 
 from nightrunner_backend.transport.reports_event import EventReportResource
 from nightrunner_backend.transport.reports_patrol_pdf import EventPatrolsPdfReportResource
 from nightrunner_backend.transport.reports_station import StationReportResource
+from nightrunner_backend.transport.compiled_reports import CompiledReportsResource, CompiledReportDownloadResource
 from nightrunner_backend.transport.login import LoginResource
 
 from nightrunner_backend.transport.users import UsersResource, UserResource
@@ -99,6 +100,9 @@ def register_routes(app):
 
     app.add_route("/v1/reports/events/{eventId}", EventReportResource())
     app.add_route("/v1/reports/events/{eventId}/patrols-pdf", EventPatrolsPdfReportResource())
+    app.add_route("/v1/events/{event_id}/compiled-reports", CompiledReportsResource())
+    app.add_route("/v1/compiled-reports/{reportId}/download", CompiledReportDownloadResource())
+    app.add_route("/v1/compiled-reports/{reportId}", CompiledReportDownloadResource())
     app.add_route("/health", HealthResource())
     app.add_route("/v1/me", MeResource())
     app.add_route("/v1/events", EventsResource())

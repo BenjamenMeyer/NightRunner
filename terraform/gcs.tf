@@ -30,6 +30,25 @@ resource "google_storage_bucket" "frontend" {
   }
 }
 
+# GCS Bucket for Generated Reports (Private - API Access Only)
+resource "google_storage_bucket" "reports" {
+  name                        = "${var.project_id}-reports-${random_id.bucket_suffix.hex}"
+  location                    = var.region
+  force_destroy               = true
+  uniform_bucket_level_access = true
+
+  public_access_prevention = "enforced"
+
+  lifecycle_rule {
+    action {
+      type = "Delete"
+    }
+    condition {
+      age = 30
+    }
+  }
+}
+
 # Grant public read access to allUsers ONLY when no CDN provider is configured (Direct dev mode)
 resource "google_storage_bucket_iam_member" "frontend_public_read" {
   count  = var.cdn_provider == "none" ? 1 : 0

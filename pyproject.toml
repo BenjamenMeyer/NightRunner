@@ -15,6 +15,7 @@ dependencies = [
     "httpx",
     "reportlab",
     "qrcode[pil]",
+    "google-cloud-storage",
 ]
 
 [project.optional-dependencies]
