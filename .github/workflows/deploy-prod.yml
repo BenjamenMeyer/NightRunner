@@ -166,18 +166,18 @@ jobs:
       - name: Authenticate to Google Cloud via OIDC (Production)
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_PROD_WORKLOAD_IDENTITY_PROVIDER || secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT || secrets.GCP_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ secrets.GCP_PROD_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ secrets.GCP_PROD_REGION || secrets.GCP_REGION }}-docker.pkg.dev
+        run: gcloud auth configure-docker ${{ secrets.GCP_PROD_REGION }}-docker.pkg.dev
 
       - name: Ensure Container Image Exists (Build if Missing)
         run: |
-          IMAGE_URL="${{ secrets.GCP_PROD_ARTIFACT_REGISTRY_URL || secrets.GCP_ARTIFACT_REGISTRY_URL }}"
+          IMAGE_URL="${{ secrets.GCP_PROD_ARTIFACT_REGISTRY_URL }}"
           IMAGE_TAG="${IMAGE_URL}:${{ needs.version.outputs.version }}"
           SHA_TAG="${IMAGE_URL}:${{ github.sha }}"
           LATEST_TAG="${IMAGE_URL}:latest"
@@ -195,9 +195,9 @@ jobs:
 
       - name: Deploy to Cloud Run (Production)
         run: |
-          gcloud run deploy ${{ secrets.GCP_PROD_CLOUD_RUN_SERVICE || secrets.GCP_CLOUD_RUN_SERVICE }} \
-            --image ${{ secrets.GCP_PROD_ARTIFACT_REGISTRY_URL || secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ needs.version.outputs.version }} \
-            --region ${{ secrets.GCP_PROD_REGION || secrets.GCP_REGION }} \
+          gcloud run deploy ${{ secrets.GCP_PROD_CLOUD_RUN_SERVICE }} \
+            --image ${{ secrets.GCP_PROD_ARTIFACT_REGISTRY_URL }}:${{ needs.version.outputs.version }} \
+            --region ${{ secrets.GCP_PROD_REGION }} \
             --port 8000 \
             --timeout 300s \
             --update-env-vars APP_VERSION="${{ needs.version.outputs.version }}"
@@ -293,8 +293,8 @@ jobs:
       - name: Authenticate to Google Cloud via OIDC (Production)
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_PROD_WORKLOAD_IDENTITY_PROVIDER || secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT || secrets.GCP_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ secrets.GCP_PROD_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -309,17 +309,17 @@ jobs:
           yarn build
         env:
           VITE_APP_VERSION: "${{ needs.version.outputs.version }}"
-          VITE_API_BACKEND_URL: "${{ secrets.GCP_PROD_DOMAIN_NAME != '' && format('https://{0}/api/v1', secrets.GCP_PROD_DOMAIN_NAME) || secrets.GCP_PROD_BACKEND_URL || secrets.GCP_BACKEND_URL }}"
-          VITE_BACKEND_URL: "${{ secrets.GCP_PROD_DOMAIN_NAME != '' && format('https://{0}/api', secrets.GCP_PROD_DOMAIN_NAME) || secrets.GCP_PROD_BACKEND_URL || secrets.GCP_BACKEND_URL }}"
-          VITE_OIDC_AUTHORITY: "https://securetoken.google.com/${{ secrets.GCP_PROD_PROJECT_ID || secrets.GCP_PROJECT_ID }}"
-          VITE_OIDC_CLIENT_ID: "${{ secrets.GCP_PROD_GOOGLE_CLIENT_ID || secrets.GCP_GOOGLE_CLIENT_ID || secrets.GCP_PROD_PROJECT_ID || secrets.GCP_PROJECT_ID }}"
-          VITE_FIREBASE_API_KEY: "${{ secrets.GCP_PROD_FIREBASE_API_KEY || secrets.GCP_FIREBASE_API_KEY }}"
+          VITE_API_BACKEND_URL: "${{ secrets.GCP_PROD_DOMAIN_NAME != '' && format('https://{0}/api/v1', secrets.GCP_PROD_DOMAIN_NAME) || secrets.GCP_PROD_BACKEND_URL }}"
+          VITE_BACKEND_URL: "${{ secrets.GCP_PROD_DOMAIN_NAME != '' && format('https://{0}/api', secrets.GCP_PROD_DOMAIN_NAME) || secrets.GCP_PROD_BACKEND_URL }}"
+          VITE_OIDC_AUTHORITY: "https://securetoken.google.com/${{ secrets.GCP_PROD_PROJECT_ID }}"
+          VITE_OIDC_CLIENT_ID: "${{ secrets.GCP_PROD_GOOGLE_CLIENT_ID || secrets.GCP_PROD_PROJECT_ID }}"
+          VITE_FIREBASE_API_KEY: "${{ secrets.GCP_PROD_FIREBASE_API_KEY }}"
 
       - name: Upload Static Assets to GCS Bucket
         uses: google-github-actions/upload-cloud-storage@v2
         with:
           path: nightrunner_frontend/dist
-          destination: ${{ secrets.GCP_PROD_FRONTEND_BUCKET || secrets.GCP_FRONTEND_BUCKET }}
+          destination: ${{ secrets.GCP_PROD_FRONTEND_BUCKET }}
           parent: false
 
   create-release:
