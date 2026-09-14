@@ -11,7 +11,7 @@ class ReportsStore:
         SELECT id, event_id, report_type, name, status, file_key, content_type, size_bytes, error_message, created_at, completed_at
         FROM compiled_reports
         WHERE event_id = :event_id
-        ORDER BY created_at DESC
+        ORDER BY created_at DESC, id DESC
         """
         rows = await self.driver.execute(sql, {"event_id": event_id})
         return rows or []
