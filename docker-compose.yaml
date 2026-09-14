@@ -160,7 +160,7 @@ services:
       - "4443:4443"
     command: ["-scheme", "http", "-public-host", "fake-gcs:4443", "-external-url", "http://localhost:4443"]
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:4443/storage/v1/b || exit 1"]
+      test: ["CMD", "nc", "-z", "localhost", "4443"]
       interval: 3s
       timeout: 3s
       retries: 5
