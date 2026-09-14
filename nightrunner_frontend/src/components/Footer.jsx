@@ -1,6 +1,16 @@
 import "./Footer.css";
 
 export default function Footer() {
+    const version =
+        import.meta.env.VITE_APP_VERSION || "v0.10.9-80";
+
+    const releaseVersion =
+        version.match(/^v?\d+\.\d+\.\d+/)?.[0];
+
+    const releaseUrl = releaseVersion
+        ? `https://github.com/TLNightOps/NightRunner/releases/tag/${releaseVersion}`
+        : "https://github.com/TLNightOps/NightRunner/releases";
+
     return (
         <footer className="app-footer">
             <div className="app-footer-content">
@@ -24,9 +34,13 @@ export default function Footer() {
                     •
                 </span>
 
-                <span>
-                    Night Runner {import.meta.env.VITE_APP_VERSION || "0.1.0-dev"}
-                </span>
+                <a
+                    href={releaseUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Night Runner {version}
+                </a>
 
                 <span className="app-footer-separator">
                     •

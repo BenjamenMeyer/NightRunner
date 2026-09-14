@@ -71,8 +71,10 @@
     /* ==========================================
        Status Colors
        ========================================== */
-
     --success: #10B981;
+    --success-bg: #12352F;
+    --success-border: #1D7A68;
+
     --warning: #F59E0B;
     --error: #EF4444;
     --info: #3B82F6;
@@ -83,19 +85,6 @@ body {
 
     background: var(--page-bg);
     color: var(--text-primary);
-
-}
-
-.header {
-
-    background: var(--header-bg);
-    color: var(--header-text);
-
-}
-
-.page-content {
-
-    background: var(--page-bg);
 
 }
 

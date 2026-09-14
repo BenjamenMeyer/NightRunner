@@ -13,18 +13,13 @@ import {
 
 
 function canAccess(route, eventId = null) {
-
-    if (
-        route.access === ACCESS.PUBLIC
-    ) {
+    if (route.access === ACCESS.PUBLIC) {
         return true;
     }
 
     const cachedUser = ApiService.userData.getCached();
 
-    if (
-        !cachedUser
-    ) {
+    if (!cachedUser) {
         return false;
     }
 
@@ -32,34 +27,26 @@ function canAccess(route, eventId = null) {
         return false;
     }
 
-    if (
-        route.access === ACCESS.SYSTEM_ADMIN
-    ) {
-        return ApiService.userData
-            .isSystemAdmin();
+    if (route.access === ACCESS.SYSTEM_ADMIN) {
+        return ApiService.userData.isSystemAdmin();
     }
 
-    if (
-        route.path === "/admin/finalizer"
-    ) {
+    if (route.path === "/admin/finalizer") {
         if (ApiService.userData.isSystemAdmin() || ApiService.userData.isAdmin(eventId)) {
             return true;
         }
+
         const eventRole = ApiService.userData.getEventRole(eventId);
         const rolesList = Array.isArray(eventRole) ? eventRole : [eventRole, ...(cachedUser.roles ? Object.values(cachedUser.roles) : [])];
         return rolesList.some(r => r === "station_leader" || r === "station_member" || r === "scorer" || r === "scoring-center" || r === "event-admin" || r === "admin");
     }
 
-    if (
-        route.access === ACCESS.ADMIN
-    ) {
+    if (route.access === ACCESS.ADMIN) {
         return ApiService.userData
             .isAdmin(eventId);
     }
 
-    if (
-        route.access === ACCESS.USER
-    ) {
+    if (route.access === ACCESS.USER) {
         return true;
     }
 

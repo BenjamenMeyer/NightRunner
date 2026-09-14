@@ -45,7 +45,14 @@
 
     --shadow: 0 2px 8px rgba(0,0,0,.12);
 
+    /* ==========================================
+       Status Colors
+       ========================================== */
+
     --success: #2E7D32;
+    --success-bg: #EDF8EF;
+    --success-border: #7AC48A;
+
     --warning: #F9A825;
     --error: #C62828;
     --info: #0288D1;
@@ -57,20 +64,6 @@ body {
     background: var(--page-bg);
 
     color: var(--text-primary);
-
-}
-
-.header {
-
-    background: var(--header-bg);
-
-    color: var(--header-text);
-
-}
-
-.page-content {
-
-    background: var(--page-bg);
 
 }
 

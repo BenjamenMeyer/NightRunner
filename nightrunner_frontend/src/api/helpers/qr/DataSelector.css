@@ -1,244 +1,148 @@
 /* -------- Selection ------- */
 
 .score-selection-card {
-
     background: var(--card-bg);
-
     border: 1px solid var(--border);
-
     border-radius: 14px;
-
     padding: 1.5rem;
-
     display: flex;
-
     flex-direction: column;
-
     gap: 1.25rem;
-
 }
 
 .score-selection-card h2 {
-
     margin: 0;
-
 }
 
 .data-selector-header {
-
     display: flex;
-
     flex-direction: column;
-
     gap: .5rem;
-
 }
 
 .data-selector-header p {
-
     margin: 0;
-
     color: var(--text-secondary);
-
 }
 
 /* -------- Patrol Selection ------- */
 
 .data-selector-options {
-
     display: grid;
-
     grid-template-columns: 240px 60px 1fr;
-
     gap: 1.5rem;
-
     align-items: stretch;
-
 }
 
 .scan-card {
-
     display: flex;
-
     flex-direction: column;
-
     justify-content: center;
-
     align-items: center;
-
     gap: .75rem;
-
     min-height: 180px;
-
     border: 2px dashed var(--button-bg);
-
     border-radius: 14px;
-
     background: var(--page-bg);
-
     cursor: pointer;
-
     transition: .15s ease;
-
 }
 
 .scan-card:hover {
-
     transform: translateY(-2px);
-
     background: var(--card-bg);
-
     border-color: var(--button-hover);
-
-    box-shadow: 0 8px 20px rgba(0,0,0,.08);
-
+    box-shadow: var(--shadow);
 }
 
 .scan-icon {
-
     font-size: 3.25rem;
-
 }
 
 .scan-card span:last-child {
-
     font-weight: 600;
-
 }
 
 .selection-divider {
-
     display: flex;
-
     align-items: center;
-
     justify-content: center;
-
     color: var(--text-secondary);
-
     font-weight: 700;
-
     position: relative;
-
 }
 
 .selection-divider::before,
 .selection-divider::after {
-
     content: "";
-
     flex: 1;
-
     height: 1px;
-
     background: var(--border);
-
 }
 
 .selection-divider::before {
-
     margin-right: .75rem;
-
 }
 
 .selection-divider::after {
-
     margin-left: .75rem;
-
 }
 
 /* -------- Manual Selection ------- */
 
 .manual-selection {
-
     display: flex;
-
     flex-direction: column;
-
     gap: .75rem;
-
 }
 
 .manual-selection label {
-
     font-weight: 600;
-
     color: var(--text-primary);
-
 }
 
 .manual-selection select {
-
     padding: .9rem 1rem;
-
     border: 1px solid var(--border);
-
     border-radius: 10px;
-
     font-size: 1rem;
-
     background: var(--card-bg);
-
 }
 
 .manual-selection select:focus {
-
     outline: none;
-
     border-color: var(--button-bg);
-
 }
 
 /* -------- Selected Data ------- */
 
 .selected-data {
-
     display: flex;
-
     align-items: center;
-
     gap: .75rem;
-
     padding: 1rem 1.25rem;
-
-    background: #edf8ef;
-
-    border: 1px solid #7ac48a;
-
-    border-left: 6px solid #2e7d32;
-
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    border-left: 6px solid var(--success);
     border-radius: 10px;
-
     font-weight: 600;
-
 }
 
 .selected-data small {
-
     display: block;
-
     margin-bottom: .2rem;
-
     color: var(--text-secondary);
-
     font-weight: 500;
-
 }
 
 /* -------- Responsive ------- */
 
 @media (max-width: 900px) {
-
     .data-selector-options {
-
         grid-template-columns: 1fr;
-
     }
 
     .selection-divider {
-
         margin: -.5rem 0;
-
     }
-
 }

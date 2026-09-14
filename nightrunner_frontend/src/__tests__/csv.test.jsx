@@ -6,7 +6,7 @@ import {
     mapSheetColumns,
     toRosterRows,
     SHEET_COLUMNS
-} from '../lib/csv.js';
+} from '../api/helpers/csv/csv.js';
 
 describe('parseCsv', () => {
 
