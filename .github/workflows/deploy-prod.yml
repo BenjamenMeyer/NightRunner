@@ -1,0 +1,310 @@
+name: Deploy to GCP Production
+
+on:
+  workflow_dispatch: # Allows manual trigger from GitHub Actions Web UI
+    inputs:
+      version_bump:
+        description: "Semantic version bump type (default: patch)"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  # Check which paths changed in the push to main
+  changes:
+    name: Detect Changed Paths
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Filter Changed Paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'nightrunner_backend/**'
+              - 'Dockerfile'
+              - 'pyproject.toml'
+              - 'Makefile'
+            frontend:
+              - 'nightrunner_frontend/**'
+
+  # Generate semantic version for release and deployments
+  version:
+    name: Generate Release Version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+      version_tag: ${{ steps.semver.outputs.version_tag }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Calculate Semantic Version
+        id: semver
+        run: |
+          BUMP_TYPE="${{ inputs.version_bump || 'patch' }}"
+          
+          # Fetch all tags
+          git fetch --tags || true
+          
+          # Find latest tag matching v*.*.* or default to initial release v0.1.0
+          LATEST_TAG=$(git tag -l "v*" --sort=-v:refname | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            NEW_VERSION="v0.1.0-prod-${{ github.run_number }}"
+            RELEASE_TAG="v0.1.0"
+          else
+            BASE_VERSION="${LATEST_TAG#v}"
+            BASE_NUMERIC="${BASE_VERSION%%-*}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_NUMERIC"
+            
+            if [ "$BUMP_TYPE" = "major" ]; then
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+            elif [ "$BUMP_TYPE" = "minor" ]; then
+              MINOR=$((MINOR + 1))
+              PATCH=0
+            else
+              PATCH=$((PATCH + 1))
+            fi
+            
+            NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}-prod-${{ github.run_number }}"
+            RELEASE_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+          
+          echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "version_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
+          echo "Calculated Version (${BUMP_TYPE} bump): ${NEW_VERSION}, Release Tag: ${RELEASE_TAG}"
+
+      - name: Create and Push Git Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.semver.outputs.version_tag }}" -m "Release ${{ steps.semver.outputs.version_tag }} (${{ steps.semver.outputs.version }})" || true
+          git push origin "${{ steps.semver.outputs.version_tag }}" || true
+
+  # Verify backend unit tests before deploying
+  test-backend:
+    name: Run Backend Unit Tests
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+
+      - name: Run pytest
+        run: pytest -q --tb=short
+        env:
+          DATABASE_URL: "sqlite:///:memory:"
+
+  deploy-backend-prod:
+    name: Build & Deploy Backend to Production
+    needs: [changes, version, test-backend]
+    if: ${{ needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Authenticate to Google Cloud via OIDC (Production)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_PROD_WORKLOAD_IDENTITY_PROVIDER || secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT || secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_PROD_REGION || secrets.GCP_REGION }}-docker.pkg.dev
+
+      - name: Build & Push Docker Image
+        run: |
+          IMAGE_URL="${{ secrets.GCP_PROD_ARTIFACT_REGISTRY_URL || secrets.GCP_ARTIFACT_REGISTRY_URL }}"
+          IMAGE_TAG="${IMAGE_URL}:${{ needs.version.outputs.version }}"
+          SHA_TAG="${IMAGE_URL}:${{ github.sha }}"
+          LATEST_TAG="${IMAGE_URL}:latest"
+          docker build -t $IMAGE_TAG -t $SHA_TAG -t $LATEST_TAG .
+          docker push $IMAGE_TAG
+          docker push $SHA_TAG
+          docker push $LATEST_TAG
+
+      - name: Deploy to Cloud Run (Production)
+        run: |
+          gcloud run deploy ${{ secrets.GCP_PROD_CLOUD_RUN_SERVICE || secrets.GCP_CLOUD_RUN_SERVICE }} \
+            --image ${{ secrets.GCP_PROD_ARTIFACT_REGISTRY_URL || secrets.GCP_ARTIFACT_REGISTRY_URL }}:${{ needs.version.outputs.version }} \
+            --region ${{ secrets.GCP_PROD_REGION || secrets.GCP_REGION }} \
+            --port 8000 \
+            --timeout 300s \
+            --update-env-vars APP_VERSION="${{ needs.version.outputs.version }}"
+
+  lint-frontend:
+    name: Run Frontend Linter
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Dependencies
+        working-directory: nightrunner_frontend
+        run: corepack enable && yarn install --frozen-lockfile
+
+      - name: Run Linter (oxlint)
+        working-directory: nightrunner_frontend
+        run: yarn lint
+
+  test-frontend:
+    name: Run Frontend Integration Tests & Build Gate
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Dependencies
+        working-directory: nightrunner_frontend
+        run: corepack enable && yarn install --frozen-lockfile
+
+      - name: Start Backend Stack (App + OIDC Server + Postgres + Seed)
+        run: |
+          docker compose up -d db oidc app
+          echo "Waiting for API server & OIDC server health checks..."
+          for i in {1..30}; do
+            API_OK=$(curl -s -f http://127.0.0.1:8000/health > /dev/null && echo "ok" || echo "fail")
+            OIDC_OK=$(curl -s -f http://localhost:4000/.well-known/openid-configuration > /dev/null && echo "ok" || echo "fail")
+            if [ "$API_OK" = "ok" ] && [ "$OIDC_OK" = "ok" ]; then
+              echo "API server & OIDC server are healthy!"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+          echo "Waiting for database seed completion..."
+          docker compose run --rm seed
+
+      - name: Run Unit & Integration Tests (vitest against Docker Compose stack)
+        working-directory: nightrunner_frontend
+        run: yarn test
+        env:
+          VITE_BACKEND_URL: "http://127.0.0.1:8000"
+          VITE_OIDC_AUTHORITY: "http://localhost:4000"
+
+      - name: Verify Production Build (vite build)
+        working-directory: nightrunner_frontend
+        run: yarn build
+
+  deploy-frontend-prod:
+    name: Deploy Frontend to Production GCS Bucket
+    needs: [changes, version, lint-frontend, test-frontend]
+    if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Authenticate to Google Cloud via OIDC (Production)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_PROD_WORKLOAD_IDENTITY_PROVIDER || secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT || secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install & Build Frontend
+        working-directory: nightrunner_frontend
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
+          yarn build
+        env:
+          VITE_APP_VERSION: "${{ needs.version.outputs.version }}"
+          VITE_API_BACKEND_URL: "${{ secrets.GCP_PROD_DOMAIN_NAME != '' && format('https://{0}/api/v1', secrets.GCP_PROD_DOMAIN_NAME) || secrets.GCP_PROD_BACKEND_URL || secrets.GCP_BACKEND_URL }}"
+          VITE_BACKEND_URL: "${{ secrets.GCP_PROD_DOMAIN_NAME != '' && format('https://{0}/api', secrets.GCP_PROD_DOMAIN_NAME) || secrets.GCP_PROD_BACKEND_URL || secrets.GCP_BACKEND_URL }}"
+          VITE_OIDC_AUTHORITY: "https://securetoken.google.com/${{ secrets.GCP_PROD_PROJECT_ID || secrets.GCP_PROJECT_ID }}"
+          VITE_OIDC_CLIENT_ID: "${{ secrets.GCP_PROD_GOOGLE_CLIENT_ID || secrets.GCP_GOOGLE_CLIENT_ID || secrets.GCP_PROD_PROJECT_ID || secrets.GCP_PROJECT_ID }}"
+          VITE_FIREBASE_API_KEY: "${{ secrets.GCP_PROD_FIREBASE_API_KEY || secrets.GCP_FIREBASE_API_KEY }}"
+
+      - name: Upload Static Assets to GCS Bucket
+        uses: google-github-actions/upload-cloud-storage@v2
+        with:
+          path: nightrunner_frontend/dist
+          destination: ${{ secrets.GCP_PROD_FRONTEND_BUCKET || secrets.GCP_FRONTEND_BUCKET }}
+          parent: false
+
+  create-release:
+    name: Create GitHub Production Release
+    needs: [version, deploy-backend-prod, deploy-frontend-prod]
+    if: always() && (needs.deploy-backend-prod.result == 'success' || needs.deploy-frontend-prod.result == 'success')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.version_tag }}
+          name: Production Release ${{ needs.version.outputs.version_tag }}
+          body: |
+            Automated Production Release ${{ needs.version.outputs.version_tag }} (${{ needs.version.outputs.version }})
+            
+            Commit: ${{ github.sha }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
