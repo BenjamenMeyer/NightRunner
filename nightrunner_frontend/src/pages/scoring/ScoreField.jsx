@@ -410,6 +410,17 @@ export default function ScoreField({
 
         case "DeltaTime":
 
+            const handleDeltaTimeChange = (e) => {
+                const rawVal = e.target.value;
+                if (rawVal === "") {
+                    onChange("");
+                    return;
+                }
+                const numVal = Number(rawVal);
+                if (Number.isNaN(numVal)) return;
+                onChange(numVal);
+            };
+
             return (
 
                 <div className="score-field">
@@ -422,9 +433,8 @@ export default function ScoreField({
                     <input
                         type="number"
                         value={value ?? ""}
-                        onChange={(e) =>
-                            onChange(Number(e.target.value))
-                        }
+                        placeholder="Enter delta time (seconds)..."
+                        onChange={handleDeltaTimeChange}
                     />
 
                 </div>
@@ -527,12 +537,12 @@ export default function ScoreField({
                                                 min="0"
                                                 max={max}
                                                 value={manual[field]}
-                                                onChange={(e) =>
-                                                    updateManual(
-                                                        field,
-                                                        e.target.value
-                                                    )
-                                                }
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    if (val === "" || !Number.isNaN(Number(val))) {
+                                                        updateManual(field, val);
+                                                    }
+                                                }}
                                             />
 
                                         </div>
@@ -562,6 +572,17 @@ export default function ScoreField({
 
         default:
 
+            const handleDefaultNumericChange = (e) => {
+                const rawVal = e.target.value;
+                if (rawVal === "") {
+                    onChange("");
+                    return;
+                }
+                const numVal = Number(rawVal);
+                if (Number.isNaN(numVal)) return;
+                onChange(numVal);
+            };
+
             return (
 
                 <div className="score-field">
@@ -575,9 +596,7 @@ export default function ScoreField({
                         type="number"
                         value={value ?? ""}
                         placeholder="Enter score..."
-                        onChange={(e) =>
-                            onChange(Number(e.target.value))
-                        }
+                        onChange={handleDefaultNumericChange}
                     />
 
                 </div>
