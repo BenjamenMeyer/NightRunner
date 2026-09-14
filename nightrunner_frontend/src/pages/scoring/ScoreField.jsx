@@ -364,7 +364,6 @@ export default function ScoreField({
                     <select
                         value={currentSelectVal}
                         onChange={handleSelectChange}
-                        style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card-bg)", color: "var(--text-primary)", width: "100%", fontSize: "1rem" }}
                     >
                         <option value="">-- Select Option --</option>
                         {optionsList.map((option, idx) => {
