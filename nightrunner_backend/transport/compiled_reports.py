@@ -1,4 +1,4 @@
-import uuid
+import uuid6
 import asyncio
 import logging
 import falcon
@@ -53,7 +53,7 @@ class CompiledReportsResource:
         event = await events_store.get(event_id)
         event_name = event.name if event else "Event Patrol Badges"
 
-        report_id = f"rep-{uuid.uuid4().hex[:12]}"
+        report_id = f"rep-{uuid6.uuid7().hex[:12]}"
         report_name = f"Patrol QR Badges ({event_name})" if report_type == "patrols-pdf" else "Event Scoring Report"
 
         job = await store.create_report_job(report_id, event_id, report_type, report_name)
