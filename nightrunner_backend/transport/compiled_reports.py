@@ -9,6 +9,9 @@ from nightrunner_backend.drivers.store.events import EventsStore
 from nightrunner_backend.reports_patrol_pdf import generate_patrol_qr_pdf
 from nightrunner_backend.reports_gcs import upload_report_bytes, download_report_bytes, delete_report_bytes
 
+from nightrunner_backend.drivers.store.scores import ScoresStore
+from nightrunner_backend.reports_scoring_pdf import generate_event_scoring_pdf
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,12 +30,44 @@ async def _background_generate_patrol_qr_pdf(report_id: str, event_id: str, even
         await reports_store.mark_report_failed(report_id, str(ex))
 
 
+async def _background_generate_scoring_pdf(report_id: str, event_id: str, event_name: str):
+    driver = get_driver()
+    reports_store = ReportsStore(driver)
+    scores_store = ScoresStore(driver)
+    try:
+        rows = await scores_store.aggregate_event(event_id)
+        patrols = {}
+        for r in rows:
+            pid = r["patrol_id"]
+            p = patrols.setdefault(pid, {
+                "patrolId": pid,
+                "patrolName": r.get("patrol_name"),
+                "eventTotal": 0.0,
+                "stationTotals": {}
+            })
+            station_id = r["station_id"]
+            weighted = r["weighted_score"]
+            p["eventTotal"] += weighted
+            p["stationTotals"][station_id] = p["stationTotals"].get(station_id, 0) + weighted
+        sorted_patrols = sorted(patrols.values(), key=lambda x: x["eventTotal"], reverse=True)
+        for rank, p in enumerate(sorted_patrols, start=1):
+            p["rank"] = rank
+
+        pdf_bytes = generate_event_scoring_pdf(event_name, sorted_patrols)
+        file_key = f"events/{event_id}/reports/{report_id}-final-scoring.pdf"
+        upload_report_bytes(file_key, pdf_bytes, content_type="application/pdf")
+        await reports_store.mark_report_ready(report_id, file_key, len(pdf_bytes))
+    except Exception as ex:
+        logger.exception(f"Failed generating scoring report {report_id}: {ex}")
+        await reports_store.mark_report_failed(report_id, str(ex))
+
+
 class CompiledReportsResource:
     """GET /v1/events/{eventId}/compiled-reports
     Lists all compiled reports for an event.
 
     POST /v1/events/{eventId}/compiled-reports
-    Triggers asynchronous generation of a report (e.g. reportType="patrols-pdf").
+    Triggers asynchronous generation of a report (e.g. reportType="patrols-pdf" or "event-scoring").
     """
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response, event_id: str):
@@ -51,15 +86,20 @@ class CompiledReportsResource:
         report_type = body.get("reportType", "patrols-pdf")
         
         event = await events_store.get(event_id)
-        event_name = event.name if event else "Event Patrol Badges"
+        event_name = event.name if event else "Event"
 
         report_id = f"rep-{uuid6.uuid7().hex[:12]}"
-        report_name = f"Patrol QR Badges ({event_name})" if report_type == "patrols-pdf" else "Event Scoring Report"
+        if report_type == "event-scoring":
+            report_name = f"Final Scoring Report ({event_name})"
+        else:
+            report_name = f"Patrol QR Badges ({event_name})"
 
         job = await store.create_report_job(report_id, event_id, report_type, report_name)
 
         # Trigger async background generation
-        if report_type == "patrols-pdf":
+        if report_type == "event-scoring":
+            asyncio.create_task(_background_generate_scoring_pdf(report_id, event_id, event_name))
+        else:
             asyncio.create_task(_background_generate_patrol_qr_pdf(report_id, event_id, event_name))
 
         resp.media = job
