@@ -23,16 +23,70 @@ export default function Reports() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    const [compiledReports, setCompiledReports] = useState([]);
+    const [generatingReport, setGeneratingReport] = useState(false);
+
     useEffect(() => {
 
         if (!eventId) {
             setReport(null);
+            setCompiledReports([]);
             return;
         }
 
         loadReport();
+        loadCompiledReports();
 
     }, [eventId]);
+
+    // Polling interval for compiled report status updates
+    useEffect(() => {
+
+        if (!eventId) return;
+
+        const hasGenerating = compiledReports.some(r => r.status === "generating");
+        if (!hasGenerating) return;
+
+        const timer = setInterval(() => {
+            loadCompiledReports();
+        }, 3000);
+
+        return () => clearInterval(timer);
+
+    }, [eventId, compiledReports]);
+
+    async function loadCompiledReports() {
+        if (!eventId) return;
+        try {
+            const res = await ApiService.reportData.listCompiledReports(eventId);
+            setCompiledReports(res?.reports ?? []);
+        } catch (err) {
+            console.error("Failed loading compiled reports list:", err);
+        }
+    }
+
+    async function handleGenerateCompiledReport(reportType = "patrols-pdf") {
+        if (!eventId) return;
+        try {
+            setGeneratingReport(true);
+            await ApiService.reportData.generateReportJob(eventId, reportType);
+            await loadCompiledReports();
+        } catch (err) {
+            console.error("Failed initiating report generation job:", err);
+        } finally {
+            setGeneratingReport(false);
+        }
+    }
+
+    async function handleDeleteCompiledReport(reportId) {
+        if (!reportId) return;
+        try {
+            await ApiService.reportData.deleteCompiledReport(reportId);
+            await loadCompiledReports();
+        } catch (err) {
+            console.error("Failed deleting compiled report:", err);
+        }
+    }
 
 
     async function loadReport() {
@@ -380,10 +434,19 @@ export default function Reports() {
                     <button
                         type="button"
                         className="reports-button"
+                        onClick={() => handleGenerateCompiledReport("patrols-pdf")}
+                        disabled={!eventId || generatingReport}
+                    >
+                        {generatingReport ? "Queueing..." : "Generate Patrol QR PDF"}
+                    </button>
+
+                    <button
+                        type="button"
+                        className="reports-button"
                         onClick={handleDownloadPatrolsPdf}
                         disabled={!eventId}
                     >
-                        Patrol QR Sheets (PDF)
+                        Instant Patrol QR (PDF)
                     </button>
 
                     <button
@@ -402,6 +465,83 @@ export default function Reports() {
 
             </div>
 
+
+            {compiledReports.length > 0 && (
+                <section className="compiled-reports-section" style={{ marginBottom: "2rem" }}>
+                    <div className="report-section-heading">
+                        <div>
+                            <div className="report-section-eyebrow">Storage & Archives</div>
+                            <h2>Compiled Report Artifacts</h2>
+                            <p>Private GCS storage archives of compiled PDF reports.</p>
+                        </div>
+                    </div>
+
+                    <div className="report-table-wrapper">
+                        <table className="report-matrix">
+                            <thead>
+                                <tr>
+                                    <th>Report Name</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th>Size</th>
+                                    <th style={{ textAlign: "right" }}>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {compiledReports.map(item => (
+                                    <tr key={item.id}>
+                                        <td>
+                                            <strong>{item.name || "Compiled Report"}</strong>
+                                            <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>ID: {item.id}</div>
+                                        </td>
+                                        <td>
+                                            {item.status === "generating" && (
+                                                <div className="status-generating" style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--button-bg)" }}>
+                                                    <span className="reports-spinner" />
+                                                    <span>Generating...</span>
+                                                </div>
+                                            )}
+                                            {item.status === "ready" && (
+                                                <span className="badge badge-success" style={{ background: "#38a169", color: "#fff", padding: "2px 8px", borderRadius: "4px", fontSize: "0.8rem" }}>
+                                                    Ready
+                                                </span>
+                                            )}
+                                            {item.status === "failed" && (
+                                                <span className="badge badge-danger" style={{ background: "#e53e3e", color: "#fff", padding: "2px 8px", borderRadius: "4px", fontSize: "0.8rem" }} title={item.error_message}>
+                                                    Failed
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td>{formatDateTime(item.created_at)}</td>
+                                        <td>{item.size_bytes ? `${(item.size_bytes / 1024).toFixed(1)} KB` : "—"}</td>
+                                        <td style={{ textAlign: "right" }}>
+                                            {item.status === "ready" && (
+                                                <a
+                                                    href={ApiService.reportData.getCompiledReportDownloadUrl(item.id)}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="reports-button"
+                                                    style={{ textDecoration: "none", marginRight: "8px", display: "inline-block" }}
+                                                >
+                                                    Download PDF
+                                                </a>
+                                            )}
+                                            <button
+                                                type="button"
+                                                className="reports-button"
+                                                style={{ color: "#e53e3e", borderColor: "#e53e3e" }}
+                                                onClick={() => handleDeleteCompiledReport(item.id)}
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            )}
 
             {error && (
 
