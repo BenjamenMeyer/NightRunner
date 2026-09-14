@@ -236,6 +236,22 @@
     font-size: 1.3rem;
 }
 
+.qr-print-event-header {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.qr-print-patrol-number {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
 .qr-code-description {
     margin: 0 0 .5rem;
 
@@ -254,6 +270,39 @@
     color: var(--text-secondary);
 
     font-size: .75rem;
+}
+
+.qr-members-table-wrapper {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.qr-members-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.qr-members-table th {
+    background: #2b6cb0;
+    color: #FFFFFF;
+    font-weight: 700;
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.qr-members-table td {
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.qr-members-table tbody tr:nth-child(even) {
+    background: rgba(0, 0, 0, 0.03);
 }
 
 
@@ -514,6 +563,50 @@
         color: #000000 !important;
         font-size: 8pt !important;
         overflow-wrap: anywhere !important;
+    }
+
+    .qr-print-event-header {
+        color: #2b6cb0 !important;
+        font-size: 11pt !important;
+        font-weight: 700 !important;
+        text-align: center !important;
+        margin-bottom: 2mm !important;
+    }
+
+    .qr-print-patrol-number {
+        color: #000000 !important;
+        font-size: 12pt !weight;
+        font-weight: 700 !important;
+        text-align: center !important;
+        margin-bottom: 4mm !important;
+    }
+
+    .qr-members-table-wrapper {
+        display: block !important;
+        width: 100% !important;
+        margin-top: 6mm !important;
+    }
+
+    .qr-members-table {
+        display: table !important;
+        width: 100% !important;
+        border-collapse: collapse !important;
+        color: #000000 !important;
+        font-size: 9pt !important;
+    }
+
+    .qr-members-table th {
+        background: #2b6cb0 !important;
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+        padding: 2mm 3mm !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .qr-members-table td {
+        padding: 2mm 3mm !important;
+        border-bottom: 1px solid #cbd5e0 !important;
     }
 
     /*

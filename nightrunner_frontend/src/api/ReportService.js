@@ -54,4 +54,15 @@ export default class ReportService {
 
     }
 
+    getPatrolsPdfUrl(eventId) {
+
+        if (!eventId) {
+            return "";
+        }
+
+        const baseUrl = BackendTransport.defaults.baseURL || "";
+        return `${baseUrl}/reports/events/${eventId}/patrols-pdf`;
+
+    }
+
 }

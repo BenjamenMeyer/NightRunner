@@ -8,12 +8,17 @@ import {
     Html5Qrcode
 } from "html5-qrcode";
 
+import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
+import { parseAndValidatePatrolQR } from "./qrUtils.js";
+
 import "./QRScanner.css";
 
 export default function QRScanner({
                                       onScan,
                                       onCancel
                                   }) {
+
+    const { event } = useEventContext();
 
     const scannerRef =
         useRef(null);
@@ -98,42 +103,18 @@ export default function QRScanner({
                         }
 
                         /*
-                         * The QR code contains a JSON object:
-                         *
-                         * {
-                         *     "id": "patrol-uuid"
-                         * }
+                         * Validate decoded payload using centralized qrUtils.
                          */
-                        let payload;
-
-                        try {
-
-                            payload =
-                                JSON.parse(
-                                    decodedText.trim()
-                                );
-
-                        } catch {
-
-                            setError(
-                                "This is not a valid patrol QR code."
+                        const result =
+                            parseAndValidatePatrolQR(
+                                decodedText,
+                                event?.name
                             );
 
-                            return;
-
-                        }
-
-                        /*
-                         * Validate the decoded payload.
-                         */
-                        if (
-                            !payload ||
-                            typeof payload !== "object" ||
-                            typeof payload.id !== "string" ||
-                            !payload.id.trim()
-                        ) {
+                        if (!result.valid) {
 
                             setError(
+                                result.error ??
                                 "This is not a valid patrol QR code."
                             );
 
@@ -148,7 +129,7 @@ export default function QRScanner({
                         scanned = true;
 
                         const patrolId =
-                            payload.id.trim();
+                            result.id;
 
                         /*
                          * Pass the patrol UUID to the caller.
