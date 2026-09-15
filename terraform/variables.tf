@@ -132,6 +132,12 @@ variable "github_repo_name" {
   default     = "NightRunner"
 }
 
+variable "is_production_environment" {
+  type        = bool
+  description = "Whether this Terraform run is provisioning the production environment. When true, sets GCP_PROD_* GitHub secrets instead of standard GCP_* secrets."
+  default     = false
+}
+
 variable "enable_load_balancer" {
   type        = bool
   description = "Whether to provision Global HTTP Load Balancer & CDN (~$18/mo). Set to false during dev to save costs."
