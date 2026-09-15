@@ -40,6 +40,9 @@ resource "google_apikeys_key" "firebase_api_key" {
     api_targets {
       service = "identitytoolkit.googleapis.com"
     }
+    api_targets {
+      service = "securetoken.googleapis.com"
+    }
   }
 }
 
