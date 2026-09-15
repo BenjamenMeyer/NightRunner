@@ -30,9 +30,6 @@ export default function ViewFinalReport() {
         }
     }
 
-    const downloadUrl = reportId
-        ? ApiService.reportData.getCompiledReportDownloadUrl(reportId)
-        : null;
 
     if (loading) {
         return (
@@ -76,16 +73,21 @@ export default function ViewFinalReport() {
                     >
                         ← Back to Reports
                     </button>
-                    {downloadUrl && (
-                        <a
-                            href={downloadUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                    {reportId && (
+                        <button
+                            type="button"
                             className="reports-button reports-button--primary"
-                            style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}
+                            style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+                            onClick={() => {
+                                const filename = `final-scoring-report-${reportId}.pdf`;
+                                ApiService.reportData.downloadCompiledReport(reportId, filename).catch((err) => {
+                                    console.error("Failed to download report:", err);
+                                    setError(err?.message || "Failed downloading report artifact.");
+                                });
+                            }}
                         >
                             <span>Download PDF</span>
-                        </a>
+                        </button>
                     )}
                 </div>
             </div>

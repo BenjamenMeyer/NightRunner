@@ -113,4 +113,41 @@ export default class ReportService {
 
     }
 
+    async downloadCompiledReport(reportId, filename = "report.pdf") {
+
+        if (!reportId) {
+            throw new Error("A report ID is required.");
+        }
+
+        const url = this.getCompiledReportDownloadUrl(reportId);
+        const headers = await BackendTransport.authHeaders();
+
+        const response = await fetch(url, {
+            method: "GET",
+            headers
+        });
+
+        if (!response.ok) {
+            let errorText;
+            try {
+                const errorJson = await response.json();
+                errorText = errorJson?.error?.message;
+            } catch {
+                errorText = response.statusText;
+            }
+            throw new Error(errorText || `Failed to download report (${response.status})`);
+        }
+
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+
+    }
+
 }

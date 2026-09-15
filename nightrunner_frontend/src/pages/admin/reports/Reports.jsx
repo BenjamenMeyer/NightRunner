@@ -264,15 +264,20 @@ export default function Reports() {
                                                     </a>
                                                 )}
                                                 {item.status === "ready" && (
-                                                    <a
-                                                        href={ApiService.reportData.getCompiledReportDownloadUrl(item.id)}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
+                                                    <button
+                                                        type="button"
                                                         className="reports-button"
-                                                        style={{ textDecoration: "none", marginRight: "8px", display: "inline-block" }}
+                                                        style={{ marginRight: "8px" }}
+                                                        onClick={() => {
+                                                            const filename = `${item.name || "report"}.pdf`;
+                                                            ApiService.reportData.downloadCompiledReport(item.id, filename).catch((err) => {
+                                                                console.error("Failed to download report:", err);
+                                                                setError(err?.message || "Failed downloading report artifact.");
+                                                            });
+                                                        }}
                                                     >
                                                         Download PDF
-                                                    </a>
+                                                    </button>
                                                 )}
                                                 <button
                                                     type="button"
