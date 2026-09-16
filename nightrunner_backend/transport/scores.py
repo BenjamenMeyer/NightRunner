@@ -8,13 +8,19 @@ from nightrunner_backend.models.score import Score
 
 def _parse_numeric_score_value(val: Any) -> float:
     """Helper to convert complex task score values into a float.
-    Handles dicts (stopwatch timestamps / elapsedSeconds), booleans, numeric strings, and text inputs.
+    Handles dicts (stopwatch timestamps / elapsedSeconds / rawValue & participantCount), booleans, numeric strings, and text inputs.
     """
     if isinstance(val, (int, float)):
         return float(val)
     if isinstance(val, bool):
         return 1.0 if val else 0.0
     if isinstance(val, dict):
+        if "rawValue" in val:
+            raw_num = _parse_numeric_score_value(val["rawValue"])
+            participant_cnt = int(val.get("participantCount") or 1)
+            if participant_cnt > 0:
+                return float(raw_num / participant_cnt)
+            return float(raw_num)
         if "elapsedSeconds" in val and isinstance(val["elapsedSeconds"], (int, float)):
             return float(val["elapsedSeconds"])
         if "startTime" in val and "endTime" in val:

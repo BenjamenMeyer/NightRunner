@@ -238,6 +238,58 @@ export default function ScoreField({
         );
     };
 
+    const divideByPatrolSize = task.divideByPatrolSize ?? scoreValue.divideByPatrolSize ?? false;
+    const initialRawValue = (typeof value === "object" && value !== null && "rawValue" in value) ? value.rawValue : (typeof value === "object" ? value : value);
+    const initialParticipantCount = (typeof value === "object" && value !== null && "participantCount" in value) ? value.participantCount : 1;
+
+    const [participantCount, setParticipantCount] = useState(initialParticipantCount);
+
+    function updateValueWithParticipants(newVal, newCount = participantCount) {
+        if (divideByPatrolSize) {
+            onChange({
+                rawValue: newVal,
+                participantCount: newCount
+            });
+        } else {
+            onChange(newVal);
+        }
+    }
+
+    const renderDivideByPatrolSizeInput = () => {
+        if (!divideByPatrolSize) return null;
+        return (
+            <div className="task-participant-count-box" style={{
+                marginTop: "6px",
+                marginBottom: "8px",
+                padding: "8px 12px",
+                background: "var(--card-bg, #1e293b)",
+                border: "1px solid var(--border, #334155)",
+                borderRadius: "6px",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px"
+            }}>
+                <label style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--text-primary)" }}>
+                    👥 Participating Patrol Members Count:
+                </label>
+                <input
+                    type="number"
+                    min="1"
+                    value={participantCount}
+                    onChange={(e) => {
+                        const cnt = Math.max(1, parseInt(e.target.value, 10) || 1);
+                        setParticipantCount(cnt);
+                        updateValueWithParticipants(initialRawValue, cnt);
+                    }}
+                    style={{ width: "80px", padding: "4px 8px" }}
+                />
+                <small style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>
+                    (Score will be divided by {participantCount} for fairness)
+                </small>
+            </div>
+        );
+    };
+
     switch (fieldType) {
 
         case "RangeRated":
@@ -249,17 +301,17 @@ export default function ScoreField({
             const handleRangeChange = (e) => {
                 const rawVal = e.target.value;
                 if (rawVal === "") {
-                    onChange("");
+                    updateValueWithParticipants("");
                     return;
                 }
                 // Allow entering negative sign or partial valid numbers
                 if (rawVal === "-") {
-                    onChange("-");
+                    updateValueWithParticipants("-");
                     return;
                 }
                 const numVal = Number(rawVal);
                 if (Number.isNaN(numVal)) return;
-                onChange(numVal);
+                updateValueWithParticipants(numVal);
             };
 
             const handleRangeBlur = (e) => {
@@ -268,9 +320,11 @@ export default function ScoreField({
                 const numVal = Number(rawVal);
                 if (!Number.isNaN(numVal)) {
                     const clampedVal = Math.max(minBound, Math.min(maxBound, numVal));
-                    onChange(clampedVal);
+                    updateValueWithParticipants(clampedVal);
                 }
             };
+
+            const displayValue = (typeof value === "object" && value !== null && "rawValue" in value) ? value.rawValue : (typeof value === "object" ? "" : value);
 
             return (
 
@@ -281,11 +335,13 @@ export default function ScoreField({
 
                     <label>{taskTitle}</label>
 
+                    {renderDivideByPatrolSizeInput()}
+
                     <input
                         type="number"
                         min={minBound}
                         max={maxBound}
-                        value={value ?? ""}
+                        value={displayValue ?? ""}
                         placeholder={`Score (${minBound} - ${maxBound})`}
                         onChange={handleRangeChange}
                         onBlur={handleRangeBlur}

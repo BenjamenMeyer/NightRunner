@@ -236,6 +236,25 @@ export default function ConfigurationTaskEditor({
 
                     </label>
 
+                    <label className="form-field checkbox-field" style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.25rem" }}>
+
+                        <input
+                            type="checkbox"
+                            checked={task.divideByPatrolSize ?? false}
+                            onChange={event =>
+                                update(
+                                    "divideByPatrolSize",
+                                    event.target.checked
+                                )
+                            }
+                        />
+
+                        <span>
+                            Divide earned score by participating patrol size (for fairness between large/small patrols)
+                        </span>
+
+                    </label>
+
                     {(task.type === "Score Challenge" ||
                         task.type === "Timed Challenge" ||
                         task.type === "Text Answer" ||
@@ -436,12 +455,30 @@ export default function ConfigurationTaskEditor({
                                 {task.maxScore ? (
                                     <span>
                                         Example Raw Score: <strong>{Math.round(task.maxScore * 0.85)}</strong> / {task.maxScore} (85%)<br />
-                                        Weighted Task Score = Raw Score ({Math.round(task.maxScore * 0.85)}) × Task Weight ({task.scoreWeight ?? 1.0}) = <strong>{(Math.round(task.maxScore * 0.85) * (task.scoreWeight ?? 1.0)).toFixed(1)} points</strong>
+                                        {task.divideByPatrolSize ? (
+                                            <span>
+                                                Patrol Division = Raw ({Math.round(task.maxScore * 0.85)}) ÷ Patrol Members (e.g. 5) = {(Math.round(task.maxScore * 0.85) / 5).toFixed(1)}<br />
+                                                Weighted Task Score = Per-person Score ({(Math.round(task.maxScore * 0.85) / 5).toFixed(1)}) × Task Weight ({task.scoreWeight ?? 1.0}) = <strong>{((Math.round(task.maxScore * 0.85) / 5) * (task.scoreWeight ?? 1.0)).toFixed(1)} points</strong>
+                                            </span>
+                                        ) : (
+                                            <span>
+                                                Weighted Task Score = Raw Score ({Math.round(task.maxScore * 0.85)}) × Task Weight ({task.scoreWeight ?? 1.0}) = <strong>{(Math.round(task.maxScore * 0.85) * (task.scoreWeight ?? 1.0)).toFixed(1)} points</strong>
+                                            </span>
+                                        )}
                                     </span>
                                 ) : (
                                     <span>
                                         Example Raw Score: <strong>85</strong> points<br />
-                                        Weighted Task Score = Raw Score (85) × Task Weight ({task.scoreWeight ?? 1.0}) = <strong>{(85 * (task.scoreWeight ?? 1.0)).toFixed(1)} points</strong>
+                                        {task.divideByPatrolSize ? (
+                                            <span>
+                                                Patrol Division = Raw (85) ÷ Patrol Members (e.g. 5) = 17.0<br />
+                                                Weighted Task Score = Per-person Score (17.0) × Task Weight ({task.scoreWeight ?? 1.0}) = <strong>{(17.0 * (task.scoreWeight ?? 1.0)).toFixed(1)} points</strong>
+                                            </span>
+                                        ) : (
+                                            <span>
+                                                Weighted Task Score = Raw Score (85) × Task Weight ({task.scoreWeight ?? 1.0}) = <strong>{(85 * (task.scoreWeight ?? 1.0)).toFixed(1)} points</strong>
+                                            </span>
+                                        )}
                                     </span>
                                 )}
                             </div>

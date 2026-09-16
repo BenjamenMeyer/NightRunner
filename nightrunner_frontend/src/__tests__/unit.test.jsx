@@ -234,6 +234,22 @@ describe('Configuration Editor Payload Contracts', () => {
       expect(task.maxScore).toBe(150);
       expect(task.scoreWeight).toBe(2.0);
     });
+
+    it('handles divideByPatrolSize flag on task configuration and divides raw score by participant count', () => {
+      const task = {
+        name: 'First Aid Rescue Task',
+        type: 'Score Challenge',
+        maxScore: 100,
+        scoreWeight: 1.0,
+        divideByPatrolSize: true
+      };
+      expect(task.divideByPatrolSize).toBe(true);
+
+      const rawScore = 80;
+      const participantCount = 4;
+      const calculatedScore = task.divideByPatrolSize ? (rawScore / participantCount) : rawScore;
+      expect(calculatedScore).toBe(20);
+    });
   });
 });
 

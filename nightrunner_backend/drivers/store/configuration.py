@@ -34,15 +34,15 @@ DELETE_CONFIG = "DELETE FROM configurations WHERE id = :id"
 
 # SQL statements for station_tasks
 LIST_CONFIG_TASKS = """
-    SELECT id, configuration_id, station_id, name, description, type, instructions, max_score, time_limit, score_value, score_weight, active
+    SELECT id, configuration_id, station_id, name, description, type, instructions, max_score, time_limit, score_value, score_weight, active, divide_by_patrol_size
     FROM station_tasks
     WHERE configuration_id = :configuration_id
     ORDER BY id
 """
 DELETE_CONFIG_TASKS = "DELETE FROM station_tasks WHERE configuration_id = :configuration_id"
 INSERT_STATION_TASK = """
-    INSERT INTO station_tasks (id, configuration_id, station_id, name, description, type, instructions, max_score, time_limit, score_value, score_weight, active)
-    VALUES (:id, :configuration_id, :station_id, :name, :description, :type, :instructions, :max_score, :time_limit, :score_value, :score_weight, :active)
+    INSERT INTO station_tasks (id, configuration_id, station_id, name, description, type, instructions, max_score, time_limit, score_value, score_weight, active, divide_by_patrol_size)
+    VALUES (:id, :configuration_id, :station_id, :name, :description, :type, :instructions, :max_score, :time_limit, :score_value, :score_weight, :active, :divide_by_patrol_size)
 """
 
 
@@ -72,7 +72,8 @@ async def _load_tasks_for_config(driver: DatabaseDriver, config_id: str, fallbac
                 "timeLimit": float(r.get("time_limit") if r.get("time_limit") is not None else 0),
                 "scoreValue": extra,
                 "scoreWeight": float(r.get("score_weight") if r.get("score_weight") is not None else 1.0),
-                "active": bool(r.get("active", True))
+                "active": bool(r.get("active", True)),
+                "divideByPatrolSize": bool(r.get("divide_by_patrol_size") or extra.get("divideByPatrolSize", False))
             }
             tasks.append(t)
         return tasks
@@ -100,6 +101,8 @@ async def _sync_tasks_for_config(driver: DatabaseDriver, config_id: str, tasks: 
         notes_val = t.get("notes") or t.get("scorer_notes")
         if notes_val:
             score_val_dict["notes"] = notes_val
+        divide_flag = bool(t.get("divideByPatrolSize") or t.get("divide_by_patrol_size", False))
+        score_val_dict["divideByPatrolSize"] = divide_flag
         score_val_str = json.dumps(score_val_dict)
         await driver.execute(INSERT_STATION_TASK, {
             "id": task_id,
@@ -113,7 +116,8 @@ async def _sync_tasks_for_config(driver: DatabaseDriver, config_id: str, tasks: 
             "time_limit": float(t.get("timeLimit") if t.get("timeLimit") is not None else 0),
             "score_value": score_val_str,
             "score_weight": float(t.get("scoreWeight") if t.get("scoreWeight") is not None else 1.0),
-            "active": bool(t.get("active", True))
+            "active": bool(t.get("active", True)),
+            "divide_by_patrol_size": divide_flag
         })
 
 
