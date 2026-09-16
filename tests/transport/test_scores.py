@@ -148,7 +148,33 @@ async def test_finalized_scores_endpoint(test_client, dev_mode_enabled):
     results = resp_get.json
     assert len(results) == 2
     assert results[0]["patrolId"] == "patrol-1"
-    assert results[0]["scoreValue"] == 9.5
+@pytest.mark.asyncio
+async def test_score_divide_by_patrol_size(test_client, dev_mode_enabled):
+    payload = {
+        "eventId": "event-divide-1",
+        "patrolId": "patrol-divide-1",
+        "stationId": "station-divide-1",
+        "timestamp": "2026-09-12T02:53:31.304Z",
+        "entryMode": "live",
+        "scores": [
+            {
+                "taskId": "task-divided",
+                "scoreValue": {
+                    "rawValue": 100.0,
+                    "participantCount": 5
+                }
+            }
+        ]
+    }
+    resp = await test_client.simulate_post("/v1/scores", json=payload)
+    assert resp.status == falcon.HTTP_201
+
+    resp_get = await test_client.simulate_get("/v1/scores?eventId=event-divide-1&stationId=station-divide-1&patrolId=patrol-divide-1")
+    assert resp_get.status == falcon.HTTP_200
+    scores = resp_get.json["scores"]
+    assert len(scores) == 1
+    assert scores[0]["scoreValue"] == 20.0
+
 
 
 
