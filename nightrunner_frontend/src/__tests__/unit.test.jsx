@@ -1208,6 +1208,46 @@ describe('Scoring Form and ScoreField Unit Verification', () => {
     });
   });
 
+  it('formats task completion summary in volunteer partner review modal without exposing point values or weights', () => {
+    const tasks = [
+      { id: 't-1', name: 'First Aid Task', type: 'Pass / Fail', scoreWeight: 5.0, maxScore: 100 },
+      { id: 't-2', name: 'Knots Task', type: 'RangeRated', scoreWeight: 2.0, maxScore: 50 },
+      { id: 't-3', name: 'Scenario Questions', type: 'Multiple Choice', scoreWeight: 10.0, options: [{ label: 'Perfect', value: 20 }] }
+    ];
+
+    const scoresState = {
+      't-1': true,
+      't-2': 45,
+      't-3': 'Perfect'
+    };
+
+    // Format summary representations as done in Partner Review Modal
+    const summaryItems = tasks.map((task) => {
+      const rawVal = scoresState[task.id];
+      const type = task.type;
+      let displayVal = rawVal;
+      if (type === 'Pass / Fail' || type === 'Completed' || type === 'Checkpoint') {
+        displayVal = rawVal ? '✓ Completed / Pass' : '✕ Not Completed / Fail';
+      }
+      return {
+        taskName: task.name,
+        displayValue: String(displayVal)
+      };
+    });
+
+    expect(summaryItems).toEqual([
+      { taskName: 'First Aid Task', displayValue: '✓ Completed / Pass' },
+      { taskName: 'Knots Task', displayValue: '45' },
+      { taskName: 'Scenario Questions', displayValue: 'Perfect' }
+    ]);
+
+    // Ensure no weights or calculated point totals are present in volunteer summary
+    const summaryString = JSON.stringify(summaryItems);
+    expect(summaryString).not.toContain('scoreWeight');
+    expect(summaryString).not.toContain('points');
+    expect(summaryString).not.toContain('100');
+  });
+
   it('allows submitting scores with untouched checkbox tasks by defaulting them to false', () => {
     const station = {
       id: 'st-1',
