@@ -24,6 +24,9 @@ class StationReportResource:
                 'breakdown': []
             })
             weighted = r['weighted_score']
+            submitted_at = r.get('submitted_at')
+            if hasattr(submitted_at, 'isoformat'):
+                submitted_at = submitted_at.isoformat()
             patrol['breakdown'].append({
                 'scoreId': r.get('score_id'),
                 'taskId': r['task_id'],
@@ -32,7 +35,7 @@ class StationReportResource:
                 'weight': r['score_weight'],
                 'weightedScore': weighted,
                 'active': bool(r['active']),
-                'submittedAt': r.get('submitted_at')
+                'submittedAt': submitted_at
             })
             patrol['total'] += weighted
         resp.media = {
