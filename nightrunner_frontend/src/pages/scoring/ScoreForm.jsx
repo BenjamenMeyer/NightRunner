@@ -160,13 +160,6 @@ export default function ScoreForm({
         }
 
     }
-        catch (error) {
-
-            alert(error.message);
-
-        }
-
-    }
 
     const [isDescCollapsed, setIsDescCollapsed] = useState(false);
 
