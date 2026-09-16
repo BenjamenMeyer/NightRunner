@@ -146,6 +146,8 @@ Task Score Values can be one of the following:
 
 Task Score Values underpin how the system performs.
 
+For full architectural details on station queues, volunteer partner reviews, scoring privacy rules, and automatic check-out flow, see [Station Workflow Documentation](docs/STATION_WORKFLOW.md).
+
 ## Deliverables
 
 The long term goal is to have:

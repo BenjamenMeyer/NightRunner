@@ -27,7 +27,9 @@ NightRunner is an **async Python backend** built on [Falcon ASGI](https://falcon
 
 ## Repository Layout
 
-```
+docs/
+└── STATION_WORKFLOW.md         # Station lifecycle, scoring privacy, & partner review workflow
+
 nightrunner_backend/
 ├── main.py                     # Falcon ASGI app, route registration, middleware wiring
 ├── app_context.py              # DB driver lifecycle (get_driver, run_migrations, close_driver)
