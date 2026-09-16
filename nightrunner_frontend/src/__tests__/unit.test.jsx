@@ -1171,6 +1171,55 @@ describe('Scoring Form and ScoreField Unit Verification', () => {
       expect(radioGroupName).toBe(`mc_${t.id}`);
     });
   });
+
+  it('allows submitting scores with untouched checkbox tasks by defaulting them to false', () => {
+    const station = {
+      id: 'st-1',
+      name: 'First Aid Station',
+      tasks: [
+        { id: 't-1', name: 'Applied Pressure', type: 'Pass / Fail' },
+        { id: 't-2', name: 'Checked Pulse', type: 'Completed' },
+        { id: 't-3', name: 'Arrival Checkpoint', type: 'Checkpoint' }
+      ]
+    };
+
+    const scoresState = {}; // Untouched form state
+
+    // Check missing tasks logic
+    const missingTask = station.tasks.find((task, idx) => {
+      const taskId = task.id || task._id || `task-${idx}`;
+      const value = scoresState[taskId];
+      const type = task.scoreValue?.type || task.type;
+
+      switch (type) {
+        case 'Completed':
+        case 'Pass / Fail':
+        case 'Checkpoint':
+          return false;
+        default:
+          return value === undefined || value === null;
+      }
+    });
+
+    expect(missingTask).toBeUndefined();
+
+    // Map payload logic
+    const submissionScores = station.tasks.map((task, idx) => {
+      const taskId = task.id || task._id || `task-${idx}`;
+      const type = task.scoreValue?.type || task.type;
+      let val = scoresState[taskId];
+      if ((type === 'Completed' || type === 'Pass / Fail' || type === 'Checkpoint') && val === undefined) {
+        val = false;
+      }
+      return { taskId, scoreValue: val };
+    });
+
+    expect(submissionScores).toEqual([
+      { taskId: 't-1', scoreValue: false },
+      { taskId: 't-2', scoreValue: false },
+      { taskId: 't-3', scoreValue: false }
+    ]);
+  });
 });
 
 describe('Event Score Finalizer Role & Access Tests', () => {

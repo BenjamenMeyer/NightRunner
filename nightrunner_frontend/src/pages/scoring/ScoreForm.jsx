@@ -65,10 +65,14 @@ export default function ScoreForm({
             const missingTask = station.tasks.find((task, idx) => {
                 const taskId = task.id || task._id || `task-${idx}`;
                 const value = scores[taskId];
+                const type = task.scoreValue?.type || task.type;
 
-                switch (task.scoreValue?.type || task.type) {
+                switch (type) {
                     case "Completed":
-                        return typeof value !== "boolean";
+                    case "Pass / Fail":
+                    case "Checkpoint":
+                        // Checkbox tasks default to false if untouched (false is valid)
+                        return false;
 
                     case "RangeRated":
                     case "DeltaTime":
@@ -115,9 +119,17 @@ export default function ScoreForm({
                         task._id ||
                         `task-${idx}`;
 
+                    const type = task.scoreValue?.type || task.type;
+                    let val = scores[taskId];
+
+                    // If boolean/checkbox task was untouched, default value to false (0 points)
+                    if ((type === "Completed" || type === "Pass / Fail" || type === "Checkpoint") && val === undefined) {
+                        val = false;
+                    }
+
                     return {
                         taskId,
-                        scoreValue: scores[taskId]
+                        scoreValue: val
                     };
                 }),
 
