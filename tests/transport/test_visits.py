@@ -110,3 +110,79 @@ async def test_completed_visit_lock_and_reset(test_client, dev_mode_enabled):
     assert resp.json["status"] == "checked_in"
 
 
+@patch("nightrunner_backend.transport.middleware.auth.AuthMiddleware.process_request", AsyncMock(return_value=None))
+@pytest.mark.asyncio
+async def test_full_station_lifecycle_workflow(test_client, dev_mode_enabled):
+    """Verifies the complete station lifecycle workflow:
+    1. Patrol checks in to wait in queue.
+    2. Patrol checks out when line is too long (no score submitted) -> visit remains un-locked.
+    3. Patrol returns later and checks in again.
+    4. Volunteers score patrol activity and submit score.
+    5. Backend automatically marks visit as completed AND records checkedOutAt timestamp.
+    6. Future check-in attempts on completed visit are blocked (409 Conflict).
+    """
+    event_id = "evt-flow-1"
+    station_id = "st-flow-1"
+    patrol_id = "pat-flow-1"
+
+    # Step 1: Check in to queue
+    resp = await test_client.simulate_post("/v1/visits/check-in", json={
+        "eventId": event_id,
+        "stationId": station_id,
+        "patrolId": patrol_id,
+        "timestamp": "2026-09-16T19:00:00Z"
+    })
+    assert resp.status == falcon.HTTP_201
+
+    # Step 2: Line too long -> check out without scoring
+    resp = await test_client.simulate_post("/v1/visits/check-out", json={
+        "eventId": event_id,
+        "stationId": station_id,
+        "patrolId": patrol_id,
+        "timestamp": "2026-09-16T19:05:00Z"
+    })
+    assert resp.status == falcon.HTTP_200
+    assert resp.json["checkedOutAt"] == "2026-09-16T19:05:00Z"
+
+    # Step 3: Patrol returns later and re-checks in
+    resp = await test_client.simulate_post("/v1/visits/check-in", json={
+        "eventId": event_id,
+        "stationId": station_id,
+        "patrolId": patrol_id,
+        "timestamp": "2026-09-16T20:00:00Z"
+    })
+    assert resp.status == falcon.HTTP_200 or resp.status == falcon.HTTP_201
+
+    # Step 4: Submit score for the station activity
+    completed_time = "2026-09-16T20:25:00Z"
+    resp = await test_client.simulate_post("/v1/scores", json={
+        "eventId": event_id,
+        "stationId": station_id,
+        "patrolId": patrol_id,
+        "startedAt": "2026-09-16T20:05:00Z",
+        "completedAt": completed_time,
+        "scores": [
+            {"taskId": "t1", "scoreValue": 8.0, "scoreWeight": 1.0}
+        ]
+    })
+    assert resp.status == falcon.HTTP_201
+
+    # Step 5: Verify visit is now completed AND automatically checked out
+    resp = await test_client.simulate_get(f"/v1/visits?eventId={event_id}")
+    assert resp.status == falcon.HTTP_200
+    visits_list = resp.json["visits"]
+    patrol_visits = [v for v in visits_list if v["patrolId"] == patrol_id and v["stationId"] == station_id]
+    latest_v = patrol_visits[-1] # Newest visit record
+    assert latest_v["status"] == "completed"
+    assert latest_v["checkedOutAt"] == completed_time
+
+    # Step 6: Verify attempt is locked against further check-ins
+    resp = await test_client.simulate_post("/v1/visits/check-in", json={
+        "eventId": event_id,
+        "stationId": station_id,
+        "patrolId": patrol_id
+    })
+    assert resp.status == falcon.HTTP_409
+
+
+

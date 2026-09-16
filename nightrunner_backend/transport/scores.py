@@ -141,7 +141,7 @@ class ScoresResource:
             await store.create(score)
             created.append({"id": score.id})
 
-        # Mark station visit as completed
+        # Mark station visit as completed & automatically check out patrol
         from nightrunner_backend.drivers.store.station_visits import StationVisitsStore
         visit_store = StationVisitsStore(get_driver())
         active_visit = await visit_store.get_active_visit(event_id, station_id, patrol_id)
@@ -149,7 +149,10 @@ class ScoresResource:
             active_visit = await visit_store.get_latest_visit(event_id, station_id, patrol_id)
         if active_visit:
             active_visit.status = "completed"
-            active_visit.tasks_completed_at = payload.get("completedAt") or active_visit.tasks_completed_at
+            comp_at = payload.get("completedAt") or payload.get("timestamp")
+            active_visit.tasks_completed_at = comp_at or active_visit.tasks_completed_at
+            if not active_visit.checked_out_at:
+                active_visit.checked_out_at = comp_at or active_visit.checked_out_at
             await visit_store.update(active_visit)
 
         resp.status = falcon.HTTP_201

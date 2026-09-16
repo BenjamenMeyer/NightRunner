@@ -8,10 +8,10 @@ GET_ACTIVE_VISIT = "SELECT * FROM station_visits WHERE event_id = :event_id AND 
 CREATE_VISIT = """
     INSERT INTO station_visits (
         id, event_id, station_id, patrol_id,
-        checked_in_at, checked_out_at, tasks_started_at, tasks_completed_at, entry_mode, status, unlocked_by
+        checked_in_at, checked_out_at, tasks_started_at, tasks_completed_at, entry_mode, status, unlocked_by, created_at
     ) VALUES (
         :id, :event_id, :station_id, :patrol_id,
-        :checked_in_at, :checked_out_at, :tasks_started_at, :tasks_completed_at, :entry_mode, :status, :unlocked_by
+        :checked_in_at, :checked_out_at, :tasks_started_at, :tasks_completed_at, :entry_mode, :status, :unlocked_by, :created_at
     )
 """
 UPDATE_VISIT = """
@@ -27,7 +27,7 @@ UPDATE_VISIT = """
 """
 
 
-GET_LATEST_VISIT = "SELECT * FROM station_visits WHERE event_id = :event_id AND station_id = :station_id AND patrol_id = :patrol_id ORDER BY created_at DESC LIMIT 1"
+GET_LATEST_VISIT = "SELECT * FROM station_visits WHERE event_id = :event_id AND station_id = :station_id AND patrol_id = :patrol_id ORDER BY created_at DESC, checked_in_at DESC LIMIT 1"
 
 
 class StationVisitsStore:
@@ -76,6 +76,8 @@ class StationVisitsStore:
 
 
     async def create(self, visit: StationVisit) -> StationVisit:
+        from datetime import datetime, timezone
+        created_at_val = visit.created_at or datetime.now(timezone.utc).isoformat()
         await self.driver.execute(CREATE_VISIT, {
             "id": visit.id,
             "event_id": visit.event_id,
@@ -88,6 +90,7 @@ class StationVisitsStore:
             "entry_mode": visit.entry_mode or "live",
             "status": visit.status or "checked_in",
             "unlocked_by": visit.unlocked_by,
+            "created_at": created_at_val,
         })
         return visit
 
