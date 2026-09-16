@@ -1037,6 +1037,42 @@ describe('Scoring Form and ScoreField Unit Verification', () => {
     expect(clamp(-10)).toBe(0); // Clamped to minBound
   });
 
+  it('accepts zero (0) as a valid score value for pointed tasks', () => {
+    const tasks = [
+      { id: 't-range', name: 'Range Task', type: 'RangeRated' },
+      { id: 't-delta', name: 'Delta Task', type: 'DeltaTime' },
+      { id: 't-choice', name: 'Choice Task', type: 'Multiple Choice' },
+      { id: 't-default', name: 'Custom Task', type: 'Custom' }
+    ];
+
+    const scores = {
+      't-range': 0,
+      't-delta': 0,
+      't-choice': 0,
+      't-default': 0
+    };
+
+    const missingTask = tasks.find((task) => {
+      const value = scores[task.id];
+      const type = task.scoreValue?.type || task.type;
+
+      switch (type) {
+        case 'RangeRated':
+        case 'DeltaTime':
+          return typeof value !== 'number' || Number.isNaN(value);
+        case 'MultiChoice':
+        case 'Multiple Choice':
+          return value === undefined || value === null;
+        default:
+          return value === undefined || value === null;
+      }
+    });
+
+    expect(missingTask).toBeUndefined();
+    expect(typeof scores['t-range']).toBe('number');
+    expect(Number.isNaN(scores['t-range'])).toBe(false);
+  });
+
   it('validates station start and completion timestamps before score submission', () => {
     const stationStartedAt = null;
     const stationCompletedAt = null;
