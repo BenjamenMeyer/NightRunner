@@ -1037,6 +1037,42 @@ describe('Scoring Form and ScoreField Unit Verification', () => {
     expect(clamp(-10)).toBe(0); // Clamped to minBound
   });
 
+  it('accepts zero (0) as a valid score value for pointed tasks', () => {
+    const tasks = [
+      { id: 't-range', name: 'Range Task', type: 'RangeRated' },
+      { id: 't-delta', name: 'Delta Task', type: 'DeltaTime' },
+      { id: 't-choice', name: 'Choice Task', type: 'Multiple Choice' },
+      { id: 't-default', name: 'Custom Task', type: 'Custom' }
+    ];
+
+    const scores = {
+      't-range': 0,
+      't-delta': 0,
+      't-choice': 0,
+      't-default': 0
+    };
+
+    const missingTask = tasks.find((task) => {
+      const value = scores[task.id];
+      const type = task.scoreValue?.type || task.type;
+
+      switch (type) {
+        case 'RangeRated':
+        case 'DeltaTime':
+          return typeof value !== 'number' || Number.isNaN(value);
+        case 'MultiChoice':
+        case 'Multiple Choice':
+          return value === undefined || value === null;
+        default:
+          return value === undefined || value === null;
+      }
+    });
+
+    expect(missingTask).toBeUndefined();
+    expect(typeof scores['t-range']).toBe('number');
+    expect(Number.isNaN(scores['t-range'])).toBe(false);
+  });
+
   it('validates station start and completion timestamps before score submission', () => {
     const stationStartedAt = null;
     const stationCompletedAt = null;
@@ -1170,6 +1206,55 @@ describe('Scoring Form and ScoreField Unit Verification', () => {
       const radioGroupName = `mc_${t.id || idx}`;
       expect(radioGroupName).toBe(`mc_${t.id}`);
     });
+  });
+
+  it('allows submitting scores with untouched checkbox tasks by defaulting them to false', () => {
+    const station = {
+      id: 'st-1',
+      name: 'First Aid Station',
+      tasks: [
+        { id: 't-1', name: 'Applied Pressure', type: 'Pass / Fail' },
+        { id: 't-2', name: 'Checked Pulse', type: 'Completed' },
+        { id: 't-3', name: 'Arrival Checkpoint', type: 'Checkpoint' }
+      ]
+    };
+
+    const scoresState = {}; // Untouched form state
+
+    // Check missing tasks logic
+    const missingTask = station.tasks.find((task, idx) => {
+      const taskId = task.id || task._id || `task-${idx}`;
+      const value = scoresState[taskId];
+      const type = task.scoreValue?.type || task.type;
+
+      switch (type) {
+        case 'Completed':
+        case 'Pass / Fail':
+        case 'Checkpoint':
+          return false;
+        default:
+          return value === undefined || value === null;
+      }
+    });
+
+    expect(missingTask).toBeUndefined();
+
+    // Map payload logic
+    const submissionScores = station.tasks.map((task, idx) => {
+      const taskId = task.id || task._id || `task-${idx}`;
+      const type = task.scoreValue?.type || task.type;
+      let val = scoresState[taskId];
+      if ((type === 'Completed' || type === 'Pass / Fail' || type === 'Checkpoint') && val === undefined) {
+        val = false;
+      }
+      return { taskId, scoreValue: val };
+    });
+
+    expect(submissionScores).toEqual([
+      { taskId: 't-1', scoreValue: false },
+      { taskId: 't-2', scoreValue: false },
+      { taskId: 't-3', scoreValue: false }
+    ]);
   });
 });
 
