@@ -88,6 +88,14 @@ async def _sync_tasks_for_station(driver: DatabaseDriver, station_id: str, tasks
         divide_flag = bool(t.get("divideByPatrolSize") or t.get("divide_by_patrol_size", False))
         score_val_dict["divideByPatrolSize"] = divide_flag
         score_val_str = json.dumps(score_val_dict)
+        def _safe_float(val, default):
+            if val is None or val == "":
+                return float(default)
+            try:
+                return float(val)
+            except (ValueError, TypeError):
+                return float(default)
+
         await driver.execute(INSERT_STATION_TASK, {
             "id": task_id,
             "configuration_id": None,
@@ -96,10 +104,10 @@ async def _sync_tasks_for_station(driver: DatabaseDriver, station_id: str, tasks
             "description": t.get("description") or t.get("name") or "",
             "type": t.get("type") or "Timed Challenge",
             "instructions": t.get("instructions") or "",
-            "max_score": float(t.get("maxScore") if t.get("maxScore") is not None else 100),
-            "time_limit": float(t.get("timeLimit") if t.get("timeLimit") is not None else 0),
+            "max_score": _safe_float(t.get("maxScore"), 100),
+            "time_limit": _safe_float(t.get("timeLimit"), 0),
             "score_value": score_val_str,
-            "score_weight": float(t.get("scoreWeight") if t.get("scoreWeight") is not None else 1.0),
+            "score_weight": _safe_float(t.get("scoreWeight"), 1.0),
             "active": bool(t.get("active", True)),
             "divide_by_patrol_size": divide_flag
         })
