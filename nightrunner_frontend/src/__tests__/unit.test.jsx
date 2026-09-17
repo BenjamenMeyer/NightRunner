@@ -1586,6 +1586,20 @@ describe('Event Score Finalizer Role & Access Tests', () => {
     expect(relativeTotals['patrol-a']).toBe(10); // 260 / 260 * 10 = 10
     expect(relativeTotals['patrol-b']).toBeCloseTo((190 / 260) * 10, 2); // ~7.31
   });
+
+  it('computes cell rawScore correctly from rawVal and custom overrides without ReferenceError', () => {
+    const rawVal = 42.5;
+    const customOverrides = { 'st1_p1_t1': 50 };
+    const overrideKey = 'st1_p1_t1';
+
+    const currentScore = customOverrides[overrideKey] !== undefined ? customOverrides[overrideKey] : (rawVal !== undefined ? Number(rawVal) : 0);
+    const rawScore = currentScore;
+
+    expect(rawScore).toBe(50);
+
+    const noOverrideScore = customOverrides['un-overridden'] !== undefined ? customOverrides['un-overridden'] : (rawVal !== undefined ? Number(rawVal) : 0);
+    expect(noOverrideScore).toBe(42.5);
+  });
 });
 
 

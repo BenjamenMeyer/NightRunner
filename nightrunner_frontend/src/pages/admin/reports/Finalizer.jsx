@@ -758,12 +758,14 @@ export default function Finalizer() {
                                                             );
                                                         }
 
+                                                        const rawScore = currentScore;
+
                                                         return (
                                                             <td
                                                                 key={taskId}
                                                                 className={`col-task-score ${!isEnabled ? "task-disabled" : ""}`}
                                                             >
-                                                                {rawScore !== undefined ? (
+                                                                {rawVal !== undefined || customOverrides[overrideKey] !== undefined ? (
                                                                     <span>
                                                                         {Number(rawScore).toFixed(1)}
                                                                         {weight !== 1.0 && isEnabled && (
