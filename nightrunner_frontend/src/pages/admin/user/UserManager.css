@@ -251,18 +251,38 @@
     max-height: 180px;
     overflow-y: auto;
     text-align: left;
+    width: 100%;
 }
 
 .station-checkbox-item {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 10px;
+    gap: 8px;
     font-size: 14px;
     color: var(--text-primary);
     cursor: pointer;
-    width: 100%;
+    width: auto;
+    max-width: 100%;
     text-align: left;
+    user-select: none;
+}
+
+.station-checkbox-item input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px;
+    min-height: 16px;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.station-checkbox-item span {
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.2;
 }
 
 .user-roles-summary-box {
@@ -677,7 +697,7 @@
 
 }
 
-.form-field input,
+.form-field input:not([type="checkbox"]),
 .form-field select {
 
     width: 100%;
