@@ -1527,6 +1527,21 @@ describe('Event Score Finalizer Role & Access Tests', () => {
     expect(absoluteTotals['patrol-b']).toBe(190);
     expect(maxAbsolute).toBe(260);
 
+    // Negative weight / penalty task validation
+    const penaltyTasks = [
+      { id: 't1', name: 'Main Task', active: true, scoreWeight: 1.0 },
+      { id: 't2', name: 'Safety Infraction Penalty', active: true, scoreWeight: -2.0 }
+    ];
+    const penaltyPatrolScores = { 'patrol-a': { t1: 100, t2: 5 } };
+    let penaltySum = 0;
+    penaltyTasks.forEach(t => {
+      if (t.active) {
+        penaltySum += (penaltyPatrolScores['patrol-a'][t.id] || 0) * t.scoreWeight;
+      }
+    });
+    // 100 * 1.0 + 5 * (-2.0) = 100 - 10 = 90
+    expect(penaltySum).toBe(90);
+
     // Calculate Relative Mode (10-point scale based on top patrol)
     const relativeTotals = {};
     Object.keys(patrolScores).forEach(pId => {

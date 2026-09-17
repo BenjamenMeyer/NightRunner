@@ -32,10 +32,11 @@ from nightrunner_backend.transport.roster import (
 )
 
 # Configure logging
-_log_level_str = (settings.log_level or "INFO").upper()
-_default_level = logging.DEBUG if settings.dev_mode else logging.INFO
-_log_level = getattr(logging, _log_level_str, _default_level)
+_log_level_str = (settings.log_level if os.getenv("LOG_LEVEL") else ("DEBUG" if settings.dev_mode else "INFO")).upper()
+_log_level = getattr(logging, _log_level_str, logging.INFO)
 logging.basicConfig(level=_log_level)
+# Set root logger level in case basicConfig was already initialized by another module
+logging.getLogger().setLevel(_log_level)
 logger = logging.getLogger(__name__)
 
 class MigrationMiddleware:
@@ -65,9 +66,10 @@ def createMiddleware():
 
 async def handle_uncaught_exception(req: falcon.Request, resp: falcon.Response, ex: Exception, params: dict):
     logger.exception(f"Unhandled exception processing {req.method} {req.path}: {ex}")
+    description = f"{type(ex).__name__}: {str(ex)}" if settings.dev_mode else "An unexpected error occurred."
     raise falcon.HTTPInternalServerError(
         title="Internal Server Error",
-        description="An unexpected error occurred."
+        description=description
     )
 
 
