@@ -9,6 +9,7 @@ const DEFAULT_TASK_TYPES = [
     "Text Answer",
     "Checkpoint",
     "Automatic Station Disqualification",
+    "Secret Cipher / Decoding",
     "Custom"
 ];
 
@@ -59,6 +60,10 @@ export default function TaskEditor({
         "Automatic Station Disqualification": {
             title: "Automatic Disqualification Guidance",
             text: "Provides a simple true/false checkbox field to automatically fail a patrol at this station (setting station score to zero). Requires entering a reason before saving after user confirmation warning."
+        },
+        "Secret Cipher / Decoding": {
+            title: "Secret Cipher / Decoding Guidance",
+            text: "Allows setting an expected secret string in the configuration editor (hidden from judges/station). On the scoring form, judges enter the patrol's submitted decoded string."
         },
         "Custom": {
             title: "Custom Task Guidance",
@@ -258,34 +263,26 @@ export default function TaskEditor({
 
                 </label>
 
-                {(task.type === "Score Challenge" ||
-                    task.type === "Timed Challenge" ||
-                    task.type === "Text Answer" ||
-                    task.type === "Checkpoint" ||
-                    task.type === "Custom") && (
+                <label className="form-field">
 
-                    <label className="form-field">
+                    <span>
+                        Maximum Score
+                    </span>
 
-                        <span>
-                            Maximum Score
-                        </span>
+                    <input
+                        type="number"
+                        min="0"
+                        value={task.maxScore ?? ""}
+                        onChange={event =>
+                            update(
+                                "maxScore",
+                                event.target.value === "" ? "" : Number(event.target.value)
+                            )
+                        }
+                        placeholder="e.g. 100"
+                    />
 
-                        <input
-                            type="number"
-                            min="0"
-                            value={task.maxScore ?? ""}
-                            onChange={event =>
-                                update(
-                                    "maxScore",
-                                    Number(event.target.value)
-                                )
-                            }
-                            placeholder="e.g. 10"
-                        />
-
-                    </label>
-
-                )}
+                </label>
 
                 {task.type === "Timed Challenge" && (
 

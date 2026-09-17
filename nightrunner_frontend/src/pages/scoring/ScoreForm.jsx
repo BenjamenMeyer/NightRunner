@@ -188,6 +188,22 @@ export default function ScoreForm({
                         val = { disqualified: false, reason: "" };
                     }
 
+                    if (type === "Secret Cipher / Decoding") {
+                        const submittedStr = String(val || "").toUpperCase().trim();
+                        const expectedStr = String(task.expectedAnswer || task.expectedSecret || "").toUpperCase().trim();
+                        let matches = 0;
+                        for (let i = 0; i < Math.min(submittedStr.length, expectedStr.length); i++) {
+                            if (submittedStr[i] === expectedStr[i]) {
+                                matches += 1;
+                            }
+                        }
+                        val = {
+                            submittedText: val || "",
+                            calculatedScore: matches,
+                            expectedLength: expectedStr.length
+                        };
+                    }
+
                     return {
                         taskId,
                         scoreValue: val
@@ -449,6 +465,8 @@ export default function ScoreForm({
                                     displayVal = rawVal ? "✓ Completed / Pass" : "✕ Not Completed / Fail";
                                 } else if (type === "Automatic Station Disqualification") {
                                     displayVal = (typeof rawVal === "object" && rawVal?.disqualified) ? `⚠️ DISQUALIFIED: "${rawVal.reason}"` : "Normal (Not Disqualified)";
+                                } else if (type === "Secret Cipher / Decoding") {
+                                    displayVal = rawVal ? `Decoded String Recorded: "${rawVal}"` : "None Entered";
                                 } else if (typeof rawVal === "object" && rawVal !== null && "rawValue" in rawVal) {
                                     displayVal = `${rawVal.rawValue} (Patrol Members: ${rawVal.participantCount || 1})`;
                                 } else if (typeof rawVal === "object" && rawVal !== null && "startTime" in rawVal) {
