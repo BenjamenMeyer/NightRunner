@@ -257,7 +257,9 @@ export default function StationEditor() {
                     ) === String(groupId)
             );
 
-        const configTasks = firstConfiguration?.tasks ? JSON.parse(JSON.stringify(firstConfiguration.tasks)) : [];
+        const configTasks = firstConfiguration?.tasks
+            ? firstConfiguration.tasks.map(({ id, ...rest }) => rest)
+            : [];
 
         setStation(current => ({
             ...current,
@@ -280,7 +282,9 @@ export default function StationEditor() {
         }
 
         const selectedConfig = configurations.find(c => String(c.id) === String(configurationId));
-        const configTasks = selectedConfig?.tasks ? JSON.parse(JSON.stringify(selectedConfig.tasks)) : [];
+        const configTasks = selectedConfig?.tasks
+            ? selectedConfig.tasks.map(({ id, ...rest }) => rest)
+            : [];
 
         setStation(current => ({
             ...current,
