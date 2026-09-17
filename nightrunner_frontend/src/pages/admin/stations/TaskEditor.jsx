@@ -450,6 +450,33 @@ export default function TaskEditor({
 
                 )}
 
+                {task.type === "Secret Cipher / Decoding" && (
+
+                    <label className="form-field">
+
+                        <span>
+                            🔒 Expected Secret Result String (Required, Hidden from Judges/Station)
+                        </span>
+
+                        <input
+                            value={task.expectedAnswer || task.expectedSecret || ""}
+                            onChange={event => {
+                                const val = event.target.value;
+                                update("expectedAnswer", val);
+                                update("expectedSecret", val);
+                                update("maxScore", val.length);
+                            }}
+                            placeholder="Enter secret decoded string (e.g. BE PREPARED AT MIDNIGHT)..."
+                        />
+
+                        <small style={{ color: "var(--text-secondary)", marginTop: "4px" }}>
+                            * Max score will automatically equal the secret string length ({ (task.expectedAnswer || task.expectedSecret || "").length } characters).
+                        </small>
+
+                    </label>
+
+                )}
+
                 {task.type === "Checkpoint" && (
 
                     <div className="task-note">

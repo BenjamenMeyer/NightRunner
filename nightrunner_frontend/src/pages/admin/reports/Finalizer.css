@@ -320,3 +320,8 @@
     background: var(--button-bg);
     color: var(--button-text);
 }
+
+/* Cipher Popover Hover Trigger */
+.cipher-task-cell:hover .cipher-hover-popover {
+    display: block !important;
+}
