@@ -462,9 +462,12 @@ export default function TaskEditor({
                             value={task.expectedAnswer || task.expectedSecret || ""}
                             onChange={event => {
                                 const val = event.target.value;
-                                update("expectedAnswer", val);
-                                update("expectedSecret", val);
-                                update("maxScore", val.length);
+                                onChange({
+                                    ...task,
+                                    expectedAnswer: val,
+                                    expectedSecret: val,
+                                    maxScore: val.length
+                                });
                             }}
                             placeholder="Enter secret decoded string (e.g. BE PREPARED AT MIDNIGHT)..."
                         />
