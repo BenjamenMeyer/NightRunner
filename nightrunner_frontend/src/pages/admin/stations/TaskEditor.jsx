@@ -204,7 +204,6 @@ export default function TaskEditor({
                     <input
                         type="number"
                         step="0.1"
-                        min="0"
                         value={task.scoreWeight ?? 1.0}
                         onChange={event =>
                             update(

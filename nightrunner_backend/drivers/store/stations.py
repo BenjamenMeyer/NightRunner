@@ -77,9 +77,11 @@ async def _load_tasks_for_station(driver: DatabaseDriver, station_id: str, fallb
 async def _sync_tasks_for_station(driver: DatabaseDriver, station_id: str, tasks: List[dict]) -> None:
     await driver.execute(DELETE_STATION_TASKS, {"station_id": station_id})
     for t in tasks:
+        if not isinstance(t, dict):
+            continue
         task_id = t.get("id") or t.get("_id") or str(uuid6.uuid7())
         t["id"] = task_id
-        score_val_dict = dict(t.get("scoreValue") or {})
+        score_val_dict = dict(t.get("scoreValue") or {}) if isinstance(t.get("scoreValue"), dict) else {}
         notes_val = t.get("notes") or t.get("scorer_notes")
         if notes_val:
             score_val_dict["notes"] = notes_val
