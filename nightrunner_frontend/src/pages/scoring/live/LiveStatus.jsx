@@ -136,7 +136,8 @@ export default function LiveStatus() {
                     checkedInAt: v.checkedInAt || v.checked_in_at || null,
                     checkedOutAt: v.checkedOutAt || v.checked_out_at || null,
                     tasksStartedAt: v.tasksStartedAt || v.tasks_started_at || null,
-                    tasksCompletedAt: v.tasksCompletedAt || v.tasks_completed_at || null
+                    tasksCompletedAt: v.tasksCompletedAt || v.tasks_completed_at || null,
+                    status: v.status || null
                 };
             }
         }

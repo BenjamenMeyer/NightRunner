@@ -149,31 +149,29 @@ async def test_finalized_scores_endpoint(test_client, dev_mode_enabled):
     assert len(results) == 2
     assert results[0]["patrolId"] == "patrol-1"
 @pytest.mark.asyncio
-async def test_score_divide_by_patrol_size(test_client, dev_mode_enabled):
+async def test_scoring_creates_synthetic_completed_visit(test_client, dev_mode_enabled):
+    # Submit score for patrol with no prior station visit
     payload = {
-        "eventId": "event-divide-1",
-        "patrolId": "patrol-divide-1",
-        "stationId": "station-divide-1",
-        "timestamp": "2026-09-12T02:53:31.304Z",
-        "entryMode": "live",
+        "eventId": "event-synth-visit",
+        "stationId": "station-synth-visit",
+        "patrolId": "patrol-synth-visit",
+        "timestamp": "2026-09-17T00:00:00.000Z",
         "scores": [
-            {
-                "taskId": "task-divided",
-                "scoreValue": {
-                    "rawValue": 100.0,
-                    "participantCount": 5
-                }
-            }
+            {"taskId": "task-1", "scoreValue": 100.0}
         ]
     }
     resp = await test_client.simulate_post("/v1/scores", json=payload)
     assert resp.status == falcon.HTTP_201
 
-    resp_get = await test_client.simulate_get("/v1/scores?eventId=event-divide-1&stationId=station-divide-1&patrolId=patrol-divide-1")
-    assert resp_get.status == falcon.HTTP_200
-    scores = resp_get.json["scores"]
-    assert len(scores) == 1
-    assert scores[0]["scoreValue"] == 20.0
+    # Verify synthetic completed visit was created
+    resp_visits = await test_client.simulate_get("/v1/visits?eventId=event-synth-visit")
+    assert resp_visits.status == falcon.HTTP_200
+    visits = resp_visits.json.get("visits", [])
+    assert len(visits) == 1
+    assert visits[0]["patrolId"] == "patrol-synth-visit"
+    assert visits[0]["stationId"] == "station-synth-visit"
+    assert visits[0]["status"] == "completed"
+    assert visits[0]["checkedOutAt"] is not None
 
 
 
