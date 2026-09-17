@@ -642,6 +642,31 @@
 
 }
 
+.form-field.full-width-field {
+    grid-column: 1 / -1;
+}
+
+.role-permissions-panel {
+    margin-top: 10px;
+    padding: 12px 16px;
+    background: var(--page-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.role-permissions-panel strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+    color: var(--button-bg);
+}
+
+.role-permissions-panel span {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
 .form-field > span {
 
     color: var(--text-primary);

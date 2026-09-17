@@ -702,14 +702,8 @@ export default function UserManager() {
                                         </label>
 
                                         {/* Permissions & Guidance Description Panel */}
-                                        <div className="role-permissions-panel" style={{
-                                            marginTop: "10px",
-                                            padding: "12px 16px",
-                                            background: "var(--page-bg)",
-                                            border: "1px solid var(--border)",
-                                            borderRadius: "8px"
-                                        }}>
-                                            <strong style={{ display: "block", marginBottom: "4px", fontSize: "0.85rem", color: "var(--button-bg)" }}>
+                                        <div className="role-permissions-panel">
+                                            <strong>
                                                 💡 Role Capabilities & Permissions Guidance:
                                             </strong>
                                             {(() => {
@@ -717,43 +711,43 @@ export default function UserManager() {
                                                 switch (currentRole) {
                                                     case "event-admin":
                                                         return (
-                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                            <span>
                                                                 <strong>Event Admin:</strong> Full event management authority. Can configure event details, manage patrols & stations, assign user roles (Scoring Lead, Station Lead, Volunteer), override station locks, access the Score Finalizer, and generate all scoring reports.
                                                             </span>
                                                         );
                                                     case "scoring-lead":
                                                         return (
-                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                            <span>
                                                                 <strong>Scoring Lead:</strong> Lead scoring manager. Can review cross-station scores, perform manual score entries for any station, access the Event Score Finalizer page, adjust calculation totals, and generate all scoring reports.
                                                             </span>
                                                         );
                                                     case "scoring-center":
                                                         return (
-                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                            <span>
                                                                 <strong>Scoring Center / Team:</strong> Scoring team member. Can review scores across all stations, enter manual paper scores for any station, and assist with score calculation verification.
                                                             </span>
                                                         );
                                                     case "scorer":
                                                         return (
-                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                            <span>
                                                                 <strong>Scorer:</strong> Scoring volunteer. Can perform station check-in/out and record raw task completion scores and timing for assigned stations. Point values and weights remain hidden.
                                                             </span>
                                                         );
                                                     case "station-lead":
                                                         return (
-                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                            <span>
                                                                 <strong>Station Lead:</strong> Station supervisor. Can assign and manage volunteer staff for their station, perform check-in/out and scoring, and override/reopen completed station attempt locks at their station beyond the 5-minute window.
                                                             </span>
                                                         );
                                                     case "volunteer":
                                                         return (
-                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                            <span>
                                                                 <strong>Station Volunteer:</strong> Station helper. Can perform patrol check-in/check-out and record task completions and timing at assigned stations. Can self-reopen attempt within 5 minutes of completion. Point weights remain hidden.
                                                             </span>
                                                         );
                                                     default:
                                                         return (
-                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                            <span>
                                                                 <strong>Standard User:</strong> Basic registered account. Has standard event participant view access once approved from the holding area.
                                                             </span>
                                                         );
@@ -763,7 +757,7 @@ export default function UserManager() {
                                     </div>
                                 )}
 
-                                <div className="form-field full-width-field" style={{ gridColumn: "1 / -1" }}>
+                                <div className="form-field full-width-field">
                                     <span>Station Roles & Assignments</span>
                                     <div className="station-checkbox-grid">
                                         {stations.length === 0 ? (
