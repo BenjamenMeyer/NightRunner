@@ -174,5 +174,31 @@ async def test_scoring_creates_synthetic_completed_visit(test_client, dev_mode_e
     assert visits[0]["checkedOutAt"] is not None
 
 
+@pytest.mark.asyncio
+async def test_automatic_station_disqualification_score_parsing(test_client, dev_mode_enabled):
+    payload = {
+        "eventId": "event-disqual",
+        "stationId": "station-disqual",
+        "patrolId": "patrol-disqual",
+        "scores": [
+            {
+                "taskId": "task-disqual",
+                "scoreValue": {
+                    "disqualified": True,
+                    "reason": "Patrol brought unauthorized power tools"
+                }
+            }
+        ]
+    }
+    resp = await test_client.simulate_post("/v1/scores", json=payload)
+    assert resp.status == falcon.HTTP_201
+
+    resp_get = await test_client.simulate_get("/v1/scores?eventId=event-disqual&stationId=station-disqual&patrolId=patrol-disqual")
+    assert resp_get.status == falcon.HTTP_200
+    scores = resp_get.json["scores"]
+    assert len(scores) == 1
+    assert scores[0]["scoreValue"] == 0.0
+
+
 
 

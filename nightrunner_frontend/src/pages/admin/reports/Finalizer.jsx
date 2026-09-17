@@ -261,18 +261,35 @@ export default function Finalizer() {
             patrols.forEach((p) => {
                 const pTaskMap = patrolBreakdownMap[p.id] || {};
                 let sum = 0;
+                let isDisqualified = false;
 
                 tasks.forEach((t) => {
                     const taskId = t.id || t._id;
                     const isEnabled = stState.enabledTasks[taskId] !== false;
+                    const type = t.scoreValue?.type || t.type;
+                    const rawVal = pTaskMap[taskId];
+
+                    if (type === "Automatic Station Disqualification") {
+                        if (typeof rawVal === "object" && rawVal !== null && rawVal.disqualified) {
+                            isDisqualified = true;
+                        } else if (rawVal === 0.0 && typeof rawVal !== "boolean") {
+                            // Check if rawScore parsed to 0.0 due to disqualification
+                            isDisqualified = true;
+                        }
+                    }
+
                     if (isEnabled) {
                         const weight = stState.taskWeights[taskId] !== undefined ? stState.taskWeights[taskId] : 1.0;
-                        const rawScore = pTaskMap[taskId] !== undefined ? Number(pTaskMap[taskId]) : 0;
+                        const rawScore = rawVal !== undefined ? (typeof rawVal === "object" ? (rawVal.disqualified ? 0 : (rawVal.rawValue || 0)) : Number(rawVal)) : 0;
                         sum += rawScore * weight;
                     }
                 });
 
-                patrolTotals[p.id] = { total: sum };
+                if (isDisqualified) {
+                    sum = 0;
+                }
+
+                patrolTotals[p.id] = { total: sum, isDisqualified };
                 if (sum > maxAbsoluteAchieved) {
                     maxAbsoluteAchieved = sum;
                 }
@@ -612,15 +629,20 @@ export default function Finalizer() {
                                     <tbody>
                                         {patrols.map((p) => {
                                             const pTaskMap = patrolBreakdownMap[p.id] || {};
-                                            const pCalc = stCalc.patrolTotals[p.id] || { total: 0, relativeScore: 0 };
-                                            const displayTotal = stState.mode === "relative" ? pCalc.relativeScore : pCalc.total;
+                                            const pCalc = stCalc.patrolTotals[p.id] || { total: 0, relativeScore: 0, isDisqualified: false };
+                                            const displayTotal = pCalc.isDisqualified ? 0 : (stState.mode === "relative" ? pCalc.relativeScore : pCalc.total);
 
                                             return (
-                                                <tr key={p.id}>
+                                                <tr key={p.id} style={{ background: pCalc.isDisqualified ? "rgba(239, 68, 68, 0.08)" : undefined }}>
                                                     <td className="col-patrol-name">
                                                         <strong>{p.name || p.programName || "Patrol"}</strong>
                                                         {p.patrolNumber && (
                                                             <span className="patrol-subtext"> (#{p.patrolNumber})</span>
+                                                        )}
+                                                        {pCalc.isDisqualified && (
+                                                            <span style={{ color: "var(--error, #ef4444)", fontWeight: "bold", fontSize: "0.8rem", marginLeft: "6px" }}>
+                                                                🚫 DISQUALIFIED (0.00)
+                                                            </span>
                                                         )}
                                                     </td>
 

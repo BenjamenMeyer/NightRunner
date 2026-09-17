@@ -45,7 +45,8 @@ export default function ScoreField({
                 startTime: startedAt.toISOString(),
                 endTime: new Date(
                     startedAt.getTime() + newElapsed
-                ).toISOString()
+                ).toISOString(),
+                running: true
             });
 
             frame = requestAnimationFrame(update);
@@ -78,6 +79,12 @@ export default function ScoreField({
         setEndedAt(null);
         setElapsed(0);
         setRunning(true);
+
+        onChange({
+            startTime: now.toISOString(),
+            endTime: now.toISOString(),
+            running: true
+        });
 
     }
 
@@ -116,7 +123,9 @@ export default function ScoreField({
 
             startTime: startedAt.toISOString(),
 
-            endTime: end.toISOString()
+            endTime: end.toISOString(),
+
+            running: false
 
         });
 
@@ -382,6 +391,79 @@ export default function ScoreField({
 
                 </div>
 
+            );
+
+        case "Automatic Station Disqualification":
+            const currentDisqual = (typeof value === "object" && value !== null) ? value : { disqualified: false, reason: "" };
+
+            const handleDisqualToggle = (e) => {
+                const checked = e.target.checked;
+                if (checked) {
+                    const confirmed = window.confirm(
+                        `⚠️ WARNING: Marking "${taskTitle}" as True will set the station score to ZERO (0) for this patrol.\n\nA reason is REQUIRED before you can submit.\n\nDo you wish to proceed?`
+                    );
+                    if (!confirmed) {
+                        return;
+                    }
+                }
+                onChange({
+                    disqualified: checked,
+                    reason: checked ? currentDisqual.reason : ""
+                });
+            };
+
+            const handleReasonChange = (e) => {
+                onChange({
+                    ...currentDisqual,
+                    reason: e.target.value
+                });
+            };
+
+            return (
+                <div className="score-field disqualification-field" style={{
+                    padding: "14px",
+                    borderRadius: "8px",
+                    border: currentDisqual.disqualified ? "2px solid var(--error, #ef4444)" : "1px solid var(--border)",
+                    background: currentDisqual.disqualified ? "rgba(239, 68, 68, 0.1)" : "var(--card-bg)"
+                }}>
+                    {renderInstructionsBubble()}
+                    {renderNotesBubble()}
+
+                    <label className="checkbox-option" style={{ color: currentDisqual.disqualified ? "var(--error, #ef4444)" : "var(--text-primary)", fontWeight: "bold", fontSize: "1rem" }}>
+                        <input
+                            type="checkbox"
+                            checked={currentDisqual.disqualified}
+                            onChange={handleDisqualToggle}
+                        />
+                        🚫 {taskTitle} (Automatic Station Disqualification / Zero Score)
+                    </label>
+
+                    {currentDisqual.disqualified && (
+                        <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <label style={{ fontSize: "0.85rem", color: "var(--error, #ef4444)", fontWeight: "bold" }}>
+                                ⚠️ Disqualification Reason (Required):
+                            </label>
+                            <textarea
+                                rows="3"
+                                placeholder="Explain why the patrol was disqualified at this station..."
+                                value={currentDisqual.reason || ""}
+                                onChange={handleReasonChange}
+                                style={{
+                                    padding: "8px",
+                                    borderRadius: "6px",
+                                    border: !currentDisqual.reason?.trim() ? "2px solid var(--error, #ef4444)" : "1px solid var(--border)",
+                                    background: "var(--input-bg, #0f172a)",
+                                    color: "var(--text-primary)"
+                                }}
+                            />
+                            {!currentDisqual.reason?.trim() && (
+                                <small style={{ color: "var(--error, #ef4444)", fontWeight: "600" }}>
+                                    * A disqualification reason must be entered before saving.
+                                </small>
+                            )}
+                        </div>
+                    )}
+                </div>
             );
 
         case "MultiChoice":

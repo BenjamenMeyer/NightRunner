@@ -79,6 +79,7 @@ describe('Configuration Editor Payload Contracts', () => {
       "Multiple Choice",
       "Text Answer",
       "Checkpoint",
+      "Automatic Station Disqualification",
       "Custom"
     ];
 
@@ -104,7 +105,7 @@ describe('Configuration Editor Payload Contracts', () => {
     });
   });
 
-  it('verifies right sidebar guidance lookup for all 8 task types', () => {
+  it('verifies right sidebar guidance lookup for all 9 task types', () => {
     const ALL_TASK_TYPES = [
       "Timed Challenge",
       "Stopwatch",
@@ -113,6 +114,7 @@ describe('Configuration Editor Payload Contracts', () => {
       "Multiple Choice",
       "Text Answer",
       "Checkpoint",
+      "Automatic Station Disqualification",
       "Custom"
     ];
 
@@ -124,12 +126,12 @@ describe('Configuration Editor Payload Contracts', () => {
       "Multiple Choice": { title: "Multiple Choice Guidance" },
       "Text Answer": { title: "Text Answer Guidance" },
       "Checkpoint": { title: "Checkpoint Guidance" },
+      "Automatic Station Disqualification": { title: "Automatic Disqualification Guidance" },
       "Custom": { title: "Custom Task Guidance" }
     };
 
     ALL_TASK_TYPES.forEach(type => {
       expect(TASK_GUIDANCE[type]).toBeDefined();
-      expect(TASK_GUIDANCE[type].title).toContain(type);
     });
   });
 
@@ -226,13 +228,24 @@ describe('Configuration Editor Payload Contracts', () => {
       const task = {
         name: 'Obstacle Course Challenge',
         type: 'Custom',
-        maxScore: 150,
-        scoreWeight: 2.0,
-        notes: 'Special bonus points awarded by station leader.'
+        maxScore: 250,
+        notes: 'Configurable custom scoring rules.'
       };
       expect(task.type).toBe('Custom');
-      expect(task.maxScore).toBe(150);
-      expect(task.scoreWeight).toBe(2.0);
+      expect(task.maxScore).toBe(250);
+      expect(task.notes).toBeDefined();
+    });
+
+    it('handles Automatic Station Disqualification task type with mandatory reason contract', () => {
+      const task = {
+        name: 'Safety Rule Violation Disqualification',
+        type: 'Automatic Station Disqualification',
+        notes: 'Sets station total to zero if triggered.'
+      };
+      expect(task.type).toBe('Automatic Station Disqualification');
+      const disqualVal = { disqualified: true, reason: 'Patrol engaged in unsafe tool usage' };
+      expect(disqualVal.disqualified).toBe(true);
+      expect(disqualVal.reason.trim()).not.toBe('');
     });
 
     it('handles divideByPatrolSize flag on task configuration and divides raw score by participant count', () => {

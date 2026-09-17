@@ -54,6 +54,42 @@ export default function ScoreForm({
             return;
         }
 
+        // Check if any Stopwatch or Timed Challenge task is currently running
+        const runningTimerTask = station.tasks?.find((task, idx) => {
+            const taskId = task.id || task._id || `task-${idx}`;
+            const type = task.scoreValue?.type || task.type;
+            if (type === "Stopwatch" || type === "Timed Challenge") {
+                const value = scores[taskId];
+                if (value && typeof value === "object" && value.running) {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        if (runningTimerTask) {
+            const taskName = runningTimerTask.name || runningTimerTask.description || runningTimerTask.title || "Stopwatch task";
+            alert(`Please stop the timer for "${taskName}" before completing the station timer or submitting scores.`);
+            return;
+        }
+
+        // Check Automatic Station Disqualification validation
+        const disqualTask = station.tasks?.find((task) => {
+            const type = task.scoreValue?.type || task.type;
+            return type === "Automatic Station Disqualification";
+        });
+
+        if (disqualTask) {
+            const taskId = disqualTask.id || disqualTask._id;
+            const disqualVal = scores[taskId];
+            if (disqualVal && typeof disqualVal === "object" && disqualVal.disqualified) {
+                if (!disqualVal.reason || !disqualVal.reason.trim()) {
+                    alert(`A reason is required when marking "${disqualTask.name || 'Automatic Station Disqualification'}" as True.`);
+                    return;
+                }
+            }
+        }
+
         const missingTask = station.tasks.find((task, idx) => {
             const taskId = task.id || task._id || `task-${idx}`;
             const value = scores[taskId];
@@ -63,6 +99,7 @@ export default function ScoreForm({
                 case "Completed":
                 case "Pass / Fail":
                 case "Checkpoint":
+                case "Automatic Station Disqualification":
                     return false;
 
                 case "RangeRated":
@@ -97,6 +134,29 @@ export default function ScoreForm({
         setShowReviewModal(true);
     }
 
+    function checkAndStopStationTimer() {
+        // Check if any task timer is running
+        const runningTimerTask = station.tasks?.find((task, idx) => {
+            const taskId = task.id || task._id || `task-${idx}`;
+            const type = task.scoreValue?.type || task.type;
+            if (type === "Stopwatch" || type === "Timed Challenge") {
+                const value = scores[taskId];
+                if (value && typeof value === "object" && value.running) {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        if (runningTimerTask) {
+            const taskName = runningTimerTask.name || runningTimerTask.description || runningTimerTask.title || "Stopwatch task";
+            alert(`Please stop the timer for "${taskName}" before stopping the overall station activity timer.`);
+            return;
+        }
+
+        setStationCompletedAt(new Date().toISOString());
+    }
+
     async function submitScore() {
         try {
             setIsSubmitting(true);
@@ -122,6 +182,10 @@ export default function ScoreForm({
                     // If boolean/checkbox task was untouched, default value to false (0 points)
                     if ((type === "Completed" || type === "Pass / Fail" || type === "Checkpoint") && val === undefined) {
                         val = false;
+                    }
+
+                    if (type === "Automatic Station Disqualification" && (val === undefined || val === null)) {
+                        val = { disqualified: false, reason: "" };
                     }
 
                     return {
@@ -263,7 +327,7 @@ export default function ScoreForm({
                             <button
                                 type="button"
                                 style={{ marginLeft: "8px", padding: "6px 10px" }}
-                                onClick={() => setStationCompletedAt(new Date().toISOString())}
+                                onClick={checkAndStopStationTimer}
                             >
                                 Set Now
                             </button>
@@ -279,7 +343,7 @@ export default function ScoreForm({
                         <button
                             type="button"
                             className="timing-stop-btn"
-                            onClick={() => setStationCompletedAt(new Date().toISOString())}
+                            onClick={checkAndStopStationTimer}
                         >
                             Stop Activity Timer Now
                         </button>
@@ -332,7 +396,7 @@ export default function ScoreForm({
                         <button
                             type="button"
                             className="timing-stop-btn"
-                            onClick={() => setStationCompletedAt(new Date().toISOString())}
+                            onClick={checkAndStopStationTimer}
                         >
                             Stop Activity Timer Now
                         </button>
@@ -383,6 +447,8 @@ export default function ScoreForm({
 
                                 if (type === "Completed" || type === "Pass / Fail" || type === "Checkpoint") {
                                     displayVal = rawVal ? "✓ Completed / Pass" : "✕ Not Completed / Fail";
+                                } else if (type === "Automatic Station Disqualification") {
+                                    displayVal = (typeof rawVal === "object" && rawVal?.disqualified) ? `⚠️ DISQUALIFIED: "${rawVal.reason}"` : "Normal (Not Disqualified)";
                                 } else if (typeof rawVal === "object" && rawVal !== null && "rawValue" in rawVal) {
                                     displayVal = `${rawVal.rawValue} (Patrol Members: ${rawVal.participantCount || 1})`;
                                 } else if (typeof rawVal === "object" && rawVal !== null && "startTime" in rawVal) {
@@ -394,7 +460,7 @@ export default function ScoreForm({
                                 return (
                                     <div key={taskId} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "var(--page-bg)", borderRadius: "6px", border: "1px solid var(--border)", fontSize: "0.9rem" }}>
                                         <span><strong>{task.name || `Task ${idx + 1}`}:</strong></span>
-                                        <span style={{ color: "var(--button-bg)", fontWeight: "600" }}>{String(displayVal)}</span>
+                                        <span style={{ color: type === "Automatic Station Disqualification" && typeof rawVal === "object" && rawVal?.disqualified ? "var(--error, #ef4444)" : "var(--button-bg)", fontWeight: "600" }}>{String(displayVal)}</span>
                                     </div>
                                 );
                             })}

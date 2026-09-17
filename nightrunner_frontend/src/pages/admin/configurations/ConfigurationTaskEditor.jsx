@@ -8,6 +8,7 @@ const TASK_TYPES = [
     "Multiple Choice",
     "Text Answer",
     "Checkpoint",
+    "Automatic Station Disqualification",
     "Custom"
 ];
 
@@ -39,6 +40,10 @@ const TASK_GUIDANCE = {
     "Checkpoint": {
         title: "Checkpoint Guidance",
         text: "Marks arrival or safety milestone completion. Checking the checkpoint awards full credit."
+    },
+    "Automatic Station Disqualification": {
+        title: "Automatic Disqualification Guidance",
+        text: "Provides a simple true/false checkbox field to automatically fail a patrol at this station (setting station score to zero). Requires entering a reason before saving after user confirmation warning."
     },
     "Custom": {
         title: "Custom Task Guidance",
