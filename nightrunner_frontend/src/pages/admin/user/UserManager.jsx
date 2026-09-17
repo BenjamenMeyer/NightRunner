@@ -402,6 +402,8 @@ export default function UserManager() {
         );
     }
 
+    const [showRoleHelp, setShowRoleHelp] = useState(false);
+
     return (
         <div className="user-manager-page">
             <header className="page-header">
@@ -416,6 +418,14 @@ export default function UserManager() {
                         Manage user accounts, roles, and event assignments.
                     </p>
                 </div>
+
+                <button
+                    type="button"
+                    className="secondary-button role-guide-toggle-btn"
+                    onClick={() => setShowRoleHelp(prev => !prev)}
+                >
+                    {showRoleHelp ? "✕ Close Role Guide" : "📖 View Role Reference Guide"}
+                </button>
             </header>
 
             {error && (
@@ -480,7 +490,7 @@ export default function UserManager() {
                 </span>
             </div>
 
-            <div className="user-manager-layout">
+            <div className={`user-manager-layout ${showRoleHelp ? "has-help-drawer" : ""}`}>
                 <section className="user-list-panel">
                     <div className="panel-header">
                         <div>
@@ -753,7 +763,7 @@ export default function UserManager() {
                                     </div>
                                 )}
 
-                                <div className="form-field">
+                                <div className="form-field full-width-field" style={{ gridColumn: "1 / -1" }}>
                                     <span>Station Roles & Assignments</span>
                                     <div className="station-checkbox-grid">
                                         {stations.length === 0 ? (
@@ -937,6 +947,75 @@ export default function UserManager() {
                         </div>
                     )}
                 </section>
+
+                {showRoleHelp && (
+                    <aside className="role-guide-drawer">
+                        <div className="drawer-header">
+                            <div>
+                                <h3>Role & Permissions Reference</h3>
+                                <p>Detailed guide of all roles available for assignment.</p>
+                            </div>
+                            <button
+                                type="button"
+                                className="drawer-close-btn"
+                                onClick={() => setShowRoleHelp(false)}
+                                title="Close Role Guide"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="drawer-content">
+                            <div className="role-guide-card">
+                                <h4>👑 System Administrator</h4>
+                                <p><strong>Key Permissions:</strong> Global root access across all events, system settings, global user management, and organization settings.</p>
+                                <p className="role-guide-audience"><strong>Who to assign:</strong> Lead technical administrators and organization system managers.</p>
+                            </div>
+
+                            <div className="role-guide-card">
+                                <h4>⭐ Event Administrator</h4>
+                                <p><strong>Key Permissions:</strong> Full event management authority. Configures event details, manages patrols & stations, assigns user roles (Scoring Lead, Station Lead, Volunteer), overrides station attempt locks, accesses Score Finalizer, and generates all scoring reports.</p>
+                                <p className="role-guide-audience"><strong>Who to assign:</strong> Event directors and head organizers.</p>
+                            </div>
+
+                            <div className="role-guide-card">
+                                <h4>📊 Scoring Lead</h4>
+                                <p><strong>Key Permissions:</strong> Oversees event scoring, verifies station submissions, performs cross-station paper score entries, accesses the Score Finalizer, adjusts calculation totals, and generates all scoring reports.</p>
+                                <p className="role-guide-audience"><strong>Who to assign:</strong> Chief scoring official or lead scoremaster.</p>
+                            </div>
+
+                            <div className="role-guide-card">
+                                <h4>📝 Scoring Center / Team</h4>
+                                <p><strong>Key Permissions:</strong> Central paper score entry, batch scoring verification across all stations, and score discrepancy audits.</p>
+                                <p className="role-guide-audience"><strong>Who to assign:</strong> Volunteers working in headquarters/scoring center entering paper score sheets.</p>
+                            </div>
+
+                            <div className="role-guide-card">
+                                <h4>🎯 Station Lead</h4>
+                                <p><strong>Key Permissions:</strong> Station supervisor. Manages volunteer staff for their station, performs check-in/out and scoring, and overrides/reopens completed station attempt locks at their station beyond 5 minutes.</p>
+                                <p className="role-guide-audience"><strong>Who to assign:</strong> Station captains and adult station leaders.</p>
+                            </div>
+
+                            <div className="role-guide-card">
+                                <h4>⏱️ Scorer (Station Scorer / Judge)</h4>
+                                <p><strong>Key Permissions:</strong> Performs patrol check-in/out and records raw task completion scores and timing for assigned stations. Point values and weights remain hidden to maintain scoring privacy.</p>
+                                <p className="role-guide-audience"><strong>Who to assign:</strong> Station judges and station scorers.</p>
+                            </div>
+
+                            <div className="role-guide-card">
+                                <h4>🤝 Station Volunteer</h4>
+                                <p><strong>Key Permissions:</strong> Performs patrol check-in/out and records task completions at assigned stations. Can self-reopen attempt within 5 minutes of completion. Point weights remain hidden.</p>
+                                <p className="role-guide-audience"><strong>Who to assign:</strong> General station volunteers and helpers.</p>
+                            </div>
+
+                            <div className="role-guide-card">
+                                <h4>👤 Standard User</h4>
+                                <p><strong>Key Permissions:</strong> Basic registered account without specific event administrative privileges.</p>
+                                <p className="role-guide-audience"><strong>Who to assign:</strong> General event participants and spectators.</p>
+                            </div>
+                        </div>
+                    </aside>
+                )}
             </div>
         </div>
     );
