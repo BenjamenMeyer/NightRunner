@@ -130,11 +130,15 @@ export default function ConfigurationEditor() {
                 return;
             }
 
+            const initialGroupId =
+                searchParams.get("groupId") || "";
+
             const targetId = configurationId || copyFromId;
 
             if (!targetId) {
                 setConfiguration({
-                    ...EMPTY_CONFIGURATION
+                    ...EMPTY_CONFIGURATION,
+                    groupId: initialGroupId
                 });
 
                 return;

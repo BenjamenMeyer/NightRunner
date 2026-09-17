@@ -398,8 +398,9 @@ export default function Configurations() {
     }
 
     function handleCreateConfiguration() {
+        const query = selectedGroupId ? `?groupId=${selectedGroupId}` : "";
         navigate(
-            "/admin/configurations/create"
+            `/admin/configurations/create${query}`
         );
     }
 

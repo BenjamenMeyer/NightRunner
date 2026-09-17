@@ -270,6 +270,21 @@ export default function ScoreForm({
                         )}
                     </div>
                 </div>
+
+                {/* Floating/Sticky Prominent Timer Reminder Banner when activity is active but not completed */}
+                {stationStartedAt && !stationCompletedAt && entryMode === "live" && (
+                    <div className="timing-active-banner">
+                        <span className="timing-active-pulse" />
+                        <span>⏱️ Station activity timer is currently running!</span>
+                        <button
+                            type="button"
+                            className="timing-stop-btn"
+                            onClick={() => setStationCompletedAt(new Date().toISOString())}
+                        >
+                            Stop Activity Timer Now
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="tasks-section">
@@ -307,7 +322,22 @@ export default function ScoreForm({
 
             </div>
 
-            <div className="submit-row">
+            <div className="submit-row" style={{ flexDirection: "column", gap: "12px" }}>
+                {stationStartedAt && !stationCompletedAt && entryMode === "live" && (
+                    <div className="timing-active-banner" style={{ width: "100%", boxSizing: "border-box" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span className="timing-active-pulse" />
+                            <span>⚠️ Station Completion Timer is still running!</span>
+                        </div>
+                        <button
+                            type="button"
+                            className="timing-stop-btn"
+                            onClick={() => setStationCompletedAt(new Date().toISOString())}
+                        >
+                            Stop Activity Timer Now
+                        </button>
+                    </div>
+                )}
 
                 <button
                     className="primary-button"
