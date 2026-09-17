@@ -15,6 +15,12 @@ def _parse_numeric_score_value(val: Any) -> float:
     if isinstance(val, bool):
         return 1.0 if val else 0.0
     if isinstance(val, dict):
+        if "disqualified" in val:
+            if val.get("disqualified"):
+                return 0.0
+            return 1.0
+        if "calculatedScore" in val and isinstance(val["calculatedScore"], (int, float)):
+            return float(val["calculatedScore"])
         if "rawValue" in val:
             raw_num = _parse_numeric_score_value(val["rawValue"])
             participant_cnt = int(val.get("participantCount") or 1)

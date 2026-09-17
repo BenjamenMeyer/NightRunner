@@ -238,6 +238,16 @@ export default function Finalizer() {
         }
     }
 
+    const [customOverrides, setCustomOverrides] = useState({});
+
+    function handleTaskScoreOverride(stationId, patrolId, taskId, val) {
+        const numVal = parseFloat(val);
+        setCustomOverrides((prev) => ({
+            ...prev,
+            [`${stationId}_${patrolId}_${taskId}`]: Number.isNaN(numVal) ? 0 : numVal
+        }));
+    }
+
     const stationCalculations = useMemo(() => {
         const calcs = {};
 
@@ -261,18 +271,38 @@ export default function Finalizer() {
             patrols.forEach((p) => {
                 const pTaskMap = patrolBreakdownMap[p.id] || {};
                 let sum = 0;
+                let isDisqualified = false;
 
                 tasks.forEach((t) => {
                     const taskId = t.id || t._id;
                     const isEnabled = stState.enabledTasks[taskId] !== false;
+                    const type = t.scoreValue?.type || t.type;
+                    const rawVal = pTaskMap[taskId];
+
+                    if (type === "Automatic Station Disqualification") {
+                        if (typeof rawVal === "object" && rawVal !== null && rawVal.disqualified) {
+                            isDisqualified = true;
+                        } else if (rawVal === 0.0 && typeof rawVal !== "boolean") {
+                            isDisqualified = true;
+                        }
+                    }
+
                     if (isEnabled) {
                         const weight = stState.taskWeights[taskId] !== undefined ? stState.taskWeights[taskId] : 1.0;
-                        const rawScore = pTaskMap[taskId] !== undefined ? Number(pTaskMap[taskId]) : 0;
+                        const overrideKey = `${st.id}_${p.id}_${taskId}`;
+                        let rawScore = rawVal !== undefined ? (typeof rawVal === "object" ? (rawVal.disqualified ? 0 : (rawVal.rawValue || 0)) : Number(rawVal)) : 0;
+                        if (customOverrides[overrideKey] !== undefined) {
+                            rawScore = customOverrides[overrideKey];
+                        }
                         sum += rawScore * weight;
                     }
                 });
 
-                patrolTotals[p.id] = { total: sum };
+                if (isDisqualified) {
+                    sum = 0;
+                }
+
+                patrolTotals[p.id] = { total: sum, isDisqualified };
                 if (sum > maxAbsoluteAchieved) {
                     maxAbsoluteAchieved = sum;
                 }
@@ -612,23 +642,121 @@ export default function Finalizer() {
                                     <tbody>
                                         {patrols.map((p) => {
                                             const pTaskMap = patrolBreakdownMap[p.id] || {};
-                                            const pCalc = stCalc.patrolTotals[p.id] || { total: 0, relativeScore: 0 };
-                                            const displayTotal = stState.mode === "relative" ? pCalc.relativeScore : pCalc.total;
+                                            const pCalc = stCalc.patrolTotals[p.id] || { total: 0, relativeScore: 0, isDisqualified: false };
+                                            const displayTotal = pCalc.isDisqualified ? 0 : (stState.mode === "relative" ? pCalc.relativeScore : pCalc.total);
 
                                             return (
-                                                <tr key={p.id}>
+                                                <tr key={p.id} style={{ background: pCalc.isDisqualified ? "rgba(239, 68, 68, 0.08)" : undefined }}>
                                                     <td className="col-patrol-name">
                                                         <strong>{p.name || p.programName || "Patrol"}</strong>
                                                         {p.patrolNumber && (
                                                             <span className="patrol-subtext"> (#{p.patrolNumber})</span>
+                                                        )}
+                                                        {pCalc.isDisqualified && (
+                                                            <span style={{ color: "var(--error, #ef4444)", fontWeight: "bold", fontSize: "0.8rem", marginLeft: "6px" }}>
+                                                                🚫 DISQUALIFIED (0.00)
+                                                            </span>
                                                         )}
                                                     </td>
 
                                                     {tasks.map((t) => {
                                                         const taskId = t.id || t._id;
                                                         const isEnabled = stState.enabledTasks[taskId] !== false;
-                                                        const rawScore = pTaskMap[taskId];
+                                                        const type = t.scoreValue?.type || t.type;
+                                                        const rawVal = pTaskMap[taskId];
                                                         const weight = stState.taskWeights[taskId] !== undefined ? stState.taskWeights[taskId] : 1.0;
+                                                        const overrideKey = `${st.id}_${p.id}_${taskId}`;
+                                                        const currentScore = customOverrides[overrideKey] !== undefined ? customOverrides[overrideKey] : (rawVal !== undefined ? Number(rawVal) : 0);
+
+                                                        if (type === "Secret Cipher / Decoding") {
+                                                            const expectedStr = String(t.expectedAnswer || t.expectedSecret || "").toUpperCase().trim();
+                                                            const submittedStr = typeof rawVal === "object" ? String(rawVal?.submittedText || "").toUpperCase().trim() : String(rawVal || "").toUpperCase().trim();
+
+                                                            // Build character alignment comparison
+                                                            const maxLen = Math.max(expectedStr.length, submittedStr.length);
+                                                            const charMatches = [];
+                                                            let autoMatchCount = 0;
+                                                            for (let i = 0; i < maxLen; i++) {
+                                                                const expChar = expectedStr[i] || "—";
+                                                                const subChar = submittedStr[i] || "—";
+                                                                const isMatch = expChar !== "—" && subChar !== "—" && expChar === subChar;
+                                                                if (isMatch) autoMatchCount += 1;
+                                                                charMatches.push({ index: i, expChar, subChar, isMatch });
+                                                            }
+
+                                                            return (
+                                                                <td
+                                                                    key={taskId}
+                                                                    className={`col-task-score cipher-task-cell ${!isEnabled ? "task-disabled" : ""}`}
+                                                                    style={{ position: "relative" }}
+                                                                >
+                                                                    <div className="cipher-cell-container" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                                                                        <div className="cipher-hover-trigger" style={{ cursor: "help", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                                                            <span style={{ fontSize: "0.85rem" }}>🔒</span>
+                                                                            <input
+                                                                                type="number"
+                                                                                min="0"
+                                                                                max={t.maxScore || expectedStr.length || 100}
+                                                                                className="cipher-override-input"
+                                                                                value={currentScore}
+                                                                                onChange={(e) => handleTaskScoreOverride(st.id, p.id, taskId, e.target.value)}
+                                                                                title="Editable character match count score override"
+                                                                                style={{ width: "55px", padding: "2px 4px", fontSize: "0.85rem", fontWeight: "bold", textAlign: "center", borderRadius: "4px", border: customOverrides[overrideKey] !== undefined ? "2px solid #3b82f6" : "1px solid var(--border)" }}
+                                                                            />
+                                                                            <small style={{ color: "var(--text-secondary)" }}>/ {expectedStr.length || t.maxScore || 0}</small>
+                                                                        </div>
+
+                                                                        {/* Rich Character Alignment Hover Popover */}
+                                                                        <div className="cipher-hover-popover" style={{
+                                                                            display: "none",
+                                                                            position: "absolute",
+                                                                            bottom: "100%",
+                                                                            left: "50%",
+                                                                            transform: "translateX(-50%)",
+                                                                            marginBottom: "8px",
+                                                                            padding: "10px 14px",
+                                                                            background: "var(--card-bg, #0f172a)",
+                                                                            border: "1px solid var(--border, #334155)",
+                                                                            borderRadius: "8px",
+                                                                            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.5)",
+                                                                            zIndex: 100,
+                                                                            whiteSpace: "nowrap",
+                                                                            fontSize: "0.82rem"
+                                                                        }}>
+                                                                            <div style={{ fontWeight: "bold", marginBottom: "6px", color: "var(--button-bg, #3b82f6)" }}>
+                                                                                🔐 Secret Cipher Character Alignment
+                                                                            </div>
+                                                                            <div style={{ fontFamily: "monospace", display: "flex", flexDirection: "column", gap: "2px", background: "var(--page-bg)", padding: "6px 8px", borderRadius: "4px", border: "1px solid var(--border)" }}>
+                                                                                <div><strong style={{ color: "var(--text-secondary)" }}>Secret Target: </strong>{expectedStr || "(None Set)"}</div>
+                                                                                <div><strong style={{ color: "var(--text-secondary)" }}>Patrol Input:  </strong>{submittedStr || "(Empty)"}</div>
+                                                                            </div>
+                                                                            <div style={{ marginTop: "6px", display: "flex", gap: "3px", flexWrap: "wrap", maxWidth: "260px" }}>
+                                                                                {charMatches.map((c, i) => (
+                                                                                    <span
+                                                                                        key={i}
+                                                                                        style={{
+                                                                                            padding: "1px 4px",
+                                                                                            borderRadius: "3px",
+                                                                                            fontWeight: "bold",
+                                                                                            fontSize: "0.75rem",
+                                                                                            background: c.isMatch ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)",
+                                                                                            color: c.isMatch ? "#4ade80" : "#fca5a5",
+                                                                                            border: c.isMatch ? "1px solid #22c55e" : "1px solid #ef4444"
+                                                                                        }}
+                                                                                        title={`Pos ${i + 1}: Expected '${c.expChar}' vs Submitted '${c.subChar}'`}
+                                                                                    >
+                                                                                        {c.subChar}
+                                                                                    </span>
+                                                                                ))}
+                                                                            </div>
+                                                                            <div style={{ marginTop: "6px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                                                                                Auto Match: <strong>{autoMatchCount}</strong> | Current Override: <strong>{currentScore}</strong>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                            );
+                                                        }
 
                                                         return (
                                                             <td

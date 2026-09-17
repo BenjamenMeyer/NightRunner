@@ -8,6 +8,8 @@ const DEFAULT_TASK_TYPES = [
     "Multiple Choice",
     "Text Answer",
     "Checkpoint",
+    "Automatic Station Disqualification",
+    "Secret Cipher / Decoding",
     "Custom"
 ];
 
@@ -54,6 +56,14 @@ export default function TaskEditor({
         "Checkpoint": {
             title: "Checkpoint Guidance",
             text: "Marks arrival or safety milestone completion. Checking the checkpoint awards full credit."
+        },
+        "Automatic Station Disqualification": {
+            title: "Automatic Disqualification Guidance",
+            text: "Provides a simple true/false checkbox field to automatically fail a patrol at this station (setting station score to zero). Requires entering a reason before saving after user confirmation warning."
+        },
+        "Secret Cipher / Decoding": {
+            title: "Secret Cipher / Decoding Guidance",
+            text: "Allows setting an expected secret string in the configuration editor (hidden from judges/station). On the scoring form, judges enter the patrol's submitted decoded string."
         },
         "Custom": {
             title: "Custom Task Guidance",
@@ -253,34 +263,26 @@ export default function TaskEditor({
 
                 </label>
 
-                {(task.type === "Score Challenge" ||
-                    task.type === "Timed Challenge" ||
-                    task.type === "Text Answer" ||
-                    task.type === "Checkpoint" ||
-                    task.type === "Custom") && (
+                <label className="form-field">
 
-                    <label className="form-field">
+                    <span>
+                        Maximum Score
+                    </span>
 
-                        <span>
-                            Maximum Score
-                        </span>
+                    <input
+                        type="number"
+                        min="0"
+                        value={task.maxScore ?? ""}
+                        onChange={event =>
+                            update(
+                                "maxScore",
+                                event.target.value === "" ? "" : Number(event.target.value)
+                            )
+                        }
+                        placeholder="e.g. 100"
+                    />
 
-                        <input
-                            type="number"
-                            min="0"
-                            value={task.maxScore ?? ""}
-                            onChange={event =>
-                                update(
-                                    "maxScore",
-                                    Number(event.target.value)
-                                )
-                            }
-                            placeholder="e.g. 10"
-                        />
-
-                    </label>
-
-                )}
+                </label>
 
                 {task.type === "Timed Challenge" && (
 
@@ -443,6 +445,33 @@ export default function TaskEditor({
                             }
                             placeholder="Enter the expected answer / grading reference"
                         />
+
+                    </label>
+
+                )}
+
+                {task.type === "Secret Cipher / Decoding" && (
+
+                    <label className="form-field">
+
+                        <span>
+                            🔒 Expected Secret Result String (Required, Hidden from Judges/Station)
+                        </span>
+
+                        <input
+                            value={task.expectedAnswer || task.expectedSecret || ""}
+                            onChange={event => {
+                                const val = event.target.value;
+                                update("expectedAnswer", val);
+                                update("expectedSecret", val);
+                                update("maxScore", val.length);
+                            }}
+                            placeholder="Enter secret decoded string (e.g. BE PREPARED AT MIDNIGHT)..."
+                        />
+
+                        <small style={{ color: "var(--text-secondary)", marginTop: "4px" }}>
+                            * Max score will automatically equal the secret string length ({ (task.expectedAnswer || task.expectedSecret || "").length } characters).
+                        </small>
 
                     </label>
 
