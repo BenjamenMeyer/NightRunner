@@ -143,17 +143,39 @@ class ScoresResource:
 
         # Mark station visit as completed & automatically check out patrol
         from nightrunner_backend.drivers.store.station_visits import StationVisitsStore
+        from nightrunner_backend.models.station_visit import StationVisit
+        import uuid6
         visit_store = StationVisitsStore(get_driver())
         active_visit = await visit_store.get_active_visit(event_id, station_id, patrol_id)
         if not active_visit:
             active_visit = await visit_store.get_latest_visit(event_id, station_id, patrol_id)
+        
+        comp_at = payload.get("completedAt") or payload.get("timestamp")
+        start_at = payload.get("startedAt") or comp_at
+
         if active_visit:
             active_visit.status = "completed"
-            comp_at = payload.get("completedAt") or payload.get("timestamp")
             active_visit.tasks_completed_at = comp_at or active_visit.tasks_completed_at
+            if not active_visit.checked_in_at:
+                active_visit.checked_in_at = start_at or comp_at
             if not active_visit.checked_out_at:
                 active_visit.checked_out_at = comp_at or active_visit.checked_out_at
             await visit_store.update(active_visit)
+        else:
+            # Create a synthetic visit for direct/offline paper scoring submissions
+            new_visit = StationVisit(
+                id=str(uuid6.uuid7()),
+                event_id=event_id,
+                station_id=station_id,
+                patrol_id=patrol_id,
+                checked_in_at=start_at or comp_at,
+                checked_out_at=comp_at,
+                tasks_started_at=start_at,
+                tasks_completed_at=comp_at,
+                entry_mode=payload.get("entryMode", "live"),
+                status="completed"
+            )
+            await visit_store.create(new_visit)
 
         resp.status = falcon.HTTP_201
         resp.media = {"created": created}
