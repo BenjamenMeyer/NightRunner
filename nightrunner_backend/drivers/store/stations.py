@@ -74,13 +74,29 @@ async def _load_tasks_for_station(driver: DatabaseDriver, station_id: str, fallb
     return tasks
 
 
+UPDATE_STATION_TASK = """
+    UPDATE station_tasks
+    SET name = :name, description = :description, type = :type, instructions = :instructions,
+        max_score = :max_score, time_limit = :time_limit, score_value = :score_value,
+        score_weight = :score_weight, active = :active, divide_by_patrol_size = :divide_by_patrol_size
+    WHERE id = :id AND station_id = :station_id
+"""
+DELETE_UNREFERENCED_STATION_TASKS = "DELETE FROM station_tasks WHERE station_id = :station_id AND id NOT IN ({placeholders})"
+
+
 async def _sync_tasks_for_station(driver: DatabaseDriver, station_id: str, tasks: List[dict]) -> None:
-    await driver.execute(DELETE_STATION_TASKS, {"station_id": station_id})
+    existing_rows = await driver.execute(LIST_STATION_TASKS, {"station_id": station_id})
+    existing_task_ids = {r["id"] for r in (existing_rows or []) if isinstance(r, dict) and "id" in r}
+
+    kept_task_ids = set()
+
     for t in tasks:
         if not isinstance(t, dict):
             continue
         task_id = t.get("id") or t.get("_id") or str(uuid6.uuid7())
         t["id"] = task_id
+        kept_task_ids.add(task_id)
+
         score_val_dict = dict(t.get("scoreValue") or {}) if isinstance(t.get("scoreValue"), dict) else {}
         notes_val = t.get("notes") or t.get("scorer_notes")
         if notes_val:
@@ -88,6 +104,7 @@ async def _sync_tasks_for_station(driver: DatabaseDriver, station_id: str, tasks
         divide_flag = bool(t.get("divideByPatrolSize") or t.get("divide_by_patrol_size", False))
         score_val_dict["divideByPatrolSize"] = divide_flag
         score_val_str = json.dumps(score_val_dict)
+
         def _safe_float(val, default):
             if val is None or val == "":
                 return float(default)
@@ -96,7 +113,7 @@ async def _sync_tasks_for_station(driver: DatabaseDriver, station_id: str, tasks
             except (ValueError, TypeError):
                 return float(default)
 
-        await driver.execute(INSERT_STATION_TASK, {
+        params = {
             "id": task_id,
             "configuration_id": None,
             "station_id": station_id,
@@ -110,7 +127,24 @@ async def _sync_tasks_for_station(driver: DatabaseDriver, station_id: str, tasks
             "score_weight": _safe_float(t.get("scoreWeight"), 1.0),
             "active": bool(t.get("active", True)),
             "divide_by_patrol_size": divide_flag
-        })
+        }
+
+        if task_id in existing_task_ids:
+            update_params = dict(params)
+            del update_params["configuration_id"]
+            await driver.execute(UPDATE_STATION_TASK, update_params)
+        else:
+            await driver.execute(INSERT_STATION_TASK, params)
+
+    # Clean up tasks that were removed from this station
+    removed_task_ids = existing_task_ids - kept_task_ids
+    for removed_id in removed_task_ids:
+        try:
+            await driver.execute("DELETE FROM station_tasks WHERE id = :id AND station_id = :station_id", {"id": removed_id, "station_id": station_id})
+        except Exception:
+            # If a task cannot be deleted due to FK references (e.g., existing scores), soft-deactivate it
+            await driver.execute("UPDATE station_tasks SET active = FALSE WHERE id = :id AND station_id = :station_id", {"id": removed_id, "station_id": station_id})
+
 
 
 class StationsStore:
