@@ -189,7 +189,7 @@ async def test_my_endpoint(test_client):
 - **Always write unit tests and integration tests** for all new features, endpoints, and components before submitting a PR.
 - **Always add or update Storybook stories** in `nightrunner_frontend/src/stories/` whenever creating new frontend UI components or pages.
 - **Always use Yarn for all frontend package management and script execution** (`yarn install`, `yarn add`, `yarn test`, `yarn build`, `yarn storybook`, `yarn build-storybook`). Never use `npm install` or `npm` commands for the frontend, as `yarn.lock` is the canonical package lockfile.
-- **Always integrate new frontend components with theme CSS variables** (`var(--card-bg)`, `var(--page-bg)`, `var(--border)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--button-bg)`, `var(--button-text)`, `var(--input-bg)`, etc.) to guarantee seamless theme switching when the user changes themes (`night-ops`, `trail-life`, `ahg`).
+- **Always integrate new frontend components with theme CSS variables** (`var(--card-bg)`, `var(--page-bg)`, `var(--border)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--button-bg)`, `var(--button-text)`, `var(--input-bg)`, etc.) to guarantee seamless theme switching when the user changes themes (`night-ops`, `trail-life`, `ahg`). Never use hardcoded inline styles (`style={{...}}`) or duplicate existing theme definitions; always reuse existing CSS theme classes and variables across all frontend pages and components.
 
 ---
 
