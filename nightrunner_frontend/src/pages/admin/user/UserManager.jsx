@@ -35,6 +35,7 @@ export default function UserManager() {
 
     const [stations, setStations] = useState([]);
     const [statusFilter, setStatusFilter] = useState("all");
+    const [showRoleHelp, setShowRoleHelp] = useState(false);
 
     const currentUser =
         ApiService.userData.getCached();
@@ -401,8 +402,6 @@ export default function UserManager() {
             </div>
         );
     }
-
-    const [showRoleHelp, setShowRoleHelp] = useState(false);
 
     return (
         <div className="user-manager-page">
