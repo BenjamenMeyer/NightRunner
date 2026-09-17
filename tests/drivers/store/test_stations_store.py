@@ -111,3 +111,41 @@ async def test_station_store_empty_string_numeric_tasks(stations_store: Stations
     assert fetched.tasks[0]["timeLimit"] == 0.0
     assert fetched.tasks[0]["scoreWeight"] == 1.0
 
+
+@pytest.mark.asyncio
+async def test_station_store_update_tasks_with_existing_scores(stations_store: StationsStore, test_database):
+    station_id = str(uuid6.uuid7())
+    task_id = str(uuid6.uuid7())
+    event_id = str(uuid6.uuid7())
+    patrol_id = str(uuid6.uuid7())
+
+    # Create initial station with a task
+    station = Station(
+        id=station_id,
+        event_id=event_id,
+        name="Station With Scores",
+        tasks=[{"id": task_id, "name": "Task 1", "maxScore": 50.0}]
+    )
+    await stations_store.create(station)
+
+    # Insert prerequisite records and a score referencing task_id
+    await test_database.execute("INSERT INTO events (id, name) VALUES (:id, 'Test Event')", {"id": event_id})
+    await test_database.execute("INSERT INTO patrols (id, event_id, name) VALUES (:id, :event_id, 'Patrol 1')", {"id": patrol_id, "event_id": event_id})
+    score_id = str(uuid6.uuid7())
+    await test_database.execute(
+        "INSERT INTO scores (id, event_id, station_id, patrol_id, task_id, score_value, score_weight) VALUES (:id, :event_id, :station_id, :patrol_id, :task_id, 45.0, 1.0)",
+        {"id": score_id, "event_id": event_id, "station_id": station_id, "patrol_id": patrol_id, "task_id": task_id}
+    )
+
+    # Update station maxScore on existing task_id
+    station.tasks[0]["maxScore"] = 100.0
+    await stations_store.update(station)
+
+    # Verify update succeeded without FK constraint violation and maxScore is updated
+    updated = await stations_store.get(station_id)
+    assert updated is not None
+    assert len(updated.tasks) == 1
+    assert updated.tasks[0]["id"] == task_id
+    assert updated.tasks[0]["maxScore"] == 100.0
+
+
