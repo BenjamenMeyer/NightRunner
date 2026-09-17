@@ -107,3 +107,111 @@ class TestMeEndpoint:
         assert resp.json["id"] is not None
         assert resp.json["roles"] == []
 
+    async def test_user_with_system_admin_role(self, test_client, test_database, token_factory):
+        """User with system-admin role has admin flag set to True in /v1/me response."""
+        await test_database.execute(
+            "INSERT INTO users (id, external_id, username, email, display_name) VALUES ('u-sys', 'test-user-id', 'sysadmin', 'sys@example.com', 'System Admin')",
+            {},
+        )
+        await test_database.execute("INSERT INTO user_roles (user_id, role) VALUES ('u-sys', 'system-admin')", {})
+        headers = token_factory(roles={"global": "system-admin"}, is_admin=True)
+
+        resp = await test_client.simulate_get("/v1/me", headers=headers)
+        assert resp.status == falcon.HTTP_200
+        assert resp.json["isAdmin"] is True
+        assert "system-admin" in resp.json["roles"]
+
+    async def test_user_with_event_admin_role(self, test_client, test_database, token_factory):
+        """User with event-admin role resolves role correctly."""
+        await test_database.execute(
+            "INSERT INTO users (id, external_id, username, email, display_name) VALUES ('u-evt-adm', 'test-user-id', 'evtadmin', 'evtadmin@example.com', 'Event Admin')",
+            {},
+        )
+        await test_database.execute("INSERT INTO user_roles (user_id, role) VALUES ('u-evt-adm', 'event-admin')", {})
+        headers = token_factory(roles={"evt-100": "event-admin"}, is_admin=False)
+
+        resp = await test_client.simulate_get("/v1/me", headers=headers)
+        assert resp.status == falcon.HTTP_200
+        assert "event-admin" in resp.json["roles"]
+
+    async def test_user_with_scoring_lead_role(self, test_client, test_database, token_factory):
+        """User with scoring-lead role resolves role correctly."""
+        await test_database.execute(
+            "INSERT INTO users (id, external_id, username, email, display_name) VALUES ('u-sc-lead', 'test-user-id', 'sclead', 'sclead@example.com', 'Scoring Lead')",
+            {},
+        )
+        await test_database.execute("INSERT INTO user_roles (user_id, role) VALUES ('u-sc-lead', 'scoring-lead')", {})
+        headers = token_factory(roles={"evt-100": "scoring-lead"}, is_admin=False)
+
+        resp = await test_client.simulate_get("/v1/me", headers=headers)
+        assert resp.status == falcon.HTTP_200
+        assert "scoring-lead" in resp.json["roles"]
+
+    async def test_user_with_scoring_center_role(self, test_client, test_database, token_factory):
+        """User with scoring-center role gets correct roles payload in /v1/me response."""
+        await test_database.execute(
+            "INSERT INTO users (id, external_id, username, email, display_name) VALUES ('u-sc-1', 'test-user-id', 'scuser', 'sc@example.com', 'Scoring Center User')",
+            {},
+        )
+        await test_database.execute("INSERT INTO user_roles (user_id, role) VALUES ('u-sc-1', 'scoring-center')", {})
+        headers = token_factory(roles={"evt-200": "scoring-center"}, is_admin=False)
+
+        resp = await test_client.simulate_get("/v1/me", headers=headers)
+        assert resp.status == falcon.HTTP_200
+        assert "scoring-center" in resp.json["roles"]
+
+    async def test_user_with_scorer_role(self, test_client, test_database, token_factory):
+        """User with scorer role resolves role correctly."""
+        await test_database.execute(
+            "INSERT INTO users (id, external_id, username, email, display_name) VALUES ('u-scorer', 'test-user-id', 'scoreruser', 'scorer@example.com', 'Scorer User')",
+            {},
+        )
+        await test_database.execute("INSERT INTO user_roles (user_id, role) VALUES ('u-scorer', 'scorer')", {})
+        headers = token_factory(roles={"evt-100": "scorer"}, is_admin=False)
+
+        resp = await test_client.simulate_get("/v1/me", headers=headers)
+        assert resp.status == falcon.HTTP_200
+        assert "scorer" in resp.json["roles"]
+
+    async def test_user_with_station_lead_role(self, test_client, test_database, token_factory):
+        """User with station-lead role resolves role correctly."""
+        await test_database.execute(
+            "INSERT INTO users (id, external_id, username, email, display_name) VALUES ('u-st-lead', 'test-user-id', 'stlead', 'stlead@example.com', 'Station Lead')",
+            {},
+        )
+        await test_database.execute("INSERT INTO user_roles (user_id, role) VALUES ('u-st-lead', 'station-lead')", {})
+        headers = token_factory(roles={"evt-100": "station-lead"}, is_admin=False)
+
+        resp = await test_client.simulate_get("/v1/me", headers=headers)
+        assert resp.status == falcon.HTTP_200
+        assert "station-lead" in resp.json["roles"]
+
+    async def test_user_with_volunteer_role(self, test_client, test_database, token_factory):
+        """User with volunteer role resolves role correctly."""
+        await test_database.execute(
+            "INSERT INTO users (id, external_id, username, email, display_name) VALUES ('u-vol', 'test-user-id', 'volunteeruser', 'vol@example.com', 'Volunteer User')",
+            {},
+        )
+        await test_database.execute("INSERT INTO user_roles (user_id, role) VALUES ('u-vol', 'volunteer')", {})
+        headers = token_factory(roles={"evt-100": "volunteer"}, is_admin=False)
+
+        resp = await test_client.simulate_get("/v1/me", headers=headers)
+        assert resp.status == falcon.HTTP_200
+        assert "volunteer" in resp.json["roles"]
+
+    async def test_user_with_general_user_role(self, test_client, test_database, token_factory):
+        """User with general user role resolves role correctly."""
+        await test_database.execute(
+            "INSERT INTO users (id, external_id, username, email, display_name) VALUES ('u-gen', 'test-user-id', 'genuser', 'gen@example.com', 'General User')",
+            {},
+        )
+        await test_database.execute("INSERT INTO user_roles (user_id, role) VALUES ('u-gen', 'user')", {})
+        headers = token_factory(roles={"evt-100": "user"}, is_admin=False)
+
+        resp = await test_client.simulate_get("/v1/me", headers=headers)
+        assert resp.status == falcon.HTTP_200
+        assert "user" in resp.json["roles"]
+
+
+
+

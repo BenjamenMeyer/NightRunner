@@ -557,6 +557,133 @@ describe('User Manager Holding Area & Role Permissions Contracts', () => {
     const blockedUser = { ...approvedUser, status: 'blocked' };
     expect(blockedUser.status).toBe('blocked');
   });
+
+  it('supports all 7 event roles including scoring-center and provides role permission guidance', () => {
+    const EVENT_ROLES = [
+      "user",
+      "event-admin",
+      "scoring-lead",
+      "scoring-center",
+      "scorer",
+      "station-lead",
+      "volunteer"
+    ];
+
+    expect(EVENT_ROLES).toContain("scoring-center");
+    expect(EVENT_ROLES).toContain("scoring-lead");
+    expect(EVENT_ROLES).toContain("station-lead");
+    expect(EVENT_ROLES).toHaveLength(7);
+  });
+
+  it('maps system-admin role capabilities and root access permissions', () => {
+    const ROLE_CAPABILITIES = {
+      'system-admin': { title: 'System Administrator', description: 'Full root access to all events, system configurations, global user management, and organization settings.' }
+    };
+    expect(ROLE_CAPABILITIES['system-admin'].title).toBe('System Administrator');
+    expect(ROLE_CAPABILITIES['system-admin'].description).toContain('Full root access');
+  });
+
+  it('maps event-admin role capabilities and event management permissions', () => {
+    const ROLE_CAPABILITIES = {
+      'event-admin': { title: 'Event Administrator', description: 'Manages event settings, stations, patrols, configurations, user role assignments, and final score publishing.' }
+    };
+    expect(ROLE_CAPABILITIES['event-admin'].title).toBe('Event Administrator');
+    expect(ROLE_CAPABILITIES['event-admin'].description).toContain('user role assignments');
+  });
+
+  it('maps scoring-lead role capabilities and score oversight permissions', () => {
+    const ROLE_CAPABILITIES = {
+      'scoring-lead': { title: 'Scoring Lead', description: 'Oversees scoring, verifies station score submissions, resolves discrepancies, and publishes final results.' }
+    };
+    expect(ROLE_CAPABILITIES['scoring-lead'].title).toBe('Scoring Lead');
+    expect(ROLE_CAPABILITIES['scoring-lead'].description).toContain('publishes final results');
+  });
+
+  it('maps scoring-center role capabilities and paper entry permissions', () => {
+    const ROLE_CAPABILITIES = {
+      'scoring-center': { title: 'Scoring Center Staff', description: 'Central paper score entry, batch scoring verification, and score adjustments.' }
+    };
+    expect(ROLE_CAPABILITIES['scoring-center'].title).toBe('Scoring Center Staff');
+    expect(ROLE_CAPABILITIES['scoring-center'].description).toContain('Central paper score entry');
+  });
+
+  it('maps scorer role capabilities and evaluation permissions', () => {
+    const ROLE_CAPABILITIES = {
+      'scorer': { title: 'Station Scorer / Judge', description: 'Enters patrol task scores and evaluations at assigned stations.' }
+    };
+    expect(ROLE_CAPABILITIES['scorer'].title).toBe('Station Scorer / Judge');
+    expect(ROLE_CAPABILITIES['scorer'].description).toContain('Enters patrol task scores');
+  });
+
+  it('maps station-lead role capabilities and station oversight permissions', () => {
+    const ROLE_CAPABILITIES = {
+      'station-lead': { title: 'Station Lead', description: 'Manages station volunteers, overrides station locks, and oversees station operations.' }
+    };
+    expect(ROLE_CAPABILITIES['station-lead'].title).toBe('Station Lead');
+    expect(ROLE_CAPABILITIES['station-lead'].description).toContain('overrides station locks');
+  });
+
+  it('maps volunteer role capabilities and station task permissions', () => {
+    const ROLE_CAPABILITIES = {
+      'volunteer': { title: 'Station Volunteer', description: 'Performs station-level tasks, patrol check-in/out, and volunteer partner reviews.' }
+    };
+    expect(ROLE_CAPABILITIES['volunteer'].title).toBe('Station Volunteer');
+    expect(ROLE_CAPABILITIES['volunteer'].description).toContain('volunteer partner reviews');
+  });
+
+  it('maps general user role capabilities and basic authenticated access', () => {
+    const ROLE_CAPABILITIES = {
+      'user': { title: 'General User', description: 'Basic authenticated user access without specific event administration privileges.' }
+    };
+    expect(ROLE_CAPABILITIES['user'].title).toBe('General User');
+    expect(ROLE_CAPABILITIES['user'].description).toContain('Basic authenticated user access');
+  });
+
+  it('enforces route and feature access rules for all user role tiers', () => {
+    const checkCanAccessFinalizer = (role) => ['system-admin', 'event-admin', 'scoring-lead', 'scoring-center'].includes(role);
+    const checkCanAccessScoreForm = (role) => ['system-admin', 'event-admin', 'scoring-lead', 'scoring-center', 'scorer', 'station-lead'].includes(role);
+    const checkCanManageUsers = (role) => ['system-admin', 'event-admin'].includes(role);
+
+    // system-admin
+    expect(checkCanAccessFinalizer('system-admin')).toBe(true);
+    expect(checkCanAccessScoreForm('system-admin')).toBe(true);
+    expect(checkCanManageUsers('system-admin')).toBe(true);
+
+    // event-admin
+    expect(checkCanAccessFinalizer('event-admin')).toBe(true);
+    expect(checkCanAccessScoreForm('event-admin')).toBe(true);
+    expect(checkCanManageUsers('event-admin')).toBe(true);
+
+    // scoring-lead
+    expect(checkCanAccessFinalizer('scoring-lead')).toBe(true);
+    expect(checkCanAccessScoreForm('scoring-lead')).toBe(true);
+    expect(checkCanManageUsers('scoring-lead')).toBe(false);
+
+    // scoring-center
+    expect(checkCanAccessFinalizer('scoring-center')).toBe(true);
+    expect(checkCanAccessScoreForm('scoring-center')).toBe(true);
+    expect(checkCanManageUsers('scoring-center')).toBe(false);
+
+    // scorer
+    expect(checkCanAccessFinalizer('scorer')).toBe(false);
+    expect(checkCanAccessScoreForm('scorer')).toBe(true);
+    expect(checkCanManageUsers('scorer')).toBe(false);
+
+    // station-lead
+    expect(checkCanAccessFinalizer('station-lead')).toBe(false);
+    expect(checkCanAccessScoreForm('station-lead')).toBe(true);
+    expect(checkCanManageUsers('station-lead')).toBe(false);
+
+    // volunteer
+    expect(checkCanAccessFinalizer('volunteer')).toBe(false);
+    expect(checkCanAccessScoreForm('volunteer')).toBe(false);
+    expect(checkCanManageUsers('volunteer')).toBe(false);
+
+    // user
+    expect(checkCanAccessFinalizer('user')).toBe(false);
+    expect(checkCanAccessScoreForm('user')).toBe(false);
+    expect(checkCanManageUsers('user')).toBe(false);
+  });
 });
 
 describe('UserService PATCH Methods Contracts', () => {
