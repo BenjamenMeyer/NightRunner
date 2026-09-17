@@ -352,13 +352,13 @@ export default function ScoreForm({
 
             {showReviewModal && (
                 <div className="modal-overlay">
-                    <div className="modal-card review-scoring-modal" style={{ maxWidth: "600px", width: "90%" }}>
-                        <h2>📋 Volunteer Partner Review</h2>
-                        <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: "16px" }}>
+                    <div className="modal-card review-scoring-modal" style={{ maxWidth: "750px", width: "95%", background: "var(--card-bg)", color: "var(--text-primary)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)" }}>
+                        <h2 style={{ margin: "0 0 8px 0" }}>📋 Volunteer Partner Review</h2>
+                        <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginBottom: "20px" }}>
                             Please review all task completions, activity timing, and notes with your partner volunteer before locking and submitting.
                         </p>
 
-                        <div className="review-summary-box" style={{ background: "var(--page-bg)", padding: "12px 16px", borderRadius: "8px", border: "1px solid var(--border)", marginBottom: "16px" }}>
+                        <div className="review-summary-box" style={{ background: "var(--page-bg)", padding: "14px 18px", borderRadius: "8px", border: "1px solid var(--border)", marginBottom: "20px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                                 <strong>Patrol:</strong> <span>{patrol.programName}</span>
                             </div>
@@ -373,8 +373,8 @@ export default function ScoreForm({
                             </div>
                         </div>
 
-                        <h4 style={{ margin: "12px 0 8px 0" }}>Task Completion Summary</h4>
-                        <div className="review-tasks-list" style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "250px", overflowY: "auto", marginBottom: "16px", paddingRight: "4px" }}>
+                        <h4 style={{ margin: "16px 0 10px 0", fontSize: "1rem" }}>Task Completion Summary</h4>
+                        <div className="review-tasks-list" style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "300px", overflowY: "auto", marginBottom: "20px", paddingRight: "6px" }}>
                             {(station.tasks ?? []).map((task, idx) => {
                                 const taskId = task.id || task._id || `task-${idx}`;
                                 const rawVal = scores[taskId];
@@ -392,7 +392,7 @@ export default function ScoreForm({
                                 }
 
                                 return (
-                                    <div key={taskId} style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", background: "var(--card-bg)", borderRadius: "6px", border: "1px solid var(--border)", fontSize: "0.85rem" }}>
+                                    <div key={taskId} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "var(--page-bg)", borderRadius: "6px", border: "1px solid var(--border)", fontSize: "0.9rem" }}>
                                         <span><strong>{task.name || `Task ${idx + 1}`}:</strong></span>
                                         <span style={{ color: "var(--button-bg)", fontWeight: "600" }}>{String(displayVal)}</span>
                                     </div>
@@ -401,15 +401,15 @@ export default function ScoreForm({
                         </div>
 
                         {comments && comments.trim() !== "" && (
-                            <div style={{ marginBottom: "16px", fontSize: "0.85rem" }}>
+                            <div style={{ marginBottom: "20px", fontSize: "0.9rem" }}>
                                 <strong>Judge Comments:</strong>
-                                <p style={{ margin: "4px 0 0 0", color: "var(--text-secondary)", whiteSpace: "pre-wrap", background: "var(--page-bg)", padding: "8px", borderRadius: "6px", border: "1px solid var(--border)" }}>
+                                <p style={{ margin: "6px 0 0 0", color: "var(--text-primary)", whiteSpace: "pre-wrap", background: "var(--page-bg)", padding: "10px 12px", borderRadius: "6px", border: "1px solid var(--border)" }}>
                                     {comments}
                                 </p>
                             </div>
                         )}
 
-                        <div className="modal-actions" style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "16px" }}>
+                        <div className="modal-actions" style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "20px" }}>
                             <button
                                 type="button"
                                 className="secondary-button"
