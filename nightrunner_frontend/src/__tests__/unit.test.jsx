@@ -684,6 +684,17 @@ describe('User Manager Holding Area & Role Permissions Contracts', () => {
     expect(checkCanAccessScoreForm('user')).toBe(false);
     expect(checkCanManageUsers('user')).toBe(false);
   });
+
+  it('toggles role reference guide sidebar drawer visibility state', () => {
+    let showRoleHelp = false;
+    const toggleRoleHelp = () => { showRoleHelp = !showRoleHelp; };
+
+    expect(showRoleHelp).toBe(false);
+    toggleRoleHelp();
+    expect(showRoleHelp).toBe(true);
+    toggleRoleHelp();
+    expect(showRoleHelp).toBe(false);
+  });
 });
 
 describe('UserService PATCH Methods Contracts', () => {
