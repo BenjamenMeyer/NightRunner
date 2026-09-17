@@ -80,3 +80,34 @@ async def test_station_store_list_filtered_by_event_id(stations_store: StationsS
     stations_all = await stations_store.list()
     assert len(stations_all) >= 2
 
+
+@pytest.mark.asyncio
+async def test_station_store_empty_string_numeric_tasks(stations_store: StationsStore):
+    station_id = str(uuid6.uuid7())
+    tasks_with_empty_strings = [
+        {
+            "id": "t1",
+            "name": "Task Empty Strings",
+            "maxScore": "",
+            "timeLimit": "",
+            "scoreWeight": ""
+        }
+    ]
+
+    station = Station(
+        id=station_id,
+        event_id="evt-empty-test",
+        name="Empty String Task Station",
+        tasks=tasks_with_empty_strings
+    )
+
+    # Creating station should not raise float("") ValueError
+    await stations_store.create(station)
+
+    fetched = await stations_store.get(station_id)
+    assert fetched is not None
+    assert len(fetched.tasks) == 1
+    assert fetched.tasks[0]["maxScore"] == 100.0
+    assert fetched.tasks[0]["timeLimit"] == 0.0
+    assert fetched.tasks[0]["scoreWeight"] == 1.0
+
