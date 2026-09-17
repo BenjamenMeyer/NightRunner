@@ -526,6 +526,98 @@
 
 }
 
+.timing-active-banner {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-top: 12px;
+
+    padding: 10px 14px;
+
+    background: var(--page-bg);
+
+    border: 1px solid var(--border);
+
+    border-radius: 6px;
+
+    font-weight: 500;
+
+    color: var(--text-primary);
+
+}
+
+.timing-active-pulse {
+
+    width: 10px;
+
+    height: 10px;
+
+    border-radius: 50%;
+
+    background-color: var(--button-bg);
+
+    display: inline-block;
+
+    box-shadow: 0 0 0 0 var(--button-bg);
+
+    animation: pulse 1.5s infinite;
+
+}
+
+@keyframes pulse {
+
+    0% {
+
+        box-shadow: 0 0 0 0 var(--button-bg);
+
+    }
+
+    70% {
+
+        box-shadow: 0 0 0 6px transparent;
+
+    }
+
+    100% {
+
+        box-shadow: 0 0 0 0 transparent;
+
+    }
+
+}
+
+.timing-stop-btn {
+
+    background: var(--button-bg);
+
+    color: var(--button-text);
+
+    font-weight: 600;
+
+    border: none;
+
+    padding: 6px 14px;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    transition: background 0.15s ease;
+
+}
+
+.timing-stop-btn:hover {
+
+    background: var(--button-hover);
+
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 768px) {

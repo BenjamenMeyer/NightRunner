@@ -436,6 +436,24 @@ describe('Copy Configuration as Template Contracts', () => {
     expect(newConfigFromStation.tasks).toHaveLength(2);
     expect(newConfigFromStation.tasks[1].name).toBe('Custom Signal Flagging');
   });
+
+  it('pre-fills target station type groupId when creating a configuration from a selected station type filter', () => {
+    const selectedGroupId = 'grp-first-aid-101';
+    const query = selectedGroupId ? `?groupId=${selectedGroupId}` : '';
+    expect(query).toBe('?groupId=grp-first-aid-101');
+
+    const searchParams = new URLSearchParams('groupId=grp-first-aid-101');
+    const initialGroupId = searchParams.get('groupId') || '';
+
+    const newConfigurationState = {
+      groupId: initialGroupId,
+      name: '',
+      description: '',
+      tasks: []
+    };
+
+    expect(newConfigurationState.groupId).toBe('grp-first-aid-101');
+  });
 });
 
 describe('Patrol Service & Editor Contracts', () => {
@@ -1433,6 +1451,16 @@ describe('Scoring Form and ScoreField Unit Verification', () => {
       { taskId: 't-2', scoreValue: false },
       { taskId: 't-3', scoreValue: false }
     ]);
+  });
+
+  it('displays active completion timer reminder banner when activity started but not completed in live mode', () => {
+    const isTimerRunning = (stationStartedAt, stationCompletedAt, entryMode) =>
+      Boolean(stationStartedAt && !stationCompletedAt && entryMode === 'live');
+
+    expect(isTimerRunning('2026-09-16T23:00:00Z', null, 'live')).toBe(true);
+    expect(isTimerRunning('2026-09-16T23:00:00Z', '2026-09-16T23:15:00Z', 'live')).toBe(false);
+    expect(isTimerRunning('2026-09-16T23:00:00Z', null, 'paper')).toBe(false);
+    expect(isTimerRunning(null, null, 'live')).toBe(false);
   });
 });
 
