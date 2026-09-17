@@ -248,6 +248,28 @@ describe('Configuration Editor Payload Contracts', () => {
       expect(disqualVal.reason.trim()).not.toBe('');
     });
 
+    it('handles Secret Cipher / Decoding task type with atomic state update for expected secret and maxScore', () => {
+      let task = {
+        name: 'Secret Cipher Decoding',
+        type: 'Secret Cipher / Decoding',
+        expectedAnswer: '',
+        expectedSecret: '',
+        maxScore: 0
+      };
+
+      const val = 'BE PREPARED AT MIDNIGHT';
+      task = {
+        ...task,
+        expectedAnswer: val,
+        expectedSecret: val,
+        maxScore: val.length
+      };
+
+      expect(task.expectedAnswer).toBe('BE PREPARED AT MIDNIGHT');
+      expect(task.expectedSecret).toBe('BE PREPARED AT MIDNIGHT');
+      expect(task.maxScore).toBe(23);
+    });
+
     it('handles divideByPatrolSize flag on task configuration and divides raw score by participant count', () => {
       const task = {
         name: 'First Aid Rescue Task',
