@@ -7,7 +7,12 @@ import "./UserManager.css";
 
 const EVENT_ROLES = [
     "user",
-    "event-admin"
+    "event-admin",
+    "scoring-lead",
+    "scoring-center",
+    "scorer",
+    "station-lead",
+    "volunteer"
 ];
 
 export default function UserManager() {
@@ -657,33 +662,95 @@ export default function UserManager() {
                                 </label>
 
                                 {(isSystemAdmin || isEventAdmin) && (
-                                    <label className="form-field">
-                                        <span>
-                                            Event Role
-                                        </span>
+                                    <div className="form-field full-width-field" style={{ gridColumn: "1 / -1" }}>
+                                        <label className="form-field">
+                                            <span>
+                                                Event Role
+                                            </span>
 
-                                        <select
-                                            value={
-                                                getEventRole(
-                                                    selectedUser
-                                                ) ?? "user"
-                                            }
-                                            onChange={event =>
-                                                updateSelectedEventRole(
-                                                    event.target.value
-                                                )
-                                            }
-                                        >
-                                            {EVENT_ROLES.map(role => (
-                                                <option
-                                                    key={role}
-                                                    value={role}
-                                                >
-                                                    {formatRole(role)}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </label>
+                                            <select
+                                                value={
+                                                    getEventRole(
+                                                        selectedUser
+                                                    ) ?? "user"
+                                                }
+                                                onChange={event =>
+                                                    updateSelectedEventRole(
+                                                        event.target.value
+                                                    )
+                                                }
+                                            >
+                                                {EVENT_ROLES.map(role => (
+                                                    <option
+                                                        key={role}
+                                                        value={role}
+                                                    >
+                                                        {formatRole(role)}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </label>
+
+                                        {/* Permissions & Guidance Description Panel */}
+                                        <div className="role-permissions-panel" style={{
+                                            marginTop: "10px",
+                                            padding: "12px 16px",
+                                            background: "var(--page-bg)",
+                                            border: "1px solid var(--border)",
+                                            borderRadius: "8px"
+                                        }}>
+                                            <strong style={{ display: "block", marginBottom: "4px", fontSize: "0.85rem", color: "var(--button-bg)" }}>
+                                                💡 Role Capabilities & Permissions Guidance:
+                                            </strong>
+                                            {(() => {
+                                                const currentRole = getEventRole(selectedUser) ?? "user";
+                                                switch (currentRole) {
+                                                    case "event-admin":
+                                                        return (
+                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                                <strong>Event Admin:</strong> Full event management authority. Can configure event details, manage patrols & stations, assign user roles (Scoring Lead, Station Lead, Volunteer), override station locks, access the Score Finalizer, and generate all scoring reports.
+                                                            </span>
+                                                        );
+                                                    case "scoring-lead":
+                                                        return (
+                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                                <strong>Scoring Lead:</strong> Lead scoring manager. Can review cross-station scores, perform manual score entries for any station, access the Event Score Finalizer page, adjust calculation totals, and generate all scoring reports.
+                                                            </span>
+                                                        );
+                                                    case "scoring-center":
+                                                        return (
+                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                                <strong>Scoring Center / Team:</strong> Scoring team member. Can review scores across all stations, enter manual paper scores for any station, and assist with score calculation verification.
+                                                            </span>
+                                                        );
+                                                    case "scorer":
+                                                        return (
+                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                                <strong>Scorer:</strong> Scoring volunteer. Can perform station check-in/out and record raw task completion scores and timing for assigned stations. Point values and weights remain hidden.
+                                                            </span>
+                                                        );
+                                                    case "station-lead":
+                                                        return (
+                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                                <strong>Station Lead:</strong> Station supervisor. Can assign and manage volunteer staff for their station, perform check-in/out and scoring, and override/reopen completed station attempt locks at their station beyond the 5-minute window.
+                                                            </span>
+                                                        );
+                                                    case "volunteer":
+                                                        return (
+                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                                <strong>Station Volunteer:</strong> Station helper. Can perform patrol check-in/check-out and record task completions and timing at assigned stations. Can self-reopen attempt within 5 minutes of completion. Point weights remain hidden.
+                                                            </span>
+                                                        );
+                                                    default:
+                                                        return (
+                                                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                                                                <strong>Standard User:</strong> Basic registered account. Has standard event participant view access once approved from the holding area.
+                                                            </span>
+                                                        );
+                                                }
+                                            })()}
+                                        </div>
+                                    </div>
                                 )}
 
                                 <div className="form-field">
@@ -879,8 +946,18 @@ function formatRole(role) {
     switch (role) {
         case "event-admin":
             return "Event Admin";
+        case "scoring-lead":
+            return "Scoring Lead";
+        case "scoring-center":
+            return "Scoring Center / Team";
+        case "scorer":
+            return "Scorer";
+        case "station-lead":
+            return "Station Lead";
+        case "volunteer":
+            return "Station Volunteer";
         case "user":
-            return "User";
+            return "Standard User";
         default:
             return role ?? "No Role";
     }

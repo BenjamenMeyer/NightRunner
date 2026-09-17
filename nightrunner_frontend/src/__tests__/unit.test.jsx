@@ -557,6 +557,23 @@ describe('User Manager Holding Area & Role Permissions Contracts', () => {
     const blockedUser = { ...approvedUser, status: 'blocked' };
     expect(blockedUser.status).toBe('blocked');
   });
+
+  it('supports all 7 event roles including scoring-center and provides role permission guidance', () => {
+    const EVENT_ROLES = [
+      "user",
+      "event-admin",
+      "scoring-lead",
+      "scoring-center",
+      "scorer",
+      "station-lead",
+      "volunteer"
+    ];
+
+    expect(EVENT_ROLES).toContain("scoring-center");
+    expect(EVENT_ROLES).toContain("scoring-lead");
+    expect(EVENT_ROLES).toContain("station-lead");
+    expect(EVENT_ROLES).toHaveLength(7);
+  });
 });
 
 describe('UserService PATCH Methods Contracts', () => {

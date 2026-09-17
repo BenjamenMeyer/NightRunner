@@ -144,9 +144,9 @@ Task Score Values can be one of the following:
 - Multi-Choice (descriptions with pre-selected values)
 - Range Rated (f.e 0-10)
 
-Task Score Values underpin how the system performs.
-
 For full architectural details on station queues, volunteer partner reviews, scoring privacy rules, and automatic check-out flow, see [Station Workflow Documentation](docs/STATION_WORKFLOW.md).
+
+For the complete role definition hierarchy, assignment rules, and permissions matrix, see [User Roles & Permissions Documentation](docs/USER_ROLES_AND_PERMISSIONS.md).
 
 ## Deliverables
 
