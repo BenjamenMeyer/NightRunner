@@ -1876,3 +1876,50 @@ describe('Stopwatch patrol-size division and unapplied-time guard', () => {
   });
 
 });
+
+describe('Finalizer participant-count divisor resolution', () => {
+
+  const resolveParticipantCount = (override, storedRaw, rosterSize) => {
+    if (override !== undefined) {
+      return override;
+    }
+    const stored = (storedRaw && typeof storedRaw === 'object' && storedRaw.participantCount)
+      ? Number(storedRaw.participantCount)
+      : 1;
+    if (stored > 1) {
+      return stored;
+    }
+    return rosterSize > 0 ? rosterSize : 1;
+  };
+
+  it('falls back to the patrol roster size when no count was captured at scoring time', () => {
+    // scores.participant_count is NOT NULL default 1, and the stopwatch captured
+    // no count at all until recently, so a stored 1 means "never captured".
+    expect(resolveParticipantCount(undefined, { participantCount: 1 }, 6)).toBe(6);
+    expect(resolveParticipantCount(undefined, undefined, 5)).toBe(5);
+  });
+
+  it('prefers a count that was actually captured over the roster size', () => {
+    expect(resolveParticipantCount(undefined, { participantCount: 4 }, 6)).toBe(4);
+  });
+
+  it('lets a manual override beat both the captured count and the roster', () => {
+    expect(resolveParticipantCount(3, { participantCount: 4 }, 6)).toBe(3);
+    expect(resolveParticipantCount(1, { participantCount: 4 }, 6)).toBe(1);
+  });
+
+  it('never divides by zero when the patrol has no roster', () => {
+    expect(resolveParticipantCount(undefined, { participantCount: 1 }, 0)).toBe(1);
+    expect(resolveParticipantCount(undefined, undefined, 0)).toBe(1);
+  });
+
+  it('divides a Teamwork stopwatch score by the resolved count', () => {
+    const elapsedSeconds = 854;
+    const divisor = resolveParticipantCount(undefined, { participantCount: 1 }, 5);
+    expect(divisor).toBe(5);
+
+    const perMember = elapsedSeconds / divisor;
+    expect(1 - perMember / 450).toBeCloseTo(0.62044, 5);
+  });
+
+});
