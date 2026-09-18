@@ -1755,7 +1755,6 @@ describe('Event Score Finalizer Role & Access Tests', () => {
     const adjustedEffectiveScore = rawScore / adjustedCount;
     expect(adjustedEffectiveScore).toBe(25.0);
   });
-  });
 });
 
 

@@ -4,7 +4,7 @@ import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
 import "./Finalizer.css";
 
 export default function Finalizer() {
-    const { event, eventId, loading: eventLoading, error: eventError } = useEventContext();
+    const { eventId, loading: eventLoading, error: eventError } = useEventContext();
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -13,13 +13,11 @@ export default function Finalizer() {
 
     const [stations, setStations] = useState([]);
     const [patrols, setPatrols] = useState([]);
-    const [configurations, setConfigurations] = useState([]);
+    const [, setConfigurations] = useState([]);
     const [stationReports, setStationReports] = useState({});
 
     const [stationStates, setStationStates] = useState({});
     const [summaryCollapsed, setSummaryCollapsed] = useState(false);
-
-    const [isAuthorized, setIsAuthorized] = useState(true);
 
     useEffect(() => {
         if (eventLoading) return;
@@ -365,7 +363,7 @@ export default function Finalizer() {
                                 }
                                 sum += durationScore;
                             }
-                        } catch (e) {}
+                        } catch {}
                     }
                 }
 
@@ -397,7 +395,7 @@ export default function Finalizer() {
         });
 
         return calcs;
-    }, [stations, patrols, stationReports, stationStates, globalScoringMode]);
+    }, [stations, patrols, stationReports, stationStates, globalScoringMode, customOverrides, customParticipantCounts]);
 
     const summaryCalculations = useMemo(() => {
         const summary = {};
@@ -1030,7 +1028,7 @@ export default function Finalizer() {
                                                                      startDateStr = sDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                                                                      endDateStr = eDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                                                                  }
-                                                             } catch (e) {}
+                                                             } catch {}
                                                          }
 
                                                          const mins = seconds !== null ? Math.floor(seconds / 60) : 0;
