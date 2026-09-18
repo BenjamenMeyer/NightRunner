@@ -34,6 +34,7 @@ AGGREGATE_STATION = """
         (s.score_value * s.score_weight) AS weighted_score,
         s.active,
         s.submitted_at,
+        s.submitted_text,
         s.started_at,
         s.completed_at,
         s.participant_count
