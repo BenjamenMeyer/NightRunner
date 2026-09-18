@@ -260,7 +260,7 @@ export default function Finalizer() {
             (stReport.patrols || []).forEach((p) => {
                 const taskMap = {};
                 (p.breakdown || []).forEach((b) => {
-                    taskMap[b.taskId] = b.rawScore;
+                    taskMap[b.taskId] = { rawScore: b.rawScore, submittedText: b.submittedText };
                 });
                 patrolBreakdownMap[p.patrolId] = taskMap;
             });
@@ -290,7 +290,7 @@ export default function Finalizer() {
                     if (isEnabled) {
                         const weight = stState.taskWeights[taskId] !== undefined ? stState.taskWeights[taskId] : 1.0;
                         const overrideKey = `${st.id}_${p.id}_${taskId}`;
-                        let rawScore = rawVal !== undefined ? (typeof rawVal === "object" ? (rawVal.disqualified ? 0 : (rawVal.rawValue || 0)) : Number(rawVal)) : 0;
+                        let rawScore = rawVal !== undefined ? (typeof rawVal === "object" && rawVal !== null ? (rawVal.disqualified ? 0 : (rawVal.rawScore !== undefined ? Number(rawVal.rawScore) : (rawVal.rawValue || 0))) : Number(rawVal)) : 0;
                         if (customOverrides[overrideKey] !== undefined) {
                             rawScore = customOverrides[overrideKey];
                         }
@@ -762,22 +762,65 @@ export default function Finalizer() {
                                                         }
 
                                                         const rawScore = currentScore;
+                                                        const isDisqualTask = type === "Automatic Station Disqualification";
+                                                        const isTextTask = type === "Text Answer";
 
                                                         return (
                                                             <td
                                                                 key={taskId}
-                                                                className={`col-task-score ${!isEnabled ? "task-disabled" : ""}`}
+                                                                className={`col-task-score cipher-task-cell ${!isEnabled ? "task-disabled" : ""}`}
+                                                                style={{ position: "relative" }}
                                                             >
                                                                 {rawScoreNum !== undefined || customOverrides[overrideKey] !== undefined ? (
-                                                                    <span>
-                                                                        {Number(rawScore).toFixed(1)}
-                                                                        {weight !== 1.0 && isEnabled && (
-                                                                            <small className="score-weighted-hint">
-                                                                                {" "}
-                                                                                ({(Number(rawScore) * weight).toFixed(1)})
-                                                                            </small>
+                                                                    <div className="cipher-cell-container" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                                                        <div className="cipher-hover-trigger" style={{ cursor: submittedTextStr ? "help" : "default", display: "inline-flex", alignItems: "center", gap: "2px" }}>
+                                                                            {isDisqualTask && (
+                                                                                <span style={{ fontSize: "0.85rem", color: "#ef4444" }}>
+                                                                                    {rawScore > 0 || (submittedTextStr && submittedTextStr.includes("disqualified: true")) ? "🚫" : "✅"}
+                                                                                </span>
+                                                                            )}
+                                                                            {isTextTask && <span style={{ fontSize: "0.85rem" }}>📝</span>}
+                                                                            <span>
+                                                                                {Number(rawScore).toFixed(1)}
+                                                                                {weight !== 1.0 && isEnabled && (
+                                                                                    <small className="score-weighted-hint">
+                                                                                        {" "}
+                                                                                        ({(Number(rawScore) * weight).toFixed(1)})
+                                                                                    </small>
+                                                                                )}
+                                                                            </span>
+                                                                        </div>
+
+                                                                        {/* Rich Detail Hover Popover for Text / Disqualification / Custom tasks */}
+                                                                        {submittedTextStr && (
+                                                                            <div className="cipher-hover-popover" style={{
+                                                                                display: "none",
+                                                                                position: "absolute",
+                                                                                bottom: "100%",
+                                                                                left: "50%",
+                                                                                transform: "translateX(-50%)",
+                                                                                marginBottom: "8px",
+                                                                                padding: "10px 14px",
+                                                                                background: "var(--card-bg, #0f172a)",
+                                                                                border: "1px solid var(--border, #334155)",
+                                                                                borderRadius: "8px",
+                                                                                boxShadow: "0 10px 25px rgba(0, 0, 0, 0.5)",
+                                                                                zIndex: 100,
+                                                                                whiteSpace: "nowrap",
+                                                                                fontSize: "0.82rem"
+                                                                            }}>
+                                                                                <div style={{ fontWeight: "bold", marginBottom: "6px", color: "var(--button-bg, #3b82f6)" }}>
+                                                                                    {isTextTask ? "📝 Text Answer Response" : (isDisqualTask ? "🚫 Disqualification Record" : "ℹ️ Submitted Response")}
+                                                                                </div>
+                                                                                <div style={{ fontFamily: "monospace", display: "flex", flexDirection: "column", gap: "2px", background: "var(--page-bg)", padding: "6px 8px", borderRadius: "4px", border: "1px solid var(--border)" }}>
+                                                                                    {t.expectedAnswer && (
+                                                                                        <div><strong style={{ color: "var(--text-secondary)" }}>Expected:  </strong>{t.expectedAnswer}</div>
+                                                                                    )}
+                                                                                    <div><strong style={{ color: "var(--text-secondary)" }}>Submitted: </strong>{submittedTextStr}</div>
+                                                                                </div>
+                                                                            </div>
                                                                         )}
-                                                                    </span>
+                                                                    </div>
                                                                 ) : (
                                                                     <span className="score-missing">—</span>
                                                                 )}
