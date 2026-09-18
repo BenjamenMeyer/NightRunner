@@ -1,9 +1,8 @@
 from datetime import datetime, timezone
 import falcon
-import uuid6
 from nightrunner_backend.app_context import get_driver
 from nightrunner_backend.drivers.store.station_visits import StationVisitsStore
-from nightrunner_backend.models.station_visit import StationVisit
+from nightrunner_backend.transport import visit_actions
 
 
 class VisitsResource:
@@ -39,39 +38,17 @@ class VisitCheckInResource:
         if not patrol_id:
             raise falcon.HTTPBadRequest(description="'patrolId' is required.")
 
-        timestamp = payload.get("timestamp") or datetime.now(timezone.utc).isoformat()
         store = StationVisitsStore(get_driver())
-
-        # Verify whether the latest visit for this station attempt was marked completed
-        latest = await store.get_latest_visit(event_id, station_id, patrol_id)
-        if latest and latest.status == "completed":
-            raise falcon.HTTPConflict(
-                title="Station Attempt Completed",
-                description="This patrol has already completed scoring for this station. A station leader or admin must reopen the station attempt before re-checking in."
-            )
-
-        # Check if an active visit already exists
-        existing = await store.get_active_visit(event_id, station_id, patrol_id)
-        if existing:
-            existing.checked_in_at = timestamp
-            existing.status = "checked_in"
-            updated = await store.update(existing)
-            resp.media = updated.to_api_dict()
-            resp.status = falcon.HTTP_200
-            return
-
-        visit = StationVisit(
-            id=str(uuid6.uuid7()),
+        visit, status = await visit_actions.check_in(
+            store,
             event_id=event_id,
             station_id=station_id,
             patrol_id=patrol_id,
-            checked_in_at=timestamp,
+            timestamp=payload.get("timestamp"),
             entry_mode=payload.get("entryMode", "live"),
-            status="checked_in",
         )
-        created = await store.create(visit)
-        resp.media = created.to_api_dict()
-        resp.status = falcon.HTTP_201
+        resp.media = visit.to_api_dict()
+        resp.status = status
 
 
 class VisitCheckOutResource:
@@ -93,32 +70,17 @@ class VisitCheckOutResource:
         if not patrol_id:
             raise falcon.HTTPBadRequest(description="'patrolId' is required.")
 
-        timestamp = payload.get("timestamp") or datetime.now(timezone.utc).isoformat()
         store = StationVisitsStore(get_driver())
-
-        existing = await store.get_active_visit(event_id, station_id, patrol_id)
-        if existing:
-            existing.checked_out_at = timestamp
-            # Maintain status if completed, otherwise set to checked_out
-            if existing.status != "completed":
-                existing.status = "checked_out"
-            updated = await store.update(existing)
-            resp.media = updated.to_api_dict()
-            resp.status = falcon.HTTP_200
-            return
-
-        visit = StationVisit(
-            id=str(uuid6.uuid7()),
+        visit, status = await visit_actions.check_out(
+            store,
             event_id=event_id,
             station_id=station_id,
             patrol_id=patrol_id,
-            checked_out_at=timestamp,
+            timestamp=payload.get("timestamp"),
             entry_mode=payload.get("entryMode", "live"),
-            status="checked_out",
         )
-        created = await store.create(visit)
-        resp.media = created.to_api_dict()
-        resp.status = falcon.HTTP_201
+        resp.media = visit.to_api_dict()
+        resp.status = status
 
 
 class VisitResetResource:

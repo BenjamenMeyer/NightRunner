@@ -1,0 +1,205 @@
+/*
+ * Shell for the public, token-authenticated pages.
+ *
+ * These render without the app Layout, so they carry their own chrome. Built
+ * dark on purpose: both pages are read at a night event, one of them outdoors
+ * on a phone, and a white screen destroys night vision.
+ */
+
+.public-page {
+    min-height: 100vh;
+    background: #10151c;
+    color: #e8edf3;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.public-page-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.public-card {
+    max-width: 520px;
+    margin: 12vh auto 0;
+    background: #182029;
+    border: 1px solid #2a3542;
+    border-radius: 10px;
+    padding: 28px;
+    text-align: center;
+}
+
+.public-header {
+    margin-bottom: 18px;
+}
+
+.public-header h1 {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+}
+
+.public-header p {
+    margin: 0;
+    color: #9fb0c3;
+    font-size: 0.95rem;
+}
+
+.public-updated {
+    margin-top: 6px !important;
+    font-size: 0.85rem !important;
+    color: #7d8fa3 !important;
+}
+
+.public-error {
+    background: #3a1d1d;
+    border: 1px solid #6b2b2b;
+    color: #ffd9d9;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+}
+
+/* ---------------------------------------------------------------- check-in */
+
+.checkin-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.checkin-change-station {
+    background: transparent;
+    border: 1px solid #3a4756;
+    color: #c6d3e0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.checkin-station-list {
+    display: grid;
+    gap: 10px;
+}
+
+/* Tap targets sized for a gloved thumb in the dark. */
+.checkin-station-button {
+    width: 100%;
+    min-height: 60px;
+    background: #1d2733;
+    border: 1px solid #33404f;
+    border-radius: 8px;
+    color: #e8edf3;
+    font-size: 1.15rem;
+    cursor: pointer;
+}
+
+.checkin-station-button:active {
+    background: #26333f;
+}
+
+.checkin-patrol-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.checkin-patrol-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #182029;
+    border: 1px solid #2a3542;
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+
+.checkin-patrol-identity {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.checkin-patrol-number {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #7fb3ff;
+    min-width: 2ch;
+}
+
+.checkin-patrol-name {
+    font-size: 1.05rem;
+}
+
+.checkin-patrol-state {
+    font-size: 0.85rem;
+    color: #9fb0c3;
+    width: 100%;
+}
+
+.checkin-action {
+    min-height: 52px;
+    min-width: 120px;
+    background: #2563a8;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.checkin-action:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.checkin-action.danger {
+    background: #a33a3a;
+}
+
+.checkin-action.subtle {
+    background: transparent;
+    border: 1px solid #3a4756;
+    color: #c6d3e0;
+    min-width: 90px;
+}
+
+.checkin-confirm {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.checkin-locked {
+    color: #9fb0c3;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+
+    .checkin-patrol-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .checkin-action,
+    .checkin-confirm {
+        width: 100%;
+    }
+
+    .checkin-confirm .checkin-action {
+        flex: 1;
+        min-width: 0;
+    }
+
+}

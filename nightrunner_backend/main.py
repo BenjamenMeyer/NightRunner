@@ -83,6 +83,13 @@ app.add_error_handler(Exception, handle_uncaught_exception)
 _routes_registered = False
 
 from nightrunner_backend.transport.visits import VisitCheckInResource, VisitCheckOutResource, VisitResetResource, VisitsResource
+from nightrunner_backend.transport.event_access_tokens import EventAccessTokensResource, EventAccessTokenResource
+from nightrunner_backend.transport.public_progress import PublicProgressResource
+from nightrunner_backend.transport.public_checkin import (
+    PublicCheckInBootstrapResource,
+    PublicCheckInResource,
+    PublicCheckOutResource,
+)
 
 def register_routes(app):
     global _routes_registered
@@ -126,6 +133,15 @@ def register_routes(app):
     app.add_route("/v1/events/{event_id}/roster/apply", RosterImportApplyResource())
     app.add_route("/v1/events/{event_id}/arrivals", ArrivalsResource())
     app.add_route("/v1/events/{event_id}/arrivals/{attendee_id}", ArrivalResource())
+    # Admin management of the public links (mint / list / revoke).
+    app.add_route("/v1/events/{event_id}/access-tokens", EventAccessTokensResource())
+    app.add_route("/v1/events/{event_id}/access-tokens/{token_id}", EventAccessTokenResource())
+    # Public, token-authenticated routes. These skip the user login but NOT the
+    # Cloudflare IAM proxy check; see PUBLIC_PATH_PREFIXES in middleware/auth.py.
+    app.add_route("/v1/public/progress/{token}", PublicProgressResource())
+    app.add_route("/v1/public/checkin/{token}", PublicCheckInBootstrapResource())
+    app.add_route("/v1/public/checkin/{token}/check-in", PublicCheckInResource())
+    app.add_route("/v1/public/checkin/{token}/check-out", PublicCheckOutResource())
     app.add_route("/v1/users", UsersResource())
     app.add_route("/v1/users/{user_id}", UserResource())
     app.add_route("/users", UsersResource())

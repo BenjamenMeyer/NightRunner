@@ -727,6 +727,270 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StationVisit'
+
+  /v1/events/{event_id}/access-tokens:
+    get:
+      summary: List Public Links
+      description: >
+        Lists the public access links for an event. Metadata only — neither the
+        token nor its hash is ever returned. Admin only.
+      tags:
+        - Public Links
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [progress, checkin]
+      responses:
+        '200':
+          description: The event's public links.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  eventId:
+                    type: string
+                  tokens:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventAccessToken'
+        '403':
+          description: Caller is not an admin for this event.
+    post:
+      summary: Create Public Link
+      description: >
+        Mints a new public link. The response carries the plaintext token
+        exactly once; it cannot be retrieved afterwards. Admin only.
+      tags:
+        - Public Links
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scope]
+              properties:
+                scope:
+                  type: string
+                  enum: [progress, checkin]
+                  description: >
+                    progress is read-only and safe to share widely. checkin can
+                    write station visit records.
+                label:
+                  type: string
+                  nullable: true
+                expiresAt:
+                  type: string
+                  nullable: true
+                  description: Defaults to the event date plus two days.
+                stationId:
+                  type: string
+                  nullable: true
+                  description: Reserved for per-station check-in links.
+      responses:
+        '201':
+          description: Link created. `token` appears here and nowhere else.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EventAccessToken'
+                  - type: object
+                    properties:
+                      token:
+                        type: string
+                        description: The plaintext link token, returned once.
+        '403':
+          description: Caller is not an admin for this event.
+
+  /v1/events/{event_id}/access-tokens/{token_id}:
+    delete:
+      summary: Revoke Public Link
+      description: >
+        Revokes a public link. The record is retained so the audit trail
+        survives. Admin only.
+      tags:
+        - Public Links
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: token_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Link revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventAccessToken'
+        '404':
+          description: No such link on this event.
+
+  /v1/public/progress/{token}:
+    get:
+      summary: Public Patrol Progress
+      description: >
+        The spectator progress board. Requires no login — the token in the path
+        is the credential and names the event, so no event id is accepted from
+        the caller. Carries no scores, no patrol contact details and no member
+        names. Unknown, revoked, expired and wrong-scope tokens all return an
+        identical 404.
+      tags:
+        - Public Links
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The progress board.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicBoard'
+        '404':
+          description: The link is unknown, revoked, expired, or of another scope.
+
+  /v1/public/checkin/{token}:
+    get:
+      summary: Public Check-In Bootstrap
+      description: >
+        Everything the volunteer check-in page renders. Requires no login.
+        Requires a token of scope `checkin`.
+      tags:
+        - Public Links
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stations, patrols and current visits for the event.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PublicBoard'
+                  - type: object
+                    properties:
+                      stationId:
+                        type: string
+                        nullable: true
+                        description: Set when the link is pinned to one station.
+        '404':
+          description: The link is unknown, revoked, expired, or of another scope.
+
+  /v1/public/checkin/{token}/check-in:
+    post:
+      summary: Public Check In Patrol
+      description: >
+        Records a patrol arriving at a station, without a login. The event comes
+        from the token; the station and patrol must both belong to it.
+      tags:
+        - Public Links
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicVisitRequest'
+      responses:
+        '200':
+          description: Active visit updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationVisit'
+        '201':
+          description: Station visit created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationVisit'
+        '400':
+          description: The station or patrol does not belong to this event.
+        '404':
+          description: The link is unknown, revoked, expired, or of another scope.
+        '409':
+          description: Scoring for this attempt is already complete and locked.
+
+  /v1/public/checkin/{token}/check-out:
+    post:
+      summary: Public Check Out Patrol
+      description: Records a patrol leaving a station, without a login.
+      tags:
+        - Public Links
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicVisitRequest'
+      responses:
+        '200':
+          description: Station visit updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationVisit'
+        '201':
+          description: Station visit created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationVisit'
+        '400':
+          description: The station or patrol does not belong to this event.
+        '404':
+          description: The link is unknown, revoked, expired, or of another scope.
+
   /v1/reports/events/{eventId}:
     get:
       summary: Get Event Report
@@ -1565,6 +1829,131 @@ components:
             message:
               type: string
               example: "A descriptive error message."
+    EventAccessToken:
+      type: object
+      description: >
+        Metadata for a public link. The plaintext token appears only in the
+        response that creates it, and the stored hash is never returned.
+      properties:
+        id:
+          type: string
+        eventId:
+          type: string
+        scope:
+          type: string
+          enum: [progress, checkin]
+        stationId:
+          type: string
+          nullable: true
+        label:
+          type: string
+          nullable: true
+        createdBy:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        expiresAt:
+          type: string
+          nullable: true
+        revokedAt:
+          type: string
+          nullable: true
+        lastUsedAt:
+          type: string
+          nullable: true
+        isValid:
+          type: boolean
+          description: False once the link is revoked or past its expiry.
+
+    PublicPatrol:
+      type: object
+      description: >
+        The public projection of a patrol. Contact and radio details and member
+        names are deliberately absent.
+      properties:
+        id:
+          type: string
+        number:
+          type: integer
+          nullable: true
+        name:
+          type: string
+        troops:
+          type: array
+          description: >
+            Distinct troop codes across the patrol's members, sorted. Patrols
+            are commonly mixed-troop, so this is a list rather than one value,
+            and is empty when no member has a troop recorded.
+          items:
+            type: string
+
+    PublicBoard:
+      type: object
+      properties:
+        event:
+          type: object
+          properties:
+            name:
+              type: string
+            date:
+              type: string
+              nullable: true
+        stations:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+        patrols:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicPatrol'
+        visits:
+          type: array
+          items:
+            type: object
+            properties:
+              stationId:
+                type: string
+              patrolId:
+                type: string
+              status:
+                type: string
+              checkedInAt:
+                type: string
+                nullable: true
+              checkedOutAt:
+                type: string
+                nullable: true
+              tasksCompletedAt:
+                type: string
+                nullable: true
+        expiresAt:
+          type: string
+          nullable: true
+
+    PublicVisitRequest:
+      type: object
+      description: >
+        No eventId: the event is taken from the token, so a link cannot be
+        pointed at another event.
+      required: [stationId, patrolId]
+      properties:
+        stationId:
+          type: string
+        patrolId:
+          type: string
+        timestamp:
+          type: string
+          nullable: true
+        entryMode:
+          type: string
+          nullable: true
+
     StationVisit:
       type: object
       properties:
