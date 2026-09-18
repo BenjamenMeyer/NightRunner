@@ -66,7 +66,15 @@ class PublicCheckInBootstrapResource:
         await touch_token(access)
 
         resp.media = {
-            "event": {"name": event.get("name"), "date": event.get("date")},
+            # `theme` lets the page load the event's own palette. Without it
+            # the branding falls back to whatever this browser last stored,
+            # which for a spectator is meaningless and can put light text on
+            # a light background.
+            "event": {
+                "name": event.get("name"),
+                "date": event.get("date"),
+                "theme": event.get("theme"),
+            },
             "stations": stations,
             "patrols": patrols,
             "visits": visits,

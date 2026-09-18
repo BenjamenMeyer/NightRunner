@@ -15,6 +15,8 @@ import ProgressGrid, {
     PUBLIC_IDENTITY_COLUMNS
 } from "../scoring/live/ProgressGrid.jsx";
 
+import useEventTheme from "../../branding/useEventTheme.js";
+
 import "./PublicPages.css";
 
 // Spectators are not making operational decisions and this endpoint is open, so
@@ -33,6 +35,9 @@ export default function PublicProgress() {
     const [lastUpdated, setLastUpdated] = useState(null);
 
     const tableWrapperRef = useRef(null);
+
+    // Match the event's palette, the way EventContext does for signed-in users.
+    useEventTheme(data?.event?.theme);
 
     useEffect(() => {
 

@@ -15,7 +15,12 @@ from typing import Any, Dict, List
 
 from nightrunner_backend.drivers.base import DatabaseDriver
 
-GET_EVENT_PUBLIC = "SELECT id, name, date FROM events WHERE id = :event_id"
+# `theme` drives the public pages' colours, so a spectator sees the same
+# palette as the event rather than whatever their browser last stored.
+GET_EVENT_PUBLIC = (
+    "SELECT id, name, date, COALESCE(theme, 'night-ops') AS theme "
+    "FROM events WHERE id = :event_id"
+)
 
 # No description: station descriptions are written for volunteers and can carry
 # answers or staging notes.
@@ -64,7 +69,12 @@ class PublicBoardStore:
         row = await self.driver.fetch_one(GET_EVENT_PUBLIC, {"event_id": event_id})
         if not row:
             return {}
-        return {"id": row["id"], "name": row["name"], "date": row.get("date")}
+        return {
+            "id": row["id"],
+            "name": row["name"],
+            "date": row.get("date"),
+            "theme": row.get("theme") or "night-ops",
+        }
 
     async def list_stations(self, event_id: str) -> List[Dict[str, Any]]:
         rows = await self.driver.execute(LIST_STATIONS_PUBLIC, {"event_id": event_id})

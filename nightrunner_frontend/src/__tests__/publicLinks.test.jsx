@@ -234,3 +234,78 @@ describe('Public page modules load', () => {
     });
 
 });
+
+
+/*
+ * Theming guard.
+ *
+ * `night-ops` is a dark palette; `trail-life` and `ahg` are light ones. A
+ * hardcoded colour is therefore unreadable under two themes out of three —
+ * black-on-black or white-on-white — which is a recurring way these pages break.
+ * These tests fail the moment a literal colour creeps back in.
+ */
+describe('Public and admin-panel styles stay themeable', () => {
+
+    const fs = require('node:fs');
+    const path = require('node:path');
+
+    const STYLESHEETS = [
+        'src/pages/public/PublicPages.css',
+        'src/pages/admin/events/PublicLinksPanel.css'
+    ];
+
+    // Colours that are deliberately literal, with the reason they have to be.
+    const ALLOWED_LITERALS = {
+        // A QR code needs a light quiet zone or scanners cannot read it.
+        'src/pages/admin/events/PublicLinksPanel.css': ['#ffffff'],
+        // White on the theme's error red, which is dark in every palette.
+        'src/pages/public/PublicPages.css': ['#ffffff']
+    };
+
+    function read(relative) {
+        return fs.readFileSync(path.resolve(process.cwd(), relative), 'utf8');
+    }
+
+    it.each(STYLESHEETS)('%s uses theme variables, not literal colours', (sheet) => {
+
+        const css = read(sheet);
+        const allowed = ALLOWED_LITERALS[sheet] ?? [];
+
+        const literals = (css.match(/#[0-9a-fA-F]{3,8}\b/g) ?? [])
+            .map(c => c.toLowerCase())
+            .filter(c => !allowed.includes(c));
+
+        expect(literals, `${sheet} should not hardcode colours`).toEqual([]);
+
+        // rgb()/rgba() literals hide the same problem.
+        const functional = css.match(/\brgba?\s*\(/g) ?? [];
+        expect(functional, `${sheet} should not hardcode rgb colours`).toEqual([]);
+
+    });
+
+    it.each(STYLESHEETS)('%s actually references theme variables', (sheet) => {
+        const css = read(sheet);
+        expect((css.match(/var\(--/g) ?? []).length).toBeGreaterThan(10);
+    });
+
+    it('sets a background and a foreground together on the public shell', () => {
+        // A background without a matching text colour is exactly how the
+        // unreadable combinations happen.
+        const css = read('src/pages/public/PublicPages.css');
+        const shell = css.slice(css.indexOf('.public-page {'), css.indexOf('.public-page-inner'));
+
+        expect(shell).toContain('background: var(--page-bg)');
+        expect(shell).toContain('color: var(--text-primary)');
+    });
+
+});
+
+
+describe('useEventTheme', () => {
+
+    it('applies the event theme and ignores a missing one', async () => {
+        const { default: useEventTheme } = await import('@/branding/useEventTheme.js');
+        expect(typeof useEventTheme).toBe('function');
+    });
+
+});

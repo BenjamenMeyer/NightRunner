@@ -1,15 +1,20 @@
 /*
  * Shell for the public, token-authenticated pages.
  *
- * These render without the app Layout, so they carry their own chrome. Built
- * dark on purpose: both pages are read at a night event, one of them outdoors
- * on a phone, and a white screen destroys night vision.
+ * These render without the app Layout, so they carry their own chrome — but
+ * every colour here comes from the active branding's variables, never a literal.
+ * That matters more than it looks: `night-ops` is a dark palette while
+ * `trail-life` and `ahg` are light ones, so anything hardcoded is guaranteed to
+ * be unreadable under two themes out of three.
+ *
+ * The page loads the event's own theme on mount (see useEventTheme), so these
+ * variables resolve to the palette the organiser picked for the event.
  */
 
 .public-page {
     min-height: 100vh;
-    background: #10151c;
-    color: #e8edf3;
+    background: var(--page-bg);
+    color: var(--text-primary);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     padding: 16px;
     box-sizing: border-box;
@@ -23,8 +28,10 @@
 .public-card {
     max-width: 520px;
     margin: 12vh auto 0;
-    background: #182029;
-    border: 1px solid #2a3542;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    box-shadow: var(--shadow);
     border-radius: 10px;
     padding: 28px;
     text-align: center;
@@ -37,24 +44,27 @@
 .public-header h1 {
     margin: 0 0 4px;
     font-size: 1.5rem;
+    color: var(--text-primary);
 }
 
 .public-header p {
     margin: 0;
-    color: #9fb0c3;
+    color: var(--text-secondary);
     font-size: 0.95rem;
 }
 
 .public-updated {
     margin-top: 6px !important;
     font-size: 0.85rem !important;
-    color: #7d8fa3 !important;
+    color: var(--text-secondary) !important;
 }
 
 .public-error {
-    background: #3a1d1d;
-    border: 1px solid #6b2b2b;
-    color: #ffd9d9;
+    background: var(--card-bg);
+    border: 1px solid var(--error);
+    /* On the text itself rather than the fill, so it stays legible whether the
+       theme's card surface is dark or light. */
+    color: var(--error);
     padding: 10px 14px;
     border-radius: 6px;
     margin-bottom: 14px;
@@ -71,13 +81,17 @@
 
 .checkin-change-station {
     background: transparent;
-    border: 1px solid #3a4756;
-    color: #c6d3e0;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
     border-radius: 6px;
     padding: 8px 12px;
     font-size: 0.9rem;
     cursor: pointer;
     flex-shrink: 0;
+}
+
+.checkin-change-station:hover {
+    border-color: var(--input-focus);
 }
 
 .checkin-station-list {
@@ -89,16 +103,17 @@
 .checkin-station-button {
     width: 100%;
     min-height: 60px;
-    background: #1d2733;
-    border: 1px solid #33404f;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    color: #e8edf3;
+    color: var(--text-primary);
     font-size: 1.15rem;
     cursor: pointer;
 }
 
+.checkin-station-button:hover,
 .checkin-station-button:active {
-    background: #26333f;
+    border-color: var(--input-focus);
 }
 
 .checkin-patrol-list {
@@ -114,8 +129,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    background: #182029;
-    border: 1px solid #2a3542;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
     border-radius: 8px;
     padding: 12px 14px;
 }
@@ -131,30 +147,36 @@
 .checkin-patrol-number {
     font-size: 1.3rem;
     font-weight: 700;
-    color: #7fb3ff;
+    color: var(--link);
     min-width: 2ch;
 }
 
 .checkin-patrol-name {
     font-size: 1.05rem;
+    color: var(--text-primary);
 }
 
 .checkin-patrol-state {
     font-size: 0.85rem;
-    color: #9fb0c3;
+    color: var(--text-secondary);
     width: 100%;
 }
 
 .checkin-action {
     min-height: 52px;
     min-width: 120px;
-    background: #2563a8;
+    background: var(--button-bg);
     border: none;
     border-radius: 8px;
-    color: #fff;
+    /* Paired with --button-bg by the theme, so the contrast holds. */
+    color: var(--button-text);
     font-size: 1rem;
     cursor: pointer;
     flex-shrink: 0;
+}
+
+.checkin-action:hover {
+    background: var(--button-hover);
 }
 
 .checkin-action:disabled {
@@ -162,14 +184,22 @@
     cursor: default;
 }
 
+/* Check-out ends the scoring window, so it reads as destructive. White on the
+   theme's error red is legible in every palette. */
 .checkin-action.danger {
-    background: #a33a3a;
+    background: var(--error);
+    color: #ffffff;
+}
+
+.checkin-action.danger:hover {
+    background: var(--error);
+    filter: brightness(0.92);
 }
 
 .checkin-action.subtle {
     background: transparent;
-    border: 1px solid #3a4756;
-    color: #c6d3e0;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
     min-width: 90px;
 }
 
@@ -180,7 +210,7 @@
 }
 
 .checkin-locked {
-    color: #9fb0c3;
+    color: var(--text-secondary);
     font-size: 0.9rem;
     flex-shrink: 0;
 }

@@ -35,10 +35,10 @@ async def test_client():
         yield client
 
 
-async def _seed_event(driver, event_id=EVENT_ID, name="Night Runner 2026"):
+async def _seed_event(driver, event_id=EVENT_ID, name="Night Runner 2026", theme="night-ops"):
     await driver.execute(
-        "INSERT INTO events (id, name, date) VALUES (:id, :name, :date)",
-        {"id": event_id, "name": name, "date": "2026-10-10"},
+        "INSERT INTO events (id, name, date, theme) VALUES (:id, :name, :date, :theme)",
+        {"id": event_id, "name": name, "date": "2026-10-10", "theme": theme},
     )
 
 
@@ -208,6 +208,46 @@ async def test_progress_rejects_bad_tokens_identically(test_client, test_databas
     assert resp.json["description"] == (
         "This link is not valid. Ask the event organiser for a current one."
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("theme", ["night-ops", "trail-life", "ahg"])
+async def test_progress_returns_the_events_theme(test_client, test_database, theme):
+    """The page needs this to render the event's palette.
+
+    Without it the public page falls back to whatever branding the browser last
+    stored — and since night-ops is dark while trail-life and ahg are light,
+    guessing wrong puts light text on a light background.
+    """
+    await _seed_event(test_database, theme=theme)
+    plaintext, _ = await _mint(SCOPE_PROGRESS)
+
+    resp = await test_client.simulate_get(f"/v1/public/progress/{plaintext}")
+
+    assert resp.json["event"]["theme"] == theme
+
+
+@pytest.mark.asyncio
+async def test_checkin_returns_the_events_theme(test_client, test_database):
+    await _seed_event(test_database, theme="ahg")
+    plaintext, _ = await _mint(SCOPE_CHECKIN)
+
+    resp = await test_client.simulate_get(f"/v1/public/checkin/{plaintext}")
+
+    assert resp.json["event"]["theme"] == "ahg"
+
+
+@pytest.mark.asyncio
+async def test_event_with_no_theme_falls_back(test_client, test_database):
+    await test_database.execute(
+        "INSERT INTO events (id, name, date) VALUES (:id, :name, :date)",
+        {"id": "evt-no-theme", "name": "Themeless", "date": "2026-10-10"},
+    )
+    plaintext, _ = await _mint(SCOPE_PROGRESS, "evt-no-theme")
+
+    resp = await test_client.simulate_get(f"/v1/public/progress/{plaintext}")
+
+    assert resp.json["event"]["theme"] == "night-ops"
 
 
 @pytest.mark.asyncio

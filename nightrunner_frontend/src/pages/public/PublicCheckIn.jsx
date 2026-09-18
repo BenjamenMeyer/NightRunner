@@ -13,6 +13,8 @@ import {
     InvalidLinkError
 } from "../../api/PublicLinkService.js";
 
+import useEventTheme from "../../branding/useEventTheme.js";
+
 import "./PublicPages.css";
 
 // Matches the internal Arrivals page, so two volunteers at one station see each
@@ -62,6 +64,9 @@ export default function PublicCheckIn() {
     const [choosingStation, setChoosingStation] = useState(false);
     const [pendingPatrolId, setPendingPatrolId] = useState(null);
     const [busyPatrolId, setBusyPatrolId] = useState(null);
+
+    // Match the event's palette, the way EventContext does for signed-in users.
+    useEventTheme(data?.event?.theme);
 
     const load = useCallback(async () => {
 

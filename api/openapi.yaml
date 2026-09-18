@@ -1899,6 +1899,13 @@ components:
             date:
               type: string
               nullable: true
+            theme:
+              type: string
+              description: >
+                The event's branding id, e.g. night-ops, trail-life, ahg. The
+                public pages load this palette so their colours match the event
+                rather than the viewer's stored default.
+              example: night-ops
         stations:
           type: array
           items:

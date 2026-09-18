@@ -42,7 +42,15 @@ class PublicProgressResource:
         resp.media = {
             # No event id: nothing public needs it, and leaving it out keeps the
             # id from turning up in a screenshot or a shared link.
-            "event": {"name": event.get("name"), "date": event.get("date")},
+            # `theme` lets the page load the event's own palette. Without it
+            # the branding falls back to whatever this browser last stored,
+            # which for a spectator is meaningless and can put light text on
+            # a light background.
+            "event": {
+                "name": event.get("name"),
+                "date": event.get("date"),
+                "theme": event.get("theme"),
+            },
             "stations": stations,
             "patrols": patrols,
             "visits": visits,
