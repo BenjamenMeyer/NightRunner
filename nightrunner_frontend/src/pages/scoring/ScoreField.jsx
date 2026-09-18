@@ -26,6 +26,14 @@ export default function ScoreField({
         milliseconds: "000"
     });
 
+    // Clock times as typed into the Started / Finished inputs ("HH:MM:SS").
+    // These are the source of truth for those two inputs; startedAt / endedAt
+    // are derived from them so a scorer can copy the times off a paper
+    // scoresheet instead of working out the duration themselves.
+    const [startClock, setStartClock] = useState("");
+    const [endClock, setEndClock] = useState("");
+    const [rolledOver, setRolledOver] = useState(false);
+
     const divideByPatrolSize = task.divideByPatrolSize ?? scoreValue.divideByPatrolSize ?? false;
     const initialRawValue = (typeof value === "object" && value !== null && "rawValue" in value) ? value.rawValue : (typeof value === "object" ? value : value);
     const initialParticipantCount = (typeof value === "object" && value !== null && "participantCount" in value) ? value.participantCount : 1;
@@ -108,6 +116,77 @@ export default function ScoreField({
 
     }
 
+    const DAY_MS = 86400000;
+
+    function formatClock(date) {
+
+        return [date.getHours(), date.getMinutes(), date.getSeconds()]
+            .map(part => String(part).padStart(2, "0"))
+            .join(":");
+
+    }
+
+    // "HH:MM" or "HH:MM:SS" to milliseconds past midnight. Null if incomplete,
+    // which is what a time input reports part-way through being typed.
+    function parseClock(text) {
+
+        const match = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(text ?? "");
+
+        if (!match) {
+            return null;
+        }
+
+        const hours = Number(match[1]);
+        const minutes = Number(match[2]);
+        const seconds = Number(match[3] ?? 0);
+
+        if (hours > 23 || minutes > 59 || seconds > 59) {
+            return null;
+        }
+
+        return hours * 3600000 + minutes * 60000 + seconds * 1000;
+
+    }
+
+    // Both times are clock times off a scoresheet, so they carry no date. Anchor
+    // them to the day the timer was started, or to today when nothing has been
+    // timed. A finish earlier than the start means the station ran through
+    // midnight, so it belongs to the next day — no station activity runs 24h.
+    function applyClockTimes(startText, endText) {
+
+        setStartClock(startText);
+        setEndClock(endText);
+
+        const startMs = parseClock(startText);
+        const endMs = parseClock(endText);
+
+        if (startMs === null || endMs === null) {
+            setRolledOver(false);
+            return;
+        }
+
+        const anchor = new Date(startedAt ?? Date.now());
+        anchor.setHours(0, 0, 0, 0);
+
+        const start = new Date(anchor.getTime() + startMs);
+        const crossesMidnight = endMs < startMs;
+        const end = new Date(anchor.getTime() + endMs + (crossesMidnight ? DAY_MS : 0));
+
+        setRunning(false);
+        setStartedAt(start);
+        setEndedAt(end);
+        setElapsed(end.getTime() - start.getTime());
+        setRolledOver(crossesMidnight);
+        setManualDirty(false);
+
+        onChange(stopwatchPayload(
+            start.toISOString(),
+            end.toISOString(),
+            { running: false }
+        ));
+
+    }
+
     function formatElapsed(ms) {
 
         const hours = Math.floor(ms / 3600000);
@@ -128,6 +207,9 @@ export default function ScoreField({
         setElapsed(0);
         setRunning(true);
         setManualDirty(false);
+        setStartClock(formatClock(now));
+        setEndClock("");
+        setRolledOver(false);
 
         onChange(stopwatchPayload(
             now.toISOString(),
@@ -169,6 +251,9 @@ export default function ScoreField({
         });
 
         setManualDirty(false);
+        setStartClock(formatClock(startedAt));
+        setEndClock(formatClock(end));
+        setRolledOver(false);
 
         onChange(stopwatchPayload(
             startedAt.toISOString(),
@@ -212,6 +297,9 @@ export default function ScoreField({
 
         setEndedAt(adjustedEnd);
         setManualDirty(false);
+        setStartClock(formatClock(startedAt));
+        setEndClock(formatClock(adjustedEnd));
+        setRolledOver(adjustedEnd.getDate() !== startedAt.getDate());
 
         onChange(stopwatchPayload(
             startedAt.toISOString(),
@@ -670,29 +758,50 @@ export default function ScoreField({
 
                             <div>
 
-                                <strong>Started</strong>
+                                <label htmlFor={`${task.id}-started`}>
+                                    <strong>Started</strong>
+                                </label>
 
-                                <br />
-
-                                {startedAt
-                                    ? startedAt.toLocaleTimeString()
-                                    : "--"}
+                                <input
+                                    id={`${task.id}-started`}
+                                    type="time"
+                                    step="1"
+                                    value={startClock}
+                                    disabled={running}
+                                    onChange={event =>
+                                        applyClockTimes(event.target.value, endClock)
+                                    }
+                                />
 
                             </div>
 
                             <div>
 
-                                <strong>Finished</strong>
+                                <label htmlFor={`${task.id}-finished`}>
+                                    <strong>Finished</strong>
+                                </label>
 
-                                <br />
-
-                                {endedAt
-                                    ? endedAt.toLocaleTimeString()
-                                    : "--"}
+                                <input
+                                    id={`${task.id}-finished`}
+                                    type="time"
+                                    step="1"
+                                    value={endClock}
+                                    disabled={running}
+                                    onChange={event =>
+                                        applyClockTimes(startClock, event.target.value)
+                                    }
+                                />
 
                             </div>
 
                         </div>
+
+                        {rolledOver && (
+                            <p className="timer-rollover-note">
+                                Finished is before Started, so this is being counted
+                                as running past midnight into the next day.
+                            </p>
+                        )}
 
                         <div className="timer-buttons">
 

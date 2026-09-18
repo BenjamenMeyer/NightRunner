@@ -248,6 +248,45 @@
 
 }
 
+.timer-times label {
+
+    display: block;
+
+    margin-bottom: .35rem;
+
+}
+
+/* Big enough to hit in the dark with cold hands. */
+.timer-times input[type="time"] {
+
+    width: 100%;
+
+    padding: .5rem;
+
+    font-size: 1.1rem;
+
+    text-align: center;
+
+    border-radius: 6px;
+
+}
+
+.timer-rollover-note {
+
+    margin: .5rem 0 0;
+
+    padding: .5rem .75rem;
+
+    background: var(--page-bg);
+
+    border-left: 3px solid var(--button-bg, #3b82f6);
+
+    border-radius: 4px;
+
+    font-size: .85rem;
+
+}
+
 .timer-buttons {
 
     display: flex;
