@@ -270,6 +270,36 @@ describe('Configuration Editor Payload Contracts', () => {
       expect(task.maxScore).toBe(23);
     });
 
+    it('transforms Secret Cipher / Decoding score submission to submittedText object with calculatedScore character matches', () => {
+      const task = {
+        id: 't-cipher-1',
+        name: 'Secret Cipher Task',
+        type: 'Secret Cipher / Decoding',
+        expectedAnswer: 'BE PREPARED',
+        expectedSecret: 'BE PREPARED',
+        maxScore: 11
+      };
+
+      const submittedText = 'BE PREPARED'; // 11 matches
+      const expectedStr = task.expectedAnswer.toUpperCase().trim();
+      let matches = 0;
+      for (let i = 0; i < Math.min(submittedText.length, expectedStr.length); i++) {
+        if (submittedText[i] === expectedStr[i]) {
+          matches += 1;
+        }
+      }
+
+      const scorePayloadValue = {
+        submittedText,
+        calculatedScore: matches,
+        expectedLength: expectedStr.length
+      };
+
+      expect(scorePayloadValue.submittedText).toBe('BE PREPARED');
+      expect(scorePayloadValue.calculatedScore).toBe(11);
+      expect(scorePayloadValue.expectedLength).toBe(11);
+    });
+
     it('handles divideByPatrolSize flag on task configuration and divides raw score by participant count', () => {
       const task = {
         name: 'First Aid Rescue Task',

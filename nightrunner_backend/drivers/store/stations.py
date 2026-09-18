@@ -46,6 +46,7 @@ async def _load_tasks_for_station(driver: DatabaseDriver, station_id: str, fallb
                 except Exception:
                     pass
             notes_val = extra.get("notes") or extra.get("scorer_notes") or ""
+            expected_ans = extra.get("expectedAnswer") or extra.get("expectedSecret") or ""
             t = {
                 "id": r["id"],
                 "name": r.get("name") or r.get("description") or "",
@@ -53,6 +54,8 @@ async def _load_tasks_for_station(driver: DatabaseDriver, station_id: str, fallb
                 "type": r.get("type") or "Timed Challenge",
                 "instructions": r.get("instructions") or "",
                 "notes": notes_val,
+                "expectedAnswer": expected_ans,
+                "expectedSecret": expected_ans,
                 "maxScore": float(r.get("max_score") if r.get("max_score") is not None else 100),
                 "timeLimit": float(r.get("time_limit") if r.get("time_limit") is not None else 0),
                 "scoreValue": extra,
@@ -101,6 +104,10 @@ async def _sync_tasks_for_station(driver: DatabaseDriver, station_id: str, tasks
         notes_val = t.get("notes") or t.get("scorer_notes")
         if notes_val:
             score_val_dict["notes"] = notes_val
+        expected_ans = t.get("expectedAnswer") or t.get("expectedSecret") or score_val_dict.get("expectedAnswer") or score_val_dict.get("expectedSecret")
+        if expected_ans:
+            score_val_dict["expectedAnswer"] = expected_ans
+            score_val_dict["expectedSecret"] = expected_ans
         divide_flag = bool(t.get("divideByPatrolSize") or t.get("divide_by_patrol_size", False))
         score_val_dict["divideByPatrolSize"] = divide_flag
         score_val_str = json.dumps(score_val_dict)
