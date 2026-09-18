@@ -1630,6 +1630,36 @@ describe('Event Score Finalizer Role & Access Tests', () => {
     const noOverrideScore = customOverrides['un-overridden'] !== undefined ? customOverrides['un-overridden'] : (rawVal !== undefined ? Number(rawVal) : 0);
     expect(noOverrideScore).toBe(42.5);
   });
+
+  it('maps rawScore and submittedText in stationCalculations breakdown map for all task types', () => {
+    const mockReport = {
+      patrols: [
+        {
+          patrolId: 'p-1',
+          breakdown: [
+            { taskId: 't-cipher', rawScore: 11.0, submittedText: 'SECRET_DECODED_VALUE' },
+            { taskId: 't-text', rawScore: 20.0, submittedText: 'FLAG_RED' },
+            { taskId: 't-disqual', rawScore: 0.0, submittedText: '{"disqualified": true, "reason": "Unsafe practice"}' }
+          ]
+        }
+      ]
+    };
+
+    const patrolBreakdownMap = {};
+    (mockReport.patrols || []).forEach((p) => {
+      const taskMap = {};
+      (p.breakdown || []).forEach((b) => {
+        taskMap[b.taskId] = { rawScore: b.rawScore, submittedText: b.submittedText };
+      });
+      patrolBreakdownMap[p.patrolId] = taskMap;
+    });
+
+    const pTaskMap = patrolBreakdownMap['p-1'];
+    expect(pTaskMap['t-cipher'].rawScore).toBe(11.0);
+    expect(pTaskMap['t-cipher'].submittedText).toBe('SECRET_DECODED_VALUE');
+    expect(pTaskMap['t-text'].submittedText).toBe('FLAG_RED');
+    expect(pTaskMap['t-disqual'].submittedText).toContain('Unsafe practice');
+  });
 });
 
 
