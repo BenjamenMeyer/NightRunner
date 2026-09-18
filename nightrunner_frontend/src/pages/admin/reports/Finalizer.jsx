@@ -371,6 +371,16 @@ export default function Finalizer() {
                     sum = 0;
                 }
 
+                // A station total must never be negative. Several stations subtract
+                // time or penalties from a fixed base, so a patrol that uses the full
+                // time allowance and picks up penalties can finish below zero. Relative
+                // mode divides by the best raw total at the station, which turns that
+                // into a negative station score -- ranking a patrol that attempted and
+                // did badly BELOW one that skipped the station entirely, since a no-show
+                // has no score rows and totals 0. Clamping here also keeps
+                // maxAbsoluteAchieved non-negative.
+                sum = Math.max(0, sum);
+
                 patrolTotals[p.id] = { total: sum, isDisqualified };
                 if (sum > maxAbsoluteAchieved) {
                     maxAbsoluteAchieved = sum;

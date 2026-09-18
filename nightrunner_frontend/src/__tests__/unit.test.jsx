@@ -1668,6 +1668,47 @@ describe('Event Score Finalizer Role & Access Tests', () => {
     expect(pTaskMap['t-disqual'].submittedText).toContain('Unsafe practice');
   });
 
+  it('clamps a negative station total to zero before normalisation', () => {
+    // Fire: 30 base - 30 minutes at the time cap - 2 safety penalty - 1 borrowed matches
+    const rawSum = 30 - 30 - 2 - 1;
+    expect(rawSum).toBe(-3);
+    expect(Math.max(0, rawSum)).toBe(0);
+  });
+
+  it('keeps a patrol that attempted and failed level with, never below, a no-show', () => {
+    const clamp = (n) => Math.max(0, n);
+    const maxAbsoluteAchieved = 25;
+    const relative = (total) => (maxAbsoluteAchieved > 0 ? (total / maxAbsoluteAchieved) * 10 : 0);
+
+    const attemptedAndFailed = clamp(30 - 30 - 2 - 1);  // -3 before clamping
+    const neverAttended = clamp(0);                     // no score rows at all
+
+    expect(relative(attemptedAndFailed)).toBe(0);
+    expect(relative(attemptedAndFailed)).toBeGreaterThanOrEqual(relative(neverAttended));
+  });
+
+  it('keeps maxAbsoluteAchieved non-negative when every patrol scores below zero', () => {
+    const totals = [-3, -8, -1].map((n) => Math.max(0, n));
+
+    let maxAbsoluteAchieved = 0;
+    totals.forEach((sum) => {
+      if (sum > maxAbsoluteAchieved) {
+        maxAbsoluteAchieved = sum;
+      }
+    });
+
+    expect(maxAbsoluteAchieved).toBe(0);
+    totals.forEach((total) => {
+      const relScore = maxAbsoluteAchieved > 0 ? (total / maxAbsoluteAchieved) * 10 : 0;
+      expect(relScore).toBe(0);
+    });
+  });
+
+  it('leaves a positive station total untouched by the clamp', () => {
+    expect(Math.max(0, 33.62044)).toBeCloseTo(33.62044, 5);
+    expect(Math.max(0, 0)).toBe(0);
+  });
+
   it('sorts loaded stations alphabetically by name in Finalizer loadData', () => {
     const fetchedStations = [
       { id: 'st-z', name: 'Zebra Station' },
