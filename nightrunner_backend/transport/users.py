@@ -2,6 +2,7 @@ import json
 import logging
 import falcon
 from nightrunner_backend.app_context import get_driver
+from nightrunner_backend.models.user_roles import roles_to_map
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +41,7 @@ class UsersResource:
                     roles_by_user[uid] = []
                     roles_map_by_user[uid] = {}
                 roles_by_user[uid].append(r_val)
-                if ":" in r_val:
-                    eid, role_name = r_val.split(":", 1)
-                    roles_map_by_user[uid][eid] = role_name
-                else:
-                    roles_map_by_user[uid][r_val] = r_val
+                roles_map_by_user[uid].update(roles_to_map([r_val]))
 
         # Fetch station staff assignments per user
         staff_rows = await self.db.execute("""
@@ -107,13 +104,7 @@ class UserResource:
 
         roles_rows = await self.db.execute("SELECT role FROM user_roles WHERE user_id = :uid", {"uid": user_id})
         roles_list = [r["role"] for r in roles_rows] if isinstance(roles_rows, list) else []
-        roles_map = {}
-        for r_val in roles_list:
-            if ":" in r_val:
-                eid, role_name = r_val.split(":", 1)
-                roles_map[eid] = role_name
-            else:
-                roles_map[r_val] = r_val
+        roles_map = roles_to_map(roles_list)
 
         staff_rows = await self.db.execute("""
             SELECT ss.station_id, ss.role, s.name AS station_name, s.event_id
