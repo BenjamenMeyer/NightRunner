@@ -83,7 +83,7 @@ class TestMeEndpoint:
         assert "admin" in resp.json["roles"]
 
     async def test_user_with_no_roles(self, test_client, test_database, token_factory):
-        """A user with no assigned roles gets an empty roles list."""
+        """A user with no assigned roles gets an empty roles map."""
         await test_database.execute(
             """
             INSERT INTO users (id, external_id, username, email, display_name)
@@ -96,7 +96,7 @@ class TestMeEndpoint:
         resp = await test_client.simulate_get("/v1/me", headers=headers)
 
         assert resp.status == falcon.HTTP_200
-        assert resp.json["roles"] == []
+        assert resp.json["roles"] == {}
 
     async def test_unknown_user_auto_provisions(self, test_client, token_factory):
         """A valid JWT whose sub doesn't match any local user is automatically provisioned."""
@@ -105,7 +105,7 @@ class TestMeEndpoint:
         resp = await test_client.simulate_get("/v1/me", headers=headers)
         assert resp.status == falcon.HTTP_200
         assert resp.json["id"] is not None
-        assert resp.json["roles"] == []
+        assert resp.json["roles"] == {}
 
     async def test_user_with_system_admin_role(self, test_client, test_database, token_factory):
         """User with system-admin role has admin flag set to True in /v1/me response."""
@@ -198,6 +198,70 @@ class TestMeEndpoint:
         resp = await test_client.simulate_get("/v1/me", headers=headers)
         assert resp.status == falcon.HTTP_200
         assert "volunteer" in resp.json["roles"]
+
+    async def test_event_role_is_returned_keyed_by_event_id(self, test_client, test_database, token_factory):
+        """Roles stored as "<event_id>:<role>" come back as an {eventId: role} map.
+
+        This is the shape the frontend indexes by event ID. Returning the raw
+        "<event_id>:<role>" strings instead left event admins with no event
+        access and no event selector.
+        """
+        await test_database.execute(
+            "INSERT INTO users (id, external_id, username, email, display_name) VALUES ('u-evt-scoped', 'test-user-id', 'evtscoped', 'evtscoped@example.com', 'Scoped Event Admin')",
+            {},
+        )
+        await test_database.execute(
+            "INSERT INTO user_roles (user_id, role) VALUES ('u-evt-scoped', 'evt-500:event-admin')",
+            {},
+        )
+        headers = token_factory(roles={"evt-500": "event-admin"}, is_admin=False)
+
+        resp = await test_client.simulate_get("/v1/me", headers=headers)
+
+        assert resp.status == falcon.HTTP_200
+        assert resp.json["roles"] == {"evt-500": "event-admin"}
+        assert resp.json["rolesList"] == ["evt-500:event-admin"]
+
+    async def test_multiple_event_roles_are_returned_as_one_map(self, test_client, test_database, token_factory):
+        """A user assigned to several events gets one entry per event."""
+        await test_database.execute(
+            "INSERT INTO users (id, external_id, username, email, display_name) VALUES ('u-multi', 'test-user-id', 'multiuser', 'multi@example.com', 'Multi Event User')",
+            {},
+        )
+        await test_database.execute(
+            "INSERT INTO user_roles (user_id, role) VALUES ('u-multi', 'evt-600:event-admin')",
+            {},
+        )
+        await test_database.execute(
+            "INSERT INTO user_roles (user_id, role) VALUES ('u-multi', 'evt-601:scorer')",
+            {},
+        )
+        headers = token_factory(roles={"evt-600": "event-admin"}, is_admin=False)
+
+        resp = await test_client.simulate_get("/v1/me", headers=headers)
+
+        assert resp.status == falcon.HTTP_200
+        assert resp.json["roles"] == {
+            "evt-600": "event-admin",
+            "evt-601": "scorer",
+        }
+
+    async def test_event_role_does_not_grant_system_admin(self, test_client, test_database, token_factory):
+        """An event-scoped admin role must not set the system admin flag."""
+        await test_database.execute(
+            "INSERT INTO users (id, external_id, username, email, display_name) VALUES ('u-evt-only', 'test-user-id', 'evtonly', 'evtonly@example.com', 'Event Admin Only')",
+            {},
+        )
+        await test_database.execute(
+            "INSERT INTO user_roles (user_id, role) VALUES ('u-evt-only', 'evt-700:event-admin')",
+            {},
+        )
+        headers = token_factory(roles={"evt-700": "event-admin"}, is_admin=False)
+
+        resp = await test_client.simulate_get("/v1/me", headers=headers)
+
+        assert resp.status == falcon.HTTP_200
+        assert resp.json["isAdmin"] is False
 
     async def test_user_with_general_user_role(self, test_client, test_database, token_factory):
         """User with general user role resolves role correctly."""
