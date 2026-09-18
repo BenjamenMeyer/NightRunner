@@ -504,6 +504,43 @@ export default function Finalizer() {
         setMismatchWarnings(warnings);
     }, [storedResultsMap, summaryCalculations, stationCalculations, patrols, stations]);
 
+    const [latestFinalReport, setLatestFinalReport] = useState(null);
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+    async function checkLatestFinalReport() {
+        if (!eventId) return;
+        try {
+            const res = await ApiService.reportData.listCompiledReports(eventId);
+            const reports = res?.reports ?? [];
+            const scoringReport = reports.find(r => r.report_type === "event-scoring" && r.status === "ready");
+            setLatestFinalReport(scoringReport || null);
+        } catch (_) {}
+    }
+
+    async function handleGenerateReport(reportType = "event-scoring-draft") {
+        if (!eventId) return;
+        try {
+            setIsGeneratingPdf(true);
+            setError(null);
+            setSaveMessage(null);
+            
+            const job = await ApiService.reportData.generateReportJob(eventId, reportType);
+            if (reportType === "event-scoring-draft") {
+                setSaveMessage("Draft Scoring Report generation queued. Redirecting to reports registry...");
+            } else {
+                setSaveMessage("Final Official Scoring Report generation queued. Redirecting to reports registry...");
+            }
+            setTimeout(() => {
+                window.location.href = `/admin/reports`;
+            }, 1200);
+        } catch (err) {
+            console.error("Failed generating scoring PDF report:", err);
+            setError(err?.message || "Failed generating PDF report.");
+        } finally {
+            setIsGeneratingPdf(false);
+        }
+    }
+
     async function saveFinalizedResults() {
         if (!eventId) return;
 
@@ -546,7 +583,7 @@ export default function Finalizer() {
                 results: payloadResults
             });
 
-            setSaveMessage("Successfully finalized and stored event scores into database.");
+            setSaveMessage("Successfully finalized and stored event scores into database. Auto-generating official final PDF report...");
             setMismatchWarnings([]);
 
             // Refresh stored results map
@@ -557,14 +594,9 @@ export default function Finalizer() {
             });
             setStoredResultsMap(newMap);
 
-            // Ask user if they want to generate a compiled report artifact
-            const confirmGenerate = window.confirm(
-                "Scores finalized! Would you like to generate a compiled 'Final Scoring Report' artifact for this event now?"
-            );
-            if (confirmGenerate) {
-                await ApiService.reportData.generateReportJob(eventId, "event-scoring");
-                window.location.href = "/admin/reports";
-            }
+            // Auto-generate official Final PDF report artifact
+            await ApiService.reportData.generateReportJob(eventId, "event-scoring");
+            await checkLatestFinalReport();
 
         } catch (err) {
             console.error("Failed to save finalized results:", err);
@@ -581,7 +613,7 @@ export default function Finalizer() {
                     <h1>Event Score Finalizer</h1>
                     <p>Adjust task inclusion, task weights, global scoring mode (Absolute vs Relative), and calculate final standings.</p>
                 </div>
-                <div className="finalizer-header-actions" style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+                <div className="finalizer-header-actions" style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
                     <div className="mode-selector">
                         <label style={{ fontWeight: "bold" }}>Scoring Mode:</label>
                         <select
@@ -593,11 +625,35 @@ export default function Finalizer() {
                             <option value="relative">Relative to Max Patrol (10pt Scale)</option>
                         </select>
                     </div>
-                    <button type="button" className="primary-button" onClick={saveFinalizedResults} disabled={saving || loading}>
-                        {saving ? "Saving..." : "💾 Save & Finalize Scores to DB"}
+
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => handleGenerateReport("event-scoring-draft")}
+                        disabled={saving || loading || isGeneratingPdf}
+                        title="Generate a preview report with DRAFT watermark"
+                    >
+                        👁️ Preview PDF (Draft)
                     </button>
+
+                    <button type="button" className="primary-button" onClick={saveFinalizedResults} disabled={saving || loading}>
+                        {saving ? "Finalizing..." : "💾 Save & Finalize Scores"}
+                    </button>
+
+                    {storedResultsMap && Object.keys(storedResultsMap).length > 0 && (
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            style={{ background: "#2b6cb0", color: "#fff", borderColor: "#2b6cb0" }}
+                            onClick={() => handleGenerateReport("event-scoring")}
+                            disabled={saving || loading || isGeneratingPdf}
+                        >
+                            📄 Download Final PDF Report
+                        </button>
+                    )}
+
                     <button type="button" className="secondary-button" onClick={loadData} disabled={loading}>
-                        🔄 Refresh Data
+                        🔄 Refresh
                     </button>
                 </div>
             </div>

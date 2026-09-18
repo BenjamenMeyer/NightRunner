@@ -230,7 +230,7 @@ export default function Reports() {
                                             </td>
                                             <td>
                                                 <span className="badge" style={{ background: "var(--input-bg)", border: "1px solid var(--border)", padding: "2px 8px", borderRadius: "4px", fontSize: "0.8rem" }}>
-                                                    {isScoringReport ? "Final Scoring" : "Patrol QR Badges"}
+                                                    {item.report_type === "event-scoring-draft" ? "Draft Scoring" : (item.report_type === "event-scoring" ? "Final Scoring" : "Patrol QR Badges")}
                                                 </span>
                                             </td>
                                             <td>
@@ -254,7 +254,7 @@ export default function Reports() {
                                             <td>{formatDateTime(item.created_at)}</td>
                                             <td>{item.size_bytes ? `${(item.size_bytes / 1024).toFixed(1)} KB` : "—"}</td>
                                             <td style={{ textAlign: "right" }}>
-                                                {item.status === "ready" && isScoringReport && (
+                                                {item.status === "ready" && item.report_type?.startsWith("event-scoring") && (
                                                     <a
                                                         href={`/admin/reports/view?reportId=${item.id}&eventId=${eventId}`}
                                                         className="reports-button"
