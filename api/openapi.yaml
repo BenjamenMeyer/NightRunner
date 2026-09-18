@@ -1447,6 +1447,14 @@ components:
                 endTime:
                   type: string
                   format: date-time
+        submittedText:
+          type: string
+          nullable: true
+          description: Raw submitted freeform text response (e.g. Secret Cipher decoded string, text answer, or disqualification reason).
+        submitted_text:
+          type: string
+          nullable: true
+          description: Raw submitted freeform text response (snake_case alias).
     EventReport:
       type: object
       properties:

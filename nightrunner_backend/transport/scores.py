@@ -1,9 +1,23 @@
-from typing import Any
+from typing import Any, Optional
 
 import falcon
 from nightrunner_backend.app_context import get_driver
 from nightrunner_backend.drivers.store.scores import ScoresStore
 from nightrunner_backend.models.score import Score
+
+
+def _extract_submitted_text(val: Any) -> Optional[str]:
+    """Helper to extract raw submitted text response from a scoreValue parameter."""
+    if val is None:
+        return None
+    if isinstance(val, str):
+        return val
+    if isinstance(val, dict):
+        if "submittedText" in val:
+            return str(val["submittedText"])
+        if "reason" in val:
+            return str(val["reason"])
+    return None
 
 
 def _parse_numeric_score_value(val: Any) -> float:
@@ -141,6 +155,7 @@ class ScoresResource:
                 started_at=s.get("startedAt") or payload.get("startedAt"),
                 completed_at=s.get("completedAt") or payload.get("completedAt"),
                 entry_mode=payload.get("entryMode", "live"),
+                submitted_text=_extract_submitted_text(raw_score_value),
             )
             # Deactivate previous active score for this same task to avoid double counting while preserving history
             await store.deactivate_previous_scores(event_id, station_id, patrol_id, task_id)

@@ -19,6 +19,7 @@ class Score:
     started_at: Optional[str] = None
     completed_at: Optional[str] = None
     entry_mode: str = "live"
+    submitted_text: Optional[str] = None
 
     def to_dict(self) -> dict:
         def _to_iso(val):
@@ -33,6 +34,7 @@ class Score:
             "patrolId": str(self.patrol_id) if self.patrol_id is not None else "",
             "taskId": str(self.task_id) if self.task_id is not None else "",
             "scoreValue": self.score_value,
+            "submittedText": self.submitted_text,
             "scoreWeight": self.score_weight,
             "active": bool(self.active),
             "submittedAt": _to_iso(self.submitted_at),

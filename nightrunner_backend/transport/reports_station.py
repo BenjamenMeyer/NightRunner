@@ -32,6 +32,7 @@ class StationReportResource:
                 'taskId': r['task_id'],
                 'taskName': r.get('task_name'),
                 'rawScore': r['score_value'],
+                'submittedText': r.get('submitted_text'),
                 'weight': r['score_weight'],
                 'weightedScore': weighted,
                 'active': bool(r['active']),

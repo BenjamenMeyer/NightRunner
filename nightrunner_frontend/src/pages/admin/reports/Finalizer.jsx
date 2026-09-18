@@ -540,7 +540,7 @@ export default function Finalizer() {
                 (stReport.patrols || []).forEach((p) => {
                     const taskMap = {};
                     (p.breakdown || []).forEach((b) => {
-                        taskMap[b.taskId] = b.rawScore;
+                        taskMap[b.taskId] = { rawScore: b.rawScore, submittedText: b.submittedText };
                     });
                     patrolBreakdownMap[p.patrolId] = taskMap;
                 });
@@ -663,14 +663,17 @@ export default function Finalizer() {
                                                         const taskId = t.id || t._id;
                                                         const isEnabled = stState.enabledTasks[taskId] !== false;
                                                         const type = t.scoreValue?.type || t.type;
-                                                        const rawVal = pTaskMap[taskId];
+                                                        const rawEntry = pTaskMap[taskId];
+                                                        const rawScoreNum = typeof rawEntry === "object" && rawEntry !== null ? rawEntry.rawScore : rawEntry;
+                                                        const submittedTextStr = typeof rawEntry === "object" && rawEntry !== null ? rawEntry.submittedText : null;
+
                                                         const weight = stState.taskWeights[taskId] !== undefined ? stState.taskWeights[taskId] : 1.0;
                                                         const overrideKey = `${st.id}_${p.id}_${taskId}`;
-                                                        const currentScore = customOverrides[overrideKey] !== undefined ? customOverrides[overrideKey] : (rawVal !== undefined ? Number(rawVal) : 0);
+                                                        const currentScore = customOverrides[overrideKey] !== undefined ? customOverrides[overrideKey] : (rawScoreNum !== undefined ? Number(rawScoreNum) : 0);
 
                                                         if (type === "Secret Cipher / Decoding") {
                                                             const expectedStr = String(t.expectedAnswer || t.expectedSecret || "").toUpperCase().trim();
-                                                            const submittedStr = typeof rawVal === "object" ? String(rawVal?.submittedText || "").toUpperCase().trim() : String(rawVal || "").toUpperCase().trim();
+                                                            const submittedStr = String(submittedTextStr || (typeof rawScoreNum === "object" ? rawScoreNum?.submittedText : rawScoreNum) || "").toUpperCase().trim();
 
                                                             // Build character alignment comparison
                                                             const maxLen = Math.max(expectedStr.length, submittedStr.length);
@@ -765,7 +768,7 @@ export default function Finalizer() {
                                                                 key={taskId}
                                                                 className={`col-task-score ${!isEnabled ? "task-disabled" : ""}`}
                                                             >
-                                                                {rawVal !== undefined || customOverrides[overrideKey] !== undefined ? (
+                                                                {rawScoreNum !== undefined || customOverrides[overrideKey] !== undefined ? (
                                                                     <span>
                                                                         {Number(rawScore).toFixed(1)}
                                                                         {weight !== 1.0 && isEnabled && (
