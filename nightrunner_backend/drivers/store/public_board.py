@@ -11,9 +11,29 @@ progress.py — it asserts on the absence of those fields specifically so that a
 widening shows up as a failure rather than as a quiet leak.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from nightrunner_backend.drivers.base import DatabaseDriver
+
+
+def _fmt_dt(val: Any) -> Optional[str]:
+    """Render a timestamp column as a string for JSON.
+
+    `station_visits.checked_in_at` and friends are TIMESTAMP columns. SQLite
+    hands them back as strings, PostgreSQL as `datetime` objects, and a
+    `datetime` is not JSON serialisable — so on PostgreSQL, serialising one of
+    these rows raw fails the whole request. The public pages read visits, so
+    this took both of them down as soon as an event had its first check-in
+    while an empty visit list had looked fine.
+
+    Mirrors `StationVisit.to_api_dict`, which formats the same columns for the
+    authenticated routes.
+    """
+    if val is None:
+        return None
+    if hasattr(val, "isoformat"):
+        return val.isoformat()
+    return str(val)
 
 # `theme` drives the public pages' colours, so a spectator sees the same
 # palette as the event rather than whatever their browser last stored.
@@ -111,9 +131,9 @@ class PublicBoardStore:
                 "stationId": r["station_id"],
                 "patrolId": r["patrol_id"],
                 "status": r.get("status") or "checked_in",
-                "checkedInAt": r.get("checked_in_at"),
-                "checkedOutAt": r.get("checked_out_at"),
-                "tasksCompletedAt": r.get("tasks_completed_at"),
+                "checkedInAt": _fmt_dt(r.get("checked_in_at")),
+                "checkedOutAt": _fmt_dt(r.get("checked_out_at")),
+                "tasksCompletedAt": _fmt_dt(r.get("tasks_completed_at")),
             }
             for r in rows
         ]
