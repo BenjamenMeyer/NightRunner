@@ -150,12 +150,132 @@ async def _background_generate_scoring_pdf(report_id: str, event_id: str, event_
         await reports_store.mark_report_failed(report_id, str(ex))
 
 
+from nightrunner_backend.reports_scoring_ods import generate_event_scoring_ods
+
+
+async def _background_generate_scoring_ods(report_id: str, event_id: str, event_name: str):
+    driver = get_driver()
+    reports_store = ReportsStore(driver)
+    scores_store = ScoresStore(driver)
+    from nightrunner_backend.drivers.store.stations import StationsStore
+    from nightrunner_backend.drivers.store.patrols import PatrolsStore
+    stations_store = StationsStore(driver)
+    patrols_store = PatrolsStore(driver)
+
+    try:
+        finalized_rows = await scores_store.list_finalized_results(event_id)
+        stations = await stations_store.list_by_event(event_id)
+        patrols = await patrols_store.list(event_id=event_id)
+
+        patrol_name_map = {p.id: p.name for p in patrols}
+        overall_patrols = []
+        station_breakdowns = []
+
+        if finalized_rows:
+            final_scores = {}
+            st_scores = {}
+            for r in finalized_rows:
+                pid = r["patrolId"]
+                sid = r.get("stationId")
+                score_val = float(r.get("scoreValue", 0.0))
+                if r.get("scoreType") == "final" or sid is None:
+                    final_scores[pid] = score_val
+                else:
+                    st_scores.setdefault(sid, {})[pid] = score_val
+
+            for pid, p_name in patrol_name_map.items():
+                overall_patrols.append({
+                    "patrolId": pid,
+                    "patrolName": p_name,
+                    "totalScore": final_scores.get(pid, 0.0)
+                })
+
+            for st in stations:
+                sid = st.id
+                st_p_scores = st_scores.get(sid, {})
+                st_patrols_list = []
+                for pid, p_name in patrol_name_map.items():
+                    st_patrols_list.append({
+                        "patrolId": pid,
+                        "patrolName": p_name,
+                        "score": st_p_scores.get(pid, 0.0)
+                    })
+                st_tasks = getattr(st, "tasks", []) or []
+                tasks_list = [{"id": t.get("id") or t.get("_id"), "name": t.get("name")} for t in st_tasks if isinstance(t, dict)]
+                station_breakdowns.append({
+                    "stationId": sid,
+                    "stationName": st.name,
+                    "stationWeight": getattr(st, "station_weight", 1.0),
+                    "tasks": tasks_list,
+                    "patrols": st_patrols_list
+                })
+        else:
+            rows = await scores_store.aggregate_event(event_id)
+            patrols_acc = {}
+            st_acc = {}
+
+            for r in rows:
+                pid = r["patrol_id"]
+                sid = r["station_id"]
+                weighted = float(r.get("weighted_score", 0.0))
+                p_entry = patrols_acc.setdefault(pid, {
+                    "patrolId": pid,
+                    "patrolName": r.get("patrol_name") or patrol_name_map.get(pid, f"Patrol {pid}"),
+                    "totalScore": 0.0
+                })
+                p_entry["totalScore"] += weighted
+                st_acc.setdefault(sid, {})[pid] = weighted
+
+            for pid, p_name in patrol_name_map.items():
+                if pid not in patrols_acc:
+                    patrols_acc[pid] = {
+                        "patrolId": pid,
+                        "patrolName": p_name,
+                        "totalScore": 0.0
+                    }
+
+            overall_patrols = list(patrols_acc.values())
+
+            for st in stations:
+                sid = st.id
+                st_p_scores = st_acc.get(sid, {})
+                st_patrols_list = []
+                for pid, p_name in patrol_name_map.items():
+                    st_patrols_list.append({
+                        "patrolId": pid,
+                        "patrolName": p_name,
+                        "score": st_p_scores.get(pid, 0.0)
+                    })
+                st_tasks = getattr(st, "tasks", []) or []
+                tasks_list = [{"id": t.get("id") or t.get("_id"), "name": t.get("name")} for t in st_tasks if isinstance(t, dict)]
+                station_breakdowns.append({
+                    "stationId": sid,
+                    "stationName": st.name,
+                    "stationWeight": getattr(st, "station_weight", 1.0),
+                    "tasks": tasks_list,
+                    "patrols": st_patrols_list
+                })
+
+        ods_bytes = generate_event_scoring_ods(
+            event_name=event_name,
+            overall_patrols=overall_patrols,
+            station_breakdowns=station_breakdowns
+        )
+
+        file_key = f"events/{event_id}/reports/{report_id}-scoring.ods"
+        upload_report_bytes(file_key, ods_bytes, content_type="application/vnd.oasis.opendocument.spreadsheet")
+        await reports_store.mark_report_ready(report_id, file_key, len(ods_bytes))
+    except Exception as ex:
+        logger.exception(f"Failed generating ODS report {report_id}: {ex}")
+        await reports_store.mark_report_failed(report_id, str(ex))
+
+
 class CompiledReportsResource:
     """GET /v1/events/{eventId}/compiled-reports
     Lists all compiled reports for an event.
 
     POST /v1/events/{eventId}/compiled-reports
-    Triggers asynchronous generation of a report (e.g. reportType="patrols-pdf", "event-scoring", or "event-scoring-draft").
+    Triggers asynchronous generation of a report (e.g. reportType="patrols-pdf", "event-scoring", "event-scoring-draft", or "event-scoring-ods").
     """
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response, event_id: str):
@@ -181,13 +301,17 @@ class CompiledReportsResource:
             report_name = f"Draft Scoring Report ({event_name})"
         elif report_type == "event-scoring":
             report_name = f"Final Scoring Report ({event_name})"
+        elif report_type == "event-scoring-ods":
+            report_name = f"Scoring Spreadsheet ODS ({event_name})"
         else:
             report_name = f"Patrol QR Badges ({event_name})"
 
         job = await store.create_report_job(report_id, event_id, report_type, report_name)
 
         # Trigger async background generation
-        if report_type in ("event-scoring", "event-scoring-draft"):
+        if report_type == "event-scoring-ods":
+            asyncio.create_task(_background_generate_scoring_ods(report_id, event_id, event_name))
+        elif report_type in ("event-scoring", "event-scoring-draft"):
             is_draft = (report_type == "event-scoring-draft")
             asyncio.create_task(_background_generate_scoring_pdf(report_id, event_id, event_name, is_draft=is_draft))
         else:
@@ -225,14 +349,15 @@ class CompiledReportDownloadResource:
         if not file_key:
             raise falcon.HTTPNotFound(title="Report File Missing", description="The report file key is missing.")
 
-        pdf_bytes = download_report_bytes(file_key)
-        if not pdf_bytes:
+        file_bytes = download_report_bytes(file_key)
+        if not file_bytes:
             raise falcon.HTTPNotFound(title="File Not Found", description="Report file could not be found in storage.")
 
         resp.content_type = report.get("content_type", "application/pdf")
-        filename = f"{report['id']}.pdf"
+        ext = "ods" if (file_key.endswith(".ods") or "opendocument.spreadsheet" in resp.content_type) else "pdf"
+        filename = f"{report['id']}.{ext}"
         resp.append_header("Content-Disposition", f'inline; filename="{filename}"')
-        resp.data = pdf_bytes
+        resp.data = file_bytes
         resp.status = falcon.HTTP_200
 
     async def on_delete(self, req: falcon.Request, resp: falcon.Response, reportId: str):

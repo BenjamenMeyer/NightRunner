@@ -230,7 +230,7 @@ export default function Reports() {
                                             </td>
                                             <td>
                                                 <span className="badge" style={{ background: "var(--input-bg)", border: "1px solid var(--border)", padding: "2px 8px", borderRadius: "4px", fontSize: "0.8rem" }}>
-                                                    {item.report_type === "event-scoring-draft" ? "Draft Scoring" : (item.report_type === "event-scoring" ? "Final Scoring" : "Patrol QR Badges")}
+                                                    {item.report_type === "event-scoring-draft" ? "Draft Scoring" : (item.report_type === "event-scoring" ? "Final Scoring" : (item.report_type === "event-scoring-ods" ? "Scoring ODS" : "Patrol QR Badges"))}
                                                 </span>
                                             </td>
                                             <td>
