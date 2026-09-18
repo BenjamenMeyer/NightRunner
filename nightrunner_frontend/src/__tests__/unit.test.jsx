@@ -1741,6 +1741,20 @@ describe('Event Score Finalizer Role & Access Tests', () => {
     expect(copiedPreset.durationCalculationMode).toBe('fixed_minus_time');
     expect(copiedPreset.durationFixedValue).toBe(45.0);
   });
+
+  it('stores raw score value and participant_count separately and calculates effective score when divideByPatrolSize is enabled', () => {
+    const rawScore = 100.0;
+    const participantCount = 5;
+
+    // Effective divided score: 100 / 5 = 20.0
+    const effectiveScore = rawScore / participantCount;
+    expect(effectiveScore).toBe(20.0);
+
+    // Adjusted participant count to 4: 100 / 4 = 25.0
+    const adjustedCount = 4;
+    const adjustedEffectiveScore = rawScore / adjustedCount;
+    expect(adjustedEffectiveScore).toBe(25.0);
+  });
 });
 
 

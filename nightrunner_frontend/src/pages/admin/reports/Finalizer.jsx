@@ -4,7 +4,7 @@ import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
 import "./Finalizer.css";
 
 export default function Finalizer() {
-    const { event, eventId, loading: eventLoading, error: eventError } = useEventContext();
+    const { eventId, loading: eventLoading, error: eventError } = useEventContext();
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -13,13 +13,11 @@ export default function Finalizer() {
 
     const [stations, setStations] = useState([]);
     const [patrols, setPatrols] = useState([]);
-    const [configurations, setConfigurations] = useState([]);
+    const [, setConfigurations] = useState([]);
     const [stationReports, setStationReports] = useState({});
 
     const [stationStates, setStationStates] = useState({});
     const [summaryCollapsed, setSummaryCollapsed] = useState(false);
-
-    const [isAuthorized, setIsAuthorized] = useState(true);
 
     useEffect(() => {
         if (eventLoading) return;
@@ -264,12 +262,22 @@ export default function Finalizer() {
     }
 
     const [customOverrides, setCustomOverrides] = useState({});
+    const [customParticipantCounts, setCustomParticipantCounts] = useState({});
 
     function handleTaskScoreOverride(stationId, patrolId, taskId, val) {
         const numVal = parseFloat(val);
         setCustomOverrides((prev) => ({
             ...prev,
             [`${stationId}_${patrolId}_${taskId}`]: Number.isNaN(numVal) ? 0 : numVal
+        }));
+    }
+
+    function handleParticipantCountChange(stationId, patrolId, taskId, val) {
+        const parsed = parseInt(val, 10);
+        const cnt = Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
+        setCustomParticipantCounts((prev) => ({
+            ...prev,
+            [`${stationId}_${patrolId}_${taskId}`]: cnt
         }));
     }
 
@@ -285,7 +293,7 @@ export default function Finalizer() {
             (stReport.patrols || []).forEach((p) => {
                 const taskMap = {};
                 (p.breakdown || []).forEach((b) => {
-                    taskMap[b.taskId] = { rawScore: b.rawScore, submittedText: b.submittedText };
+                    taskMap[b.taskId] = { rawScore: b.rawScore, submittedText: b.submittedText, participantCount: b.participantCount };
                 });
                 patrolBreakdownMap[p.patrolId] = taskMap;
             });
@@ -302,6 +310,7 @@ export default function Finalizer() {
                     const taskId = t.id || t._id;
                     const isEnabled = stState.enabledTasks[taskId] !== false;
                     const type = t.scoreValue?.type || t.type;
+                    const divideByPatrolSize = t.divideByPatrolSize ?? t.scoreValue?.divideByPatrolSize ?? false;
                     const rawVal = pTaskMap[taskId];
 
                     if (type === "Automatic Station Disqualification") {
@@ -319,7 +328,14 @@ export default function Finalizer() {
                         if (customOverrides[overrideKey] !== undefined) {
                             rawScore = customOverrides[overrideKey];
                         }
-                        sum += rawScore * weight;
+                        let effectiveScore = rawScore;
+                        if (divideByPatrolSize) {
+                            const pCount = customParticipantCounts[overrideKey] !== undefined ? customParticipantCounts[overrideKey] : (typeof rawVal === "object" && rawVal !== null && rawVal.participantCount ? Number(rawVal.participantCount) : 1);
+                            if (pCount > 0) {
+                                effectiveScore = rawScore / pCount;
+                            }
+                        }
+                        sum += effectiveScore * weight;
                     }
                 });
 
@@ -347,7 +363,7 @@ export default function Finalizer() {
                                 }
                                 sum += durationScore;
                             }
-                        } catch (e) {}
+                        } catch {}
                     }
                 }
 
@@ -379,7 +395,7 @@ export default function Finalizer() {
         });
 
         return calcs;
-    }, [stations, patrols, stationReports, stationStates, globalScoringMode]);
+    }, [stations, patrols, stationReports, stationStates, globalScoringMode, customOverrides, customParticipantCounts]);
 
     const summaryCalculations = useMemo(() => {
         const summary = {};
@@ -910,6 +926,11 @@ export default function Finalizer() {
                                                         const rawScore = currentScore;
                                                         const isDisqualTask = type === "Automatic Station Disqualification";
                                                         const isTextTask = type === "Text Answer";
+                                                        const divideByPatrolSize = t.divideByPatrolSize ?? t.scoreValue?.divideByPatrolSize ?? false;
+
+                                                        const storedPCount = typeof rawEntry === "object" && rawEntry !== null && rawEntry.participantCount ? Number(rawEntry.participantCount) : 1;
+                                                        const currentPCount = customParticipantCounts[overrideKey] !== undefined ? customParticipantCounts[overrideKey] : storedPCount;
+                                                        const effectiveScore = divideByPatrolSize && currentPCount > 0 ? (rawScore / currentPCount) : rawScore;
 
                                                         return (
                                                             <td
@@ -918,8 +939,8 @@ export default function Finalizer() {
                                                                 style={{ position: "relative" }}
                                                             >
                                                                 {rawScoreNum !== undefined || customOverrides[overrideKey] !== undefined ? (
-                                                                    <div className="cipher-cell-container" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                                                        <div className="cipher-hover-trigger" style={{ cursor: submittedTextStr ? "help" : "default", display: "inline-flex", alignItems: "center", gap: "2px" }}>
+                                                                    <div className="cipher-cell-container" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                                                                        <div className="cipher-hover-trigger" style={{ cursor: (submittedTextStr || divideByPatrolSize) ? "help" : "default", display: "inline-flex", alignItems: "center", gap: "2px" }}>
                                                                             {isDisqualTask && (
                                                                                 <span style={{ fontSize: "0.85rem", color: "#ef4444" }}>
                                                                                     {rawScore > 0 || (submittedTextStr && submittedTextStr.includes("disqualified: true")) ? "🚫" : "✅"}
@@ -927,15 +948,29 @@ export default function Finalizer() {
                                                                             )}
                                                                             {isTextTask && <span style={{ fontSize: "0.85rem" }}>📝</span>}
                                                                             <span>
-                                                                                {Number(rawScore).toFixed(1)}
+                                                                                {Number(effectiveScore).toFixed(1)}
                                                                                 {weight !== 1.0 && isEnabled && (
                                                                                     <small className="score-weighted-hint">
                                                                                         {" "}
-                                                                                        ({(Number(rawScore) * weight).toFixed(1)})
+                                                                                        ({(Number(effectiveScore) * weight).toFixed(1)})
                                                                                     </small>
                                                                                 )}
                                                                             </span>
                                                                         </div>
+
+                                                                        {divideByPatrolSize && (
+                                                                            <div style={{ display: "flex", alignItems: "center", gap: "2px", fontSize: "0.75rem", marginTop: "2px" }}>
+                                                                                <span style={{ color: "var(--text-secondary)", fontSize: "0.7rem" }}>👥 ÷</span>
+                                                                                <input
+                                                                                    type="number"
+                                                                                    min="1"
+                                                                                    value={currentPCount}
+                                                                                    onChange={(e) => handleParticipantCountChange(st.id, p.id, taskId, e.target.value)}
+                                                                                    title="Adjust participating patrol member count for this score"
+                                                                                    style={{ width: "42px", padding: "1px 2px", fontSize: "0.75rem", textAlign: "center", borderRadius: "3px", border: customParticipantCounts[overrideKey] !== undefined ? "2px solid #3b82f6" : "1px solid var(--border)" }}
+                                                                                />
+                                                                            </div>
+                                                                        )}
 
                                                                         {/* Rich Detail Hover Popover for Text / Disqualification / Custom tasks */}
                                                                         {submittedTextStr && (
@@ -993,7 +1028,7 @@ export default function Finalizer() {
                                                                      startDateStr = sDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                                                                      endDateStr = eDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                                                                  }
-                                                             } catch (e) {}
+                                                             } catch {}
                                                          }
 
                                                          const mins = seconds !== null ? Math.floor(seconds / 60) : 0;

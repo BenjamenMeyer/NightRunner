@@ -20,6 +20,18 @@ def _extract_submitted_text(val: Any) -> Optional[str]:
     return None
 
 
+def _extract_participant_count(val: Any) -> int:
+    """Helper to extract participant count from a scoreValue parameter."""
+    if isinstance(val, dict):
+        if "participantCount" in val:
+            try:
+                cnt = int(val["participantCount"])
+                return cnt if cnt > 0 else 1
+            except Exception:
+                return 1
+    return 1
+
+
 def _parse_numeric_score_value(val: Any) -> float:
     """Helper to convert complex task score values into a float.
     Handles dicts (stopwatch timestamps / elapsedSeconds / rawValue & participantCount), booleans, numeric strings, and text inputs.
@@ -36,11 +48,7 @@ def _parse_numeric_score_value(val: Any) -> float:
         if "calculatedScore" in val and isinstance(val["calculatedScore"], (int, float)):
             return float(val["calculatedScore"])
         if "rawValue" in val:
-            raw_num = _parse_numeric_score_value(val["rawValue"])
-            participant_cnt = int(val.get("participantCount") or 1)
-            if participant_cnt > 0:
-                return float(raw_num / participant_cnt)
-            return float(raw_num)
+            return _parse_numeric_score_value(val["rawValue"])
         if "elapsedSeconds" in val and isinstance(val["elapsedSeconds"], (int, float)):
             return float(val["elapsedSeconds"])
         if "startTime" in val and "endTime" in val:
@@ -156,6 +164,7 @@ class ScoresResource:
                 completed_at=s.get("completedAt") or payload.get("completedAt"),
                 entry_mode=payload.get("entryMode", "live"),
                 submitted_text=_extract_submitted_text(raw_score_value),
+                participant_count=_extract_participant_count(raw_score_value),
             )
             # Deactivate previous active score for this same task to avoid double counting while preserving history
             await store.deactivate_previous_scores(event_id, station_id, patrol_id, task_id)
