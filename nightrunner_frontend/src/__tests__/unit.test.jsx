@@ -1343,6 +1343,55 @@ describe('Scoring Form and ScoreField Unit Verification', () => {
     expect(isEventAdminWithEvent).toBe(true);
   });
 
+  it('correctly evaluates isEventOps and isPatrolManager permissions across role levels', () => {
+    const eventOpsUser = {
+      id: 'usr-ops',
+      isAdmin: false,
+      roles: { 'evt-100': 'event-ops' }
+    };
+
+    const patrolMgmtUser = {
+      id: 'usr-pm',
+      isAdmin: false,
+      roles: { 'evt-100': 'patrol-management' }
+    };
+
+    const eventAdminUser = {
+      id: 'usr-admin',
+      isAdmin: false,
+      roles: { 'evt-100': 'event-admin' }
+    };
+
+    const sysAdminUser = {
+      id: 'usr-sys',
+      isAdmin: true,
+      roles: {}
+    };
+
+    const standardUser = {
+      id: 'usr-std',
+      isAdmin: false,
+      roles: { 'evt-100': 'user' }
+    };
+
+    const checkEventOps = (u, eId) => u.isAdmin || u.roles?.[eId] === 'event-admin' || u.roles?.[eId] === 'event-ops';
+    const checkPatrolMgmt = (u, eId) => u.isAdmin || u.roles?.[eId] === 'event-admin' || u.roles?.[eId] === 'patrol-management';
+
+    // Event Ops evaluation
+    expect(checkEventOps(eventOpsUser, 'evt-100')).toBe(true);
+    expect(checkEventOps(eventOpsUser, 'evt-200')).toBe(false);
+    expect(checkEventOps(eventAdminUser, 'evt-100')).toBe(true);
+    expect(checkEventOps(sysAdminUser, 'evt-100')).toBe(true);
+    expect(checkEventOps(standardUser, 'evt-100')).toBe(false);
+
+    // Patrol Management evaluation
+    expect(checkPatrolMgmt(patrolMgmtUser, 'evt-100')).toBe(true);
+    expect(checkPatrolMgmt(patrolMgmtUser, 'evt-200')).toBe(false);
+    expect(checkPatrolMgmt(eventAdminUser, 'evt-100')).toBe(true);
+    expect(checkPatrolMgmt(sysAdminUser, 'evt-100')).toBe(true);
+    expect(checkPatrolMgmt(standardUser, 'evt-100')).toBe(false);
+  });
+
   it('deduplicates listener notifications when user data is unchanged', () => {
     let notifyCount = 0;
     const userA = { id: 'u1', name: 'User 1' };

@@ -8,6 +8,8 @@ import "./UserManager.css";
 const EVENT_ROLES = [
     "user",
     "event-admin",
+    "event-ops",
+    "patrol-management",
     "scoring-lead",
     "scoring-center",
     "scorer",
@@ -714,6 +716,18 @@ export default function UserManager() {
                                                                 <strong>Event Admin:</strong> Full event management authority. Can configure event details, manage patrols & stations, assign user roles (Scoring Lead, Station Lead, Volunteer), override station locks, access the Score Finalizer, and generate all scoring reports.
                                                             </span>
                                                         );
+                                                    case "event-ops":
+                                                        return (
+                                                            <span>
+                                                                <strong>Event Operations:</strong> Logistics & gate staff. Can access the Arrivals Dashboard and Gate Check-in page to record participant arrivals.
+                                                            </span>
+                                                        );
+                                                    case "patrol-management":
+                                                        return (
+                                                            <span>
+                                                                <strong>Patrol Management:</strong> Patrol manager & registrar. Can view the Patrol Manager page, scan patrol QR codes, and create or update patrol registrations.
+                                                            </span>
+                                                        );
                                                     case "scoring-lead":
                                                         return (
                                                             <span>
@@ -972,6 +986,18 @@ export default function UserManager() {
                             </div>
 
                             <div className="role-guide-card">
+                                <h4>📋 Event Operations</h4>
+                                <p><strong>Key Permissions:</strong> Access to the Arrivals Dashboard and Gate Check-In functionality. Enables staff to view and record participant arrivals.</p>
+                                <p className="role-guide-audience"><strong>Who to assign:</strong> Gate check-in staff, registration desk volunteers, and logistics coordinators.</p>
+                            </div>
+
+                            <div className="role-guide-card">
+                                <h4>🛡️ Patrol Management</h4>
+                                <p><strong>Key Permissions:</strong> Access to the Patrol Manager page, QR code scanning, and creating/editing patrol registrations.</p>
+                                <p className="role-guide-audience"><strong>Who to assign:</strong> Patrol registrars, unit liaisons, and check-in coordinators.</p>
+                            </div>
+
+                            <div className="role-guide-card">
                                 <h4>📊 Scoring Lead</h4>
                                 <p><strong>Key Permissions:</strong> Oversees event scoring, verifies station submissions, performs cross-station paper score entries, accesses the Score Finalizer, adjusts calculation totals, and generates all scoring reports.</p>
                                 <p className="role-guide-audience"><strong>Who to assign:</strong> Chief scoring official or lead scoremaster.</p>
@@ -1018,6 +1044,10 @@ function formatRole(role) {
     switch (role) {
         case "event-admin":
             return "Event Admin";
+        case "event-ops":
+            return "Event Operations";
+        case "patrol-management":
+            return "Patrol Management";
         case "scoring-lead":
             return "Scoring Lead";
         case "scoring-center":

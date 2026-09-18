@@ -9,6 +9,8 @@ This document details the user roles, access control hierarchy, event visibility
 ```mermaid
 flowchart TD
     SA["System Admin"] --> EA["Event Admin"]
+    EA --> EO["Event Operations"]
+    EA --> PM["Patrol Management"]
     EA --> SL["Station Lead"]
     EA --> ST["Scoring Lead / Team"]
     SL --> SV["Station Volunteer"]
@@ -35,7 +37,22 @@ flowchart TD
   - Full station activity timing & scoring capabilities across all stations in the event.
   - Access to Event Score Finalizer, calculation adjustments, and all score report generation.
 
-### 3. Scoring Lead / Scoring Team
+### 3. Event Operations (`event-ops`)
+- **Scope**: Event-specific gate check-in & arrivals logistics.
+- **Event Visibility**: Can view and access assigned events.
+- **Permissions**:
+  - Access to the **Arrivals Dashboard** (`/arrivals/dashboard`) and **Gate Check-In** screen (`/arrivals`).
+  - Record participant arrivals by troop or individual.
+
+### 4. Patrol Management (`patrol-management`)
+- **Scope**: Event-specific patrol registration and roster management.
+- **Event Visibility**: Can view and access assigned events.
+- **Permissions**:
+  - Access to the **Patrol Manager** page (`/admin/patrols`).
+  - Scan patrol QR codes to quickly view/edit patrol information.
+  - Create, update, and manage patrol registrations and roster member assignments.
+
+### 5. Scoring Lead / Scoring Team
 - **Scope**: Event-specific scoring operations.
 - **Event Visibility**: Can view and access assigned events.
 - **Permissions**:
@@ -44,7 +61,7 @@ flowchart TD
   - Access Event Score Finalizer page to calculate, adjust, and finalize event scores.
   - Generate all scoring reports (Scoring Lead, Event Admin, System Admin).
 
-### 4. Station Lead
+### 6. Station Lead
 - **Scope**: Event-specific & station-specific operations.
 - **Event Visibility**: Can view and access assigned events.
 - **Permissions**:
@@ -52,7 +69,7 @@ flowchart TD
   - Perform station check-in/check-out and activity scoring at their assigned station.
   - Override or reopen completed station attempts for their station (beyond the 5-minute volunteer self-reset window).
 
-### 5. Station Volunteer / Scorer
+### 7. Station Volunteer / Scorer
 - **Scope**: Station-level scoring tasks.
 - **Event Visibility**: Can view and access assigned events.
 - **Permissions**:
@@ -65,17 +82,19 @@ flowchart TD
 
 ## Detailed Permissions & Capabilities Matrix
 
-| Feature / Action | System Admin | Event Admin | Scoring Lead / Team | Station Lead | Station Volunteer |
-|------------------|--------------|-------------|---------------------|--------------|-------------------|
-| **View All System Events** | ✅ | ❌ (Assigned only) | ❌ (Assigned only) | ❌ (Assigned only) | ❌ (Assigned only) |
-| **Assign Event Admins** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Assign Station Leads & Staff** | ✅ | ✅ | ❌ | ✅ (Their station) | ❌ |
-| **View Point Weights & Point Totals** | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **Manual Score Entry (Any Station)** | ✅ | ✅ | ✅ | ❌ (Their station) | ❌ (Their station) |
-| **Reopen Completed Attempt (<= 5 mins)** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Reopen Completed Attempt (> 5 mins)** | ✅ | ✅ | ✅ | ✅ (Their station) | ❌ |
-| **Access Score Finalizer Page** | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **Generate Scoring Reports** | ✅ | ✅ | ✅ (Scoring Lead) | ❌ | ❌ |
+| Feature / Action | System Admin | Event Admin | Event Ops | Patrol Mgmt | Scoring Lead / Team | Station Lead | Station Volunteer |
+|------------------|--------------|-------------|-----------|-------------|---------------------|--------------|-------------------|
+| **View All System Events** | ✅ | ❌ (Assigned only) | ❌ (Assigned only) | ❌ (Assigned only) | ❌ (Assigned only) | ❌ (Assigned only) | ❌ (Assigned only) |
+| **Arrivals & Gate Check-In** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Patrol Manager & QR Scanning** | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **Assign Event Admins** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Assign Station Leads & Staff** | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ (Their station) | ❌ |
+| **View Point Weights & Point Totals** | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **Manual Score Entry (Any Station)** | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ (Their station) | ❌ (Their station) |
+| **Reopen Completed Attempt (<= 5 mins)** | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Reopen Completed Attempt (> 5 mins)** | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ (Their station) | ❌ |
+| **Access Score Finalizer Page** | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **Generate Scoring Reports** | ✅ | ✅ | ❌ | ❌ | ✅ (Scoring Lead) | ❌ | ❌ |
 
 ---
 

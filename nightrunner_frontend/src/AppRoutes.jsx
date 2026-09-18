@@ -36,6 +36,8 @@ import ArrivalsDashboard from "./pages/arrivals/ArrivalsDashboard.jsx";
 export const ACCESS = {
     PUBLIC: "public",
     USER: "user",
+    EVENT_OPS: "event-ops",
+    PATROL_MANAGER: "patrol-manager",
     ADMIN: "admin",
     SYSTEM_ADMIN: "system-admin"
 };
@@ -157,7 +159,7 @@ export const AppRoutes = [
         path: "/admin/patrols",
         element: PatrolsAdmin,
         name: "Patrol Manager",
-        access: ACCESS.ADMIN
+        access: ACCESS.PATROL_MANAGER
     },
     {
         path: "/admin/roster",
@@ -169,19 +171,19 @@ export const AppRoutes = [
         path: "/arrivals",
         element: Arrivals,
         name: "Gate Check-In",
-        access: ACCESS.USER
+        access: ACCESS.EVENT_OPS
     },
     {
         path: "/arrivals/print",
         element: ArrivalsPrint,
-        access: ACCESS.USER,
+        access: ACCESS.EVENT_OPS,
         layout: false
     },
     {
         path: "/arrivals/dashboard",
         element: ArrivalsDashboard,
         name: "Arrivals Dashboard",
-        access: ACCESS.USER
+        access: ACCESS.EVENT_OPS
     },
     {
         path: "/admin/patrols/create",
@@ -190,7 +192,7 @@ export const AppRoutes = [
                 mode="create"
             />
         ),
-        access: ACCESS.ADMIN
+        access: ACCESS.PATROL_MANAGER
     },
     {
         path: "/admin/patrols/edit",
@@ -199,7 +201,7 @@ export const AppRoutes = [
                 mode="edit"
             />
         ),
-        access: ACCESS.ADMIN
+        access: ACCESS.PATROL_MANAGER
     },
     {
         path: "/admin/stations",
