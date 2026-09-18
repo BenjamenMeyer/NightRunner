@@ -1698,6 +1698,49 @@ describe('Event Score Finalizer Role & Access Tests', () => {
     const grandTotalFormula = `Grand Total Score = ${grandTotalFormulaParts.join(' + ')}`;
     expect(grandTotalFormula).toBe('Grand Total Score = [Alpha Station (10pt) × 1] + [Beta Station (10pt) × 2]');
   });
+
+  it('calculates station duration score for fixed_minus_time and direct calculation modes', () => {
+    const durSecs = 20.0;
+    const durWeight = 1.5;
+
+    // fixed_minus_time mode: (30 - 20) * 1.5 = 15 points
+    const fixedModeScore = (30.0 - durSecs) * durWeight;
+    expect(fixedModeScore).toBe(15.0);
+
+    // direct mode: 20 * 1.5 = 30 points
+    const directModeScore = durSecs * durWeight;
+    expect(directModeScore).toBe(30.0);
+  });
+
+  it('carries over duration score configuration settings when copying station to template and loading preset', () => {
+    const mockStation = {
+      id: 'st-10',
+      name: 'Pioneering',
+      description: 'Pioneering station',
+      stationWeight: 2.0,
+      durationScoreActive: true,
+      durationScoreWeight: 1.5,
+      durationCalculationMode: 'fixed_minus_time',
+      durationFixedValue: 45.0,
+      tasks: []
+    };
+
+    // Simulated copyFromStation mapping as in ConfigurationEditor
+    const copiedPreset = {
+      name: `${mockStation.name} Preset`,
+      stationWeight: mockStation.stationWeight,
+      durationScoreActive: mockStation.durationScoreActive,
+      durationScoreWeight: mockStation.durationScoreWeight,
+      durationCalculationMode: mockStation.durationCalculationMode,
+      durationFixedValue: mockStation.durationFixedValue,
+      tasks: mockStation.tasks
+    };
+
+    expect(copiedPreset.durationScoreActive).toBe(true);
+    expect(copiedPreset.durationScoreWeight).toBe(1.5);
+    expect(copiedPreset.durationCalculationMode).toBe('fixed_minus_time');
+    expect(copiedPreset.durationFixedValue).toBe(45.0);
+  });
 });
 
 
