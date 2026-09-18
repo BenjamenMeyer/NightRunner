@@ -34,7 +34,9 @@ AGGREGATE_STATION = """
         (s.score_value * s.score_weight) AS weighted_score,
         s.active,
         s.submitted_at,
-        s.submitted_text
+        s.submitted_text,
+        s.started_at,
+        s.completed_at
     FROM scores s
     JOIN patrols p       ON p.id = s.patrol_id
     LEFT JOIN station_tasks t ON t.id = s.task_id

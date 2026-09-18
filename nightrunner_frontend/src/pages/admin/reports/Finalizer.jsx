@@ -621,6 +621,7 @@ export default function Finalizer() {
                                                     {t.name || t.description || "Task"}
                                                 </th>
                                             ))}
+                                            <th className="col-total" style={{ minWidth: "120px" }}>⏱️ Station Duration</th>
                                             <th className="col-total">
                                                 {globalScoringMode === "relative" ? "Total Score (10pt Relative)" : "Total Score (Weighted Sum)"}
                                             </th>
@@ -646,6 +647,7 @@ export default function Finalizer() {
                                                     </th>
                                                 );
                                             })}
+                                            <th className="col-task-center font-sm">—</th>
                                             <th className="col-total-label">
                                                 {globalScoringMode === "relative" ? `Max Patrol Raw: ${stCalc.maxAbsoluteAchieved.toFixed(1)}` : "Sum"}
                                             </th>
@@ -671,6 +673,7 @@ export default function Finalizer() {
                                                     </th>
                                                 );
                                             })}
+                                            <th className="col-task-center font-sm">—</th>
                                             <th className="col-total-label">Subtotal</th>
                                         </tr>
                                     </thead>
@@ -864,9 +867,77 @@ export default function Finalizer() {
                                                         );
                                                     })}
 
-                                                    <td className="col-total-val">
-                                                        <strong>{displayTotal.toFixed(2)}</strong>
-                                                    </td>
+                                                     {/* Station Duration Cell with Hover Popover */}
+                                                     {(() => {
+                                                         const pReport = (stReport.patrols || []).find((pr) => String(pr.patrolId) === String(p.id));
+                                                         const startIso = pReport?.tasksStartedAt || pReport?.checkedInAt;
+                                                         const endIso = pReport?.tasksCompletedAt || pReport?.checkedOutAt;
+
+                                                         let seconds = null;
+                                                         let startDateStr = "—";
+                                                         let endDateStr = "—";
+
+                                                         if (startIso && endIso) {
+                                                             try {
+                                                                 const sDate = new Date(startIso);
+                                                                 const eDate = new Date(endIso);
+                                                                 if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
+                                                                     seconds = Math.max(0, (eDate.getTime() - sDate.getTime()) / 1000);
+                                                                     startDateStr = sDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                                                                     endDateStr = eDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                                                                 }
+                                                             } catch (e) {}
+                                                         }
+
+                                                         const mins = seconds !== null ? Math.floor(seconds / 60) : 0;
+                                                         const remSecs = seconds !== null ? (seconds % 60).toFixed(2) : "0.00";
+
+                                                         return (
+                                                             <td className="col-task-score cipher-task-cell" style={{ position: "relative" }}>
+                                                                 {seconds !== null ? (
+                                                                     <div className="cipher-cell-container" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                                                         <div className="cipher-hover-trigger" style={{ cursor: "help", display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                                                                             <span>⏱️</span>
+                                                                             <strong>{seconds.toFixed(2)}s</strong>
+                                                                         </div>
+
+                                                                         {/* Duration Detail Hover Popover */}
+                                                                         <div className="cipher-hover-popover" style={{
+                                                                             display: "none",
+                                                                             position: "absolute",
+                                                                             bottom: "100%",
+                                                                             left: "50%",
+                                                                             transform: "translateX(-50%)",
+                                                                             marginBottom: "8px",
+                                                                             padding: "10px 14px",
+                                                                             background: "var(--card-bg, #0f172a)",
+                                                                             border: "1px solid var(--border, #334155)",
+                                                                             borderRadius: "8px",
+                                                                             boxShadow: "0 10px 25px rgba(0, 0, 0, 0.5)",
+                                                                             zIndex: 100,
+                                                                             whiteSpace: "nowrap",
+                                                                             fontSize: "0.82rem"
+                                                                         }}>
+                                                                             <div style={{ fontWeight: "bold", marginBottom: "6px", color: "var(--button-bg, #3b82f6)" }}>
+                                                                                 ⏱️ Station Visit & Timing Details
+                                                                             </div>
+                                                                             <div style={{ fontFamily: "monospace", display: "flex", flexDirection: "column", gap: "3px", background: "var(--page-bg)", padding: "6px 8px", borderRadius: "4px", border: "1px solid var(--border)" }}>
+                                                                                 <div><strong style={{ color: "var(--text-secondary)" }}>Start Time:  </strong>{startDateStr}</div>
+                                                                                 <div><strong style={{ color: "var(--text-secondary)" }}>End Time:    </strong>{endDateStr}</div>
+                                                                                 <div><strong style={{ color: "var(--text-secondary)" }}>Duration:    </strong>{mins}m {remSecs}s ({seconds.toFixed(2)}s total)</div>
+                                                                             </div>
+                                                                         </div>
+                                                                     </div>
+                                                                 ) : (
+                                                                     <span className="score-missing">—</span>
+                                                                 )}
+                                                             </td>
+                                                         );
+                                                     })()}
+
+                                                     <td className="col-total-val">
+                                                         <strong>{displayTotal.toFixed(2)}</strong>
+                                                     </td>
                                                 </tr>
                                             );
                                         })}

@@ -1698,6 +1698,26 @@ describe('Event Score Finalizer Role & Access Tests', () => {
     const grandTotalFormula = `Grand Total Score = ${grandTotalFormulaParts.join(' + ')}`;
     expect(grandTotalFormula).toBe('Grand Total Score = [Alpha Station (10pt) × 1] + [Beta Station (10pt) × 2]');
   });
+
+  it('calculates station duration seconds and formats minutes and seconds for hover popover', () => {
+    const startIso = '2026-09-18T10:00:00.000Z';
+    const endIso = '2026-09-18T10:02:45.350Z';
+
+    const sDate = new Date(startIso);
+    const eDate = new Date(endIso);
+    const seconds = (eDate.getTime() - sDate.getTime()) / 1000;
+
+    expect(seconds).toBe(165.35);
+    expect(seconds.toFixed(2)).toBe('165.35');
+
+    const mins = Math.floor(seconds / 60);
+    const remSecs = (seconds % 60).toFixed(2);
+    const formattedStr = `${mins}m ${remSecs}s (${seconds.toFixed(2)}s total)`;
+
+    expect(mins).toBe(2);
+    expect(remSecs).toBe('45.35');
+    expect(formattedStr).toBe('2m 45.35s (165.35s total)');
+  });
 });
 
 
