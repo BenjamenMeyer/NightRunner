@@ -175,17 +175,18 @@ async def test_scoring_creates_synthetic_completed_visit(test_client, dev_mode_e
 
 
 @pytest.mark.asyncio
-async def test_automatic_station_disqualification_score_parsing(test_client, dev_mode_enabled):
+async def test_score_participant_count_api_to_database_persistence(test_client, dev_mode_enabled):
+    """Integration test verifying that raw scoreValue and participantCount flow from POST /v1/scores into database."""
     payload = {
-        "eventId": "event-disqual",
-        "stationId": "station-disqual",
-        "patrolId": "patrol-disqual",
+        "eventId": "event-participant-test",
+        "stationId": "station-participant-test",
+        "patrolId": "patrol-participant-test",
         "scores": [
             {
-                "taskId": "task-disqual",
+                "taskId": "task-divided",
                 "scoreValue": {
-                    "disqualified": True,
-                    "reason": "Patrol brought unauthorized power tools"
+                    "rawValue": 100.0,
+                    "participantCount": 5
                 }
             }
         ]
@@ -193,11 +194,25 @@ async def test_automatic_station_disqualification_score_parsing(test_client, dev
     resp = await test_client.simulate_post("/v1/scores", json=payload)
     assert resp.status == falcon.HTTP_201
 
-    resp_get = await test_client.simulate_get("/v1/scores?eventId=event-disqual&stationId=station-disqual&patrolId=patrol-disqual")
+    # 1. Fetch via GET /v1/scores API endpoint
+    resp_get = await test_client.simulate_get("/v1/scores?eventId=event-participant-test&stationId=station-participant-test&patrolId=patrol-participant-test")
     assert resp_get.status == falcon.HTTP_200
-    scores = resp_get.json["scores"]
+    scores = resp_get.json.get("scores", [])
     assert len(scores) == 1
-    assert scores[0]["scoreValue"] == 0.0
+    assert scores[0]["scoreValue"] == 100.0  # Raw un-divided score stored directly
+    assert scores[0]["participantCount"] == 5
+
+    # 2. Query direct Database Driver row to ensure database column participant_count is populated
+    from nightrunner_backend.app_context import get_driver
+    driver = get_driver()
+    db_rows = await driver.execute(
+        "SELECT score_value, participant_count FROM scores WHERE event_id = :e AND station_id = :s AND patrol_id = :p",
+        {"e": "event-participant-test", "s": "station-participant-test", "p": "patrol-participant-test"}
+    )
+    assert len(db_rows) == 1
+    assert db_rows[0]["score_value"] == 100.0
+    assert db_rows[0]["participant_count"] == 5
+
 
 
 
