@@ -10,6 +10,7 @@ import ApiService from "../../../api/ApiService.js";
 import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
 
 import QRCodeModal from "./QRCodeModal.jsx";
+import QRScanner from "@/api/helpers/qr/QRScanner.jsx";
 
 import "./Patrols.css";
 
@@ -30,6 +31,7 @@ export default function Patrols() {
     const [error, setError] = useState(null);
 
     const [qrPatrol, setQrPatrol] = useState(null);
+    const [showScanner, setShowScanner] = useState(false);
 
     useEffect(() => {
         if (eventLoading) {
@@ -205,16 +207,27 @@ export default function Patrols() {
                     </p>
                 </div>
 
-                <button
-                    type="button"
-                    className="primary-button"
-                    onClick={() =>
-                        navigate("/admin/patrols/create")
-                    }
-                    disabled={!eventId}
-                >
-                    + Create Patrol
-                </button>
+                <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => setShowScanner(true)}
+                        disabled={!eventId}
+                    >
+                        📷 Scan Patrol QR
+                    </button>
+
+                    <button
+                        type="button"
+                        className="primary-button"
+                        onClick={() =>
+                            navigate("/admin/patrols/create")
+                        }
+                        disabled={!eventId}
+                    >
+                        + Create Patrol
+                    </button>
+                </div>
             </header>
 
             {error && (
@@ -441,6 +454,18 @@ export default function Patrols() {
                     onClose={() =>
                         setQrPatrol(null)
                     }
+                />
+            )}
+
+            {showScanner && (
+                <QRScanner
+                    onScan={(scanned) => {
+                        setShowScanner(false);
+                        if (scanned?.id) {
+                            navigate(`/admin/patrols/edit?patrolId=${encodeURIComponent(scanned.id)}`);
+                        }
+                    }}
+                    onCancel={() => setShowScanner(false)}
                 />
             )}
         </div>

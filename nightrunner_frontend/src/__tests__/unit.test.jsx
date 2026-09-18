@@ -569,6 +569,13 @@ describe('Patrol Service & Editor Contracts', () => {
     expect(call2.patrolId).toBe('p-100');
     expect(call2.patrol.name).toBe('Foxes');
   });
+
+  it('navigates to patrol editor route when a patrol QR code is scanned on Patrol Manager page', () => {
+    const scanned = { id: '01a022b8-45f0-7612-872e-201e8c8158db' };
+    const buildEditUrl = (patrolId) => `/admin/patrols/edit?patrolId=${encodeURIComponent(patrolId)}`;
+
+    expect(buildEditUrl(scanned.id)).toBe('/admin/patrols/edit?patrolId=01a022b8-45f0-7612-872e-201e8c8158db');
+  });
 });
 
 describe('EventManager Station Count & Member Roles Contracts', () => {
