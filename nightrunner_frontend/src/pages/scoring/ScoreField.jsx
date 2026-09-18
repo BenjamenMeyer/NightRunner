@@ -26,6 +26,17 @@ export default function ScoreField({
         milliseconds: "000"
     });
 
+    const divideByPatrolSize = task.divideByPatrolSize ?? scoreValue.divideByPatrolSize ?? false;
+    const initialRawValue = (typeof value === "object" && value !== null && "rawValue" in value) ? value.rawValue : (typeof value === "object" ? value : value);
+    const initialParticipantCount = (typeof value === "object" && value !== null && "participantCount" in value) ? value.participantCount : 1;
+
+    const [participantCount, setParticipantCount] = useState(initialParticipantCount);
+
+    // True once the HH/MM/SS/MS boxes have been edited but "Apply Adjusted Time"
+    // has not been pressed. Until it is pressed the value that would submit is
+    // still the raw timer run, not the time written on the paper scoresheet.
+    const [manualDirty, setManualDirty] = useState(false);
+
     useEffect(() => {
 
         if (!running || !startedAt) {
@@ -41,13 +52,13 @@ export default function ScoreField({
 
             setElapsed(newElapsed);
 
-            onChange({
-                startTime: startedAt.toISOString(),
-                endTime: new Date(
+            onChange(stopwatchPayload(
+                startedAt.toISOString(),
+                new Date(
                     startedAt.getTime() + newElapsed
                 ).toISOString(),
-                running: true
-            });
+                { running: true }
+            ));
 
             frame = requestAnimationFrame(update);
 
@@ -58,7 +69,44 @@ export default function ScoreField({
         return () =>
             cancelAnimationFrame(frame);
 
-    }, [running, startedAt]);
+    }, [running, startedAt, participantCount]);
+
+    // Stopwatch submissions are {startTime, endTime}; the backend derives elapsed
+    // seconds from them. When the task divides by patrol size the count has to ride
+    // along on the same object, since the backend reads participantCount off
+    // whatever dict it is given.
+    function stopwatchPayload(startIso, endIso, extra = {}, count) {
+
+        const payload = {
+            startTime: startIso,
+            endTime: endIso,
+            ...extra
+        };
+
+        if (divideByPatrolSize) {
+            payload.participantCount = count !== undefined ? count : participantCount;
+        }
+
+        return payload;
+
+    }
+
+    function handleStopwatchCountChange(cnt) {
+
+        // While the timer runs the animation-frame loop re-emits every frame and
+        // picks up the new count from its refreshed dependencies.
+        if (running || !startedAt) {
+            return;
+        }
+
+        onChange(stopwatchPayload(
+            startedAt.toISOString(),
+            (endedAt ?? startedAt).toISOString(),
+            {},
+            cnt
+        ));
+
+    }
 
     function formatElapsed(ms) {
 
@@ -79,12 +127,13 @@ export default function ScoreField({
         setEndedAt(null);
         setElapsed(0);
         setRunning(true);
+        setManualDirty(false);
 
-        onChange({
-            startTime: now.toISOString(),
-            endTime: now.toISOString(),
-            running: true
-        });
+        onChange(stopwatchPayload(
+            now.toISOString(),
+            now.toISOString(),
+            { running: true }
+        ));
 
     }
 
@@ -119,19 +168,19 @@ export default function ScoreField({
 
         });
 
-        onChange({
+        setManualDirty(false);
 
-            startTime: startedAt.toISOString(),
-
-            endTime: end.toISOString(),
-
-            running: false
-
-        });
+        onChange(stopwatchPayload(
+            startedAt.toISOString(),
+            end.toISOString(),
+            { running: false }
+        ));
 
     }
 
     function updateManual(field, newValue) {
+
+        setManualDirty(true);
 
         setManual(current => ({
 
@@ -162,14 +211,12 @@ export default function ScoreField({
         );
 
         setEndedAt(adjustedEnd);
+        setManualDirty(false);
 
-        onChange({
-
-            startTime: startedAt.toISOString(),
-
-            endTime: adjustedEnd.toISOString()
-
-        });
+        onChange(stopwatchPayload(
+            startedAt.toISOString(),
+            adjustedEnd.toISOString()
+        ));
 
     }
 
@@ -247,11 +294,6 @@ export default function ScoreField({
         );
     };
 
-    const divideByPatrolSize = task.divideByPatrolSize ?? scoreValue.divideByPatrolSize ?? false;
-    const initialRawValue = (typeof value === "object" && value !== null && "rawValue" in value) ? value.rawValue : (typeof value === "object" ? value : value);
-    const initialParticipantCount = (typeof value === "object" && value !== null && "participantCount" in value) ? value.participantCount : 1;
-
-    const [participantCount, setParticipantCount] = useState(initialParticipantCount);
 
     function updateValueWithParticipants(newVal, newCount = participantCount) {
         if (divideByPatrolSize) {
@@ -264,7 +306,10 @@ export default function ScoreField({
         }
     }
 
-    const renderDivideByPatrolSizeInput = () => {
+    // onCountChange lets a caller re-emit in its own value shape. The numeric
+    // tasks submit {rawValue, participantCount}; a stopwatch submits
+    // {startTime, endTime, participantCount}, so it passes its own handler.
+    const renderDivideByPatrolSizeInput = (onCountChange) => {
         if (!divideByPatrolSize) return null;
         return (
             <div className="task-participant-count-box" style={{
@@ -288,7 +333,11 @@ export default function ScoreField({
                     onChange={(e) => {
                         const cnt = Math.max(1, parseInt(e.target.value, 10) || 1);
                         setParticipantCount(cnt);
-                        updateValueWithParticipants(initialRawValue, cnt);
+                        if (onCountChange) {
+                            onCountChange(cnt);
+                        } else {
+                            updateValueWithParticipants(initialRawValue, cnt);
+                        }
                     }}
                     style={{ width: "80px", padding: "4px 8px" }}
                 />
@@ -607,6 +656,8 @@ export default function ScoreField({
 
                     <label>{taskTitle}</label>
 
+                    {renderDivideByPatrolSizeInput(handleStopwatchCountChange)}
+
                     <div className="stopwatch-card">
 
                         <div className="timer-display">
@@ -705,8 +756,16 @@ export default function ScoreField({
 
                                 </div>
 
+                                {manualDirty && (
+                                    <p className="manual-time-unapplied">
+                                        Time edited but not applied &mdash; press
+                                        &ldquo;Apply Adjusted Time&rdquo; or the
+                                        {" "}{formatElapsed(elapsed)} above is what will be saved.
+                                    </p>
+                                )}
+
                                 <button
-                                    className="secondary-button"
+                                    className="apply-adjusted-time-button"
                                     onClick={applyManual}
                                 >
 

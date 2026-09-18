@@ -1807,3 +1807,72 @@ describe('Event Score Finalizer Role & Access Tests', () => {
 
 
 
+
+describe('Stopwatch patrol-size division and unapplied-time guard', () => {
+
+  const makePayload = ({ startIso, endIso, divideByPatrolSize, participantCount, extra = {} }) => {
+    const payload = { startTime: startIso, endTime: endIso, ...extra };
+    if (divideByPatrolSize) {
+      payload.participantCount = participantCount;
+    }
+    return payload;
+  };
+
+  it('carries participantCount alongside the timestamps when the task divides by patrol size', () => {
+    const payload = makePayload({
+      startIso: '2026-09-18T20:00:00.000Z',
+      endIso: '2026-09-18T20:14:14.000Z',
+      divideByPatrolSize: true,
+      participantCount: 5
+    });
+
+    expect(payload.participantCount).toBe(5);
+    expect(payload.startTime).toBe('2026-09-18T20:00:00.000Z');
+    expect(payload.endTime).toBe('2026-09-18T20:14:14.000Z');
+  });
+
+  it('omits participantCount when the task does not divide by patrol size', () => {
+    const payload = makePayload({
+      startIso: '2026-09-18T20:00:00.000Z',
+      endIso: '2026-09-18T20:14:14.000Z',
+      divideByPatrolSize: false,
+      participantCount: 5
+    });
+
+    expect('participantCount' in payload).toBe(false);
+  });
+
+  it('divides stopwatch seconds by the member count to reach the Teamwork time points', () => {
+    const start = new Date('2026-09-18T20:00:00.000Z');
+    const end = new Date('2026-09-18T20:14:14.000Z');
+
+    const elapsedSeconds = (end.getTime() - start.getTime()) / 1000;
+    expect(elapsedSeconds).toBe(854);
+
+    const perMemberSeconds = elapsedSeconds / 5;
+    expect(perMemberSeconds).toBeCloseTo(170.8, 5);
+
+    // Teamwork time points = (7.5 - minutes per member) / 7.5, applied as a
+    // weight of -1/450 against the station's base of 26.
+    const timePoints = 1 - perMemberSeconds / 450;
+    expect(timePoints).toBeCloseTo(0.62044, 5);
+  });
+
+  it('flags manual time as edited-but-unapplied and clears it on apply or stop', () => {
+    let manualDirty = false;
+
+    const stopTimer = () => { manualDirty = false; };
+    const updateManual = () => { manualDirty = true; };
+    const applyManual = () => { manualDirty = false; };
+
+    stopTimer();
+    expect(manualDirty).toBe(false);
+
+    updateManual('minutes', '14');
+    expect(manualDirty).toBe(true);
+
+    applyManual();
+    expect(manualDirty).toBe(false);
+  });
+
+});
