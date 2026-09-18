@@ -281,6 +281,37 @@ export default function Finalizer() {
         }));
     }
 
+    // How many members a patrol has on its roster.
+    const patrolMemberCount = (patrol) => (Array.isArray(patrol?.members) ? patrol.members.length : 0);
+
+    // Divisor for a divide-by-patrol-size task. Preference order:
+    //   1. an explicit override typed on this screen
+    //   2. the count captured when the score was taken
+    //   3. the patrol's roster size
+    // Step 3 matters because scores.participant_count is NOT NULL and defaults to
+    // 1, and the stopwatch did not capture a count at all until recently -- so a
+    // stored 1 almost always means "never captured" rather than "one member took
+    // part". Falling back to the roster divides by something real instead of by 1,
+    // and the override is still there for a patrol that genuinely ran short.
+    const resolveParticipantCount = (overrideKey, storedRaw, patrol) => {
+
+        if (customParticipantCounts[overrideKey] !== undefined) {
+            return customParticipantCounts[overrideKey];
+        }
+
+        const stored = (storedRaw && typeof storedRaw === "object" && storedRaw.participantCount)
+            ? Number(storedRaw.participantCount)
+            : 1;
+
+        if (stored > 1) {
+            return stored;
+        }
+
+        const roster = patrolMemberCount(patrol);
+        return roster > 0 ? roster : 1;
+
+    };
+
     const stationCalculations = useMemo(() => {
         const calcs = {};
 
@@ -330,7 +361,7 @@ export default function Finalizer() {
                         }
                         let effectiveScore = rawScore;
                         if (divideByPatrolSize) {
-                            const pCount = customParticipantCounts[overrideKey] !== undefined ? customParticipantCounts[overrideKey] : (typeof rawVal === "object" && rawVal !== null && rawVal.participantCount ? Number(rawVal.participantCount) : 1);
+                            const pCount = resolveParticipantCount(overrideKey, rawVal, p);
                             if (pCount > 0) {
                                 effectiveScore = rawScore / pCount;
                             }
@@ -370,6 +401,16 @@ export default function Finalizer() {
                 if (isDisqualified) {
                     sum = 0;
                 }
+
+                // A station total must never be negative. Several stations subtract
+                // time or penalties from a fixed base, so a patrol that uses the full
+                // time allowance and picks up penalties can finish below zero. Relative
+                // mode divides by the best raw total at the station, which turns that
+                // into a negative station score -- ranking a patrol that attempted and
+                // did badly BELOW one that skipped the station entirely, since a no-show
+                // has no score rows and totals 0. Clamping here also keeps
+                // maxAbsoluteAchieved non-negative.
+                sum = Math.max(0, sum);
 
                 patrolTotals[p.id] = { total: sum, isDisqualified };
                 if (sum > maxAbsoluteAchieved) {
@@ -928,8 +969,7 @@ export default function Finalizer() {
                                                         const isTextTask = type === "Text Answer";
                                                         const divideByPatrolSize = t.divideByPatrolSize ?? t.scoreValue?.divideByPatrolSize ?? false;
 
-                                                        const storedPCount = typeof rawEntry === "object" && rawEntry !== null && rawEntry.participantCount ? Number(rawEntry.participantCount) : 1;
-                                                        const currentPCount = customParticipantCounts[overrideKey] !== undefined ? customParticipantCounts[overrideKey] : storedPCount;
+                                                        const currentPCount = resolveParticipantCount(overrideKey, rawEntry, p);
                                                         const effectiveScore = divideByPatrolSize && currentPCount > 0 ? (rawScore / currentPCount) : rawScore;
 
                                                         return (
@@ -966,7 +1006,7 @@ export default function Finalizer() {
                                                                                     min="1"
                                                                                     value={currentPCount}
                                                                                     onChange={(e) => handleParticipantCountChange(st.id, p.id, taskId, e.target.value)}
-                                                                                    title="Adjust participating patrol member count for this score"
+                                                                                    title={`Participating patrol member count used as the divisor. Patrol roster: ${patrolMemberCount(p) || "unknown"}. Edit to match how many members actually took part.`}
                                                                                     style={{ width: "42px", padding: "1px 2px", fontSize: "0.75rem", textAlign: "center", borderRadius: "3px", border: customParticipantCounts[overrideKey] !== undefined ? "2px solid #3b82f6" : "1px solid var(--border)" }}
                                                                                 />
                                                                             </div>

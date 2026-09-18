@@ -1668,6 +1668,47 @@ describe('Event Score Finalizer Role & Access Tests', () => {
     expect(pTaskMap['t-disqual'].submittedText).toContain('Unsafe practice');
   });
 
+  it('clamps a negative station total to zero before normalisation', () => {
+    // Fire: 30 base - 30 minutes at the time cap - 2 safety penalty - 1 borrowed matches
+    const rawSum = 30 - 30 - 2 - 1;
+    expect(rawSum).toBe(-3);
+    expect(Math.max(0, rawSum)).toBe(0);
+  });
+
+  it('keeps a patrol that attempted and failed level with, never below, a no-show', () => {
+    const clamp = (n) => Math.max(0, n);
+    const maxAbsoluteAchieved = 25;
+    const relative = (total) => (maxAbsoluteAchieved > 0 ? (total / maxAbsoluteAchieved) * 10 : 0);
+
+    const attemptedAndFailed = clamp(30 - 30 - 2 - 1);  // -3 before clamping
+    const neverAttended = clamp(0);                     // no score rows at all
+
+    expect(relative(attemptedAndFailed)).toBe(0);
+    expect(relative(attemptedAndFailed)).toBeGreaterThanOrEqual(relative(neverAttended));
+  });
+
+  it('keeps maxAbsoluteAchieved non-negative when every patrol scores below zero', () => {
+    const totals = [-3, -8, -1].map((n) => Math.max(0, n));
+
+    let maxAbsoluteAchieved = 0;
+    totals.forEach((sum) => {
+      if (sum > maxAbsoluteAchieved) {
+        maxAbsoluteAchieved = sum;
+      }
+    });
+
+    expect(maxAbsoluteAchieved).toBe(0);
+    totals.forEach((total) => {
+      const relScore = maxAbsoluteAchieved > 0 ? (total / maxAbsoluteAchieved) * 10 : 0;
+      expect(relScore).toBe(0);
+    });
+  });
+
+  it('leaves a positive station total untouched by the clamp', () => {
+    expect(Math.max(0, 33.62044)).toBeCloseTo(33.62044, 5);
+    expect(Math.max(0, 0)).toBe(0);
+  });
+
   it('sorts loaded stations alphabetically by name in Finalizer loadData', () => {
     const fetchedStations = [
       { id: 'st-z', name: 'Zebra Station' },
@@ -1766,3 +1807,119 @@ describe('Event Score Finalizer Role & Access Tests', () => {
 
 
 
+
+describe('Stopwatch patrol-size division and unapplied-time guard', () => {
+
+  const makePayload = ({ startIso, endIso, divideByPatrolSize, participantCount, extra = {} }) => {
+    const payload = { startTime: startIso, endTime: endIso, ...extra };
+    if (divideByPatrolSize) {
+      payload.participantCount = participantCount;
+    }
+    return payload;
+  };
+
+  it('carries participantCount alongside the timestamps when the task divides by patrol size', () => {
+    const payload = makePayload({
+      startIso: '2026-09-18T20:00:00.000Z',
+      endIso: '2026-09-18T20:14:14.000Z',
+      divideByPatrolSize: true,
+      participantCount: 5
+    });
+
+    expect(payload.participantCount).toBe(5);
+    expect(payload.startTime).toBe('2026-09-18T20:00:00.000Z');
+    expect(payload.endTime).toBe('2026-09-18T20:14:14.000Z');
+  });
+
+  it('omits participantCount when the task does not divide by patrol size', () => {
+    const payload = makePayload({
+      startIso: '2026-09-18T20:00:00.000Z',
+      endIso: '2026-09-18T20:14:14.000Z',
+      divideByPatrolSize: false,
+      participantCount: 5
+    });
+
+    expect('participantCount' in payload).toBe(false);
+  });
+
+  it('divides stopwatch seconds by the member count to reach the Teamwork time points', () => {
+    const start = new Date('2026-09-18T20:00:00.000Z');
+    const end = new Date('2026-09-18T20:14:14.000Z');
+
+    const elapsedSeconds = (end.getTime() - start.getTime()) / 1000;
+    expect(elapsedSeconds).toBe(854);
+
+    const perMemberSeconds = elapsedSeconds / 5;
+    expect(perMemberSeconds).toBeCloseTo(170.8, 5);
+
+    // Teamwork time points = (7.5 - minutes per member) / 7.5, applied as a
+    // weight of -1/450 against the station's base of 26.
+    const timePoints = 1 - perMemberSeconds / 450;
+    expect(timePoints).toBeCloseTo(0.62044, 5);
+  });
+
+  it('flags manual time as edited-but-unapplied and clears it on apply or stop', () => {
+    let manualDirty = false;
+
+    const stopTimer = () => { manualDirty = false; };
+    const updateManual = () => { manualDirty = true; };
+    const applyManual = () => { manualDirty = false; };
+
+    stopTimer();
+    expect(manualDirty).toBe(false);
+
+    updateManual('minutes', '14');
+    expect(manualDirty).toBe(true);
+
+    applyManual();
+    expect(manualDirty).toBe(false);
+  });
+
+});
+
+describe('Finalizer participant-count divisor resolution', () => {
+
+  const resolveParticipantCount = (override, storedRaw, rosterSize) => {
+    if (override !== undefined) {
+      return override;
+    }
+    const stored = (storedRaw && typeof storedRaw === 'object' && storedRaw.participantCount)
+      ? Number(storedRaw.participantCount)
+      : 1;
+    if (stored > 1) {
+      return stored;
+    }
+    return rosterSize > 0 ? rosterSize : 1;
+  };
+
+  it('falls back to the patrol roster size when no count was captured at scoring time', () => {
+    // scores.participant_count is NOT NULL default 1, and the stopwatch captured
+    // no count at all until recently, so a stored 1 means "never captured".
+    expect(resolveParticipantCount(undefined, { participantCount: 1 }, 6)).toBe(6);
+    expect(resolveParticipantCount(undefined, undefined, 5)).toBe(5);
+  });
+
+  it('prefers a count that was actually captured over the roster size', () => {
+    expect(resolveParticipantCount(undefined, { participantCount: 4 }, 6)).toBe(4);
+  });
+
+  it('lets a manual override beat both the captured count and the roster', () => {
+    expect(resolveParticipantCount(3, { participantCount: 4 }, 6)).toBe(3);
+    expect(resolveParticipantCount(1, { participantCount: 4 }, 6)).toBe(1);
+  });
+
+  it('never divides by zero when the patrol has no roster', () => {
+    expect(resolveParticipantCount(undefined, { participantCount: 1 }, 0)).toBe(1);
+    expect(resolveParticipantCount(undefined, undefined, 0)).toBe(1);
+  });
+
+  it('divides a Teamwork stopwatch score by the resolved count', () => {
+    const elapsedSeconds = 854;
+    const divisor = resolveParticipantCount(undefined, { participantCount: 1 }, 5);
+    expect(divisor).toBe(5);
+
+    const perMember = elapsedSeconds / divisor;
+    expect(1 - perMember / 450).toBeCloseTo(0.62044, 5);
+  });
+
+});

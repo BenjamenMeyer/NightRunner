@@ -685,3 +685,49 @@
     }
 
 }
+/* Apply Adjusted Time — deliberately loud. Scores are entered from paper after
+   the event, so the timer is started and stopped only to expose these boxes.
+   If the operator types the real time and does not press this, the two or three
+   seconds the timer actually ran is what gets saved, silently. */
+
+.apply-adjusted-time-button {
+
+    width: 100%;
+
+    margin-top: 8px;
+
+    padding: 10px 16px;
+
+    background: var(--error, #ef4444);
+
+    color: #000000;
+
+    border: 2px solid #000000;
+
+    border-radius: 6px;
+
+    font-weight: 700;
+
+    font-size: 0.95rem;
+
+    cursor: pointer;
+
+}
+
+.apply-adjusted-time-button:hover {
+
+    filter: brightness(1.08);
+
+}
+
+.manual-time-unapplied {
+
+    margin: 8px 0 0 0;
+
+    color: var(--error, #ef4444);
+
+    font-size: 0.85rem;
+
+    font-weight: 600;
+
+}
