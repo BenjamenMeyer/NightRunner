@@ -570,9 +570,13 @@ export default function StationEditor() {
                                     <input
                                         type="number"
                                         step="0.1"
-                                        min="0"
                                         value={station.durationScoreWeight ?? 1.0}
-                                        onChange={event => updateStation("durationScoreWeight", Number(event.target.value))}
+                                        onChange={event => {
+                                            // A number input reports "" for a partial value like "-",
+                                            // so keep the raw string and let the reader coerce it.
+                                            const raw = event.target.value;
+                                            updateStation("durationScoreWeight", raw === "" ? "" : Number(raw));
+                                        }}
                                         style={{ width: "120px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--border)" }}
                                     />
                                 </div>
