@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 import falcon
 from nightrunner_backend.app_context import get_driver
