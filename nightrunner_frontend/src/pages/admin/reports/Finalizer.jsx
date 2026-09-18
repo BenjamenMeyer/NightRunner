@@ -382,7 +382,9 @@ export default function Finalizer() {
                             const eDate = new Date(endIso);
                             if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
                                 const durSecs = Math.max(0, (eDate.getTime() - sDate.getTime()) / 1000);
-                                const durWeight = stState.durationScoreWeight !== undefined ? stState.durationScoreWeight : 1.0;
+                                const durWeight = stState.durationScoreWeight === undefined
+                                    ? 1.0
+                                    : (Number(stState.durationScoreWeight) || 0);
                                 const mode = stState.durationCalculationMode || "fixed_minus_time";
                                 const fixedVal = stState.durationFixedValue !== undefined ? stState.durationFixedValue : 30.0;
 
@@ -857,11 +859,10 @@ export default function Finalizer() {
                                                         <input
                                                             type="number"
                                                             step="0.1"
-                                                            min="0"
                                                             className="weight-input"
                                                             value={stState.durationScoreWeight ?? 1.0}
                                                             onChange={(e) =>
-                                                                handleStationDurationChange(st.id, "durationScoreWeight", parseFloat(e.target.value) || 0)
+                                                                handleStationDurationChange(st.id, "durationScoreWeight", e.target.value === "" ? "" : parseFloat(e.target.value))
                                                             }
                                                             title="Duration Score Weight Multiplier"
                                                         />
