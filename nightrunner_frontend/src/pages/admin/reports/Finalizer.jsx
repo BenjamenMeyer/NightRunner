@@ -459,7 +459,7 @@ export default function Finalizer() {
 
             // Add station scores for each patrol
             stations.forEach((st) => {
-                const stMode = stationStates[st.id]?.mode || "absolute";
+                const stMode = globalScoringMode;
                 patrols.forEach((p) => {
                     const val = stationCalculations[st.id]?.patrolTotals?.[p.id]?.relativeScore || 0;
                     payloadResults.push({
@@ -789,7 +789,7 @@ export default function Finalizer() {
                                         {patrols.map((p) => {
                                             const pTaskMap = patrolBreakdownMap[p.id] || {};
                                             const pCalc = stCalc.patrolTotals[p.id] || { total: 0, relativeScore: 0, isDisqualified: false };
-                                            const displayTotal = pCalc.isDisqualified ? 0 : (stState.mode === "relative" ? pCalc.relativeScore : pCalc.total);
+                                            const displayTotal = pCalc.isDisqualified ? 0 : (globalScoringMode === "relative" ? pCalc.relativeScore : pCalc.total);
 
                                             return (
                                                 <tr key={p.id} style={{ background: pCalc.isDisqualified ? "rgba(239, 68, 68, 0.08)" : undefined }}>
