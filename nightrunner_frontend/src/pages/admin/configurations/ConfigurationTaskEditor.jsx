@@ -215,13 +215,11 @@ export default function ConfigurationTaskEditor({
                         <input
                             type="number"
                             step="0.1"
-                            value={task.scoreWeight ?? 1.0}
-                            onChange={event =>
-                                update(
-                                    "scoreWeight",
-                                    Number(event.target.value)
-                                )
-                            }
+                            value={task.scoreWeight !== undefined && task.scoreWeight !== null ? task.scoreWeight : 1.0}
+                            onChange={event => {
+                                const val = event.target.value;
+                                update("scoreWeight", val === "" ? "" : (Number.isNaN(parseFloat(val)) ? 1.0 : parseFloat(val)));
+                            }}
                         />
 
                     </label>
