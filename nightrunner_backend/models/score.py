@@ -20,6 +20,7 @@ class Score:
     completed_at: Optional[str] = None
     entry_mode: str = "live"
     submitted_text: Optional[str] = None
+    participant_count: int = 1
 
     def to_dict(self) -> dict:
         def _to_iso(val):
@@ -35,6 +36,7 @@ class Score:
             "taskId": str(self.task_id) if self.task_id is not None else "",
             "scoreValue": self.score_value,
             "submittedText": self.submitted_text,
+            "participantCount": int(self.participant_count or 1),
             "scoreWeight": self.score_weight,
             "active": bool(self.active),
             "submittedAt": _to_iso(self.submitted_at),

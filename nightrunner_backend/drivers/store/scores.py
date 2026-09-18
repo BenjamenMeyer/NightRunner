@@ -13,11 +13,11 @@ CREATE_SCORE = """
     INSERT INTO scores (
         id, event_id, station_id, patrol_id, task_id,
         score_value, score_weight, active, submitted_at,
-        started_at, completed_at, entry_mode, submitted_text
+        started_at, completed_at, entry_mode, submitted_text, participant_count
     ) VALUES (
         :id, :event_id, :station_id, :patrol_id, :task_id,
         :score_value, :score_weight, :active, CURRENT_TIMESTAMP,
-        :started_at, :completed_at, :entry_mode, :submitted_text
+        :started_at, :completed_at, :entry_mode, :submitted_text, :participant_count
     )
 """
 
@@ -34,9 +34,9 @@ AGGREGATE_STATION = """
         (s.score_value * s.score_weight) AS weighted_score,
         s.active,
         s.submitted_at,
-        s.submitted_text,
         s.started_at,
-        s.completed_at
+        s.completed_at,
+        s.participant_count
     FROM scores s
     JOIN patrols p       ON p.id = s.patrol_id
     LEFT JOIN station_tasks t ON t.id = s.task_id
@@ -132,6 +132,7 @@ class ScoresStore:
             "completed_at": score.completed_at,
             "entry_mode": score.entry_mode or "live",
             "submitted_text": score.submitted_text,
+            "participant_count": int(score.participant_count or 1),
         })
         return score
 
