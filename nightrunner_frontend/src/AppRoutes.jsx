@@ -26,6 +26,8 @@ import Callback from "./pages/Callback.jsx";
 import PendingApproval from "./pages/PendingApproval.jsx";
 
 import LiveStatus from "./pages/scoring/live/LiveStatus.jsx";
+import PublicProgress from "./pages/public/PublicProgress.jsx";
+import PublicCheckIn from "./pages/public/PublicCheckIn.jsx";
 import CheckInOut from "@/pages/checkin/CheckInOut.jsx";
 import RosterImport from "./pages/admin/roster/RosterImport.jsx";
 import Arrivals from "./pages/arrivals/Arrivals.jsx";
@@ -133,6 +135,23 @@ export const AppRoutes = [
         access: ACCESS.USER,
         layout: false,
         newTab: true
+    },
+
+    // Public links. No login: the token in the URL is the credential, resolved
+    // by the backend against event_access_tokens. `layout: false` matters —
+    // Layout renders the sidebar and user chrome, which assume a signed-in user.
+    // Neither route appears in the sidebar, since neither has a `name`.
+    {
+        path: "/progress/:token",
+        element: PublicProgress,
+        access: ACCESS.PUBLIC,
+        layout: false
+    },
+    {
+        path: "/checkin/:token",
+        element: PublicCheckIn,
+        access: ACCESS.PUBLIC,
+        layout: false
     },
 
     // Administration

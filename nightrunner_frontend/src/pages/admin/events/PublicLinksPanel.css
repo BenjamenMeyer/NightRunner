@@ -1,0 +1,205 @@
+/*
+ * Every colour here comes from the active branding's variables.
+ *
+ * This panel sits inside Event Manager, which is themed, so hardcoded colours
+ * would have been light-on-light under trail-life and ahg and light-on-dark
+ * under night-ops.
+ */
+
+.public-links-panel {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.public-links-panel h3 {
+    margin: 0 0 4px;
+    color: var(--text-primary);
+}
+
+.public-links-intro {
+    margin: 0 0 16px;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+}
+
+.public-links-create {
+    margin-bottom: 20px;
+}
+
+.public-links-scope-choice {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.public-links-scope {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+        "radio label"
+        "radio blurb";
+    gap: 2px 10px;
+    align-items: start;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+}
+
+.public-links-scope input {
+    grid-area: radio;
+    margin-top: 3px;
+}
+
+.public-links-scope-label {
+    grid-area: label;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.public-links-scope-blurb {
+    grid-area: blurb;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Selection is shown with the border and a focus ring rather than a fill, so it
+   reads the same on a dark or a light surface. */
+.public-links-scope.selected {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* A check-in link is a write credential; the colour is the reminder. */
+.public-links-scope.sensitive.selected {
+    border-color: var(--error);
+    box-shadow: 0 0 0 3px var(--overlay-bg);
+}
+
+.public-links-create-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.public-links-label-input {
+    flex: 1;
+    min-width: 240px;
+    padding: 9px 12px;
+    background: var(--input-bg);
+    color: var(--input-text);
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+}
+
+.public-links-label-input:focus {
+    outline: none;
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.public-links-minted {
+    border: 2px solid var(--input-focus);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 20px;
+    background: var(--card-bg);
+    box-shadow: var(--shadow);
+}
+
+.public-links-minted h4 {
+    margin: 0 0 6px;
+    color: var(--text-primary);
+}
+
+.public-links-warning {
+    margin: 0 0 12px;
+    color: var(--warning);
+    font-size: 0.9rem;
+}
+
+.public-links-url-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.public-links-url {
+    flex: 1;
+    min-width: 260px;
+    padding: 9px 12px;
+    background: var(--input-bg);
+    color: var(--input-text);
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+}
+
+/* The QR keeps a white plate regardless of theme — scanners need the quiet zone
+   light, and a dark-on-dark code does not read. */
+.public-links-qr {
+    display: block;
+    width: 220px;
+    height: 220px;
+    margin-bottom: 12px;
+    background: #ffffff;
+    padding: 8px;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.public-links-dismiss {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+.public-links-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.public-links-table th,
+.public-links-table td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+.public-links-table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.public-links-dead {
+    color: var(--text-secondary);
+}
+
+.public-links-revoke {
+    background: transparent;
+    border: 1px solid var(--error);
+    color: var(--error);
+    border-radius: 6px;
+    padding: 5px 12px;
+    cursor: pointer;
+}
+
+.public-links-revoke:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.public-links-empty {
+    color: var(--text-secondary);
+}

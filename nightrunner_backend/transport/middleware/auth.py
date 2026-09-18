@@ -9,6 +9,26 @@ from nightrunner_backend.app_context import get_driver
 
 logger = logging.getLogger(__name__)
 
+# Paths that authenticate themselves rather than through a signed-in user.
+#
+# Resources under these prefixes carry a per-event token in the URL and resolve
+# it against `event_access_tokens`; see transport/public_progress.py and
+# transport/public_checkin.py. For them `req.context.user` is None and
+# `req.context.roles` is empty, so any resource added here MUST NOT read either.
+#
+# Note where the bypass is applied, further down: *after* the IAM proxy check,
+# not alongside `/health`. The `/health` exemption sits above that block, so
+# copying it here would drop the Cloudflare proxy gate as well as the login —
+# and that gate is what stops arbitrary internet traffic from reaching Cloud Run
+# and running up charges. The login is what we mean to skip; the proxy check is
+# not.
+PUBLIC_PATH_PREFIXES = ("/v1/public/",)
+
+
+def is_public_path(path: str) -> bool:
+    return path.startswith(PUBLIC_PATH_PREFIXES)
+
+
 class AuthMiddleware:
     """
     Falcon middleware for JWT Authentication via OIDC/JWKS.
@@ -57,16 +77,21 @@ class AuthMiddleware:
             req.context.roles = ["admin"]
             return
 
+        # Resolved once here and used in two places below: a public path still
+        # has to clear the IAM proxy, but has no user token to offer.
+        public_path = is_public_path(req.path)
+
         if settings.require_iam_proxy_auth and not settings.dev_mode:
             logger.info("Enforcing strict dual IAM proxy authentication mode.")
             iam_header = req.get_header("Authorization")
             user_header = req.get_header("X-Forwarded-Authorization")
 
-            if not iam_header or not user_header:
+            if not iam_header or (not user_header and not public_path):
                 logger.warning(
-                    "IAM proxy auth check failed: missing required headers. Authorization present=%s, X-Forwarded-Authorization present=%s",
+                    "IAM proxy auth check failed: missing required headers. Authorization present=%s, X-Forwarded-Authorization present=%s, public_path=%s",
                     bool(iam_header),
-                    bool(user_header)
+                    bool(user_header),
+                    public_path
                 )
                 raise falcon.HTTPUnauthorized(
                     title="Missing or invalid Authorization header",
@@ -95,6 +120,15 @@ class AuthMiddleware:
         else:
             logger.debug("Standard auth mode (require_iam_proxy_auth=False). Resolving user auth header.")
             auth_header = req.get_header("X-Forwarded-Authorization") or req.get_header("Authorization")
+
+        # The login bypass for public resources, and only the login bypass. By
+        # here the IAM proxy token has already been verified when strict mode is
+        # on, so the infrastructure gate is intact and this skips nothing but the
+        # user check. `req.context.user` stays None and `req.context.roles` stays
+        # empty; the resource authenticates itself against `event_access_tokens`.
+        if public_path:
+            logger.debug("Public path %s — skipping user authentication.", req.path)
+            return
 
         if not auth_header or not auth_header.startswith("Bearer "):
             logger.warning("User auth check failed: missing or invalid user Bearer header.")

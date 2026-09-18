@@ -9,6 +9,7 @@ import "./EventManager.css";
 import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
 import ApiService from "../../../api/ApiService.js";
 import brandings from "@/branding/index.js";
+import PublicLinksPanel from "./PublicLinksPanel.jsx";
 
 export default function EventManager() {
     const navigate = useNavigate();
@@ -702,6 +703,10 @@ export default function EventManager() {
                     )}
                 </div>
             </form>
+
+            {/* Outside the form on purpose: this panel has its own buttons, and
+                nesting them would submit the event form. */}
+            <PublicLinksPanel eventId={eventId} />
         </div>
     );
 }

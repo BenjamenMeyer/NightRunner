@@ -9,6 +9,7 @@ import {
 } from "../../../api/helpers/event/EventContext.jsx";
 
 import { getLiveScoring } from "./LiveStatusService.js";
+import ProgressGrid from "./ProgressGrid.jsx";
 
 import "./LiveStatus.css";
 
@@ -122,32 +123,6 @@ export default function LiveStatus() {
         );
     }
 
-    const visitMap = {};
-    if (data.visits) {
-        // Sort visits by created_at / createdAt ascending so latest visit overrides earlier ones
-        const sortedVisits = [...data.visits].sort(
-            (a, b) => new Date(a.createdAt || a.created_at || a.checkedInAt || a.checked_in_at || 0) - new Date(b.createdAt || b.created_at || b.checkedInAt || b.checked_in_at || 0)
-        );
-        for (const v of sortedVisits) {
-            const pid = v.patrolId || v.patrol_id;
-            const sid = v.stationId || v.station_id;
-            if (pid && sid) {
-                visitMap[`${pid}_${sid}`] = {
-                    checkedInAt: v.checkedInAt || v.checked_in_at || null,
-                    checkedOutAt: v.checkedOutAt || v.checked_out_at || null,
-                    tasksStartedAt: v.tasksStartedAt || v.tasks_started_at || null,
-                    tasksCompletedAt: v.tasksCompletedAt || v.tasks_completed_at || null,
-                    status: v.status || null
-                };
-            }
-        }
-    }
-
-    const patrolsToMap =
-        data.patrols.length > 10 && displayMode === "auto"
-            ? [...data.patrols, ...data.patrols]
-            : data.patrols;
-
     return (
         <div className="live-scoring-container">
             <div className="live-scoring-page">
@@ -219,103 +194,14 @@ export default function LiveStatus() {
                     </div>
                 </div>
 
-                <div ref={tableWrapperRef} className={`live-table-wrapper ${displayMode}`}>
-                    <table className={`live-table ${displayMode}`}>
-                        <thead>
-                            <tr>
-                                <th className="sticky-column">Patrol</th>
-                                {data.stations.map((station) => (
-                                    <th key={station.id}>{station.name}</th>
-                                ))}
-                            </tr>
-                        </thead>
+                <ProgressGrid
+                    stations={data.stations}
+                    patrols={data.patrols}
+                    visits={data.visits}
+                    displayMode={displayMode}
+                    tableWrapperRef={tableWrapperRef}
+                />
 
-                        <tbody>
-                            {patrolsToMap.map((patrol, index) => (
-                                <tr key={`${patrol.id}-${index}`}>
-                                    <td className="sticky-column patrol-name">
-                                        {patrol.programName || patrol.name}
-                                    </td>
-
-                                    {data.stations.map((station) => {
-                                        const visit = visitMap[`${patrol.id}_${station.id}`];
-
-                                        const isCompletedScoring = visit?.status === "completed";
-
-                                         const isCheckedIn = Boolean(
-                                             visit?.checkedInAt ||
-                                             patrol.currentStationId === station.id ||
-                                             (patrol.status === "checked-in" && patrol.stationId === station.id)
-                                         );
-
-                                         const isInProgress = Boolean(
-                                             visit?.tasksStartedAt ||
-                                             patrol.inProgressStationId === station.id ||
-                                             (isCheckedIn && patrol.inProgress)
-                                         );
-
-                                         const isCheckedOut = Boolean(
-                                             visit?.checkedOutAt ||
-                                             patrol.completedStations?.includes(station.id) ||
-                                             patrol.completed?.[station.id]
-                                         );
-
-                                         let className = "not-arrived";
-                                         let value = "";
-                                         let title = "Not Arrived";
-
-                                         if (isCompletedScoring) {
-                                             className = "completed";
-                                             value = "★";
-                                             title = "Scoring Completed / Locked Attempt";
-                                         } else if (isCheckedOut) {
-                                             className = "completed";
-                                             value = "✓";
-                                             title = "Checked Out / Attempt Finished";
-                                         } else if (isInProgress) {
-                                             className = "in-progress";
-                                             value = "⚡";
-                                             title = "In Progress";
-                                         } else if (isCheckedIn) {
-                                             className = "checked-in";
-                                             value = "⏳";
-                                             title = "Checked In";
-                                         }
-
-                                         return (
-                                             <td key={station.id} className={className} title={title}>
-                                                 {value}
-                                             </td>
-                                         );
-
-                                    })}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="legend">
-                    <span className="legend-item">
-                        <span className="legend-box not-arrived"></span>
-                        Not Arrived
-                    </span>
-
-                    <span className="legend-item">
-                        <span className="legend-box checked-in"></span>
-                        Checked In (⏳)
-                    </span>
-
-                    <span className="legend-item">
-                        <span className="legend-box in-progress"></span>
-                        In Progress (⚡)
-                    </span>
-
-                    <span className="legend-item">
-                        <span className="legend-box completed"></span>
-                        Checked Out / Completed (✓)
-                    </span>
-                </div>
             </div>
         </div>
     );

@@ -101,4 +101,76 @@ export default class EventService {
         }
         return await this.transport.delete( `/events/${eventId}` );
     }
+
+
+    /**
+     * Lists the public links for an event.
+     *
+     * Metadata only — the backend never returns the token itself, so a link
+     * that has been lost has to be revoked and reissued.
+     *
+     * @param {string} eventId
+     * @param {string|null} scope "progress", "checkin", or null for both.
+     * @returns {Promise<Object>} { eventId, tokens: [] }
+     */
+    async getAccessTokens(eventId, scope = null) {
+
+        if (!eventId) {
+            throw new Error("An event ID is required.");
+        }
+
+        const query =
+            scope
+                ? `?scope=${encodeURIComponent(scope)}`
+                : "";
+
+        return await this.transport.get(
+            `/events/${eventId}/access-tokens${query}`
+        );
+
+    }
+
+
+    /**
+     * Mints a new public link.
+     *
+     * The response carries the plaintext token exactly once. It cannot be
+     * retrieved again afterwards.
+     *
+     * @param {string} eventId
+     * @param {Object} options { scope, label, expiresAt, stationId }
+     * @returns {Promise<Object>} Token metadata plus the one-time `token`.
+     */
+    async createAccessToken(eventId, options) {
+
+        if (!eventId) {
+            throw new Error("An event ID is required.");
+        }
+
+        return await this.transport.post(
+            `/events/${eventId}/access-tokens`,
+            options
+        );
+
+    }
+
+
+    /**
+     * Revokes a public link. The record is kept so the audit trail survives.
+     *
+     * @param {string} eventId
+     * @param {string} tokenId
+     * @returns {Promise<Object>}
+     */
+    async revokeAccessToken(eventId, tokenId) {
+
+        if (!eventId || !tokenId) {
+            throw new Error("An event ID and token ID are required.");
+        }
+
+        return await this.transport.delete(
+            `/events/${eventId}/access-tokens/${tokenId}`
+        );
+
+    }
 }
