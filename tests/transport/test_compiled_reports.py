@@ -57,3 +57,36 @@ async def test_compiled_reports_workflow(test_client, token_factory):
     # 4. Clean up / Delete compiled reports
     await test_client.simulate_delete(f"/v1/compiled-reports/{report_id1}", headers=headers)
     await test_client.simulate_delete(f"/v1/compiled-reports/{report_id2}", headers=headers)
+
+
+@pytest.mark.asyncio
+async def test_compiled_scoring_reports_workflow(test_client, token_factory):
+    headers = token_factory()
+
+    # 1. Trigger draft scoring PDF creation
+    resp_draft = await test_client.simulate_post(
+        "/v1/events/evt-123/compiled-reports",
+        json={"reportType": "event-scoring-draft"},
+        headers=headers,
+    )
+    assert resp_draft.status == falcon.HTTP_202
+    draft_job = resp_draft.json
+    assert draft_job["report_type"] == "event-scoring-draft"
+
+    # 2. Trigger final scoring PDF creation
+    resp_final = await test_client.simulate_post(
+        "/v1/events/evt-123/compiled-reports",
+        json={"reportType": "event-scoring"},
+        headers=headers,
+    )
+    assert resp_final.status == falcon.HTTP_202
+    final_job = resp_final.json
+    assert final_job["report_type"] == "event-scoring"
+
+    # Wait briefly for background tasks
+    await asyncio.sleep(0.5)
+
+    # 3. Clean up
+    await test_client.simulate_delete(f"/v1/compiled-reports/{draft_job['id']}", headers=headers)
+    await test_client.simulate_delete(f"/v1/compiled-reports/{final_job['id']}", headers=headers)
+

@@ -30,31 +30,119 @@ async def _background_generate_patrol_qr_pdf(report_id: str, event_id: str, even
         await reports_store.mark_report_failed(report_id, str(ex))
 
 
-async def _background_generate_scoring_pdf(report_id: str, event_id: str, event_name: str):
+async def _background_generate_scoring_pdf(report_id: str, event_id: str, event_name: str, is_draft: bool = False):
     driver = get_driver()
     reports_store = ReportsStore(driver)
     scores_store = ScoresStore(driver)
-    try:
-        rows = await scores_store.aggregate_event(event_id)
-        patrols = {}
-        for r in rows:
-            pid = r["patrol_id"]
-            p = patrols.setdefault(pid, {
-                "patrolId": pid,
-                "patrolName": r.get("patrol_name"),
-                "eventTotal": 0.0,
-                "stationTotals": {}
-            })
-            station_id = r["station_id"]
-            weighted = r["weighted_score"]
-            p["eventTotal"] += weighted
-            p["stationTotals"][station_id] = p["stationTotals"].get(station_id, 0) + weighted
-        sorted_patrols = sorted(patrols.values(), key=lambda x: x["eventTotal"], reverse=True)
-        for rank, p in enumerate(sorted_patrols, start=1):
-            p["rank"] = rank
+    from nightrunner_backend.drivers.store.stations import StationsStore
+    from nightrunner_backend.drivers.store.patrols import PatrolsStore
+    stations_store = StationsStore(driver)
+    patrols_store = PatrolsStore(driver)
 
-        pdf_bytes = generate_event_scoring_pdf(event_name, sorted_patrols)
-        file_key = f"events/{event_id}/reports/{report_id}-final-scoring.pdf"
+    try:
+        # 1. Fetch saved finalized results if available, otherwise aggregate
+        finalized_rows = await scores_store.list_finalized_results(event_id)
+        stations = await stations_store.list_by_event(event_id)
+        patrols = await patrols_store.list(event_id=event_id)
+
+        patrol_name_map = {p.id: p.name for p in patrols}
+        station_name_map = {s.id: s.name for s in stations}
+        station_weight_map = {s.id: getattr(s, "station_weight", 1.0) for s in stations}
+
+        overall_patrols = []
+        station_breakdowns = []
+
+        if finalized_rows:
+            # Group by patrol & station from stored finalized results
+            final_scores = {}
+            st_scores = {} # station_id -> {patrol_id: score}
+
+            for r in finalized_rows:
+                pid = r["patrolId"]
+                sid = r.get("stationId")
+                score_val = float(r.get("scoreValue", 0.0))
+                if r.get("scoreType") == "final" or sid is None:
+                    final_scores[pid] = score_val
+                else:
+                    st_scores.setdefault(sid, {})[pid] = score_val
+
+            for pid, p_name in patrol_name_map.items():
+                overall_patrols.append({
+                    "patrolId": pid,
+                    "patrolName": p_name,
+                    "totalScore": final_scores.get(pid, 0.0)
+                })
+
+            for st in stations:
+                sid = st.id
+                st_p_scores = st_scores.get(sid, {})
+                st_patrols_list = []
+                for pid, p_name in patrol_name_map.items():
+                    st_patrols_list.append({
+                        "patrolId": pid,
+                        "patrolName": p_name,
+                        "score": st_p_scores.get(pid, 0.0)
+                    })
+                station_breakdowns.append({
+                    "stationId": sid,
+                    "stationName": st.name,
+                    "stationWeight": getattr(st, "station_weight", 1.0),
+                    "patrols": st_patrols_list
+                })
+        else:
+            # Fallback to database score aggregation
+            rows = await scores_store.aggregate_event(event_id)
+            patrols_acc = {}
+            st_acc = {} # station_id -> {patrol_id: weighted_score}
+
+            for r in rows:
+                pid = r["patrol_id"]
+                sid = r["station_id"]
+                weighted = float(r.get("weighted_score", 0.0))
+                p_entry = patrols_acc.setdefault(pid, {
+                    "patrolId": pid,
+                    "patrolName": r.get("patrol_name") or patrol_name_map.get(pid, f"Patrol {pid}"),
+                    "totalScore": 0.0
+                })
+                p_entry["totalScore"] += weighted
+                st_acc.setdefault(sid, {})[pid] = weighted
+
+            for pid, p_name in patrol_name_map.items():
+                if pid not in patrols_acc:
+                    patrols_acc[pid] = {
+                        "patrolId": pid,
+                        "patrolName": p_name,
+                        "totalScore": 0.0
+                    }
+
+            overall_patrols = list(patrols_acc.values())
+
+            for st in stations:
+                sid = st.id
+                st_p_scores = st_acc.get(sid, {})
+                st_patrols_list = []
+                for pid, p_name in patrol_name_map.items():
+                    st_patrols_list.append({
+                        "patrolId": pid,
+                        "patrolName": p_name,
+                        "score": st_p_scores.get(pid, 0.0)
+                    })
+                station_breakdowns.append({
+                    "stationId": sid,
+                    "stationName": st.name,
+                    "stationWeight": getattr(st, "station_weight", 1.0),
+                    "patrols": st_patrols_list
+                })
+
+        pdf_bytes = generate_event_scoring_pdf(
+            event_name=event_name,
+            overall_patrols=overall_patrols,
+            station_breakdowns=station_breakdowns,
+            is_draft=is_draft
+        )
+
+        file_prefix = "draft-scoring" if is_draft else "final-scoring"
+        file_key = f"events/{event_id}/reports/{report_id}-{file_prefix}.pdf"
         upload_report_bytes(file_key, pdf_bytes, content_type="application/pdf")
         await reports_store.mark_report_ready(report_id, file_key, len(pdf_bytes))
     except Exception as ex:
@@ -67,7 +155,7 @@ class CompiledReportsResource:
     Lists all compiled reports for an event.
 
     POST /v1/events/{eventId}/compiled-reports
-    Triggers asynchronous generation of a report (e.g. reportType="patrols-pdf" or "event-scoring").
+    Triggers asynchronous generation of a report (e.g. reportType="patrols-pdf", "event-scoring", or "event-scoring-draft").
     """
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response, event_id: str):
@@ -89,7 +177,9 @@ class CompiledReportsResource:
         event_name = event.name if event else "Event"
 
         report_id = f"rep-{uuid6.uuid7().hex[:12]}"
-        if report_type == "event-scoring":
+        if report_type == "event-scoring-draft":
+            report_name = f"Draft Scoring Report ({event_name})"
+        elif report_type == "event-scoring":
             report_name = f"Final Scoring Report ({event_name})"
         else:
             report_name = f"Patrol QR Badges ({event_name})"
@@ -97,8 +187,9 @@ class CompiledReportsResource:
         job = await store.create_report_job(report_id, event_id, report_type, report_name)
 
         # Trigger async background generation
-        if report_type == "event-scoring":
-            asyncio.create_task(_background_generate_scoring_pdf(report_id, event_id, event_name))
+        if report_type in ("event-scoring", "event-scoring-draft"):
+            is_draft = (report_type == "event-scoring-draft")
+            asyncio.create_task(_background_generate_scoring_pdf(report_id, event_id, event_name, is_draft=is_draft))
         else:
             asyncio.create_task(_background_generate_patrol_qr_pdf(report_id, event_id, event_name))
 
