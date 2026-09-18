@@ -118,7 +118,11 @@ export default function Finalizer() {
                     mode: "absolute",
                     enabledTasks,
                     taskWeights,
-                    stationWeight: st.station_weight !== undefined ? Number(st.station_weight) : 1.0,
+                    stationWeight: st.station_weight !== undefined ? Number(st.station_weight) : (st.stationWeight !== undefined ? Number(st.stationWeight) : 1.0),
+                    durationScoreActive: st.duration_score_active ?? st.durationScoreActive ?? false,
+                    durationScoreWeight: st.duration_score_weight !== undefined ? Number(st.duration_score_weight) : (st.durationScoreWeight !== undefined ? Number(st.durationScoreWeight) : 1.0),
+                    durationCalculationMode: st.duration_calculation_mode ?? st.durationCalculationMode ?? "fixed_minus_time",
+                    durationFixedValue: st.duration_fixed_value !== undefined ? Number(st.duration_fixed_value) : (st.durationFixedValue !== undefined ? Number(st.durationFixedValue) : 30.0),
                     collapsed: false
                 };
             });
@@ -188,6 +192,16 @@ export default function Finalizer() {
         }));
     }
 
+    function handleStationDurationChange(stationId, field, val) {
+        setStationStates((prev) => ({
+            ...prev,
+            [stationId]: {
+                ...prev[stationId],
+                [field]: val
+            }
+        }));
+    }
+
     function toggleCollapse(stationId) {
         setStationStates((prev) => ({
             ...prev,
@@ -222,6 +236,15 @@ export default function Finalizer() {
             const updatePayload = {
                 ...stationObj,
                 station_weight: stState.stationWeight,
+                stationWeight: stState.stationWeight,
+                durationScoreActive: stState.durationScoreActive,
+                duration_score_active: stState.durationScoreActive,
+                durationScoreWeight: stState.durationScoreWeight,
+                duration_score_weight: stState.durationScoreWeight,
+                durationCalculationMode: stState.durationCalculationMode,
+                duration_calculation_mode: stState.durationCalculationMode,
+                durationFixedValue: stState.durationFixedValue,
+                duration_fixed_value: stState.durationFixedValue,
                 tasks: updatedTasks
             };
 
@@ -299,6 +322,34 @@ export default function Finalizer() {
                         sum += rawScore * weight;
                     }
                 });
+
+                // Calculate duration contribution if duration scoring is active
+                if (stState.durationScoreActive) {
+                    const pReport = (stReport.patrols || []).find((pr) => String(pr.patrolId) === String(p.id));
+                    const startIso = pReport?.tasksStartedAt || pReport?.checkedInAt;
+                    const endIso = pReport?.tasksCompletedAt || pReport?.checkedOutAt;
+
+                    if (startIso && endIso) {
+                        try {
+                            const sDate = new Date(startIso);
+                            const eDate = new Date(endIso);
+                            if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
+                                const durSecs = Math.max(0, (eDate.getTime() - sDate.getTime()) / 1000);
+                                const durWeight = stState.durationScoreWeight !== undefined ? stState.durationScoreWeight : 1.0;
+                                const mode = stState.durationCalculationMode || "fixed_minus_time";
+                                const fixedVal = stState.durationFixedValue !== undefined ? stState.durationFixedValue : 30.0;
+
+                                let durationScore = 0;
+                                if (mode === "fixed_minus_time") {
+                                    durationScore = (fixedVal - durSecs) * durWeight;
+                                } else {
+                                    durationScore = durSecs * durWeight;
+                                }
+                                sum += durationScore;
+                            }
+                        } catch (e) {}
+                    }
+                }
 
                 if (isDisqualified) {
                     sum = 0;
@@ -582,31 +633,34 @@ export default function Finalizer() {
                                     <div className="formula-box-title">🧮 Resulting Station Total Score Formula</div>
                                     <div className="formula-expression">
                                         <code>
-                                            {globalScoringMode === "relative" ? (
-                                                <>
-                                                    Station Score = ( (
-                                                    {tasks.map((t, idx) => {
-                                                        const taskId = t.id || t._id;
-                                                        const isEnabled = stState.enabledTasks[taskId] !== false;
-                                                        const weight = stState.taskWeights[taskId] !== undefined ? stState.taskWeights[taskId] : 1.0;
-                                                        if (!isEnabled) return null;
-                                                        const name = t.name || `Task ${idx + 1}`;
-                                                        return `[${name} × ${weight}]`;
-                                                    }).filter(Boolean).join(" + ") || "0"}
-                                                    ) / Max Patrol Raw Score {stCalc.maxAbsoluteAchieved > 0 ? `(${stCalc.maxAbsoluteAchieved.toFixed(1)})` : ""} ) × 10
-                                                </>
-                                            ) : (
-                                                <>
-                                                    Station Score = Weighted Sum = {tasks.map((t, idx) => {
-                                                        const taskId = t.id || t._id;
-                                                        const isEnabled = stState.enabledTasks[taskId] !== false;
-                                                        const weight = stState.taskWeights[taskId] !== undefined ? stState.taskWeights[taskId] : 1.0;
-                                                        if (!isEnabled) return null;
-                                                        const name = t.name || `Task ${idx + 1}`;
-                                                        return `[${name} × ${weight}]`;
-                                                    }).filter(Boolean).join(" + ") || "0"}
-                                                </>
-                                            )}
+                                            {(() => {
+                                                const taskTerms = tasks.map((t, idx) => {
+                                                    const taskId = t.id || t._id;
+                                                    const isEnabled = stState.enabledTasks[taskId] !== false;
+                                                    const weight = stState.taskWeights[taskId] !== undefined ? stState.taskWeights[taskId] : 1.0;
+                                                    if (!isEnabled) return null;
+                                                    const name = t.name || `Task ${idx + 1}`;
+                                                    return `[${name} × ${weight}]`;
+                                                }).filter(Boolean);
+
+                                                if (stState.durationScoreActive) {
+                                                    const durW = stState.durationScoreWeight !== undefined ? stState.durationScoreWeight : 1.0;
+                                                    const mode = stState.durationCalculationMode || "fixed_minus_time";
+                                                    const fixedV = stState.durationFixedValue !== undefined ? stState.durationFixedValue : 30.0;
+                                                    if (mode === "fixed_minus_time") {
+                                                        taskTerms.push(`[(${fixedV}s - Duration) × ${durW}]`);
+                                                    } else {
+                                                        taskTerms.push(`[Duration × ${durW}]`);
+                                                    }
+                                                }
+
+                                                const innerExpr = taskTerms.join(" + ") || "0";
+                                                if (globalScoringMode === "relative") {
+                                                    return `Station Score = ( (${innerExpr}) / Max Patrol Raw Score ${stCalc.maxAbsoluteAchieved > 0 ? `(${stCalc.maxAbsoluteAchieved.toFixed(1)})` : ""} ) × 10`;
+                                                } else {
+                                                    return `Station Score = Weighted Sum = ${innerExpr}`;
+                                                }
+                                            })()}
                                         </code>
                                     </div>
                                 </div>
@@ -621,7 +675,7 @@ export default function Finalizer() {
                                                     {t.name || t.description || "Task"}
                                                 </th>
                                             ))}
-                                            <th className="col-total" style={{ minWidth: "120px" }}>⏱️ Station Duration</th>
+                                            <th className="col-total" style={{ minWidth: "160px" }}>⏱️ Station Duration</th>
                                             <th className="col-total">
                                                 {globalScoringMode === "relative" ? "Total Score (10pt Relative)" : "Total Score (Weighted Sum)"}
                                             </th>
@@ -647,7 +701,18 @@ export default function Finalizer() {
                                                     </th>
                                                 );
                                             })}
-                                            <th className="col-task-center font-sm">—</th>
+                                            <th className="col-task-center font-sm" style={{ padding: "4px" }}>
+                                                <label className="checkbox-label" style={{ fontSize: "0.8rem" }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={stState.durationScoreActive ?? false}
+                                                        onChange={(e) =>
+                                                            handleStationDurationChange(st.id, "durationScoreActive", e.target.checked)
+                                                        }
+                                                    />
+                                                    Include
+                                                </label>
+                                            </th>
                                             <th className="col-total-label">
                                                 {globalScoringMode === "relative" ? `Max Patrol Raw: ${stCalc.maxAbsoluteAchieved.toFixed(1)}` : "Sum"}
                                             </th>
@@ -673,7 +738,49 @@ export default function Finalizer() {
                                                     </th>
                                                 );
                                             })}
-                                            <th className="col-task-center font-sm">—</th>
+                                            <th className="col-task-center font-sm" style={{ padding: "4px" }}>
+                                                {stState.durationScoreActive ? (
+                                                    <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
+                                                        <input
+                                                            type="number"
+                                                            step="0.1"
+                                                            min="0"
+                                                            className="weight-input"
+                                                            value={stState.durationScoreWeight ?? 1.0}
+                                                            onChange={(e) =>
+                                                                handleStationDurationChange(st.id, "durationScoreWeight", parseFloat(e.target.value) || 0)
+                                                            }
+                                                            title="Duration Score Weight Multiplier"
+                                                        />
+                                                        <select
+                                                            value={stState.durationCalculationMode || "fixed_minus_time"}
+                                                            onChange={(e) =>
+                                                                handleStationDurationChange(st.id, "durationCalculationMode", e.target.value)
+                                                            }
+                                                            style={{ fontSize: "0.7rem", padding: "1px 2px", maxWidth: "120px" }}
+                                                            title="Duration Calculation Mode"
+                                                        >
+                                                            <option value="fixed_minus_time">Fixed - Seconds</option>
+                                                            <option value="direct">Direct Seconds</option>
+                                                        </select>
+                                                        {(stState.durationCalculationMode || "fixed_minus_time") === "fixed_minus_time" && (
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                value={stState.durationFixedValue ?? 30.0}
+                                                                onChange={(e) =>
+                                                                    handleStationDurationChange(st.id, "durationFixedValue", parseFloat(e.target.value) || 0)
+                                                                }
+                                                                placeholder="Fixed Secs"
+                                                                style={{ width: "55px", fontSize: "0.75rem", textAlign: "center", padding: "1px 2px" }}
+                                                                title="Fixed Baseline Value in Seconds"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    "—"
+                                                )}
+                                            </th>
                                             <th className="col-total-label">Subtotal</th>
                                         </tr>
                                     </thead>

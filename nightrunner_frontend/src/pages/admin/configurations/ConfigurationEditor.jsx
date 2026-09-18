@@ -21,6 +21,10 @@ const EMPTY_CONFIGURATION = {
     name: "",
     description: "",
     stationWeight: 1.0,
+    durationScoreActive: false,
+    durationScoreWeight: 1.0,
+    durationCalculationMode: "fixed_minus_time",
+    durationFixedValue: 30.0,
     tasks: []
 };
 
@@ -125,6 +129,10 @@ export default function ConfigurationEditor() {
                     name: `${copyFromStation.name || "Station"} Preset`,
                     description: copyFromStation.description || `Configuration created from station ${copyFromStation.name}`,
                     stationWeight: copyFromStation.stationWeight ?? 1.0,
+                    durationScoreActive: copyFromStation.durationScoreActive ?? false,
+                    durationScoreWeight: copyFromStation.durationScoreWeight ?? 1.0,
+                    durationCalculationMode: copyFromStation.durationCalculationMode ?? "fixed_minus_time",
+                    durationFixedValue: copyFromStation.durationFixedValue ?? 30.0,
                     tasks: JSON.parse(JSON.stringify(stationTasks))
                 });
                 return;
@@ -168,6 +176,22 @@ export default function ConfigurationEditor() {
                     loadedConfiguration?.stationWeight ??
                     loadedConfiguration?.station_weight ??
                     1.0,
+                durationScoreActive:
+                    loadedConfiguration?.durationScoreActive ??
+                    loadedConfiguration?.duration_score_active ??
+                    false,
+                durationScoreWeight:
+                    loadedConfiguration?.durationScoreWeight ??
+                    loadedConfiguration?.duration_score_weight ??
+                    1.0,
+                durationCalculationMode:
+                    loadedConfiguration?.durationCalculationMode ??
+                    loadedConfiguration?.duration_calculation_mode ??
+                    "fixed_minus_time",
+                durationFixedValue:
+                    loadedConfiguration?.durationFixedValue ??
+                    loadedConfiguration?.duration_fixed_value ??
+                    30.0,
                 tasks:
                     loadedConfiguration?.tasks
                         ? JSON.parse(JSON.stringify(loadedConfiguration.tasks))
@@ -634,6 +658,71 @@ export default function ConfigurationEditor() {
                             }
                             disabled={saving}
                         />
+                    </div>
+
+                    <div className="configuration-editor-field duration-scoring-section" style={{ marginTop: "1rem", padding: "1rem", background: "var(--card-bg)", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                        <label className="checkbox-label" style={{ fontWeight: "bold", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+                            <input
+                                type="checkbox"
+                                checked={configuration.durationScoreActive ?? false}
+                                onChange={event => updateField("durationScoreActive", event.target.checked)}
+                                disabled={saving}
+                            />
+                            ⏱️ Include Station Duration in Scoring Calculations
+                        </label>
+
+                        {configuration.durationScoreActive && (
+                            <div style={{ marginTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.75rem", paddingLeft: "1.5rem" }}>
+                                <div>
+                                    <label style={{ fontSize: "0.85rem", fontWeight: "600", display: "block", marginBottom: "0.25rem" }}>
+                                        Duration Weight Multiplier:
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        value={configuration.durationScoreWeight ?? 1.0}
+                                        onChange={event => updateField("durationScoreWeight", Number(event.target.value))}
+                                        disabled={saving}
+                                        style={{ width: "120px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--border)" }}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label style={{ fontSize: "0.85rem", fontWeight: "600", display: "block", marginBottom: "0.25rem" }}>
+                                        Duration Calculation Mode:
+                                    </label>
+                                    <select
+                                        value={configuration.durationCalculationMode ?? "fixed_minus_time"}
+                                        onChange={event => updateField("durationCalculationMode", event.target.value)}
+                                        disabled={saving}
+                                        style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--border)" }}
+                                    >
+                                        <option value="fixed_minus_time">Fixed Baseline Minus Time: (Fixed Baseline - Time in Seconds) × Weight</option>
+                                        <option value="direct">Direct Seconds: (Time in Seconds) × Weight</option>
+                                    </select>
+                                </div>
+
+                                {(configuration.durationCalculationMode ?? "fixed_minus_time") === "fixed_minus_time" && (
+                                    <div>
+                                        <label style={{ fontSize: "0.85rem", fontWeight: "600", display: "block", marginBottom: "0.25rem" }}>
+                                            Fixed Baseline Value (Seconds):
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="1"
+                                            value={configuration.durationFixedValue ?? 30.0}
+                                            onChange={event => updateField("durationFixedValue", Number(event.target.value))}
+                                            disabled={saving}
+                                            style={{ width: "120px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--border)" }}
+                                        />
+                                        <small style={{ display: "block", color: "var(--text-secondary)", marginTop: "2px" }}>
+                                            Faster times below baseline receive positive points (e.g. 30 - 20 = 10 pts).
+                                        </small>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </section>
 

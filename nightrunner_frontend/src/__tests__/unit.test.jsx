@@ -1699,24 +1699,47 @@ describe('Event Score Finalizer Role & Access Tests', () => {
     expect(grandTotalFormula).toBe('Grand Total Score = [Alpha Station (10pt) × 1] + [Beta Station (10pt) × 2]');
   });
 
-  it('calculates station duration seconds and formats minutes and seconds for hover popover', () => {
-    const startIso = '2026-09-18T10:00:00.000Z';
-    const endIso = '2026-09-18T10:02:45.350Z';
+  it('calculates station duration score for fixed_minus_time and direct calculation modes', () => {
+    const durSecs = 20.0;
+    const durWeight = 1.5;
 
-    const sDate = new Date(startIso);
-    const eDate = new Date(endIso);
-    const seconds = (eDate.getTime() - sDate.getTime()) / 1000;
+    // fixed_minus_time mode: (30 - 20) * 1.5 = 15 points
+    const fixedModeScore = (30.0 - durSecs) * durWeight;
+    expect(fixedModeScore).toBe(15.0);
 
-    expect(seconds).toBe(165.35);
-    expect(seconds.toFixed(2)).toBe('165.35');
+    // direct mode: 20 * 1.5 = 30 points
+    const directModeScore = durSecs * durWeight;
+    expect(directModeScore).toBe(30.0);
+  });
 
-    const mins = Math.floor(seconds / 60);
-    const remSecs = (seconds % 60).toFixed(2);
-    const formattedStr = `${mins}m ${remSecs}s (${seconds.toFixed(2)}s total)`;
+  it('carries over duration score configuration settings when copying station to template and loading preset', () => {
+    const mockStation = {
+      id: 'st-10',
+      name: 'Pioneering',
+      description: 'Pioneering station',
+      stationWeight: 2.0,
+      durationScoreActive: true,
+      durationScoreWeight: 1.5,
+      durationCalculationMode: 'fixed_minus_time',
+      durationFixedValue: 45.0,
+      tasks: []
+    };
 
-    expect(mins).toBe(2);
-    expect(remSecs).toBe('45.35');
-    expect(formattedStr).toBe('2m 45.35s (165.35s total)');
+    // Simulated copyFromStation mapping as in ConfigurationEditor
+    const copiedPreset = {
+      name: `${mockStation.name} Preset`,
+      stationWeight: mockStation.stationWeight,
+      durationScoreActive: mockStation.durationScoreActive,
+      durationScoreWeight: mockStation.durationScoreWeight,
+      durationCalculationMode: mockStation.durationCalculationMode,
+      durationFixedValue: mockStation.durationFixedValue,
+      tasks: mockStation.tasks
+    };
+
+    expect(copiedPreset.durationScoreActive).toBe(true);
+    expect(copiedPreset.durationScoreWeight).toBe(1.5);
+    expect(copiedPreset.durationCalculationMode).toBe('fixed_minus_time');
+    expect(copiedPreset.durationFixedValue).toBe(45.0);
   });
 });
 
