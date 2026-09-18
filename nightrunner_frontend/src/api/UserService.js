@@ -420,6 +420,34 @@ export default class UserService {
 
     }
 
+    /**
+     * Determines whether the current user has Event Operations role.
+     *
+     * @param {string} eventId
+     * @returns {boolean}
+     */
+    isEventOps(eventId) {
+        return (
+            this.isSystemAdmin() ||
+            this.isEventAdmin(eventId) ||
+            this.getEventRole(eventId) === "event-ops"
+        );
+    }
+
+    /**
+     * Determines whether the current user has Patrol Management role.
+     *
+     * @param {string} eventId
+     * @returns {boolean}
+     */
+    isPatrolManager(eventId) {
+        return (
+            this.isSystemAdmin() ||
+            this.isEventAdmin(eventId) ||
+            this.getEventRole(eventId) === "patrol-management"
+        );
+    }
+
 
     //
     // User Management

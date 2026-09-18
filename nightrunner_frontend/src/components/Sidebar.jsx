@@ -41,6 +41,14 @@ function canAccess(route, eventId = null) {
         return rolesList.some(r => r === "station_leader" || r === "station_member" || r === "scorer" || r === "scoring-center" || r === "event-admin" || r === "admin");
     }
 
+    if (route.access === ACCESS.EVENT_OPS) {
+        return ApiService.userData.isEventOps(eventId);
+    }
+
+    if (route.access === ACCESS.PATROL_MANAGER) {
+        return ApiService.userData.isPatrolManager(eventId);
+    }
+
     if (route.access === ACCESS.ADMIN) {
         return ApiService.userData
             .isAdmin(eventId);
