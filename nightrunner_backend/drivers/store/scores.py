@@ -41,7 +41,9 @@ AGGREGATE_STATION = """
     FROM scores s
     JOIN patrols p       ON p.id = s.patrol_id
     LEFT JOIN station_tasks t ON t.id = s.task_id
-    WHERE s.event_id = :event_id AND s.station_id = :station_id
+    WHERE s.event_id = :event_id
+      AND s.station_id = :station_id
+      AND (s.active = TRUE OR s.active IS TRUE)
     ORDER BY s.patrol_id, s.task_id;
 """
 

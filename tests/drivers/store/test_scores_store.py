@@ -51,6 +51,38 @@ async def test_scores_aggregation(store):
     assert station_agg[0]["score_value"] == 10.0
 
 @pytest.mark.asyncio
+async def test_aggregate_station_excludes_superseded_scores(store):
+    """A rescore must replace the original in the station report, not sit beside it.
+
+    Resubmitting a patrol's score deactivates the previous row and inserts a new
+    one. aggregate_station used to return both, so the Finalizer -- which keys its
+    breakdown by task id, last row wins -- could display either value depending on
+    the order the database happened to return them, and the report's own total
+    counted the old score and the new one together.
+    """
+    from nightrunner_backend.models.patrol import Patrol
+    from nightrunner_backend.models.station import Station
+    from nightrunner_backend.drivers.store.patrols import PatrolsStore
+    from nightrunner_backend.drivers.store.stations import StationsStore
+
+    await PatrolsStore(store.driver).create(Patrol(id="p1", event_id="e1", name="Patrol 1"))
+    await StationsStore(store.driver).create(Station(id="s1", event_id="e1", name="Teamwork"))
+
+    # Original score, then a correction submitted the way the API submits it.
+    await store.create(Score(event_id="e1", station_id="s1", patrol_id="p1",
+                             task_id="t1", score_value=854.0, score_weight=1.0))
+    await store.deactivate_previous_scores("e1", "s1", "p1", "t1")
+    await store.create(Score(event_id="e1", station_id="s1", patrol_id="p1",
+                             task_id="t1", score_value=612.0, score_weight=1.0))
+
+    rows = await store.aggregate_station("e1", "s1")
+
+    assert len(rows) == 1, "superseded score still present in the station report"
+    assert rows[0]["score_value"] == 612.0
+    assert all(bool(r["active"]) for r in rows)
+
+
+@pytest.mark.asyncio
 async def test_deactivate_previous_scores(store):
     score1 = Score(event_id="e1", station_id="s1", patrol_id="p1", task_id="t1", score_value=50.0, active=True)
     await store.create(score1)
