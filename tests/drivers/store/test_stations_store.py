@@ -82,6 +82,22 @@ async def test_station_store_list_filtered_by_event_id(stations_store: StationsS
 
 
 @pytest.mark.asyncio
+async def test_station_store_list_ordered_alphabetically(stations_store: StationsStore):
+    event_id = str(uuid6.uuid7())
+    st_z = Station(id=str(uuid6.uuid7()), event_id=event_id, name="Zebra Station")
+    st_a = Station(id=str(uuid6.uuid7()), event_id=event_id, name="Alpha Station")
+    st_m = Station(id=str(uuid6.uuid7()), event_id=event_id, name="Mango Station")
+
+    await stations_store.create(st_z)
+    await stations_store.create(st_a)
+    await stations_store.create(st_m)
+
+    ordered = await stations_store.list(event_id=event_id)
+    assert len(ordered) == 3
+    assert [s.name for s in ordered] == ["Alpha Station", "Mango Station", "Zebra Station"]
+
+
+@pytest.mark.asyncio
 async def test_station_store_empty_string_numeric_tasks(stations_store: StationsStore):
     station_id = str(uuid6.uuid7())
     tasks_with_empty_strings = [
