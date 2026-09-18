@@ -69,7 +69,9 @@ export default function Finalizer() {
                 ApiService.backendTransport.get(`/scores/finalized?eventId=${encodeURIComponent(eventId)}`).catch(() => [])
             ]);
 
-            const loadedStations = Array.isArray(fetchedStations) ? fetchedStations : [];
+            const loadedStations = Array.isArray(fetchedStations)
+                ? [...fetchedStations].sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+                : [];
             const loadedPatrols = Array.isArray(fetchedPatrols) ? fetchedPatrols : [];
             const loadedConfigs = Array.isArray(fetchedConfigs) ? fetchedConfigs : [];
             const storedList = Array.isArray(fetchedStoredResults) ? fetchedStoredResults : [];
@@ -575,7 +577,41 @@ export default function Finalizer() {
                         </div>
 
                         {!stState.collapsed && (
-                            <div className="table-responsive">
+                            <>
+                                <div className="formula-display-box">
+                                    <div className="formula-box-title">🧮 Resulting Station Total Score Formula</div>
+                                    <div className="formula-expression">
+                                        <code>
+                                            {globalScoringMode === "relative" ? (
+                                                <>
+                                                    Station Score = ( (
+                                                    {tasks.map((t, idx) => {
+                                                        const taskId = t.id || t._id;
+                                                        const isEnabled = stState.enabledTasks[taskId] !== false;
+                                                        const weight = stState.taskWeights[taskId] !== undefined ? stState.taskWeights[taskId] : 1.0;
+                                                        if (!isEnabled) return null;
+                                                        const name = t.name || `Task ${idx + 1}`;
+                                                        return `[${name} × ${weight}]`;
+                                                    }).filter(Boolean).join(" + ") || "0"}
+                                                    ) / Max Patrol Raw Score {stCalc.maxAbsoluteAchieved > 0 ? `(${stCalc.maxAbsoluteAchieved.toFixed(1)})` : ""} ) × 10
+                                                </>
+                                            ) : (
+                                                <>
+                                                    Station Score = Weighted Sum = {tasks.map((t, idx) => {
+                                                        const taskId = t.id || t._id;
+                                                        const isEnabled = stState.enabledTasks[taskId] !== false;
+                                                        const weight = stState.taskWeights[taskId] !== undefined ? stState.taskWeights[taskId] : 1.0;
+                                                        if (!isEnabled) return null;
+                                                        const name = t.name || `Task ${idx + 1}`;
+                                                        return `[${name} × ${weight}]`;
+                                                    }).filter(Boolean).join(" + ") || "0"}
+                                                </>
+                                            )}
+                                        </code>
+                                    </div>
+                                </div>
+
+                                <div className="table-responsive">
                                 <table className="finalizer-table">
                                     <thead>
                                         <tr className="header-row-names">
@@ -837,7 +873,8 @@ export default function Finalizer() {
                                     </tbody>
                                 </table>
                             </div>
-                        )}
+                        </>
+                    )}
                     </div>
                 );
             })}
@@ -865,7 +902,22 @@ export default function Finalizer() {
                 </div>
 
                 {!summaryCollapsed && (
-                    <div className="table-responsive">
+                    <>
+                        <div className="formula-display-box summary-formula-box">
+                            <div className="formula-box-title">🏆 Resulting Event Grand Total Score Formula</div>
+                            <div className="formula-expression">
+                                <code>
+                                    Grand Total Score = {stations.map((st, idx) => {
+                                        const stState = stationStates[st.id] || { stationWeight: 1.0 };
+                                        const weight = stState.stationWeight !== undefined ? stState.stationWeight : 1.0;
+                                        const name = st.name || `Station ${idx + 1}`;
+                                        return `[${name} ${globalScoringMode === "relative" ? "(10pt)" : "(Sum)"} × ${weight}]`;
+                                    }).join(" + ") || "0"}
+                                </code>
+                            </div>
+                        </div>
+
+                        <div className="table-responsive">
                         <table className="finalizer-table summary-table">
                             <thead>
                                 <tr className="header-row-names">
@@ -946,7 +998,8 @@ export default function Finalizer() {
                             </tbody>
                         </table>
                     </div>
-                )}
+                </>
+            )}
             </div>
         </div>
     );

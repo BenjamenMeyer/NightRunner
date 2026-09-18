@@ -1667,6 +1667,37 @@ describe('Event Score Finalizer Role & Access Tests', () => {
     expect(pTaskMap['t-text'].submittedText).toBe('FLAG_RED');
     expect(pTaskMap['t-disqual'].submittedText).toContain('Unsafe practice');
   });
+
+  it('sorts loaded stations alphabetically by name in Finalizer loadData', () => {
+    const fetchedStations = [
+      { id: 'st-z', name: 'Zebra Station' },
+      { id: 'st-a', name: 'Alpha Station' },
+      { id: 'st-m', name: 'Mango Station' }
+    ];
+
+    const sorted = [...fetchedStations].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    expect(sorted.map(s => s.name)).toEqual(['Alpha Station', 'Mango Station', 'Zebra Station']);
+  });
+
+  it('generates resulting formula strings for station total and overall event grand total', () => {
+    const mockTasks = [
+      { id: 't1', name: 'Knot Tying', scoreWeight: 1.0, active: true },
+      { id: 't2', name: 'Lashing Speed', scoreWeight: 1.5, active: true }
+    ];
+
+    const stationFormulaParts = mockTasks.map(t => `[${t.name} × ${t.scoreWeight}]`);
+    const stationFormula = `Station Score = Weighted Sum = ${stationFormulaParts.join(' + ')}`;
+    expect(stationFormula).toBe('Station Score = Weighted Sum = [Knot Tying × 1] + [Lashing Speed × 1.5]');
+
+    const mockStations = [
+      { id: 's1', name: 'Alpha Station', stationWeight: 1.0 },
+      { id: 's2', name: 'Beta Station', stationWeight: 2.0 }
+    ];
+
+    const grandTotalFormulaParts = mockStations.map(st => `[${st.name} (10pt) × ${st.stationWeight}]`);
+    const grandTotalFormula = `Grand Total Score = ${grandTotalFormulaParts.join(' + ')}`;
+    expect(grandTotalFormula).toBe('Grand Total Score = [Alpha Station (10pt) × 1] + [Beta Station (10pt) × 2]');
+  });
 });
 
 

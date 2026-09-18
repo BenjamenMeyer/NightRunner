@@ -4,8 +4,8 @@ import uuid6
 from nightrunner_backend.drivers.base import DatabaseDriver
 from nightrunner_backend.models.station import Station
 
-GET_STATIONS = "SELECT id, event_id, name, description, active_configuration_id, station_weight, tasks FROM stations"
-GET_STATIONS_BY_EVENT = "SELECT id, event_id, name, description, active_configuration_id, station_weight, tasks FROM stations WHERE event_id = :event_id"
+GET_STATIONS = "SELECT id, event_id, name, description, active_configuration_id, station_weight, tasks FROM stations ORDER BY name ASC"
+GET_STATIONS_BY_EVENT = "SELECT id, event_id, name, description, active_configuration_id, station_weight, tasks FROM stations WHERE event_id = :event_id ORDER BY name ASC"
 GET_STATION = "SELECT id, event_id, name, description, active_configuration_id, station_weight, tasks FROM stations WHERE id = :id"
 CREATE_STATION = """
     INSERT INTO stations (id, event_id, name, description, active_configuration_id, station_weight, tasks)
