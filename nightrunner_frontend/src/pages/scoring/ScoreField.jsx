@@ -538,6 +538,7 @@ export default function ScoreField({
 
         case "Text Answer":
         case "Secret Cipher / Decoding":
+            const cipherTextVal = (typeof value === "object" && value !== null) ? (value.submittedText ?? "") : (value ?? "");
 
             return (
 
@@ -550,7 +551,7 @@ export default function ScoreField({
 
                     <input
                         type="text"
-                        value={value ?? ""}
+                        value={cipherTextVal}
                         placeholder={fieldType === "Secret Cipher / Decoding" ? "Enter patrol decoded secret string..." : "Enter text answer or response..."}
                         onChange={(e) =>
                             onChange(e.target.value)
