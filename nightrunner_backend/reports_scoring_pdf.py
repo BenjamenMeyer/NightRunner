@@ -53,6 +53,20 @@ def _ordinal(n: int) -> str:
     return f"{n}{suffix}"
 
 
+def _patrol_number(p: Dict[str, Any]) -> str:
+    """Renders a patrol number as '#12', or an em dash when unset."""
+    num = p.get("patrolNumber")
+    return f"#{num}" if num not in (None, "") else "—"
+
+
+def _patrol_troops(p: Dict[str, Any]) -> str:
+    """Renders the troop(s) a patrol's members belong to, or an em dash when unknown."""
+    troops = p.get("troops")
+    if isinstance(troops, (list, tuple)):
+        troops = ", ".join(str(t) for t in troops if t)
+    return str(troops) if troops else "—"
+
+
 def _assign_rankings(items: List[Dict[str, Any]], score_key: str = "score") -> List[Dict[str, Any]]:
     """Assigns ranks with standard competition ranking and tie flags (*).
     If 2 items tie for 1st: both get rank '1st*', next item gets rank '3rd'.
@@ -97,8 +111,8 @@ def generate_event_scoring_pdf(
     """Generates a PDF bytes buffer containing the Detailed Event Scoring Report.
     
     :param event_name: Display name of the event
-    :param overall_patrols: List of dicts: [{patrolId, patrolName, totalScore, rank, rankStr}]
-    :param station_breakdowns: List of station dicts: [{stationId, stationName, stationWeight, patrols: [{patrolId, patrolName, score}]}]
+    :param overall_patrols: List of dicts: [{patrolId, patrolName, patrolNumber, troops, totalScore, rank, rankStr}]
+    :param station_breakdowns: List of station dicts: [{stationId, stationName, stationWeight, patrols: [{patrolId, patrolName, patrolNumber, troops, score}]}]
     :param is_draft: If True, overlay a DRAFT watermark across all pages.
     """
     buffer = io.BytesIO()
@@ -202,7 +216,9 @@ def generate_event_scoring_pdf(
     summary_table_data = [
         [
             Paragraph("Rank", table_header_style),
+            Paragraph("Patrol #", table_header_style),
             Paragraph("Patrol Name", table_header_style),
+            Paragraph("Troop(s)", table_header_style),
             Paragraph("Final Overall Score", table_header_style),
         ]
     ]
@@ -218,11 +234,13 @@ def generate_event_scoring_pdf(
         row_style = table_cell_bold if p.get("rank") == 1 else table_cell_style
         summary_table_data.append([
             Paragraph(rank_str, row_style),
+            Paragraph(_patrol_number(p), row_style),
             Paragraph(name_str, row_style),
+            Paragraph(_patrol_troops(p), row_style),
             Paragraph(score_str, row_style),
         ])
 
-    col_widths_summary = [1.5 * inch, 4.2 * inch, 1.8 * inch]
+    col_widths_summary = [0.8 * inch, 0.8 * inch, 2.7 * inch, 1.9 * inch, 1.3 * inch]
     t_summary = Table(summary_table_data, colWidths=col_widths_summary)
     t_summary.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2b6cb0")),
@@ -282,7 +300,9 @@ def generate_event_scoring_pdf(
             st_table_data = [
                 [
                     Paragraph("Station Rank", table_header_style),
+                    Paragraph("Patrol #", table_header_style),
                     Paragraph("Patrol Name", table_header_style),
+                    Paragraph("Troop(s)", table_header_style),
                     Paragraph("Effective Score", table_header_style),
                 ]
             ]
@@ -290,7 +310,9 @@ def generate_event_scoring_pdf(
             if not st_ranked:
                 st_table_data.append([
                     Paragraph("—", table_cell_style),
+                    Paragraph("—", table_cell_style),
                     Paragraph("No scores recorded for this station", table_cell_style),
+                    Paragraph("—", table_cell_style),
                     Paragraph("—", table_cell_style),
                 ])
             else:
@@ -301,7 +323,9 @@ def generate_event_scoring_pdf(
                     score_str = f"{score_val:.2f}"
                     st_table_data.append([
                         Paragraph(rank_str, table_cell_style),
+                        Paragraph(_patrol_number(p), table_cell_style),
                         Paragraph(name_str, table_cell_style),
+                        Paragraph(_patrol_troops(p), table_cell_style),
                         Paragraph(score_str, table_cell_style),
                     ])
 
