@@ -86,6 +86,16 @@ export default function Finalizer() {
             });
             setStoredResultsMap(resultMap);
 
+            // Restore the scoring mode this event was last finalized under. Without
+            // this the dropdown silently resets to Absolute on every visit, and the
+            // next Save overwrites relative scores with absolute ones.
+            const storedMode = storedList.find(
+                (r) => r.stationId && (r.scoringMode === "absolute" || r.scoringMode === "relative")
+            )?.scoringMode;
+            if (storedMode) {
+                setGlobalScoringMode(storedMode);
+            }
+
             const reports = {};
             await Promise.all(
                 loadedStations.map(async (st) => {
