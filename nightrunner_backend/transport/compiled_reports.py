@@ -201,6 +201,9 @@ async def _background_generate_scoring_ods(report_id: str, event_id: str, event_
         patrol_number_map, patrol_troops_map = _patrol_identity_maps(patrols)
         overall_patrols = []
         station_breakdowns = []
+        # The Finalizer stores the mode it was set to on every station row. Without
+        # this the export always labelled itself absolute, even for relative events.
+        scoring_mode = "absolute"
 
         if finalized_rows:
             final_scores = {}
@@ -213,6 +216,9 @@ async def _background_generate_scoring_ods(report_id: str, event_id: str, event_
                     final_scores[pid] = score_val
                 else:
                     st_scores.setdefault(sid, {})[pid] = score_val
+                    row_mode = r.get("scoringMode")
+                    if row_mode in ("absolute", "relative"):
+                        scoring_mode = row_mode
 
             for pid, p_name in patrol_name_map.items():
                 overall_patrols.append({
@@ -235,13 +241,10 @@ async def _background_generate_scoring_ods(report_id: str, event_id: str, event_
                         "troops": patrol_troops_map.get(pid, ""),
                         "score": st_p_scores.get(pid, 0.0)
                     })
-                st_tasks = getattr(st, "tasks", []) or []
-                tasks_list = [{"id": t.get("id") or t.get("_id"), "name": t.get("name")} for t in st_tasks if isinstance(t, dict)]
                 station_breakdowns.append({
                     "stationId": sid,
                     "stationName": st.name,
                     "stationWeight": getattr(st, "station_weight", 1.0),
-                    "tasks": tasks_list,
                     "patrols": st_patrols_list
                 })
         else:
@@ -287,20 +290,18 @@ async def _background_generate_scoring_ods(report_id: str, event_id: str, event_
                         "troops": patrol_troops_map.get(pid, ""),
                         "score": st_p_scores.get(pid, 0.0)
                     })
-                st_tasks = getattr(st, "tasks", []) or []
-                tasks_list = [{"id": t.get("id") or t.get("_id"), "name": t.get("name")} for t in st_tasks if isinstance(t, dict)]
                 station_breakdowns.append({
                     "stationId": sid,
                     "stationName": st.name,
                     "stationWeight": getattr(st, "station_weight", 1.0),
-                    "tasks": tasks_list,
                     "patrols": st_patrols_list
                 })
 
         ods_bytes = generate_event_scoring_ods(
             event_name=event_name,
             overall_patrols=overall_patrols,
-            station_breakdowns=station_breakdowns
+            station_breakdowns=station_breakdowns,
+            scoring_mode=scoring_mode
         )
 
         file_key = f"events/{event_id}/reports/{report_id}-scoring.ods"
