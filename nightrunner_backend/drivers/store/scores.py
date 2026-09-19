@@ -181,7 +181,7 @@ class ScoresStore:
     async def list_finalized_results(self, event_id: str) -> List[Dict[str, Any]]:
         """List all stored finalized results for an event."""
         rows = await self.driver.execute(
-            "SELECT id, event_id AS eventId, patrol_id AS patrolId, station_id AS stationId, score_type AS scoreType, score_value AS scoreValue, scoring_mode AS scoringMode, calculated_at AS calculatedAt FROM event_finalized_results WHERE event_id = :event_id",
+            'SELECT id, event_id AS "eventId", patrol_id AS "patrolId", station_id AS "stationId", score_type AS "scoreType", score_value AS "scoreValue", scoring_mode AS "scoringMode", calculated_at AS "calculatedAt" FROM event_finalized_results WHERE event_id = :event_id',
             {"event_id": event_id}
         )
         if not isinstance(rows, list):

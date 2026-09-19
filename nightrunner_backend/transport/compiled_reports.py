@@ -164,7 +164,7 @@ async def _background_generate_scoring_ods(report_id: str, event_id: str, event_
 
     try:
         finalized_rows = await scores_store.list_finalized_results(event_id)
-        stations = await stations_store.list_by_event(event_id)
+        stations = await stations_store.list(event_id=event_id)
         patrols = await patrols_store.list(event_id=event_id)
 
         patrol_name_map = {p.id: p.name for p in patrols}
