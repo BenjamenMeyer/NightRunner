@@ -94,9 +94,25 @@ async def test_compiled_scoring_reports_workflow(test_client, token_factory):
     assert ods_job["report_type"] == "event-scoring-ods"
 
     # Wait briefly for background tasks
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(1.5)
 
-    # 4. Clean up
+    # 4. The background jobs must actually succeed, not just be accepted.
+    # A 202 only means the job was queued; generation failures are swallowed
+    # into a "failed" status, so assert on the final status of each report.
+    list_resp = await test_client.simulate_get(
+        "/v1/events/evt-123/compiled-reports",
+        headers=headers,
+    )
+    assert list_resp.status == falcon.HTTP_200
+    by_id = {r["id"]: r for r in list_resp.json["reports"]}
+    for job in (draft_job, final_job, ods_job):
+        report = by_id[job["id"]]
+        assert report["status"] == "ready", (
+            f"{job['report_type']} generation failed: {report.get('error_message')}"
+        )
+        assert report["size_bytes"] > 0
+
+    # 5. Clean up
     await test_client.simulate_delete(f"/v1/compiled-reports/{draft_job['id']}", headers=headers)
     await test_client.simulate_delete(f"/v1/compiled-reports/{final_job['id']}", headers=headers)
     await test_client.simulate_delete(f"/v1/compiled-reports/{ods_job['id']}", headers=headers)
