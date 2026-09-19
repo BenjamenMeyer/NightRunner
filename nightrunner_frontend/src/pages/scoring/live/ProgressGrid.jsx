@@ -156,7 +156,10 @@ export default function ProgressGrid({
                     <thead>
                         <tr>
                             {identityColumns.map((column) => (
-                                <th key={column.key} className="sticky-column">
+                                <th
+                                    key={column.key}
+                                    className={`sticky-column identity-col identity-col--${column.key}`}
+                                >
                                     {column.label}
                                 </th>
                             ))}
@@ -172,7 +175,7 @@ export default function ProgressGrid({
                                 {identityColumns.map((column) => (
                                     <td
                                         key={column.key}
-                                        className="sticky-column patrol-name"
+                                        className={`sticky-column patrol-name identity-col identity-col--${column.key}`}
                                     >
                                         {column.render(patrol)}
                                     </td>
