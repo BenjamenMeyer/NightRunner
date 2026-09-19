@@ -394,3 +394,44 @@ async def test_public_path_prefix_is_exact():
     assert is_public_path("/v1/public/progress/abc")
     assert not is_public_path("/v1/events")
     assert not is_public_path("/v1/not/v1/public/sneaky")
+
+
+# --------------------------------------------------------------------------
+# Timestamp serialisation
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_visit_timestamps_are_serialised_from_datetime_objects():
+    """A visit row carrying `datetime` objects must still render as JSON.
+
+    `station_visits.checked_in_at` and friends are TIMESTAMP columns. SQLite
+    returns them as strings, so the rest of this suite never sees a `datetime`
+    here — but PostgreSQL returns real `datetime` objects, and one of those
+    reaching `resp.media` raises inside the JSON serialiser and 500s the whole
+    request. That took out both public pages in production the moment an event
+    recorded its first check-in; an empty visit list had looked healthy.
+    """
+    import json
+
+    from nightrunner_backend.drivers.store.public_board import PublicBoardStore
+
+    checked_in = datetime(2026, 9, 18, 21, 5, tzinfo=timezone.utc)
+
+    class _StubDriver:
+        async def execute(self, query, params=None):
+            return [{
+                "station_id": "st-1",
+                "patrol_id": "pat-1",
+                "status": "checked_in",
+                "checked_in_at": checked_in,
+                "checked_out_at": None,
+                "tasks_completed_at": None,
+            }]
+
+    visits = await PublicBoardStore(_StubDriver()).list_visits("ev-1")
+
+    assert visits[0]["checkedInAt"] == checked_in.isoformat()
+    assert visits[0]["checkedOutAt"] is None
+    # The real regression: this is what falcon does with resp.media.
+    json.dumps(visits)
