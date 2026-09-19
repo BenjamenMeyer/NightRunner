@@ -83,10 +83,22 @@ async def test_compiled_scoring_reports_workflow(test_client, token_factory):
     final_job = resp_final.json
     assert final_job["report_type"] == "event-scoring"
 
+    # 3. Trigger ODS spreadsheet creation
+    resp_ods = await test_client.simulate_post(
+        "/v1/events/evt-123/compiled-reports",
+        json={"reportType": "event-scoring-ods"},
+        headers=headers,
+    )
+    assert resp_ods.status == falcon.HTTP_202
+    ods_job = resp_ods.json
+    assert ods_job["report_type"] == "event-scoring-ods"
+
     # Wait briefly for background tasks
     await asyncio.sleep(0.5)
 
-    # 3. Clean up
+    # 4. Clean up
     await test_client.simulate_delete(f"/v1/compiled-reports/{draft_job['id']}", headers=headers)
     await test_client.simulate_delete(f"/v1/compiled-reports/{final_job['id']}", headers=headers)
+    await test_client.simulate_delete(f"/v1/compiled-reports/{ods_job['id']}", headers=headers)
+
 

@@ -529,6 +529,8 @@ export default function Finalizer() {
             const job = await ApiService.reportData.generateReportJob(eventId, reportType);
             if (reportType === "event-scoring-draft") {
                 setSaveMessage("Draft Scoring Report generation queued. Redirecting to reports registry...");
+            } else if (reportType === "event-scoring-ods") {
+                setSaveMessage("Scoring ODS Spreadsheet generation queued. Redirecting to reports registry...");
             } else {
                 setSaveMessage("Final Official Scoring Report generation queued. Redirecting to reports registry...");
             }
@@ -536,8 +538,8 @@ export default function Finalizer() {
                 window.location.href = `/admin/reports`;
             }, 1200);
         } catch (err) {
-            console.error("Failed generating scoring PDF report:", err);
-            setError(err?.message || "Failed generating PDF report.");
+            console.error("Failed generating scoring report:", err);
+            setError(err?.message || "Failed generating report.");
         } finally {
             setIsGeneratingPdf(false);
         }
@@ -636,6 +638,16 @@ export default function Finalizer() {
                         title="Generate a preview report with DRAFT watermark"
                     >
                         👁️ Preview PDF (Draft)
+                    </button>
+
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => handleGenerateReport("event-scoring-ods")}
+                        disabled={saving || loading || isGeneratingPdf}
+                        title="Download OpenDocument Spreadsheet (.ods) workbook with cross-referenced formulas"
+                    >
+                        📊 Download ODS Spreadsheet
                     </button>
 
                     <button type="button" className="primary-button" onClick={saveFinalizedResults} disabled={saving || loading}>
