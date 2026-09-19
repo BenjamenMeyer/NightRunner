@@ -184,4 +184,16 @@ class ScoresStore:
             "SELECT id, event_id AS eventId, patrol_id AS patrolId, station_id AS stationId, score_type AS scoreType, score_value AS scoreValue, scoring_mode AS scoringMode, calculated_at AS calculatedAt FROM event_finalized_results WHERE event_id = :event_id",
             {"event_id": event_id}
         )
-        return rows if isinstance(rows, list) else []
+        if not isinstance(rows, list):
+            return []
+        cleaned = []
+        for r in rows:
+            if isinstance(r, dict):
+                r_copy = dict(r)
+                calc_at = r_copy.get("calculatedAt")
+                if hasattr(calc_at, "isoformat"):
+                    r_copy["calculatedAt"] = calc_at.isoformat()
+                elif calc_at is not None:
+                    r_copy["calculatedAt"] = str(calc_at)
+                cleaned.append(r_copy)
+        return cleaned
