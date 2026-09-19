@@ -416,11 +416,43 @@
 
 @media (max-width: 768px) {
 
+    .live-scoring-container {
+
+        padding: .75rem;
+
+    }
+
     .page-header {
 
         flex-direction: column;
 
         align-items: stretch;
+
+    }
+
+    .controls-row {
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: .75rem;
+
+    }
+
+    .refresh-controls {
+
+        flex-wrap: wrap;
+
+        gap: .5rem;
+
+    }
+
+    .refresh-select {
+
+        flex: 1;
+
+        min-width: 0;
 
     }
 
@@ -436,17 +468,141 @@
 
     }
 
-    .live-table {
+    /* Every mode scrolls here, `fit` included.
+     *
+     * `fit` shrinks the grid to the screen, which is what a projector at base
+     * camp wants. A phone is narrower than the grid's own 800px floor, so on
+     * mobile `fit` clipped the right-hand stations with `overflow: hidden` and
+     * left no way to reach them — and `fit` is the mode the page opens in.
+     * `auto` had the opposite problem: it scrolled vertically only, so the
+     * grid pushed the whole page sideways instead of scrolling inside its box.
+     */
+    .live-table-wrapper,
+    .live-table-wrapper.fit,
+    .live-table-wrapper.auto,
+    .live-table-wrapper.manual {
+
+        overflow: auto;
+
+        -webkit-overflow-scrolling: touch;
+
+        max-height: calc(100vh - 260px);
+
+        max-height: calc(100dvh - 260px);
+
+    }
+
+    /* Drop the 800px floor rather than keeping a width no phone has. The grid
+     * sizes to its own content instead: it fills the screen when an event has
+     * few stations, and scrolls sideways when it has many.
+     */
+    .live-table,
+    .live-table.fit {
+
+        min-width: 100%;
+
+        width: max-content;
+
+        table-layout: auto;
 
         font-size: .9rem;
 
     }
 
-    .live-table td {
+    .live-table th,
+    .live-table td,
+    .live-table.fit th,
+    .live-table.fit td {
 
-        width: 60px;
+        padding: .5rem;
 
-        height: 60px;
+        width: 52px;
+
+        height: 52px;
+
+        font-size: .9rem;
+
+    }
+
+    /* The sticky patrol column is what makes sideways scrolling usable — it
+     * keeps the patrol you are reading on screen while the stations move.
+     *
+     * Capping it needs the name to be allowed to wrap. The desktop rule sets
+     * `white-space: nowrap`, and under `table-layout: auto` that makes the
+     * column grow to fit the longest patrol name whatever width is asked for —
+     * on a phone that left a name like "Screaming Eagles" occupying most of the
+     * screen. Letting it wrap is what actually holds the column to its cap.
+     */
+    .sticky-column {
+
+        width: 6.5rem;
+
+    }
+
+    /* Only the column carrying the patrol's name stays pinned.
+     *
+     * Every identity column is `position: sticky; left: 0`, which is fine for
+     * the signed-in board because it has exactly one. The public board has
+     * three — number, name and troop — and all three pinned to the same edge
+     * simply stack on top of each other as soon as the grid scrolls sideways.
+     * That was invisible while `fit` clipped the grid on mobile; now that it
+     * scrolls, it would not be. The name is the one worth keeping on screen,
+     * so the other two scroll away with the stations.
+     *
+     * These follow the `.sticky-column` width above deliberately: same
+     * specificity, so order is what decides.
+     */
+    .live-table th.identity-col--number,
+    .live-table td.identity-col--number,
+    .live-table th.identity-col--troop,
+    .live-table td.identity-col--troop {
+
+        /* `th` needs naming explicitly: `.live-table th` sets `position:
+         * sticky` for the frozen header row and outranks a bare class, so a
+         * plainer selector unpinned the body cells but left the header cells
+         * pinned — and the troop heading then sat on top of the patrol
+         * heading above a column of patrol names.
+         */
+        position: static;
+
+    }
+
+    /* Carries the `.fit` variant as well, and sizes with `width` rather than
+     * `max-width`, for two separate reasons:
+     *
+     *  - the cell-sizing rule above includes `.live-table.fit td`, which
+     *    outranks a plainer selector, so without the matching `.fit` here the
+     *    number column keeps a full station's width for a single digit;
+     *  - `max-width` does not apply to table cells, so on its own it computes
+     *    but changes nothing. `width` is a suggestion the column algorithm
+     *    actually reads.
+     */
+    .live-table .identity-col--number,
+    .live-table.fit .identity-col--number {
+
+        width: 2.5rem;
+
+    }
+
+    .live-table .identity-col--troop,
+    .live-table.fit .identity-col--troop {
+
+        width: 4.5rem;
+
+    }
+
+    .live-table .patrol-name,
+    .live-table.fit .patrol-name {
+
+        max-width: 6.5rem;
+
+        white-space: normal;
+
+        overflow-wrap: break-word;
+
+        font-size: .85rem;
+
+        line-height: 1.2;
 
     }
 
