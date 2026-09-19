@@ -15,6 +15,25 @@ from nightrunner_backend.reports_scoring_pdf import generate_event_scoring_pdf
 logger = logging.getLogger(__name__)
 
 
+def _patrol_identity_maps(patrols):
+    """Builds patrolId -> patrol number and patrolId -> joined troop list.
+
+    Troop lives on each patrol member, so a patrol's "troops" is the distinct
+    set of troops across its members, in roster order.
+    """
+    number_map = {}
+    troops_map = {}
+    for p in patrols:
+        number_map[p.id] = getattr(p, "number", None)
+        seen = []
+        for m in getattr(p, "members", []) or []:
+            troop = (getattr(m, "troop", None) or "").strip()
+            if troop and troop not in seen:
+                seen.append(troop)
+        troops_map[p.id] = ", ".join(seen)
+    return number_map, troops_map
+
+
 async def _background_generate_patrol_qr_pdf(report_id: str, event_id: str, event_name: str):
     driver = get_driver()
     reports_store = ReportsStore(driver)
@@ -46,6 +65,7 @@ async def _background_generate_scoring_pdf(report_id: str, event_id: str, event_
         patrols = await patrols_store.list(event_id=event_id)
 
         patrol_name_map = {p.id: p.name for p in patrols}
+        patrol_number_map, patrol_troops_map = _patrol_identity_maps(patrols)
         station_name_map = {s.id: s.name for s in stations}
         station_weight_map = {s.id: getattr(s, "station_weight", 1.0) for s in stations}
 
@@ -70,6 +90,8 @@ async def _background_generate_scoring_pdf(report_id: str, event_id: str, event_
                 overall_patrols.append({
                     "patrolId": pid,
                     "patrolName": p_name,
+                    "patrolNumber": patrol_number_map.get(pid),
+                    "troops": patrol_troops_map.get(pid, ""),
                     "totalScore": final_scores.get(pid, 0.0)
                 })
 
@@ -81,6 +103,8 @@ async def _background_generate_scoring_pdf(report_id: str, event_id: str, event_
                     st_patrols_list.append({
                         "patrolId": pid,
                         "patrolName": p_name,
+                        "patrolNumber": patrol_number_map.get(pid),
+                        "troops": patrol_troops_map.get(pid, ""),
                         "score": st_p_scores.get(pid, 0.0)
                     })
                 station_breakdowns.append({
@@ -102,6 +126,8 @@ async def _background_generate_scoring_pdf(report_id: str, event_id: str, event_
                 p_entry = patrols_acc.setdefault(pid, {
                     "patrolId": pid,
                     "patrolName": r.get("patrol_name") or patrol_name_map.get(pid, f"Patrol {pid}"),
+                    "patrolNumber": patrol_number_map.get(pid),
+                    "troops": patrol_troops_map.get(pid, ""),
                     "totalScore": 0.0
                 })
                 p_entry["totalScore"] += weighted
@@ -112,6 +138,8 @@ async def _background_generate_scoring_pdf(report_id: str, event_id: str, event_
                     patrols_acc[pid] = {
                         "patrolId": pid,
                         "patrolName": p_name,
+                        "patrolNumber": patrol_number_map.get(pid),
+                        "troops": patrol_troops_map.get(pid, ""),
                         "totalScore": 0.0
                     }
 
@@ -125,6 +153,8 @@ async def _background_generate_scoring_pdf(report_id: str, event_id: str, event_
                     st_patrols_list.append({
                         "patrolId": pid,
                         "patrolName": p_name,
+                        "patrolNumber": patrol_number_map.get(pid),
+                        "troops": patrol_troops_map.get(pid, ""),
                         "score": st_p_scores.get(pid, 0.0)
                     })
                 station_breakdowns.append({
@@ -168,6 +198,7 @@ async def _background_generate_scoring_ods(report_id: str, event_id: str, event_
         patrols = await patrols_store.list(event_id=event_id)
 
         patrol_name_map = {p.id: p.name for p in patrols}
+        patrol_number_map, patrol_troops_map = _patrol_identity_maps(patrols)
         overall_patrols = []
         station_breakdowns = []
 
@@ -187,6 +218,8 @@ async def _background_generate_scoring_ods(report_id: str, event_id: str, event_
                 overall_patrols.append({
                     "patrolId": pid,
                     "patrolName": p_name,
+                    "patrolNumber": patrol_number_map.get(pid),
+                    "troops": patrol_troops_map.get(pid, ""),
                     "totalScore": final_scores.get(pid, 0.0)
                 })
 
@@ -198,6 +231,8 @@ async def _background_generate_scoring_ods(report_id: str, event_id: str, event_
                     st_patrols_list.append({
                         "patrolId": pid,
                         "patrolName": p_name,
+                        "patrolNumber": patrol_number_map.get(pid),
+                        "troops": patrol_troops_map.get(pid, ""),
                         "score": st_p_scores.get(pid, 0.0)
                     })
                 st_tasks = getattr(st, "tasks", []) or []
@@ -221,6 +256,8 @@ async def _background_generate_scoring_ods(report_id: str, event_id: str, event_
                 p_entry = patrols_acc.setdefault(pid, {
                     "patrolId": pid,
                     "patrolName": r.get("patrol_name") or patrol_name_map.get(pid, f"Patrol {pid}"),
+                    "patrolNumber": patrol_number_map.get(pid),
+                    "troops": patrol_troops_map.get(pid, ""),
                     "totalScore": 0.0
                 })
                 p_entry["totalScore"] += weighted
@@ -231,6 +268,8 @@ async def _background_generate_scoring_ods(report_id: str, event_id: str, event_
                     patrols_acc[pid] = {
                         "patrolId": pid,
                         "patrolName": p_name,
+                        "patrolNumber": patrol_number_map.get(pid),
+                        "troops": patrol_troops_map.get(pid, ""),
                         "totalScore": 0.0
                     }
 
@@ -244,6 +283,8 @@ async def _background_generate_scoring_ods(report_id: str, event_id: str, event_
                     st_patrols_list.append({
                         "patrolId": pid,
                         "patrolName": p_name,
+                        "patrolNumber": patrol_number_map.get(pid),
+                        "troops": patrol_troops_map.get(pid, ""),
                         "score": st_p_scores.get(pid, 0.0)
                     })
                 st_tasks = getattr(st, "tasks", []) or []

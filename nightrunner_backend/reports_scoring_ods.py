@@ -33,6 +33,29 @@ def _sanitize_sheet_name(name: str) -> str:
     return clean[:31] if len(clean) > 31 else clean
 
 
+def _patrol_number_text(p: Dict[str, Any]) -> str:
+    """Renders a patrol number for a spreadsheet cell, blank when unset."""
+    num = p.get("patrolNumber")
+    return "" if num in (None, "") else str(num)
+
+
+def _patrol_troops_text(p: Dict[str, Any]) -> str:
+    """Renders the troop(s) a patrol's members belong to, blank when unknown."""
+    troops = p.get("troops")
+    if isinstance(troops, (list, tuple)):
+        troops = ", ".join(str(t) for t in troops if t)
+    return str(troops) if troops else ""
+
+
+# Sheet layout, 0-indexed columns.
+# Event Summary: A Rank | B Patrol # | C Patrol | D Troop(s) | E.. Stations | Final Score
+SUMMARY_STATION_START_COL = 4
+# Station sheet: A Patrol | B Patrol # | C Troop(s) | D Raw Total | E Effective | F.. Tasks
+STATION_TASK_START_COL = 5
+STATION_RAW_TOTAL_COL = "D"
+STATION_EFFECTIVE_COL = "E"
+
+
 def generate_event_scoring_ods(
     event_name: str,
     overall_patrols: List[Dict[str, Any]],
@@ -44,7 +67,7 @@ def generate_event_scoring_ods(
     Uses OpenFormula standard formulas to dynamically calculate station totals, weighted scores, and event grand totals.
     
     :param event_name: Display name of the event
-    :param overall_patrols: List of patrol dicts [{patrolId, patrolName, totalScore, rank, rankStr}]
+    :param overall_patrols: List of patrol dicts [{patrolId, patrolName, patrolNumber, troops, totalScore, rank, rankStr}]
     :param station_breakdowns: List of station dicts [{stationId, stationName, stationWeight, tasks: [...], patrols: [...]}]
     :param scoring_mode: "absolute" or "relative"
     """
@@ -54,6 +77,7 @@ def generate_event_scoring_ods(
     sorted_patrols = sorted(overall_patrols, key=lambda p: float(p.get("totalScore", 0.0)), reverse=True)
     patrol_order = [p["patrolId"] for p in sorted_patrols]
     patrol_name_map = {p["patrolId"]: p.get("patrolName", f"Patrol {p['patrolId']}") for p in sorted_patrols}
+    patrol_obj_map = {p["patrolId"]: p for p in sorted_patrols}
 
     sheets_xml_list = []
 
@@ -97,7 +121,9 @@ def generate_event_scoring_ods(
     # Header Row 1: Titles
     h1_cells = [
         '<table:table-cell office:value-type="string"><text:p>Rank</text:p></table:table-cell>',
-        '<table:table-cell office:value-type="string"><text:p>Patrol</text:p></table:table-cell>'
+        '<table:table-cell office:value-type="string"><text:p>Patrol #</text:p></table:table-cell>',
+        '<table:table-cell office:value-type="string"><text:p>Patrol</text:p></table:table-cell>',
+        '<table:table-cell office:value-type="string"><text:p>Troop(s)</text:p></table:table-cell>'
     ]
     for st in station_breakdowns:
         s_meta = station_meta[st["stationId"]]
@@ -107,6 +133,8 @@ def generate_event_scoring_ods(
 
     # Header Row 2: Station Weight Multipliers
     h2_cells = [
+        '<table:table-cell office:value-type="string"><text:p></text:p></table:table-cell>',
+        '<table:table-cell office:value-type="string"><text:p></text:p></table:table-cell>',
         '<table:table-cell office:value-type="string"><text:p></text:p></table:table-cell>',
         '<table:table-cell office:value-type="string"><text:p>Station Weight</text:p></table:table-cell>'
     ]
@@ -121,7 +149,7 @@ def generate_event_scoring_ods(
     # Row index tracking for OpenFormula references:
     # Row 1: Title
     # Row 2: Empty
-    # Row 3: Header Row 1 (Rank, Patrol, [Stations...], Final Score)
+    # Row 3: Header Row 1 (Rank, Patrol #, Patrol, Troop(s), [Stations...], Final Score)
     # Row 4: Header Row 2 (Station Weights)
     # Row 5: Empty separator
     summary_rows.append('<table:table-row/>')
@@ -138,19 +166,27 @@ def generate_event_scoring_ods(
 
         r_cells = []
 
-        # Column A: Rank formula using OpenFormula RANK function
-        rank_formula = f'of:=RANK([.D{row_num}];[.D${data_start_row}:.D${data_end_row}];0)'
-        r_cells.append(f'<table:table-cell table:formula="{rank_formula}" office:value-type="float" office:value="{p_idx + 1}"><text:p>{p_idx + 1}</text:p></table:table-cell>')
+        # Column A: Rank. Placeholder formula; rewritten below once the final
+        # score column is known.
+        r_cells.append(f'<table:table-cell office:value-type="float" office:value="{p_idx + 1}"><text:p>{p_idx + 1}</text:p></table:table-cell>')
 
-        # Column B: Patrol Name
+        # Column B: Patrol Number
+        p_num_text = _patrol_number_text(patrol_obj_map.get(pid, {}))
+        r_cells.append(f'<table:table-cell office:value-type="string"><text:p>{_escape_xml(p_num_text)}</text:p></table:table-cell>')
+
+        # Column C: Patrol Name
         r_cells.append(f'<table:table-cell office:value-type="string"><text:p>{_escape_xml(p_name)}</text:p></table:table-cell>')
+
+        # Column D: Troop(s) the patrol members belong to
+        p_troops_text = _patrol_troops_text(patrol_obj_map.get(pid, {}))
+        r_cells.append(f'<table:table-cell office:value-type="string"><text:p>{_escape_xml(p_troops_text)}</text:p></table:table-cell>')
 
         # Station Columns (Column C, D, ...): OpenFormula reference to Station Sheet total * Station Weight
         st_ref_cols = []
         for s_idx, st in enumerate(station_breakdowns):
             s_id = st["stationId"]
             s_meta = station_meta[s_id]
-            col_letter = _col_to_letter(2 + s_idx) # Col C is idx 2
+            col_letter = _col_to_letter(SUMMARY_STATION_START_COL + s_idx)
             st_ref_cols.append(col_letter)
 
             # Find row number of this patrol in station sheet
@@ -159,7 +195,7 @@ def generate_event_scoring_ods(
             
             # OpenFormula cross-sheet cell reference: $'Station Sheet Name'.[Cell]
             sheet_escaped = s_meta['sheetName'].replace("'", "''")
-            st_cell_ref = f"${sheet_escaped}.C{st_patrol_row}"
+            st_cell_ref = f"${sheet_escaped}.{STATION_EFFECTIVE_COL}{st_patrol_row}"
             st_weight_ref = f"[.{col_letter}$4]" # Weight is on summary row 4
 
             st_formula = f'of:=[{st_cell_ref}]*[{st_weight_ref}]'
@@ -175,11 +211,11 @@ def generate_event_scoring_ods(
             )
 
         # Final Score Column: SUM of weighted station scores for this patrol
-        first_st_col = "C"
-        last_st_col = _col_to_letter(1 + len(station_breakdowns))
+        first_st_col = _col_to_letter(SUMMARY_STATION_START_COL)
+        last_st_col = _col_to_letter(SUMMARY_STATION_START_COL + len(station_breakdowns) - 1)
         final_formula = f'of:=SUM([.{first_st_col}{row_num}:.{last_st_col}{row_num}])'
 
-        final_col_letter = _col_to_letter(2 + len(station_breakdowns))
+        final_col_letter = _col_to_letter(SUMMARY_STATION_START_COL + len(station_breakdowns))
         # Update rank formula to point to exact final score column
         rank_formula = f'of:=RANK([.{final_col_letter}{row_num}];[.{final_col_letter}${data_start_row}:.{final_col_letter}${data_end_row}];0)'
         r_cells[0] = f'<table:table-cell table:formula="{rank_formula}" office:value-type="float" office:value="{p_idx + 1}"><text:p>{p_idx + 1}</text:p></table:table-cell>'
@@ -217,9 +253,11 @@ def generate_event_scoring_ods(
             f'</table:table-row>'
         )
 
-        # Header Row: Patrol | Raw Total | Station Score | [Task 1, Task 2...]
+        # Header Row: Patrol | Patrol # | Troop(s) | Raw Total | Station Score | [Task 1, Task 2...]
         h_cells = [
             '<table:table-cell office:value-type="string"><text:p>Patrol</text:p></table:table-cell>',
+            '<table:table-cell office:value-type="string"><text:p>Patrol #</text:p></table:table-cell>',
+            '<table:table-cell office:value-type="string"><text:p>Troop(s)</text:p></table:table-cell>',
             '<table:table-cell office:value-type="string"><text:p>Raw Total</text:p></table:table-cell>',
             '<table:table-cell office:value-type="string"><text:p>Effective Station Score</text:p></table:table-cell>'
         ]
@@ -246,10 +284,21 @@ def generate_event_scoring_ods(
             # Column A: Patrol Name
             r_cells.append(f'<table:table-cell office:value-type="string"><text:p>{_escape_xml(p_name)}</text:p></table:table-cell>')
 
-            # Column B: Raw Total (SUM of task columns D to end if tasks exist)
+            # Columns B and C: patrol identity. Prefer the station row, fall back
+            # to the summary row, which always carries it.
+            p_summary = patrol_obj_map.get(pid, {})
+
+            p_num_text = _patrol_number_text(st_p_entry) or _patrol_number_text(p_summary)
+            r_cells.append(f'<table:table-cell office:value-type="string"><text:p>{_escape_xml(p_num_text)}</text:p></table:table-cell>')
+
+            # Troop(s) the patrol members belong to
+            p_troops_text = _patrol_troops_text(st_p_entry) or _patrol_troops_text(p_summary)
+            r_cells.append(f'<table:table-cell office:value-type="string"><text:p>{_escape_xml(p_troops_text)}</text:p></table:table-cell>')
+
+            # Column D: Raw Total (SUM of the task columns if tasks exist)
             if tasks:
-                first_task_col = "D"
-                last_task_col = _col_to_letter(3 + len(tasks) - 1)
+                first_task_col = _col_to_letter(STATION_TASK_START_COL)
+                last_task_col = _col_to_letter(STATION_TASK_START_COL + len(tasks) - 1)
                 raw_formula = f'of:=SUM([.{first_task_col}{row_num}:.{last_task_col}{row_num}])'
                 r_cells.append(
                     f'<table:table-cell table:formula="{raw_formula}" office:value-type="float" office:value="{cached_st_score}">'
@@ -258,20 +307,20 @@ def generate_event_scoring_ods(
                 )
             else:
                 r_cells.append(
-                    f'<table:table-cell table:formula="of:=[.D{row_num}]" office:value-type="float" office:value="{cached_st_score}">'
+                    f'<table:table-cell table:formula="of:=[.{_col_to_letter(STATION_TASK_START_COL)}{row_num}]" office:value-type="float" office:value="{cached_st_score}">'
                     f'<text:p>{round(cached_st_score, 2)}</text:p>'
                     f'</table:table-cell>'
                 )
 
-            # Column C: Effective Station Score (Formula: MAX(0, [.B{row_num}]))
-            eff_formula = f'of:=MAX(0;[.B{row_num}])'
+            # Column E: Effective Station Score, floored at zero
+            eff_formula = f'of:=MAX(0;[.{STATION_RAW_TOTAL_COL}{row_num}])'
             r_cells.append(
                 f'<table:table-cell table:formula="{eff_formula}" office:value-type="float" office:value="{cached_st_score}">'
                 f'<text:p>{round(cached_st_score, 2)}</text:p>'
                 f'</table:table-cell>'
             )
 
-            # Column D onwards: Task Scores
+            # Column F onwards: Task Scores
             if tasks:
                 task_breakdown = st_p_entry.get("breakdown") or []
                 t_score_map = {}
