@@ -110,3 +110,24 @@ flowchart LR
 
 - When a new user logs in for the first time via OIDC / Firebase Auth, they are automatically provisioned with `status = "pending"` in the user holding area.
 - Pending users cannot access event data until an Admin or Station Lead approves them and assigns them an event/station role.
+
+---
+
+## Local Development Identity Providers
+
+NightRunner supports two local OIDC development modes:
+
+### 1. Default Lightweight Mock OIDC (`oidc-server-mock`)
+Fast, stateless OIDC server for quick local testing and automated CI.
+```bash
+docker compose up -d
+```
+
+### 2. Authentik Identity Provider Overlay
+Full interactive OIDC provider with UI login, user management, and automated blueprint bootstrapping (`authentik/blueprints/nightrunner-dev.yaml`).
+```bash
+docker compose -f docker-compose.yaml -f docker-compose.authentik.yaml up -d
+```
+- **OIDC Authority**: `http://localhost:9000/application/o/nightrunner/`
+- **Default Users & Password**: `adminuser`, `organizeruser`, `scoreruser`, `leaderuser` (Password: `password`)
+

@@ -1,0 +1,142 @@
+version: 1
+metadata:
+  name: NightRunner Dev Authentik Setup
+  labels:
+    blueprints.goauthentik.io/description: "Automated local development OIDC setup for NightRunner"
+entries:
+  # 1. Custom Scope Mapping for isAdmin
+  - model: authentik_providers_oauth2.scopemapping
+    state: present
+    identifiers:
+      name: NightRunner Admin Scope
+    attrs:
+      scope_name: is_admin
+      expression: |
+        return {
+            "isAdmin": request.user.username == "adminuser" or request.user.attributes.get("isAdmin", False)
+        }
+
+  # 2. Custom Scope Mapping for Event Roles
+  - model: authentik_providers_oauth2.scopemapping
+    state: present
+    identifiers:
+      name: NightRunner Event Roles Scope
+    attrs:
+      scope_name: roles
+      expression: |
+        roles_dict = request.user.attributes.get("roles", {})
+        return {
+            "roles": roles_dict
+        }
+
+  # 3. Create OIDC Provider
+  - model: authentik_providers_oauth2.oauth2provider
+    state: present
+    identifiers:
+      name: NightRunner Dev OIDC Provider
+    attrs:
+      client_type: confidential
+      client_id: client-id
+      client_secret: secret
+      redirect_uris:
+        - matching_mode: strict
+          url: http://localhost:3000/callback
+      sub_mode: user_id
+      property_mappings:
+        - !Find [authentik_providers_oauth2.scopemapping, [name, "authentik default OAuth Mapping: OpenID 'openid'"]]
+        - !Find [authentik_providers_oauth2.scopemapping, [name, "authentik default OAuth Mapping: OpenID 'profile'"]]
+        - !Find [authentik_providers_oauth2.scopemapping, [name, "authentik default OAuth Mapping: OpenID 'email'"]]
+        - !Find [authentik_providers_oauth2.scopemapping, [name, "NightRunner Admin Scope"]]
+        - !Find [authentik_providers_oauth2.scopemapping, [name, "NightRunner Event Roles Scope"]]
+
+  # 4. Create Application
+  - model: authentik_core.application
+    state: present
+    identifiers:
+      slug: nightrunner
+    attrs:
+      name: NightRunner
+      provider: !Find [authentik_providers_oauth2.oauth2provider, [name, "NightRunner Dev OIDC Provider"]]
+
+  # 5. Create Admin User
+  - model: authentik_core.user
+    state: present
+    identifiers:
+      username: adminuser
+    attrs:
+      name: Admin User
+      email: admin@example.com
+      is_active: true
+      attributes:
+        isAdmin: true
+
+  # Set Admin User Password
+  - model: authentik_core.userpassword
+    state: present
+    identifiers:
+      user: !Find [authentik_core.user, [username, "adminuser"]]
+    attrs:
+      password: password
+
+  # 6. Create Organizer User
+  - model: authentik_core.user
+    state: present
+    identifiers:
+      username: organizeruser
+    attrs:
+      name: Organizer User
+      email: organizer@example.com
+      is_active: true
+      attributes:
+        roles:
+          "01a022b8-45f0-7612-872e-201e8c8158db": "organizer"
+
+  # Set Organizer Password
+  - model: authentik_core.userpassword
+    state: present
+    identifiers:
+      user: !Find [authentik_core.user, [username, "organizeruser"]]
+    attrs:
+      password: password
+
+  # 7. Create Scorer User
+  - model: authentik_core.user
+    state: present
+    identifiers:
+      username: scoreruser
+    attrs:
+      name: Scorer User
+      email: scorer@example.com
+      is_active: true
+      attributes:
+        roles:
+          "01a022b8-45f0-7612-872e-201e8c8158db": "scorer"
+
+  # Set Scorer Password
+  - model: authentik_core.userpassword
+    state: present
+    identifiers:
+      user: !Find [authentik_core.user, [username, "scoreruser"]]
+    attrs:
+      password: password
+
+  # 8. Create Station Leader User
+  - model: authentik_core.user
+    state: present
+    identifiers:
+      username: leaderuser
+    attrs:
+      name: Station Leader User
+      email: leader@example.com
+      is_active: true
+      attributes:
+        roles:
+          "01a022b8-45f0-7612-872e-201e8c8158db": "station_leader"
+
+  # Set Station Leader Password
+  - model: authentik_core.userpassword
+    state: present
+    identifiers:
+      user: !Find [authentik_core.user, [username, "leaderuser"]]
+    attrs:
+      password: password
