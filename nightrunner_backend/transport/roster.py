@@ -300,18 +300,31 @@ class ArrivalsResource:
         store = RosterStore(get_driver())
         attendees = await store.list_attendees(event_id)
         arrivals = {a.attendee_id: a for a in await store.list_arrivals(event_id)}
-        troop_numbers = await _troop_number_map(store)
+        all_troops = await store.list_troops()
+        troop_numbers = {t.id: t.number for t in all_troops}
 
         by_troop: Dict[str, Dict[str, Any]] = {}
-        for attendee in attendees:
-            troop_id = attendee.troop_id or ""
-            bucket = by_troop.setdefault(troop_id, {
-                "troopId": troop_id,
-                "troopNumber": troop_numbers.get(troop_id, ""),
+        # Pre-seed all known troops so empty/newly created troops appear in the gate dropdown
+        for troop in all_troops:
+            by_troop[troop.id] = {
+                "troopId": troop.id,
+                "troopNumber": troop.number,
                 "expected": 0,
                 "arrived": 0,
                 "attendees": [],
-            })
+            }
+
+        for attendee in attendees:
+            troop_id = attendee.troop_id or ""
+            if troop_id not in by_troop:
+                by_troop[troop_id] = {
+                    "troopId": troop_id,
+                    "troopNumber": troop_numbers.get(troop_id, ""),
+                    "expected": 0,
+                    "arrived": 0,
+                    "attendees": [],
+                }
+            bucket = by_troop[troop_id]
             bucket["expected"] += 1
             arrival = arrivals.get(attendee.id)
             if arrival:
