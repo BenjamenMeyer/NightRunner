@@ -15,10 +15,9 @@ echo "=========================================================="
 START_FRONTEND=false
 
 for arg in "$@"; do
-  case $arg in
+  case "$arg" in
     --with-frontend)
       START_FRONTEND=true
-      shift
       ;;
   esac
 done
