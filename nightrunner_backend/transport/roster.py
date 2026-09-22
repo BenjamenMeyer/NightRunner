@@ -27,9 +27,24 @@ def _require_object(payload: Any) -> Dict[str, Any]:
     return payload
 
 
-async def _troop_number_map(store: RosterStore) -> Dict[str, str]:
-    troops = await store.list_troops()
-    return {troop.id: troop.number for troop in troops}
+def _require_admin(req: falcon.Request, event_id: str = None) -> dict:
+    user = getattr(req.context, "user", None) or {}
+    roles = getattr(req.context, "roles", []) or []
+
+    is_admin = bool(user.get("is_admin")) or bool(user.get("isAdmin"))
+    if not is_admin:
+        if isinstance(roles, dict) and event_id:
+            role = roles.get(event_id)
+            is_admin = role in ("admin", "event-admin")
+        else:
+            is_admin = "admin" in roles or "system-admin" in roles or "event-admin" in roles
+
+    if not is_admin:
+        raise falcon.HTTPForbidden(
+            title="Admin required",
+            description="Only Event-Admin or System Admin roles can add troops or attendees.",
+        )
+    return user
 
 
 class TroopsResource:
@@ -42,6 +57,7 @@ class TroopsResource:
         resp.status = falcon.HTTP_200
 
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
+        _require_admin(req)
         payload = _require_object(await req.get_media())
         number = normalise_troop_number(payload.get("number"))
         if not number:
@@ -112,6 +128,7 @@ class EventAttendeesResource:
         resp.status = falcon.HTTP_200
 
     async def on_post(self, req: falcon.Request, resp: falcon.Response, event_id: str):
+        _require_admin(req, event_id)
         payload = _require_object(await req.get_media())
 
         first_name = (payload.get("firstName") or "").strip()

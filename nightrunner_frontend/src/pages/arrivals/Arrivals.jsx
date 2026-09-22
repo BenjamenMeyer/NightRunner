@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import ApiService from "@/api/ApiService.js";
+import UserService from "@/api/UserService.js";
 import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
 
 import "./Arrivals.css";
@@ -17,6 +18,7 @@ import "./Arrivals.css";
 export default function Arrivals() {
 
     const { eventId, loading: eventLoading } = useEventContext();
+    const canManageRoster = UserService.isEventAdmin(eventId);
 
     const [summary, setSummary] = useState(null);
     const [troopId, setTroopId] = useState("");
@@ -419,22 +421,24 @@ export default function Arrivals() {
                         )}
                     </div>
 
-                    <div className="arrivals__action-buttons">
-                        <button
-                            type="button"
-                            className="arrivals__add-btn"
-                            onClick={() => setShowAddTroopModal(true)}
-                        >
-                            ➕ Add Troop
-                        </button>
-                        <button
-                            type="button"
-                            className="arrivals__add-btn"
-                            onClick={() => openAddAttendeesModalForTroop()}
-                        >
-                            ➕ Add Attendees
-                        </button>
-                    </div>
+                    {canManageRoster && (
+                        <div className="arrivals__action-buttons">
+                            <button
+                                type="button"
+                                className="arrivals__add-btn"
+                                onClick={() => setShowAddTroopModal(true)}
+                            >
+                                ➕ Add Troop
+                            </button>
+                            <button
+                                type="button"
+                                className="arrivals__add-btn"
+                                onClick={() => openAddAttendeesModalForTroop()}
+                            >
+                                ➕ Add Attendees
+                            </button>
+                        </div>
+                    )}
                 </div>
 
             </header>
@@ -521,13 +525,15 @@ export default function Arrivals() {
                             </span>
                         </h2>
                         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                            <button
-                                type="button"
-                                className="arrivals__add-btn"
-                                onClick={() => openAddAttendeesModalForTroop(selectedTroop.troopNumber)}
-                            >
-                                ➕ Add People to {selectedTroop.troopNumber}
-                            </button>
+                            {canManageRoster && (
+                                <button
+                                    type="button"
+                                    className="arrivals__add-btn"
+                                    onClick={() => openAddAttendeesModalForTroop(selectedTroop.troopNumber)}
+                                >
+                                    ➕ Add People to {selectedTroop.troopNumber}
+                                </button>
+                            )}
                             <button
                                 type="button"
                                 className="arrivals__all"
