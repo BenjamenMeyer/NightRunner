@@ -35,7 +35,7 @@ entries:
     identifiers:
       name: NightRunner Dev OIDC Provider
     attrs:
-      client_type: confidential
+      client_type: public
       client_id: client-id
       client_secret: secret
       redirect_uris:
