@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:authentik": "vite --mode authentik",
     "dev:firebase": "vite --mode firebase",
     "build": "vite build",
     "lint": "oxlint",

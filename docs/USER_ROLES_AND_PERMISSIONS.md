@@ -134,4 +134,5 @@ docker compose -f docker-compose.yaml -f docker-compose.authentik.yaml up -d --b
 ```
 - **OIDC Authority**: `http://localhost:9000/application/o/nightrunner/`
 - **Default Users & Password**: `adminuser`, `organizeruser`, `scoreruser`, `leaderuser` (Password: `password`)
+- **Frontend Dev Mode**: Run `yarn --cwd nightrunner_frontend dev:authentik` to run Vite configured with Authentik OIDC authority (`.env.authentik`).
 
