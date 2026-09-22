@@ -2,6 +2,8 @@ services:
   db:
     image: postgres:16-alpine
     restart: always
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: nightrunner
       POSTGRES_PASSWORD: nightrunner_password
@@ -182,45 +184,50 @@ services:
           description = EXCLUDED.description, 
           rounding_precision = EXCLUDED.rounding_precision;
 
-        INSERT INTO users (id, external_id, username, email, display_name)
-        VALUES ('u-admin-id', 'admin-user-id', 'adminuser', 'admin@example.com', 'Admin User')
+        INSERT INTO users (id, external_id, username, email, display_name, status)
+        VALUES ('u-admin-id', 'admin-user-id', 'adminuser', 'admin@example.com', 'Admin User', 'active')
         ON CONFLICT (id) DO UPDATE SET 
           external_id = EXCLUDED.external_id, 
           username = EXCLUDED.username, 
           email = EXCLUDED.email, 
-          display_name = EXCLUDED.display_name;
+          display_name = EXCLUDED.display_name,
+          status = 'active';
 
-        INSERT INTO users (id, external_id, username, email, display_name)
-        VALUES ('u-org-id', 'organizer-user-id', 'organizeruser', 'organizer@example.com', 'Organizer User')
+        INSERT INTO users (id, external_id, username, email, display_name, status)
+        VALUES ('u-org-id', 'organizer-user-id', 'organizeruser', 'organizer@example.com', 'Organizer User', 'active')
         ON CONFLICT (id) DO UPDATE SET 
           external_id = EXCLUDED.external_id, 
           username = EXCLUDED.username, 
           email = EXCLUDED.email, 
-          display_name = EXCLUDED.display_name;
+          display_name = EXCLUDED.display_name,
+          status = 'active';
 
-        INSERT INTO users (id, external_id, username, email, display_name)
-        VALUES ('u-scorer-id', 'scorer-user-id', 'scoreruser', 'scorer@example.com', 'Scorer User')
+        INSERT INTO users (id, external_id, username, email, display_name, status)
+        VALUES ('u-scorer-id', 'scorer-user-id', 'scoreruser', 'scorer@example.com', 'Scorer User', 'active')
         ON CONFLICT (id) DO UPDATE SET 
           external_id = EXCLUDED.external_id, 
           username = EXCLUDED.username, 
           email = EXCLUDED.email, 
-          display_name = EXCLUDED.display_name;
+          display_name = EXCLUDED.display_name,
+          status = 'active';
 
-        INSERT INTO users (id, external_id, username, email, display_name)
-        VALUES ('u-leader-id', 'leader-user-id', 'leaderuser', 'leader@example.com', 'Station Leader User')
+        INSERT INTO users (id, external_id, username, email, display_name, status)
+        VALUES ('u-leader-id', 'leader-user-id', 'leaderuser', 'leader@example.com', 'Station Leader User', 'active')
         ON CONFLICT (id) DO UPDATE SET 
           external_id = EXCLUDED.external_id, 
           username = EXCLUDED.username, 
           email = EXCLUDED.email, 
-          display_name = EXCLUDED.display_name;
+          display_name = EXCLUDED.display_name,
+          status = 'active';
 
-        INSERT INTO users (id, external_id, username, email, display_name)
-        VALUES ('u-member-id', 'member-user-id', 'memberuser', 'member@example.com', 'Station Member User')
+        INSERT INTO users (id, external_id, username, email, display_name, status)
+        VALUES ('u-member-id', 'member-user-id', 'memberuser', 'member@example.com', 'Station Member User', 'active')
         ON CONFLICT (id) DO UPDATE SET 
           external_id = EXCLUDED.external_id, 
           username = EXCLUDED.username, 
           email = EXCLUDED.email, 
-          display_name = EXCLUDED.display_name;
+          display_name = EXCLUDED.display_name,
+          status = 'active';
 
         INSERT INTO user_roles (user_id, role)
         VALUES ('u-org-id', 'organizer')

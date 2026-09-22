@@ -27,9 +27,24 @@ def _require_object(payload: Any) -> Dict[str, Any]:
     return payload
 
 
-async def _troop_number_map(store: RosterStore) -> Dict[str, str]:
-    troops = await store.list_troops()
-    return {troop.id: troop.number for troop in troops}
+def _require_admin(req: falcon.Request, event_id: str = None) -> dict:
+    user = getattr(req.context, "user", None) or {}
+    roles = getattr(req.context, "roles", []) or []
+
+    is_admin = bool(user.get("is_admin")) or bool(user.get("isAdmin"))
+    if not is_admin:
+        if isinstance(roles, dict) and event_id:
+            role = roles.get(event_id)
+            is_admin = role in ("admin", "event-admin")
+        else:
+            is_admin = "admin" in roles or "system-admin" in roles or "event-admin" in roles
+
+    if not is_admin:
+        raise falcon.HTTPForbidden(
+            title="Admin required",
+            description="Only Event-Admin or System Admin roles can add troops or attendees.",
+        )
+    return user
 
 
 class TroopsResource:
@@ -42,6 +57,7 @@ class TroopsResource:
         resp.status = falcon.HTTP_200
 
     async def on_post(self, req: falcon.Request, resp: falcon.Response):
+        _require_admin(req)
         payload = _require_object(await req.get_media())
         number = normalise_troop_number(payload.get("number"))
         if not number:
@@ -112,6 +128,7 @@ class EventAttendeesResource:
         resp.status = falcon.HTTP_200
 
     async def on_post(self, req: falcon.Request, resp: falcon.Response, event_id: str):
+        _require_admin(req, event_id)
         payload = _require_object(await req.get_media())
 
         first_name = (payload.get("firstName") or "").strip()
@@ -128,6 +145,21 @@ class EventAttendeesResource:
         category = normalise_category(payload.get("category")) or "Youth"
         if category not in CATEGORIES:
             raise falcon.HTTPBadRequest(description=f"Unknown category '{category}'.")
+
+        member_id = (payload.get("memberId") or "").strip() or None
+        youth_protection_completed = bool(payload.get("youthProtectionCompleted"))
+
+        # For Adults: Youth Protection training is required, and Member ID is required unless organizer waiver is set
+        if category == "Adult":
+            organizer_approved = bool(payload.get("organizerApprovedMemberIdWaiver"))
+            if not member_id and not organizer_approved:
+                raise falcon.HTTPBadRequest(
+                    description="Member ID is required for Adults unless approved by the event organizer."
+                )
+            if not youth_protection_completed:
+                raise falcon.HTTPBadRequest(
+                    description="Adults must have completed Youth Protection Training ('Who is Responsible for Child Safety and Youth Protection? I am!')."
+                )
 
         store = RosterStore(get_driver())
         troop = await store.ensure_troop(number)
@@ -148,6 +180,8 @@ class EventAttendeesResource:
             phone=payload.get("phone"),
             emergency_contact_1=payload.get("emergencyContact1"),
             emergency_contact_2=payload.get("emergencyContact2"),
+            member_id=member_id,
+            youth_protection_completed=youth_protection_completed,
             source_key=source_key,
             key_ordinal=ordinal,
             created_at=_now(),
@@ -300,18 +334,31 @@ class ArrivalsResource:
         store = RosterStore(get_driver())
         attendees = await store.list_attendees(event_id)
         arrivals = {a.attendee_id: a for a in await store.list_arrivals(event_id)}
-        troop_numbers = await _troop_number_map(store)
+        all_troops = await store.list_troops()
+        troop_numbers = {t.id: t.number for t in all_troops}
 
         by_troop: Dict[str, Dict[str, Any]] = {}
-        for attendee in attendees:
-            troop_id = attendee.troop_id or ""
-            bucket = by_troop.setdefault(troop_id, {
-                "troopId": troop_id,
-                "troopNumber": troop_numbers.get(troop_id, ""),
+        # Pre-seed all known troops so empty/newly created troops appear in the gate dropdown
+        for troop in all_troops:
+            by_troop[troop.id] = {
+                "troopId": troop.id,
+                "troopNumber": troop.number,
                 "expected": 0,
                 "arrived": 0,
                 "attendees": [],
-            })
+            }
+
+        for attendee in attendees:
+            troop_id = attendee.troop_id or ""
+            if troop_id not in by_troop:
+                by_troop[troop_id] = {
+                    "troopId": troop_id,
+                    "troopNumber": troop_numbers.get(troop_id, ""),
+                    "expected": 0,
+                    "arrived": 0,
+                    "attendees": [],
+                }
+            bucket = by_troop[troop_id]
             bucket["expected"] += 1
             arrival = arrivals.get(attendee.id)
             if arrival:
