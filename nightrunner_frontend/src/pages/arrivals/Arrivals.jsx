@@ -17,6 +17,15 @@ import "./Arrivals.css";
 export default function Arrivals() {
 
     const { eventId, loading: eventLoading } = useEventContext();
+    const [user, setUser] = useState(() => ApiService.userData.getCached());
+
+    useEffect(() => {
+        const unsubscribe = ApiService.userData.subscribe(newUser => {
+            setUser(newUser);
+        });
+        return unsubscribe;
+    }, []);
+
     const canManageRoster = ApiService.userData.isEventAdmin(eventId);
 
     const [summary, setSummary] = useState(null);
