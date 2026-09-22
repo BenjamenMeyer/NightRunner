@@ -468,3 +468,62 @@
     cursor: not-allowed;
 }
 
+.arrivals__batch-card {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.arrivals__batch-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.5rem;
+}
+
+.arrivals__batch-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.arrivals__batch-sublabel {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.arrivals__contact-inputs {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.arrivals__contact-inputs input {
+    width: 50%;
+}
+
+.arrivals__sub-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    margin-top: 0.2rem;
+}
+
+.arrivals__sub-checkbox input[type="checkbox"] {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+.arrivals__yp-compliance {
+    border-top: 1px dashed var(--border);
+    padding-top: 0.35rem;
+    margin-top: 0.25rem;
+}
+

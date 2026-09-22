@@ -129,6 +129,21 @@ class EventAttendeesResource:
         if category not in CATEGORIES:
             raise falcon.HTTPBadRequest(description=f"Unknown category '{category}'.")
 
+        member_id = (payload.get("memberId") or "").strip() or None
+        youth_protection_completed = bool(payload.get("youthProtectionCompleted"))
+
+        # For Adults: Youth Protection training is required, and Member ID is required unless organizer waiver is set
+        if category == "Adult":
+            organizer_approved = bool(payload.get("organizerApprovedMemberIdWaiver"))
+            if not member_id and not organizer_approved:
+                raise falcon.HTTPBadRequest(
+                    description="Member ID is required for Adults unless approved by the event organizer."
+                )
+            if not youth_protection_completed:
+                raise falcon.HTTPBadRequest(
+                    description="Adults must have completed Youth Protection Training ('Who is Responsible for Child Safety and Youth Protection? I am!')."
+                )
+
         store = RosterStore(get_driver())
         troop = await store.ensure_troop(number)
         source_key = build_source_key(number, last_name, first_name)
@@ -148,6 +163,8 @@ class EventAttendeesResource:
             phone=payload.get("phone"),
             emergency_contact_1=payload.get("emergencyContact1"),
             emergency_contact_2=payload.get("emergencyContact2"),
+            member_id=member_id,
+            youth_protection_completed=youth_protection_completed,
             source_key=source_key,
             key_ordinal=ordinal,
             created_at=_now(),

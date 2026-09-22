@@ -246,9 +246,19 @@ export default function Arrivals() {
     function openAddAttendeesModalForTroop(troopNum = "") {
         setTargetTroopNumber(troopNum || (selectedTroop ? selectedTroop.troopNumber : ""));
         setBatchRows([
-            { id: 1, firstName: "", lastName: "", category: "Youth" },
-            { id: 2, firstName: "", lastName: "", category: "Youth" },
-            { id: 3, firstName: "", lastName: "", category: "Youth" }
+            {
+                id: 1,
+                firstName: "",
+                lastName: "",
+                category: "Youth",
+                memberId: "",
+                emergencyContact1Name: "",
+                emergencyContact1Phone: "",
+                emergencyContact2Name: "",
+                emergencyContact2Phone: "",
+                youthProtectionCompleted: false,
+                organizerApprovedMemberIdWaiver: false,
+            }
         ]);
         setShowAddAttendeesModal(true);
     }
@@ -265,7 +275,19 @@ export default function Arrivals() {
         if (batchRows.length >= 10) return;
         setBatchRows(prev => [
             ...prev,
-            { id: Date.now() + Math.random(), firstName: "", lastName: "", category: "Youth" }
+            {
+                id: Date.now() + Math.random(),
+                firstName: "",
+                lastName: "",
+                category: "Youth",
+                memberId: "",
+                emergencyContact1Name: "",
+                emergencyContact1Phone: "",
+                emergencyContact2Name: "",
+                emergencyContact2Phone: "",
+                youthProtectionCompleted: false,
+                organizerApprovedMemberIdWaiver: false,
+            }
         ]);
     }
 
@@ -288,20 +310,41 @@ export default function Arrivals() {
             return;
         }
 
+        // Validate adult requirements before making network requests
+        for (let i = 0; i < validRows.length; i++) {
+            const r = validRows[i];
+            if (r.category === "Adult") {
+                if (!r.memberId.trim() && !r.organizerApprovedMemberIdWaiver) {
+                    setError(`Row #${i + 1} (${r.firstName} ${r.lastName}): Member ID is required for Adults unless approved by event organizer.`);
+                    return;
+                }
+                if (!r.youthProtectionCompleted) {
+                    setError(`Row #${i + 1} (${r.firstName} ${r.lastName}): Adults must complete Youth Protection Training.`);
+                    return;
+                }
+            }
+        }
+
         try {
             setAddingAttendees(true);
             setError(null);
 
-            const createdAttendees = [];
             for (const r of validRows) {
+                const ec1 = [r.emergencyContact1Name.trim(), r.emergencyContact1Phone.trim()].filter(Boolean).join(" - ") || null;
+                const ec2 = [r.emergencyContact2Name.trim(), r.emergencyContact2Phone.trim()].filter(Boolean).join(" - ") || null;
+
                 const attendeePayload = {
                     troopNumber: troopNum,
                     firstName: r.firstName.trim(),
                     lastName: r.lastName.trim(),
-                    category: r.category || "Youth"
+                    category: r.category || "Youth",
+                    memberId: r.memberId.trim() || null,
+                    emergencyContact1: ec1,
+                    emergencyContact2: ec2,
+                    youthProtectionCompleted: Boolean(r.youthProtectionCompleted),
+                    organizerApprovedMemberIdWaiver: Boolean(r.organizerApprovedMemberIdWaiver),
                 };
                 const created = await ApiService.rosterData.addAttendee(eventId, attendeePayload);
-                createdAttendees.push(created);
 
                 if (autoCheckInNew && created?.id) {
                     await ApiService.rosterData.recordArrival(eventId, created.id, arrivalTime());
@@ -632,38 +675,113 @@ export default function Arrivals() {
                                 </div>
 
                                 {batchRows.map((row, idx) => (
-                                    <div key={row.id} className="arrivals__batch-row">
-                                        <span className="arrivals__batch-num">#{idx + 1}</span>
-                                        <input
-                                            type="text"
-                                            placeholder="First Name"
-                                            value={row.firstName}
-                                            onChange={e => updateBatchRow(idx, "firstName", e.target.value)}
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Last Name"
-                                            value={row.lastName}
-                                            onChange={e => updateBatchRow(idx, "lastName", e.target.value)}
-                                        />
-                                        <select
-                                            value={row.category}
-                                            onChange={e => updateBatchRow(idx, "category", e.target.value)}
-                                        >
-                                            <option value="Youth">Youth</option>
-                                            <option value="Adult">Adult</option>
-                                            <option value="Non-participant Youth">Non-participant Youth</option>
-                                        </select>
-                                        {batchRows.length > 1 ? (
-                                            <button
-                                                type="button"
-                                                className="arrivals__remove-row-btn"
-                                                onClick={() => removeBatchRow(idx)}
-                                                title="Remove row"
+                                    <div key={row.id} className="arrivals__batch-card">
+                                        <div className="arrivals__batch-row">
+                                            <span className="arrivals__batch-num">#{idx + 1}</span>
+                                            <input
+                                                type="text"
+                                                placeholder="First Name *"
+                                                required
+                                                value={row.firstName}
+                                                onChange={e => updateBatchRow(idx, "firstName", e.target.value)}
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="Last Name *"
+                                                required
+                                                value={row.lastName}
+                                                onChange={e => updateBatchRow(idx, "lastName", e.target.value)}
+                                            />
+                                            <select
+                                                value={row.category}
+                                                onChange={e => updateBatchRow(idx, "category", e.target.value)}
                                             >
-                                                ✕
-                                            </button>
-                                        ) : <span />}
+                                                <option value="Youth">Youth</option>
+                                                <option value="Adult">Adult</option>
+                                                <option value="Non-participant Youth">Non-participant Youth</option>
+                                            </select>
+                                            {batchRows.length > 1 ? (
+                                                <button
+                                                    type="button"
+                                                    className="arrivals__remove-row-btn"
+                                                    onClick={() => removeBatchRow(idx)}
+                                                    title="Remove attendee"
+                                                >
+                                                    ✕
+                                                </button>
+                                            ) : <span />}
+                                        </div>
+
+                                        <div className="arrivals__batch-details">
+                                            <div className="arrivals__batch-col">
+                                                <label className="arrivals__batch-sublabel">Member ID {row.category === "Adult" ? "*" : "(Optional Youth)"}</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Member ID from badge"
+                                                    value={row.memberId}
+                                                    onChange={e => updateBatchRow(idx, "memberId", e.target.value)}
+                                                />
+                                                {row.category === "Adult" && (
+                                                    <label className="arrivals__sub-checkbox">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={row.organizerApprovedMemberIdWaiver}
+                                                            onChange={e => updateBatchRow(idx, "organizerApprovedMemberIdWaiver", e.target.checked)}
+                                                        />
+                                                        Organizer Approved Waiver
+                                                    </label>
+                                                )}
+                                            </div>
+
+                                            <div className="arrivals__batch-col">
+                                                <label className="arrivals__batch-sublabel">Emergency Contact 1 (Required)</label>
+                                                <div className="arrivals__contact-inputs">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Name *"
+                                                        value={row.emergencyContact1Name}
+                                                        onChange={e => updateBatchRow(idx, "emergencyContact1Name", e.target.value)}
+                                                    />
+                                                    <input
+                                                        type="tel"
+                                                        placeholder="Phone *"
+                                                        value={row.emergencyContact1Phone}
+                                                        onChange={e => updateBatchRow(idx, "emergencyContact1Phone", e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="arrivals__batch-col">
+                                                <label className="arrivals__batch-sublabel">Emergency Contact 2 (Optional)</label>
+                                                <div className="arrivals__contact-inputs">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Name"
+                                                        value={row.emergencyContact2Name}
+                                                        onChange={e => updateBatchRow(idx, "emergencyContact2Name", e.target.value)}
+                                                    />
+                                                    <input
+                                                        type="tel"
+                                                        placeholder="Phone"
+                                                        value={row.emergencyContact2Phone}
+                                                        onChange={e => updateBatchRow(idx, "emergencyContact2Phone", e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {row.category === "Adult" && (
+                                            <div className="arrivals__yp-compliance">
+                                                <label className="arrivals__checkbox-label" style={{ fontSize: "0.82rem", margin: "0.25rem 0 0" }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={row.youthProtectionCompleted}
+                                                        onChange={e => updateBatchRow(idx, "youthProtectionCompleted", e.target.checked)}
+                                                    />
+                                                    IF ADULT: Has this adult completed the &quot;Who is Responsible for Child Safety and Youth Protection? I am!&quot; training in Trail Life Connect? *
+                                                </label>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
