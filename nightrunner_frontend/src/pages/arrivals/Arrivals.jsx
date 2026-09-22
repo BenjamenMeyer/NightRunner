@@ -599,14 +599,19 @@ export default function Arrivals() {
                         </p>
                         <form onSubmit={handleAddAttendees} className="arrivals__modal-form">
                             <div className="arrivals__field">
-                                <label>Troop Number *</label>
-                                <input
-                                    type="text"
+                                <label>Troop *</label>
+                                <select
                                     required
-                                    placeholder="e.g. GA-0594"
                                     value={targetTroopNumber}
                                     onChange={e => setTargetTroopNumber(e.target.value)}
-                                />
+                                >
+                                    <option value="">Select a troop…</option>
+                                    {summary?.troops.map(t => (
+                                        <option key={t.troopId || t.troopNumber} value={t.troopNumber}>
+                                            {t.troopNumber}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div>
