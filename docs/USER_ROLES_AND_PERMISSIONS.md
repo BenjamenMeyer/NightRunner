@@ -126,7 +126,11 @@ docker compose up -d
 ### 2. Authentik Identity Provider Overlay
 Full interactive OIDC provider with UI login, user management, and automated blueprint bootstrapping (`authentik/blueprints/nightrunner-dev.yaml`).
 ```bash
-docker compose -f docker-compose.yaml -f docker-compose.authentik.yaml up -d
+./scripts/start-dev-authentik.sh
+```
+Or directly via docker compose:
+```bash
+docker compose -f docker-compose.yaml -f docker-compose.authentik.yaml up -d --build
 ```
 - **OIDC Authority**: `http://localhost:9000/application/o/nightrunner/`
 - **Default Users & Password**: `adminuser`, `organizeruser`, `scoreruser`, `leaderuser` (Password: `password`)
