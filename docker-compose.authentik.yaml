@@ -45,7 +45,7 @@ services:
   # Point backend to Authentik OIDC provider
   app:
     environment:
-      OIDC_ISSUER: "http://localhost:9000/application/o/nightrunner/"
+      OIDC_ISSUER: "http://localhost:9000/application/o/nightrunner"
       OIDC_AUDIENCE: "client-id"
       JWKS_URL: "http://authentik-server:9000/application/o/nightrunner/jwks/"
 
@@ -53,5 +53,5 @@ services:
   frontend:
     build:
       args:
-        VITE_OIDC_AUTHORITY: "http://localhost:9000/application/o/nightrunner/"
+        VITE_OIDC_AUTHORITY: "http://localhost:9000/application/o/nightrunner"
         VITE_OIDC_CLIENT_ID: "client-id"
