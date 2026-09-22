@@ -146,7 +146,7 @@ def register_routes(app):
     app.add_route("/v1/users/{user_id}", UserResource())
     app.add_route("/users", UsersResource())
     app.add_route("/users/{user_id}", UserResource())
-    # Non‑versioned aliases required by tests (GET/POST/PUT/DELETE on root paths)
+    # Non‑versioned aliases required by tests and frontend calls on root paths
     app.add_route("/events", EventsResource())
     app.add_route("/events/{event_id}", EventResource())
     app.add_route("/patrols", PatrolsResource())
@@ -158,6 +158,13 @@ def register_routes(app):
     app.add_route("/visits/check-in", VisitCheckInResource())
     app.add_route("/visits/check-out", VisitCheckOutResource())
     app.add_route("/visits/reset", VisitResetResource())
+    app.add_route("/troops", TroopsResource())
+    app.add_route("/events/{event_id}/attendees", EventAttendeesResource())
+    app.add_route("/events/{event_id}/attendees/{attendee_id}", EventAttendeeResource())
+    app.add_route("/events/{event_id}/roster/preview", RosterImportPreviewResource())
+    app.add_route("/events/{event_id}/roster/apply", RosterImportApplyResource())
+    app.add_route("/events/{event_id}/arrivals", ArrivalsResource())
+    app.add_route("/events/{event_id}/arrivals/{attendee_id}", ArrivalResource())
     # login route moved to top level
 register_routes(app)
 
