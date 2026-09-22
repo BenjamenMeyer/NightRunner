@@ -38,15 +38,10 @@ entries:
       client_type: public
       client_id: client-id
       client_secret: secret
-      allowed_origins: ".*"
-      redirect_uris:
-        - matching_mode: strict
-          url: http://localhost:3000/callback
+      authorization_flow: !Find [authentik_flows.flow, [slug, "default-provider-authorization-explicit-consent"]]
+      redirect_uris: ".*"
       sub_mode: user_id
       property_mappings:
-        - !Find [authentik_providers_oauth2.scopemapping, [name, "authentik default OAuth Mapping: OpenID 'openid'"]]
-        - !Find [authentik_providers_oauth2.scopemapping, [name, "authentik default OAuth Mapping: OpenID 'profile'"]]
-        - !Find [authentik_providers_oauth2.scopemapping, [name, "authentik default OAuth Mapping: OpenID 'email'"]]
         - !Find [authentik_providers_oauth2.scopemapping, [name, "NightRunner Admin Scope"]]
         - !Find [authentik_providers_oauth2.scopemapping, [name, "NightRunner Event Roles Scope"]]
 
@@ -67,17 +62,10 @@ entries:
     attrs:
       name: Admin User
       email: admin@example.com
+      password: password
       is_active: true
       attributes:
         isAdmin: true
-
-  # Set Admin User Password
-  - model: authentik_core.userpassword
-    state: present
-    identifiers:
-      user: !Find [authentik_core.user, [username, "adminuser"]]
-    attrs:
-      password: password
 
   # 6. Create Organizer User
   - model: authentik_core.user
@@ -87,18 +75,11 @@ entries:
     attrs:
       name: Organizer User
       email: organizer@example.com
+      password: password
       is_active: true
       attributes:
         roles:
           "01a022b8-45f0-7612-872e-201e8c8158db": "organizer"
-
-  # Set Organizer Password
-  - model: authentik_core.userpassword
-    state: present
-    identifiers:
-      user: !Find [authentik_core.user, [username, "organizeruser"]]
-    attrs:
-      password: password
 
   # 7. Create Scorer User
   - model: authentik_core.user
@@ -108,18 +89,11 @@ entries:
     attrs:
       name: Scorer User
       email: scorer@example.com
+      password: password
       is_active: true
       attributes:
         roles:
           "01a022b8-45f0-7612-872e-201e8c8158db": "scorer"
-
-  # Set Scorer Password
-  - model: authentik_core.userpassword
-    state: present
-    identifiers:
-      user: !Find [authentik_core.user, [username, "scoreruser"]]
-    attrs:
-      password: password
 
   # 8. Create Station Leader User
   - model: authentik_core.user
@@ -129,15 +103,8 @@ entries:
     attrs:
       name: Station Leader User
       email: leader@example.com
+      password: password
       is_active: true
       attributes:
         roles:
           "01a022b8-45f0-7612-872e-201e8c8158db": "station_leader"
-
-  # Set Station Leader Password
-  - model: authentik_core.userpassword
-    state: present
-    identifiers:
-      user: !Find [authentik_core.user, [username, "leaderuser"]]
-    attrs:
-      password: password
