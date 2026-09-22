@@ -12,13 +12,17 @@ echo "=========================================================="
 echo " Starting NightRunner Dev Environment with Authentik OIDC"
 echo "=========================================================="
 
-# Check for docker compose
-if command -v docker &>/dev/null && docker compose version &>/dev/null; then
+# Check container CLI preference: podman compose / podman-compose -> docker compose / docker-compose
+if command -v podman &>/dev/null && podman compose version &>/dev/null; then
+  DOCKER_COMPOSE_CMD="podman compose"
+elif command -v podman-compose &>/dev/null; then
+  DOCKER_COMPOSE_CMD="podman-compose"
+elif command -v docker &>/dev/null && docker compose version &>/dev/null; then
   DOCKER_COMPOSE_CMD="docker compose"
 elif command -v docker-compose &>/dev/null; then
   DOCKER_COMPOSE_CMD="docker-compose"
 else
-  echo "Error: Neither 'docker compose' nor 'docker-compose' command was found."
+  echo "Error: Neither podman nor docker compose commands were found."
   exit 1
 fi
 
