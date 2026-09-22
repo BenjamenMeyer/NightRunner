@@ -12,6 +12,17 @@ echo "=========================================================="
 echo " Starting NightRunner Dev Environment with Authentik OIDC"
 echo "=========================================================="
 
+START_FRONTEND=false
+
+for arg in "$@"; do
+  case $arg in
+    --with-frontend)
+      START_FRONTEND=true
+      shift
+      ;;
+  esac
+done
+
 # Check container CLI preference: podman compose / podman-compose -> docker compose / docker-compose
 if command -v podman &>/dev/null && podman compose version &>/dev/null; then
   DOCKER_COMPOSE_CMD="podman compose"
@@ -28,8 +39,16 @@ fi
 
 echo "Using: $DOCKER_COMPOSE_CMD"
 
-echo "Launching docker containers..."
-$DOCKER_COMPOSE_CMD -f docker-compose.yaml -f docker-compose.authentik.yaml up -d --build
+COMPOSE_FILES="-f docker-compose.yaml -f docker-compose.authentik.yaml"
+
+if [ "$START_FRONTEND" = true ]; then
+  echo "Launching containers (including frontend)..."
+  $DOCKER_COMPOSE_CMD $COMPOSE_FILES up -d --build
+else
+  echo "Launching containers (backend & authentik services only)..."
+  echo "Note: Pass '--with-frontend' if you want to run the containerized frontend."
+  $DOCKER_COMPOSE_CMD $COMPOSE_FILES up -d --build db app authentik-server redis fake-gcs seed
+fi
 
 echo ""
 echo "Waiting for services to become ready..."
@@ -47,7 +66,11 @@ echo ""
 echo "=========================================================="
 echo " NightRunner local dev environment is READY!"
 echo "=========================================================="
-echo " - Frontend:   http://localhost:3000"
+if [ "$START_FRONTEND" = true ]; then
+  echo " - Frontend:   http://localhost:3000"
+else
+  echo " - Frontend:   (Disabled - run 'yarn dev' locally or use '--with-frontend')"
+fi
 echo " - Backend:    http://localhost:8000/v1"
 echo " - Authentik:  http://localhost:9000"
 echo ""
