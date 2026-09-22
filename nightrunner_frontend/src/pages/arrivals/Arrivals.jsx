@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
 import ApiService from "@/api/ApiService.js";
-import UserService from "@/api/UserService.js";
 import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
 
 import "./Arrivals.css";
@@ -18,7 +17,7 @@ import "./Arrivals.css";
 export default function Arrivals() {
 
     const { eventId, loading: eventLoading } = useEventContext();
-    const canManageRoster = UserService.isEventAdmin(eventId);
+    const canManageRoster = ApiService.userData.isEventAdmin(eventId);
 
     const [summary, setSummary] = useState(null);
     const [troopId, setTroopId] = useState("");
