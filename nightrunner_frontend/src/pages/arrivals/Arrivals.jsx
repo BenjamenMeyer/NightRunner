@@ -784,7 +784,7 @@ export default function Arrivals() {
                                                         checked={row.youthProtectionCompleted}
                                                         onChange={e => updateBatchRow(idx, "youthProtectionCompleted", e.target.checked)}
                                                     />
-                                                    IF ADULT: Has this adult completed the &quot;Who is Responsible for Child Safety and Youth Protection? I am!&quot; training in Trail Life Connect? *
+                                                    IF ADULT: Has this adult completed the &quot;Who is Responsible for Child Safety and Youth Protection? I am!&quot; training? *
                                                 </label>
                                             </div>
                                         )}
