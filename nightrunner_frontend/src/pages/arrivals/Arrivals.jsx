@@ -197,6 +197,127 @@ export default function Arrivals() {
             : parsed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     }
 
+    // Modal states for manual entry
+    const [showAddTroopModal, setShowAddTroopModal] = useState(false);
+    const [newTroopNumber, setNewTroopNumber] = useState("");
+    const [newTroopName, setNewTroopName] = useState("");
+    const [addingTroop, setAddingTroop] = useState(false);
+
+    const [showAddAttendeesModal, setShowAddAttendeesModal] = useState(false);
+    const [targetTroopNumber, setTargetTroopNumber] = useState("");
+    const [autoCheckInNew, setAutoCheckInNew] = useState(true);
+    const [addingAttendees, setAddingAttendees] = useState(false);
+    const [batchRows, setBatchRows] = useState([
+        { id: 1, firstName: "", lastName: "", category: "Youth" },
+        { id: 2, firstName: "", lastName: "", category: "Youth" },
+        { id: 3, firstName: "", lastName: "", category: "Youth" }
+    ]);
+
+    async function handleAddTroop(e) {
+        e.preventDefault();
+        const trimmedNum = newTroopNumber.trim();
+        if (!trimmedNum) {
+            setError("Troop number is required (e.g. GA-0594).");
+            return;
+        }
+
+        try {
+            setAddingTroop(true);
+            setError(null);
+            const createdTroop = await ApiService.rosterData.addTroop(trimmedNum, newTroopName.trim());
+            await load();
+            setShowAddTroopModal(false);
+            setNewTroopNumber("");
+            setNewTroopName("");
+            // Auto-select the newly created troop
+            const createdNum = createdTroop?.number || trimmedNum;
+            const match = summary?.troops.find(t => t.troopNumber === createdNum);
+            if (match) {
+                setTroopId(match.troopId);
+            }
+        } catch (err) {
+            console.error("Failed to add troop:", err);
+            setError(err?.message || "Failed to add troop.");
+        } finally {
+            setAddingTroop(false);
+        }
+    }
+
+    function openAddAttendeesModalForTroop(troopNum = "") {
+        setTargetTroopNumber(troopNum || (selectedTroop ? selectedTroop.troopNumber : ""));
+        setBatchRows([
+            { id: 1, firstName: "", lastName: "", category: "Youth" },
+            { id: 2, firstName: "", lastName: "", category: "Youth" },
+            { id: 3, firstName: "", lastName: "", category: "Youth" }
+        ]);
+        setShowAddAttendeesModal(true);
+    }
+
+    function updateBatchRow(idx, field, value) {
+        setBatchRows(prev => {
+            const updated = [...prev];
+            updated[idx] = { ...updated[idx], [field]: value };
+            return updated;
+        });
+    }
+
+    function addBatchRow() {
+        if (batchRows.length >= 10) return;
+        setBatchRows(prev => [
+            ...prev,
+            { id: Date.now() + Math.random(), firstName: "", lastName: "", category: "Youth" }
+        ]);
+    }
+
+    function removeBatchRow(idx) {
+        if (batchRows.length <= 1) return;
+        setBatchRows(prev => prev.filter((_, i) => i !== idx));
+    }
+
+    async function handleAddAttendees(e) {
+        e.preventDefault();
+        const validRows = batchRows.filter(r => r.firstName.trim() && r.lastName.trim());
+        if (validRows.length === 0) {
+            setError("Please fill in at least one attendee's First and Last name.");
+            return;
+        }
+
+        const troopNum = targetTroopNumber.trim() || (selectedTroop ? selectedTroop.troopNumber : "");
+        if (!troopNum) {
+            setError("A troop number is required for attendees.");
+            return;
+        }
+
+        try {
+            setAddingAttendees(true);
+            setError(null);
+
+            const createdAttendees = [];
+            for (const r of validRows) {
+                const attendeePayload = {
+                    troopNumber: troopNum,
+                    firstName: r.firstName.trim(),
+                    lastName: r.lastName.trim(),
+                    category: r.category || "Youth"
+                };
+                const created = await ApiService.rosterData.addAttendee(eventId, attendeePayload);
+                createdAttendees.push(created);
+
+                if (autoCheckInNew && created?.id) {
+                    await ApiService.rosterData.recordArrival(eventId, created.id, arrivalTime());
+                }
+            }
+
+            await load();
+            setShowAddAttendeesModal(false);
+        } catch (err) {
+            console.error("Failed to add attendees:", err);
+            setError(err?.message || "Failed to add attendees.");
+        } finally {
+            setAddingAttendees(false);
+        }
+    }
+
     if (eventLoading) {
         return <p className="arrivals__status">Loading event…</p>;
     }
@@ -224,34 +345,53 @@ export default function Arrivals() {
                     </p>
                 )}
 
-                <div className="arrivals__print-links">
-                    {/*
-                      * The blank checklist is the outage fallback and is meant
-                      * to be printed before the event, so it is offered first.
-                      */}
-                    <a
-                        href={printUrl("blank")}
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        Print blank checklists
-                    </a>
-                    <a
-                        href={printUrl("status")}
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        Print current status
-                    </a>
-                    {troopId && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+                    <div className="arrivals__print-links">
+                        {/*
+                          * The blank checklist is the outage fallback and is meant
+                          * to be printed before the event, so it is offered first.
+                          */}
                         <a
-                            href={printUrl("blank", troopId)}
+                            href={printUrl("blank")}
                             target="_blank"
                             rel="noreferrer"
                         >
-                            Print this troop only
+                            Print blank checklists
                         </a>
-                    )}
+                        <a
+                            href={printUrl("status")}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Print current status
+                        </a>
+                        {troopId && (
+                            <a
+                                href={printUrl("blank", troopId)}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                Print this troop only
+                            </a>
+                        )}
+                    </div>
+
+                    <div className="arrivals__action-buttons">
+                        <button
+                            type="button"
+                            className="arrivals__add-btn"
+                            onClick={() => setShowAddTroopModal(true)}
+                        >
+                            ➕ Add Troop
+                        </button>
+                        <button
+                            type="button"
+                            className="arrivals__add-btn"
+                            onClick={() => openAddAttendeesModalForTroop()}
+                        >
+                            ➕ Add Attendees
+                        </button>
+                    </div>
                 </div>
 
             </header>
@@ -337,16 +477,25 @@ export default function Arrivals() {
                                 {selectedTroop.arrived} of {selectedTroop.expected} arrived
                             </span>
                         </h2>
-                        <button
-                            type="button"
-                            className="arrivals__all"
-                            disabled={selectedTroop.missing === 0}
-                            onClick={() => checkInTroop(selectedTroop)}
-                        >
-                            {selectedTroop.missing === 0
-                                ? "All arrived"
-                                : `Check in remaining ${selectedTroop.missing}`}
-                        </button>
+                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                            <button
+                                type="button"
+                                className="arrivals__add-btn"
+                                onClick={() => openAddAttendeesModalForTroop(selectedTroop.troopNumber)}
+                            >
+                                ➕ Add People to {selectedTroop.troopNumber}
+                            </button>
+                            <button
+                                type="button"
+                                className="arrivals__all"
+                                disabled={selectedTroop.missing === 0}
+                                onClick={() => checkInTroop(selectedTroop)}
+                            >
+                                {selectedTroop.missing === 0
+                                    ? "All arrived"
+                                    : `Check in remaining ${selectedTroop.missing}`}
+                            </button>
+                        </div>
                     </div>
 
                     <ul className="arrivals__list">
@@ -388,6 +537,161 @@ export default function Arrivals() {
                         ))}
                     </ul>
                 </section>
+            )}
+
+            {/* Modal: Add Troop */}
+            {showAddTroopModal && (
+                <div className="arrivals__modal-overlay" onClick={() => setShowAddTroopModal(false)}>
+                    <div className="arrivals__modal" onClick={e => e.stopPropagation()}>
+                        <h2>Add New Troop</h2>
+                        <p className="arrivals__modal-subtitle">
+                            Create a troop code for manual attendee registration without roster import.
+                        </p>
+                        <form onSubmit={handleAddTroop} className="arrivals__modal-form">
+                            <div className="arrivals__field">
+                                <label>Troop Number * (e.g. GA-0594)</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="GA-0594"
+                                    value={newTroopNumber}
+                                    onChange={e => setNewTroopNumber(e.target.value)}
+                                />
+                            </div>
+                            <div className="arrivals__field">
+                                <label>Troop Name (Optional)</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Troop 594 Savannah"
+                                    value={newTroopName}
+                                    onChange={e => setNewTroopName(e.target.value)}
+                                />
+                            </div>
+                            <div className="arrivals__modal-actions">
+                                <button
+                                    type="button"
+                                    className="arrivals__btn-secondary"
+                                    onClick={() => setShowAddTroopModal(false)}
+                                    disabled={addingTroop}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="arrivals__btn-primary"
+                                    disabled={addingTroop}
+                                >
+                                    {addingTroop ? "Adding..." : "Add Troop"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Add Attendees (Group up to 10) */}
+            {showAddAttendeesModal && (
+                <div className="arrivals__modal-overlay" onClick={() => setShowAddAttendeesModal(false)}>
+                    <div className="arrivals__modal" onClick={e => e.stopPropagation()}>
+                        <h2>Add Attendees / Roster Members</h2>
+                        <p className="arrivals__modal-subtitle">
+                            Add individual or group attendees (up to 10 at once) directly to a troop.
+                        </p>
+                        <form onSubmit={handleAddAttendees} className="arrivals__modal-form">
+                            <div className="arrivals__field">
+                                <label>Troop Number *</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. GA-0594"
+                                    value={targetTroopNumber}
+                                    onChange={e => setTargetTroopNumber(e.target.value)}
+                                />
+                            </div>
+
+                            <div>
+                                <div className="arrivals__batch-header">
+                                    <span style={{ fontSize: "0.85rem", fontWeight: "600" }}>
+                                        Attendees List ({batchRows.length}/10)
+                                    </span>
+                                    {batchRows.length < 10 && (
+                                        <button
+                                            type="button"
+                                            className="arrivals__btn-secondary"
+                                            style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}
+                                            onClick={addBatchRow}
+                                        >
+                                            ➕ Add Row
+                                        </button>
+                                    )}
+                                </div>
+
+                                {batchRows.map((row, idx) => (
+                                    <div key={row.id} className="arrivals__batch-row">
+                                        <span className="arrivals__batch-num">#{idx + 1}</span>
+                                        <input
+                                            type="text"
+                                            placeholder="First Name"
+                                            value={row.firstName}
+                                            onChange={e => updateBatchRow(idx, "firstName", e.target.value)}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Last Name"
+                                            value={row.lastName}
+                                            onChange={e => updateBatchRow(idx, "lastName", e.target.value)}
+                                        />
+                                        <select
+                                            value={row.category}
+                                            onChange={e => updateBatchRow(idx, "category", e.target.value)}
+                                        >
+                                            <option value="Youth">Youth</option>
+                                            <option value="Adult">Adult</option>
+                                            <option value="Non-participant Youth">Non-participant Youth</option>
+                                        </select>
+                                        {batchRows.length > 1 ? (
+                                            <button
+                                                type="button"
+                                                className="arrivals__remove-row-btn"
+                                                onClick={() => removeBatchRow(idx)}
+                                                title="Remove row"
+                                            >
+                                                ✕
+                                            </button>
+                                        ) : <span />}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <label className="arrivals__checkbox-label">
+                                <input
+                                    type="checkbox"
+                                    checked={autoCheckInNew}
+                                    onChange={e => setAutoCheckInNew(e.target.checked)}
+                                />
+                                Check in newly added attendees immediately at gate
+                            </label>
+
+                            <div className="arrivals__modal-actions">
+                                <button
+                                    type="button"
+                                    className="arrivals__btn-secondary"
+                                    onClick={() => setShowAddAttendeesModal(false)}
+                                    disabled={addingAttendees}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="arrivals__btn-primary"
+                                    disabled={addingAttendees}
+                                >
+                                    {addingAttendees ? "Adding..." : `Save ${batchRows.filter(r => r.firstName.trim() && r.lastName.trim()).length || ""} Attendee(s)`}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )}
 
         </div>

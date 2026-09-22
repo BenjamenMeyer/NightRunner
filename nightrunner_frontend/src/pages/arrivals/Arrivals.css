@@ -277,3 +277,194 @@
 .arrivals__print-links a {
     color: var(--button-bg);
 }
+
+.arrivals__action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.arrivals__add-btn {
+    padding: 0.55rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.arrivals__add-btn:hover {
+    background: var(--input-bg);
+}
+
+/* Modal styles using theme CSS variables */
+.arrivals__modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.arrivals__modal {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 44rem;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    color: var(--text-primary);
+}
+
+.arrivals__modal h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.3rem;
+    color: var(--text-primary);
+}
+
+.arrivals__modal-subtitle {
+    margin: 0 0 1.25rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.arrivals__modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.arrivals__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.arrivals__field label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.arrivals__field input,
+.arrivals__field select {
+    padding: 0.6rem;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--input-text);
+    font: inherit;
+}
+
+.arrivals__batch-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.arrivals__batch-row {
+    display: grid;
+    grid-template-columns: 2rem 1fr 1fr 1fr 2rem;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.arrivals__batch-num {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.arrivals__batch-row input,
+.arrivals__batch-row select {
+    padding: 0.5rem;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--input-text);
+    font: inherit;
+    font-size: 0.85rem;
+}
+
+.arrivals__remove-row-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.2rem;
+}
+
+.arrivals__remove-row-btn:hover {
+    color: #e53e3e;
+}
+
+.arrivals__checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0.5rem 0;
+}
+
+.arrivals__checkbox-label input[type="checkbox"] {
+    width: 1.1rem;
+    height: 1.1rem;
+    cursor: pointer;
+}
+
+.arrivals__modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.arrivals__btn-secondary {
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.arrivals__btn-primary {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    background: var(--button-bg);
+    color: var(--button-text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.arrivals__btn-primary:disabled,
+.arrivals__btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+

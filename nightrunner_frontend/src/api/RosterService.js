@@ -22,6 +22,10 @@ export default class RosterService {
         return result?.troops ?? [];
     }
 
+    async addTroop(number, name = "") {
+        return await this.transport.post("/troops", { number, name });
+    }
+
     //
     // Attendees
     //
