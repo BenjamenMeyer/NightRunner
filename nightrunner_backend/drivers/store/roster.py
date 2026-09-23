@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import uuid6
@@ -19,7 +20,7 @@ CREATE_TROOP = "INSERT INTO troops (id, number, name) VALUES (:id, :number, :nam
 ATTENDEE_COLUMNS = """
     id, event_id, troop_id, first_name, last_name, category, source_category,
     phone, emergency_contact_1, emergency_contact_2, member_id, youth_protection_completed,
-    source_key, key_ordinal, created_at, updated_at
+    source_key, key_ordinal, status, status_note, created_at, updated_at
 """
 
 LIST_ATTENDEES_FOR_EVENT = f"""
@@ -56,11 +57,11 @@ CREATE_ATTENDEE = """
     INSERT INTO event_attendees (
         id, event_id, troop_id, first_name, last_name, category, source_category,
         phone, emergency_contact_1, emergency_contact_2, member_id, youth_protection_completed,
-        source_key, key_ordinal, created_at, updated_at
+        source_key, key_ordinal, status, status_note, created_at, updated_at
     ) VALUES (
         :id, :event_id, :troop_id, :first_name, :last_name, :category, :source_category,
         :phone, :emergency_contact_1, :emergency_contact_2, :member_id, :youth_protection_completed,
-        :source_key, :key_ordinal, :created_at, :updated_at
+        :source_key, :key_ordinal, :status, :status_note, :created_at, :updated_at
     )
 """
 
@@ -76,6 +77,16 @@ UPDATE_ATTENDEE = """
         emergency_contact_2 = :emergency_contact_2,
         member_id = :member_id,
         youth_protection_completed = :youth_protection_completed,
+        status = :status,
+        status_note = :status_note,
+        updated_at = :updated_at
+    WHERE id = :id
+"""
+
+UPDATE_ATTENDEE_STATUS = """
+    UPDATE event_attendees
+    SET status = :status,
+        status_note = :status_note,
         updated_at = :updated_at
     WHERE id = :id
 """
@@ -168,6 +179,8 @@ class RosterStore:
             youth_protection_completed=bool(row.get("youth_protection_completed")),
             source_key=row.get("source_key") or "",
             key_ordinal=int(row.get("key_ordinal") or 1),
+            status=row.get("status") or "coming",
+            status_note=row.get("status_note"),
             created_at=row.get("created_at"),
             updated_at=row.get("updated_at"),
         )
@@ -243,6 +256,8 @@ class RosterStore:
             "youth_protection_completed": attendee.youth_protection_completed,
             "source_key": attendee.source_key,
             "key_ordinal": attendee.key_ordinal,
+            "status": attendee.status,
+            "status_note": attendee.status_note,
             "created_at": attendee.created_at,
             "updated_at": attendee.updated_at,
         })
@@ -261,9 +276,21 @@ class RosterStore:
             "emergency_contact_2": attendee.emergency_contact_2,
             "member_id": attendee.member_id,
             "youth_protection_completed": attendee.youth_protection_completed,
+            "status": attendee.status,
+            "status_note": attendee.status_note,
             "updated_at": attendee.updated_at,
         })
         return attendee
+
+    async def update_attendee_status(
+        self, attendee_id: str, status: str, status_note: Optional[str] = None, updated_at: Optional[str] = None
+    ) -> None:
+        await self.driver.execute(UPDATE_ATTENDEE_STATUS, {
+            "id": attendee_id,
+            "status": status,
+            "status_note": status_note,
+            "updated_at": updated_at or datetime.now(timezone.utc).isoformat(),
+        })
 
     async def delete_attendee(self, attendee_id: str) -> None:
         await self.driver.execute(DELETE_ATTENDEE, {"id": attendee_id})

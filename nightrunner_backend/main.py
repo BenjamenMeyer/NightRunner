@@ -25,6 +25,7 @@ from nightrunner_backend.transport.roster import (
     TroopsResource,
     EventAttendeesResource,
     EventAttendeeResource,
+    EventAttendeeStatusResource,
     RosterImportPreviewResource,
     RosterImportApplyResource,
     ArrivalsResource,
@@ -129,6 +130,7 @@ def register_routes(app):
     app.add_route("/v1/troops", TroopsResource())
     app.add_route("/v1/events/{event_id}/attendees", EventAttendeesResource())
     app.add_route("/v1/events/{event_id}/attendees/{attendee_id}", EventAttendeeResource())
+    app.add_route("/v1/events/{event_id}/attendees/{attendee_id}/status", EventAttendeeStatusResource())
     app.add_route("/v1/events/{event_id}/roster/preview", RosterImportPreviewResource())
     app.add_route("/v1/events/{event_id}/roster/apply", RosterImportApplyResource())
     app.add_route("/v1/events/{event_id}/arrivals", ArrivalsResource())
@@ -161,6 +163,7 @@ def register_routes(app):
     app.add_route("/troops", TroopsResource())
     app.add_route("/events/{event_id}/attendees", EventAttendeesResource())
     app.add_route("/events/{event_id}/attendees/{attendee_id}", EventAttendeeResource())
+    app.add_route("/events/{event_id}/attendees/{attendee_id}/status", EventAttendeeStatusResource())
     app.add_route("/events/{event_id}/roster/preview", RosterImportPreviewResource())
     app.add_route("/events/{event_id}/roster/apply", RosterImportApplyResource())
     app.add_route("/events/{event_id}/arrivals", ArrivalsResource())

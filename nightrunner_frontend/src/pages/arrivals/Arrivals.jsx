@@ -154,9 +154,26 @@ export default function Arrivals() {
         }
     }
 
+    async function setAttendeeStatus(attendee, status) {
+
+        setPending(current => ({ ...current, [attendee.id]: true }));
+
+        try {
+            await ApiService.rosterData.updateAttendeeStatus(eventId, attendee.id, status);
+            await load();
+            if (query.trim().length >= 2) {
+                setSearchResults(await ApiService.rosterData.searchAttendees(eventId, query.trim()));
+            }
+        } catch {
+            setError(`Could not update status for ${attendee.fullName}.`);
+        } finally {
+            setPending(current => ({ ...current, [attendee.id]: false }));
+        }
+    }
+
     async function checkInTroop(troop) {
 
-        const outstanding = troop.attendees.filter(a => !a.arrival);
+        const outstanding = troop.attendees.filter(a => !a.arrival && a.status !== "not_coming");
 
         if (outstanding.length === 0) {
             return;
@@ -391,10 +408,7 @@ export default function Arrivals() {
 
                 {summary && (
                     <p className="arrivals__totals">
-                        <strong>{summary.arrived}</strong> of {summary.expected} arrived
-                        <span className="arrivals__missing">
-                            {summary.missing} still to come
-                        </span>
+                        <strong>{summary.arrived ?? summary.here} here</strong> · {summary.coming} coming · {summary.notComing} not coming ({summary.expected} total)
                     </p>
                 )}
 
@@ -515,6 +529,7 @@ export default function Arrivals() {
                                 busy={pending[attendee.id]}
                                 onCheckIn={checkIn}
                                 onUndo={undo}
+                                onSetStatus={setAttendeeStatus}
                                 formatTime={formatTime}
                             />
                         ))}
@@ -563,6 +578,7 @@ export default function Arrivals() {
                                 busy={pending[attendee.id]}
                                 onCheckIn={checkIn}
                                 onUndo={undo}
+                                onSetStatus={setAttendeeStatus}
                                 formatTime={formatTime}
                             />
                         ))}
@@ -838,16 +854,20 @@ export default function Arrivals() {
 }
 
 
-function AttendeeRow({ attendee, showTroop, busy, onCheckIn, onUndo, formatTime }) {
+function AttendeeRow({ attendee, showTroop, busy, onCheckIn, onUndo, onSetStatus, formatTime }) {
 
     const arrived = Boolean(attendee.arrival);
+    const isNotComing = attendee.status === "not_coming";
 
     return (
 
-        <li className={arrived ? "arrivals__row arrivals__row--arrived" : "arrivals__row"}>
+        <li className={arrived ? "arrivals__row arrivals__row--arrived" : isNotComing ? "arrivals__row arrivals__row--not-coming" : "arrivals__row"}>
 
             <div className="arrivals__who">
-                <span className="arrivals__name">{attendee.fullName}</span>
+                <span className="arrivals__name">
+                    {attendee.fullName}
+                    {isNotComing && <span className="arrivals__badge-not-coming"> (Not Coming)</span>}
+                </span>
                 <span className="arrivals__meta">
                     {showTroop && attendee.troopNumber
                         ? `${attendee.troopNumber} · `
@@ -857,25 +877,46 @@ function AttendeeRow({ attendee, showTroop, busy, onCheckIn, onUndo, formatTime 
                 </span>
             </div>
 
-            {arrived ? (
-                <button
-                    type="button"
-                    className="arrivals__undo"
-                    disabled={busy}
-                    onClick={() => onUndo(attendee)}
-                >
-                    Undo
-                </button>
-            ) : (
-                <button
-                    type="button"
-                    className="arrivals__checkin"
-                    disabled={busy}
-                    onClick={() => onCheckIn(attendee)}
-                >
-                    Check in
-                </button>
-            )}
+            <div className="arrivals__actions">
+                {arrived ? (
+                    <button
+                        type="button"
+                        className="arrivals__undo"
+                        disabled={busy}
+                        onClick={() => onUndo(attendee)}
+                    >
+                        Undo
+                    </button>
+                ) : isNotComing ? (
+                    <button
+                        type="button"
+                        className="arrivals__undo"
+                        disabled={busy}
+                        onClick={() => onSetStatus(attendee, "coming")}
+                    >
+                        Undo Not Coming
+                    </button>
+                ) : (
+                    <>
+                        <button
+                            type="button"
+                            className="arrivals__checkin"
+                            disabled={busy}
+                            onClick={() => onCheckIn(attendee)}
+                        >
+                            Check in
+                        </button>
+                        <button
+                            type="button"
+                            className="arrivals__not-coming"
+                            disabled={busy}
+                            onClick={() => onSetStatus(attendee, "not_coming")}
+                        >
+                            Not coming
+                        </button>
+                    </>
+                )}
+            </div>
 
         </li>
 

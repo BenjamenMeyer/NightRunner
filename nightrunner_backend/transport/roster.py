@@ -213,6 +213,28 @@ class EventAttendeeResource:
         resp.status = falcon.HTTP_204
 
 
+class EventAttendeeStatusResource:
+    """PATCH /v1/events/{event_id}/attendees/{attendee_id}/status"""
+
+    async def on_patch(self, req: falcon.Request, resp: falcon.Response, event_id: str, attendee_id: str):
+        payload = _require_object(await req.get_media())
+        status = payload.get("status")
+        if not status or status not in ("coming", "here", "not_coming"):
+            raise falcon.HTTPBadRequest(description="Valid 'status' ('coming', 'here', 'not_coming') is required.")
+
+        status_note = payload.get("statusNote")
+
+        store = RosterStore(get_driver())
+        attendee = await store.get_attendee(attendee_id)
+        if not attendee or attendee.event_id != event_id:
+            raise falcon.HTTPNotFound(description="Attendee not found for this event.")
+
+        await store.update_attendee_status(attendee_id, status, status_note)
+        updated_attendee = await store.get_attendee(attendee_id)
+        resp.media = updated_attendee.to_api_dict()
+        resp.status = falcon.HTTP_200
+
+
 class RosterImportPreviewResource:
     """
     POST /v1/events/{event_id}/roster/preview
@@ -354,8 +376,13 @@ class ArrivalsResource:
                 "troopNumber": troop.number,
                 "expected": 0,
                 "arrived": 0,
+                "here": 0,
+                "coming": 0,
+                "notComing": 0,
                 "attendees": [],
             }
+
+        total_not_coming = 0
 
         for attendee in attendees:
             troop_id = attendee.troop_id or ""
@@ -365,6 +392,9 @@ class ArrivalsResource:
                     "troopNumber": troop_numbers.get(troop_id, ""),
                     "expected": 0,
                     "arrived": 0,
+                    "here": 0,
+                    "coming": 0,
+                    "notComing": 0,
                     "attendees": [],
                 }
             bucket = by_troop[troop_id]
@@ -372,6 +402,13 @@ class ArrivalsResource:
             arrival = arrivals.get(attendee.id)
             if arrival:
                 bucket["arrived"] += 1
+                bucket["here"] += 1
+            elif attendee.status == "not_coming":
+                bucket["notComing"] += 1
+                total_not_coming += 1
+            else:
+                bucket["coming"] += 1
+
             bucket["attendees"].append({
                 **attendee.to_api_dict(),
                 "arrival": arrival.to_api_dict() if arrival else None,
@@ -379,13 +416,19 @@ class ArrivalsResource:
 
         troops = sorted(by_troop.values(), key=lambda t: t["troopNumber"])
         for troop in troops:
-            troop["missing"] = troop["expected"] - troop["arrived"]
+            troop["missing"] = troop["coming"]
+
+        total_arrived = len(arrivals)
+        total_expected = len(attendees)
 
         resp.media = {
             "eventId": event_id,
-            "expected": len(attendees),
-            "arrived": len(arrivals),
-            "missing": len(attendees) - len(arrivals),
+            "expected": total_expected,
+            "arrived": total_arrived,
+            "here": total_arrived,
+            "coming": total_expected - total_arrived - total_not_coming,
+            "notComing": total_not_coming,
+            "missing": total_expected - total_arrived - total_not_coming,
             "troops": troops,
         }
         resp.status = falcon.HTTP_200

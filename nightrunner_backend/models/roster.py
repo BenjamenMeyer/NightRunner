@@ -115,6 +115,8 @@ class EventAttendee:
         emergency_contact_2: Optional[str] = None,
         member_id: Optional[str] = None,
         youth_protection_completed: bool = False,
+        status: str = "coming",
+        status_note: Optional[str] = None,
         source_key: str = "",
         key_ordinal: int = 1,
         created_at: Optional[str] = None,
@@ -132,6 +134,8 @@ class EventAttendee:
         self.emergency_contact_2 = emergency_contact_2
         self.member_id = member_id
         self.youth_protection_completed = youth_protection_completed
+        self.status = status
+        self.status_note = status_note
         self.source_key = source_key
         self.key_ordinal = key_ordinal
         self.created_at = created_at
@@ -166,6 +170,8 @@ class EventAttendee:
             "emergencyContact2": self.emergency_contact_2,
             "memberId": self.member_id,
             "youthProtectionCompleted": self.youth_protection_completed,
+            "status": self.status,
+            "statusNote": self.status_note,
             "keyOrdinal": self.key_ordinal,
         }
 

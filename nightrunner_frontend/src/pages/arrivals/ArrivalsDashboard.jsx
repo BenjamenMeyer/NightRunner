@@ -122,13 +122,18 @@ export default function ArrivalsDashboard() {
             <section className="dashboard__totals">
 
                 <div className="dashboard__stat">
-                    <span className="dashboard__stat-value">{summary.arrived}</span>
-                    <span className="dashboard__stat-label">Arrived</span>
+                    <span className="dashboard__stat-value">{summary.arrived ?? summary.here}</span>
+                    <span className="dashboard__stat-label">Here</span>
                 </div>
 
                 <div className="dashboard__stat dashboard__stat--missing">
-                    <span className="dashboard__stat-value">{summary.missing}</span>
-                    <span className="dashboard__stat-label">Still to come</span>
+                    <span className="dashboard__stat-value">{summary.coming}</span>
+                    <span className="dashboard__stat-label">Coming</span>
+                </div>
+
+                <div className="dashboard__stat">
+                    <span className="dashboard__stat-value">{summary.notComing ?? 0}</span>
+                    <span className="dashboard__stat-label">Not Coming</span>
                 </div>
 
                 <div className="dashboard__stat">
@@ -215,7 +220,7 @@ export default function ArrivalsDashboard() {
                                     </span>
 
                                     <span className="dashboard__troop-missing">
-                                        {complete ? "all in" : `${troop.missing} missing`}
+                                        {complete ? "all in" : `${troop.missing} coming`}
                                     </span>
 
                                 </button>
@@ -228,11 +233,13 @@ export default function ArrivalsDashboard() {
                                                 className={
                                                     attendee.arrival
                                                         ? "dashboard__person dashboard__person--arrived"
+                                                        : attendee.status === "not_coming"
+                                                        ? "dashboard__person dashboard__person--not-coming"
                                                         : "dashboard__person"
                                                 }
                                             >
                                                 <span className="dashboard__tick" aria-hidden="true">
-                                                    {attendee.arrival ? "✓" : "·"}
+                                                    {attendee.arrival ? "✓" : attendee.status === "not_coming" ? "✕" : "·"}
                                                 </span>
                                                 <span className="dashboard__person-name">
                                                     {attendee.fullName}
@@ -243,6 +250,8 @@ export default function ArrivalsDashboard() {
                                                 <span className="dashboard__person-time">
                                                     {attendee.arrival
                                                         ? formatTime(attendee.arrival.arrivedAt)
+                                                        : attendee.status === "not_coming"
+                                                        ? "not coming"
                                                         : "not arrived"}
                                                 </span>
                                             </li>
