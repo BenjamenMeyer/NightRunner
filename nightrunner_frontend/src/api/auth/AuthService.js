@@ -176,6 +176,21 @@ class AuthService {
 
             }
 
+            // Secondary fallback: search for any oidc.user key in localStorage
+            // in case authority scheme/port differs slightly (e.g. 3000 vs 9000 or trailing slash)
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith("oidc.user:")) {
+                    const item = localStorage.getItem(key);
+                    if (item) {
+                        const user = User.fromStorageString(item);
+                        if (user && !user.expired) {
+                            return user.access_token;
+                        }
+                    }
+                }
+            }
+
         } catch {
 
             // Malformed storage entry — fall through and return null.

@@ -249,13 +249,30 @@ class AuthMiddleware:
             None, jwks_client.get_signing_key_from_jwt, token
         )
 
-        return jwt.decode(
-            token,
-            signing_key.key,
-            algorithms=["RS256"],
-            audience=settings.oidc_audience,
-            issuer=settings.oidc_issuer
-        )
+        # Strip trailing slash from issuer when decoding to prevent slash mismatch errors
+        issuer = settings.oidc_issuer.rstrip("/") if settings.oidc_issuer else None
+        
+        # Verify token with standard RS256 decoding, allowing matching issuer regardless of trailing slash
+        try:
+            return jwt.decode(
+                token,
+                signing_key.key,
+                algorithms=["RS256"],
+                audience=settings.oidc_audience,
+                issuer=issuer,
+                options={"verify_iss": True if issuer else False}
+            )
+        except jwt.InvalidIssuerError:
+            # Fallback retry with trailing slash if issuer without slash failed
+            if issuer:
+                return jwt.decode(
+                    token,
+                    signing_key.key,
+                    algorithms=["RS256"],
+                    audience=settings.oidc_audience,
+                    issuer=f"{issuer}/"
+                )
+            raise
 
     async def _verify_iam_token(self, token: str) -> Dict[str, Any]:
         """
