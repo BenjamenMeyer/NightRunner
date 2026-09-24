@@ -31,6 +31,7 @@ services:
       AUTHENTIK_BOOTSTRAP_PASSWORD: "${AUTHENTIK_BOOTSTRAP_PASSWORD:-adminpassword}"
       AUTHENTIK_BOOTSTRAP_EMAIL: "${AUTHENTIK_BOOTSTRAP_EMAIL:-admin@example.com}"
       AUTHENTIK_BLUEPRINTS_DIR: /blueprints
+      AUTHENTIK_CORS_ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:9000,http://127.0.0.1:3000"
     volumes:
       - ./authentik/blueprints:/blueprints/custom
     ports:

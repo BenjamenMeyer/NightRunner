@@ -38,9 +38,13 @@ entries:
       client_type: public
       client_id: client-id
       client_secret: secret
-      authorization_flow: !Find [authentik_flows.flow, [slug, "default-provider-authorization-explicit-consent"]]
+      authorization_flow: !Find [authentik_flows.flow, [slug, "default-provider-authorization-implicit-consent"]]
       signing_key: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
-      redirect_uris: ".*"
+      redirect_uris: |
+        http://localhost:3000/.*
+        http://localhost:9000/.*
+        http://127.0.0.1:3000/.*
+        .*
       sub_mode: user_id
       property_mappings:
         - !Find [authentik_providers_oauth2.scopemapping, [name, "NightRunner Admin Scope"]]

@@ -103,6 +103,16 @@ describe('RosterService', () => {
             );
         });
 
+        it('updates attendee status to not_coming', async () => {
+            transport.patch = vi.fn().mockResolvedValue({});
+            await roster.updateAttendeeStatus('event-1', 'attendee-1', 'not_coming', 'Sick');
+
+            expect(transport.patch).toHaveBeenCalledWith(
+                '/events/event-1/attendees/attendee-1/status',
+                { status: 'not_coming', statusNote: 'Sick' }
+            );
+        });
+
     });
 
     describe('import', () => {

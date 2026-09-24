@@ -44,16 +44,26 @@ const oidcConfig = {
             jwks_uri: "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
             code_challenge_methods_supported: ["S256"],
         }
+    } : authority.startsWith(window.location.origin) ? {
+        metadataSeed: {
+            issuer: authority,
+            authorization_endpoint: `${window.location.origin}/application/o/authorize/`,
+            token_endpoint: `${window.location.origin}/application/o/token/`,
+            userinfo_endpoint: `${window.location.origin}/application/o/userinfo/`,
+            end_session_endpoint: `${window.location.origin}/application/o/nightrunner/end-session/`,
+            jwks_uri: `${window.location.origin}/application/o/nightrunner/jwks/`,
+        }
     } : {}),
 
     // Automatically renew access tokens in background before expiration
     automaticSilentRenew: true,
     silent_redirect_uri: `${window.location.origin}/callback`,
 
-    // Store the session in localStorage so all tabs share the same OIDC session.
-    // The default (sessionStorage) is tab-isolated, which breaks pages opened
-    // in a new tab (e.g. /live) before the React auth context has initialised.
+    // Store session and login state in localStorage so all tabs share the same OIDC session
+    // and PKCE state persists across redirect flows seamlessly.
     userStore:
+        new WebStorageStateStore({ store: window.localStorage }),
+    stateStore:
         new WebStorageStateStore({ store: window.localStorage }),
 
     onSigninCallback: () => {

@@ -173,6 +173,17 @@
     background: var(--input-bg);
 }
 
+.arrivals__row--not-coming {
+    background: var(--input-bg);
+    opacity: 0.75;
+}
+
+.arrivals__badge-not-coming {
+    font-size: 0.85rem;
+    font-weight: normal;
+    color: var(--text-secondary);
+}
+
 .arrivals__who {
     display: flex;
     flex-direction: column;
@@ -190,8 +201,15 @@
     color: var(--text-secondary);
 }
 
+.arrivals__actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
 /* Big enough to hit on a phone, in the dark, wearing gloves. */
 .arrivals__checkin,
+.arrivals__not-coming,
 .arrivals__undo {
     flex-shrink: 0;
     min-width: 6rem;
@@ -208,6 +226,12 @@
     color: var(--button-text);
 }
 
+.arrivals__not-coming {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+}
+
 .arrivals__undo {
     border: 1px solid var(--border);
     background: transparent;
@@ -216,6 +240,7 @@
 }
 
 .arrivals__checkin:disabled,
+.arrivals__not-coming:disabled,
 .arrivals__undo:disabled {
     opacity: 0.5;
     cursor: not-allowed;

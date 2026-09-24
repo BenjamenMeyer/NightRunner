@@ -35,11 +35,41 @@ export default defineConfig(({ mode }) => {
       open: true, // Automatically opens the app in the browser on startup
       host: true, // Exposes the server to the local network
       proxy: {
-        // Proxies API requests to avoid CORS issues
+        // Proxies NightRunner Backend API requests
+        '/api/v1': {
+          target: env.VITE_BACKEND_URL || 'http://localhost:8000',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/v1/, '/v1'),
+        },
+        // Proxies Authentik API requests (flows, brands, userinfo)
+        '/api/v3': {
+          target: 'http://localhost:9000',
+          changeOrigin: true,
+        },
+        // Fallback for general /api requests to backend
         '/api': {
-          target: env.VITE_BACKEND_URL, // Correctly references your variable
+          target: env.VITE_BACKEND_URL || 'http://localhost:8000',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+        // Proxies OIDC metadata & token requests to Authentik
+        '/application': {
+          target: 'http://localhost:9000',
+          changeOrigin: true,
+        },
+        // Proxies Authentik interface flows (login UI & redirect flows)
+        '/if': {
+          target: 'http://localhost:9000',
+          changeOrigin: true,
+        },
+        '/flows': {
+          target: 'http://localhost:9000',
+          changeOrigin: true,
+        },
+        // Proxies Authentik static assets (CSS, JS)
+        '/static': {
+          target: 'http://localhost:9000',
+          changeOrigin: true,
         },
       },
     }

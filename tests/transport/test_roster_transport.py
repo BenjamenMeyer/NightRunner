@@ -172,3 +172,67 @@ class TestTroopsForEvent:
 
         everything = await test_client.simulate_get("/v1/troops", headers=headers)
         assert len(everything.json["troops"]) == 2
+
+
+class TestAttendeeStatusAndArrivals:
+
+    async def test_update_attendee_status_and_arrivals_summary(self, test_client, token_factory):
+        await seed_user(role="event-admin")
+        headers = token_factory(roles={"event-1": "event-admin"}, is_admin=False)
+
+        # 1. Create 3 attendees
+        r1 = await test_client.simulate_post(
+            "/v1/events/event-1/attendees",
+            headers=headers,
+            json={"troopNumber": "GA-0100", "firstName": "Alice", "lastName": "Smith", "category": "Youth"},
+        )
+        a1_id = r1.json["id"]
+
+        r2 = await test_client.simulate_post(
+            "/v1/events/event-1/attendees",
+            headers=headers,
+            json={"troopNumber": "GA-0100", "firstName": "Bob", "lastName": "Jones", "category": "Youth"},
+        )
+        a2_id = r2.json["id"]
+
+        r3 = await test_client.simulate_post(
+            "/v1/events/event-1/attendees",
+            headers=headers,
+            json={"troopNumber": "GA-0100", "firstName": "Charlie", "lastName": "Brown", "category": "Youth"},
+        )
+        a3_id = r3.json["id"]
+
+        # 2. Check in Alice (a1)
+        await test_client.simulate_post(
+            "/v1/events/event-1/arrivals",
+            headers=headers,
+            json={"attendeeId": a1_id},
+        )
+
+        # 3. Mark Bob (a2) as not_coming
+        patch_resp = await test_client.simulate_patch(
+            f"/v1/events/event-1/attendees/{a2_id}/status",
+            headers=headers,
+            json={"status": "not_coming"},
+        )
+        assert patch_resp.status == falcon.HTTP_200
+        assert patch_resp.json["status"] == "not_coming"
+
+        # 4. GET /v1/events/event-1/arrivals and verify stats
+        arr_resp = await test_client.simulate_get("/v1/events/event-1/arrivals", headers=headers)
+        assert arr_resp.status == falcon.HTTP_200
+        data = arr_resp.json
+        assert data["expected"] == 3
+        assert data["arrived"] == 1
+        assert data["here"] == 1
+        assert data["coming"] == 1
+        assert data["notComing"] == 1
+        assert data["missing"] == 1
+
+        troop = next(t for t in data["troops"] if t["troopNumber"] == "GA-0100")
+        assert troop["expected"] == 3
+        assert troop["arrived"] == 1
+        assert troop["here"] == 1
+        assert troop["coming"] == 1
+        assert troop["notComing"] == 1
+        assert troop["missing"] == 1

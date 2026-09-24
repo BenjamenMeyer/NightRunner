@@ -101,6 +101,13 @@ export default class RosterService {
         );
     }
 
+    async updateAttendeeStatus(eventId, attendeeId, status, statusNote = null) {
+        return await this.transport.patch(
+            `/events/${encodeURIComponent(eventId)}/attendees/${encodeURIComponent(attendeeId)}/status`,
+            { status, statusNote }
+        );
+    }
+
     //
     // Sheet import
     //

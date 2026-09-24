@@ -170,28 +170,36 @@ export default function ArrivalsPrint() {
                             {troop.attendees.map(attendee => {
 
                                 const arrived = Boolean(attendee.arrival);
+                                const isNotComing = attendee.status === "not_coming";
 
                                 return (
                                     <tr
                                         key={attendee.id}
                                         className={
                                             mode === "status" && !arrived
-                                                ? "arrivals-print__row--missing"
+                                                ? isNotComing
+                                                    ? "arrivals-print__row--not-coming"
+                                                    : "arrivals-print__row--missing"
                                                 : undefined
                                         }
                                     >
                                         <td className="arrivals-print__tick">
                                             {mode === "blank"
                                                 ? <span className="arrivals-print__box" />
-                                                : (arrived ? "✓" : "")}
+                                                : (arrived ? "✓" : isNotComing ? "✕" : "")}
                                         </td>
-                                        <td>{attendee.fullName}</td>
+                                        <td>
+                                            {attendee.fullName}
+                                            {mode === "status" && isNotComing && " (Not Coming)"}
+                                        </td>
                                         <td>{attendee.category}</td>
                                         <td className="arrivals-print__time">
                                             {mode === "blank"
                                                 ? <span className="arrivals-print__rule" />
                                                 : (arrived
                                                     ? formatTime(attendee.arrival.arrivedAt)
+                                                    : isNotComing
+                                                    ? "not coming"
                                                     : "not arrived")}
                                         </td>
                                     </tr>
@@ -202,7 +210,7 @@ export default function ArrivalsPrint() {
 
                     {mode === "status" && troop.missing > 0 && (
                         <p className="arrivals-print__missing-note">
-                            {troop.missing} still to arrive.
+                            {troop.missing} still expected to arrive.
                         </p>
                     )}
 
