@@ -5,6 +5,7 @@ from nightrunner_backend.models.event import Event
 LIST_EVENTS_BATCH = """
 SELECT
     e.id, e.name, e.date, e.description, e.rounding_precision, COALESCE(e.theme, 'night-ops') AS theme,
+    COALESCE(e.scoring_mode, 'absolute') AS scoring_mode,
     GROUP_CONCAT(DISTINCT eo.user_id) AS organizers,
     GROUP_CONCAT(DISTINCT s.id) AS stations,
     GROUP_CONCAT(DISTINCT p.id) AS patrols
@@ -12,16 +13,16 @@ FROM events e
 LEFT JOIN event_organizers eo ON e.id = eo.event_id
 LEFT JOIN stations s ON e.id = s.event_id
 LEFT JOIN patrols p ON e.id = p.event_id
-GROUP BY e.id, e.name, e.date, e.description, e.rounding_precision, e.theme
+GROUP BY e.id, e.name, e.date, e.description, e.rounding_precision, e.theme, e.scoring_mode
 """
-GET_EVENT = "SELECT id, name, date, description, rounding_precision, COALESCE(theme, 'night-ops') AS theme FROM events WHERE id = :id"
+GET_EVENT = "SELECT id, name, date, description, rounding_precision, COALESCE(theme, 'night-ops') AS theme, COALESCE(scoring_mode, 'absolute') AS scoring_mode FROM events WHERE id = :id"
 CREATE_EVENT = """
-    INSERT INTO events (id, name, date, description, rounding_precision, theme)
-    VALUES (:id, :name, :date, :description, :rounding_precision, :theme)
+    INSERT INTO events (id, name, date, description, rounding_precision, theme, scoring_mode)
+    VALUES (:id, :name, :date, :description, :rounding_precision, :theme, :scoring_mode)
 """
 UPDATE_EVENT = """
     UPDATE events
-    SET name = :name, date = :date, description = :description, rounding_precision = :rounding_precision, theme = :theme
+    SET name = :name, date = :date, description = :description, rounding_precision = :rounding_precision, theme = :theme, scoring_mode = :scoring_mode
     WHERE id = :id
 """
 DELETE_EVENT = "DELETE FROM events WHERE id = :id"
@@ -51,6 +52,7 @@ class EventsStore:
                 description=row["description"],
                 rounding_precision=row["rounding_precision"],
                 theme=row.get("theme") or "night-ops",
+                scoring_mode=row.get("scoring_mode") or "absolute",
             )
             # GROUP_CONCAT returns a comma-separated string or None when no rows match
             event.organizers = [x for x in (row.get("organizers") or "").split(",") if x]
@@ -77,6 +79,7 @@ class EventsStore:
             "description": event.description,
             "rounding_precision": event.rounding_precision,
             "theme": event.theme,
+            "scoring_mode": event.scoring_mode,
         })
         for user_id in event.organizers:
             await self.driver.execute(ADD_EVENT_ORGANIZER, {"event_id": event.id, "user_id": user_id})
@@ -89,6 +92,7 @@ class EventsStore:
             "description": event.description,
             "rounding_precision": event.rounding_precision,
             "theme": event.theme,
+            "scoring_mode": event.scoring_mode,
         })
         # Sync organizers: delete then re-insert
         await self.driver.execute(DELETE_EVENT_ORGANIZERS, {"event_id": event.id})
