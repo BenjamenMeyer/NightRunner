@@ -4,6 +4,7 @@ import Events from "./pages/user/Events.jsx";
 import Patrols from "./pages/user/Patrols.jsx";
 import Stations from "./pages/user/Stations.jsx";
 import Scoring from "./pages/scoring/Scoring.jsx";
+import StationReview from "./pages/scoring/review/StationReview.jsx";
 
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import EventManager from "./pages/admin/events/EventManager.jsx";
@@ -112,6 +113,17 @@ export const AppRoutes = [
         path: "/scoring",
         element: Scoring,
         name: "Scoring",
+        access: ACCESS.USER,
+        // Otherwise the sidebar marks Scoring active on /scoring/review too.
+        exact: true
+    },
+    {
+        // Open to every signed-in user for now, same as Scoring, so a volunteer
+        // can check their own entries. Narrow to station lead / scoring center /
+        // admin with the role matrix (#236).
+        path: "/scoring/review",
+        element: StationReview,
+        name: "Review Entries",
         access: ACCESS.USER
     },
     {

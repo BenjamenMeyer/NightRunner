@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 import ApiService from "../../api/ApiService.js";
 import { useEventContext } from "../../api/helpers/event/EventContext.jsx";
@@ -338,6 +339,13 @@ export default function Scoring() {
                                     <br /><br />
                                     Starting a new score session will <strong>deactivate the previous score</strong> and record new scores for this patrol.
                                 </div>
+
+                                <Link
+                                    className="review-entries-link"
+                                    to={`/scoring/review?station=${encodeURIComponent(selectedStation.id)}&patrol=${encodeURIComponent(selectedPatrol.id)}`}
+                                >
+                                    Review what was entered →
+                                </Link>
 
                                 <button
                                     className="primary-button"

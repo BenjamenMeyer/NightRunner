@@ -770,3 +770,21 @@
     font-weight: 600;
 
 }
+
+/* Link from "Patrol Already Scored" to the per-station review page. */
+
+.review-entries-link {
+
+    color: var(--link);
+
+    font-weight: 600;
+
+    text-decoration: underline;
+
+}
+
+.review-entries-link:hover {
+
+    color: var(--link-hover);
+
+}

@@ -114,7 +114,7 @@ function Sidebar({ open, close }) {
         {
             key: "scoring",
             title: "Scoring",
-            paths: ["/scoring", "/live", "/checkin"]
+            paths: ["/scoring", "/scoring/review", "/live", "/checkin"]
         },
         {
             key: "administration",
