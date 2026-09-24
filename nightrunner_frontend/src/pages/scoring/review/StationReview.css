@@ -1,0 +1,228 @@
+/* Per-station review page. Theme variables only — see CLAUDE.md. */
+
+.station-review-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.review-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.review-controls > :first-child {
+    flex: 1 1 280px;
+}
+
+.review-table-card {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    padding: 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+}
+
+.review-summary {
+    color: var(--text-secondary);
+}
+
+.review-summary strong {
+    color: var(--text-primary);
+}
+
+.review-summary-missing {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Horizontal scroll on phones; the patrol column stays pinned. */
+.review-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.review-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .95rem;
+}
+
+.review-table th,
+.review-table td {
+    padding: .55rem .7rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+    color: var(--text-primary);
+}
+
+.review-table thead th {
+    background: var(--page-bg);
+    white-space: nowrap;
+}
+
+.review-table .col-patrol {
+    position: sticky;
+    left: 0;
+    background: var(--card-bg);
+    font-weight: 600;
+    min-width: 8rem;
+}
+
+.review-table thead .col-patrol {
+    background: var(--page-bg);
+    z-index: 1;
+}
+
+.review-table .col-number,
+.review-table .col-submitted {
+    white-space: nowrap;
+    color: var(--text-secondary);
+}
+
+.review-sort-button {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.review-sort-button.is-active {
+    color: var(--link);
+}
+
+.review-sort-arrow {
+    display: inline-block;
+    min-width: .8em;
+    font-size: .75em;
+}
+
+.cell-value {
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.cell-detail {
+    display: block;
+    font-size: .8rem;
+    color: var(--text-secondary);
+}
+
+.cell-pass .cell-value {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.cell-fail .cell-value {
+    color: var(--error);
+    font-weight: 600;
+}
+
+.cell-missing .cell-value,
+.cell-text-empty .cell-value {
+    color: var(--text-secondary);
+}
+
+/* A patrol with no entries must not look like a patrol that scored zero. */
+.row-no-entry td,
+.row-no-entry th {
+    background: var(--page-bg);
+}
+
+/* --warning is a pale yellow in the light themes, too faint for text, so it
+   marks the row edge and the text stays in the normal colours. */
+.row-no-entry .col-patrol {
+    background: var(--page-bg);
+    box-shadow: inset 4px 0 0 var(--warning);
+}
+
+.cell-no-entry {
+    color: var(--text-secondary);
+    font-style: italic;
+    font-weight: 600;
+}
+
+.row-highlight td,
+.row-highlight th,
+.row-highlight .col-patrol {
+    background: var(--success-bg);
+}
+
+.row-highlight .col-patrol {
+    box-shadow: inset 4px 0 0 var(--link);
+}
+
+.patrol-cell-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.comment-badge-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.15rem 0.4rem;
+    background: var(--page-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.comment-badge-button:hover,
+.comment-badge-button.is-active {
+    background: var(--button-bg);
+    color: var(--button-text);
+    border-color: var(--button-bg);
+}
+
+.comment-count {
+    font-weight: 600;
+}
+
+.row-comments-detail td {
+    background: var(--page-bg);
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.comments-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.comments-panel strong {
+    color: var(--text-primary);
+}
+
+.comments-list {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.comment-task-label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
