@@ -163,3 +163,66 @@
 .row-highlight .col-patrol {
     box-shadow: inset 4px 0 0 var(--link);
 }
+
+.patrol-cell-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.comment-badge-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.15rem 0.4rem;
+    background: var(--page-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.comment-badge-button:hover,
+.comment-badge-button.is-active {
+    background: var(--button-bg);
+    color: var(--button-text);
+    border-color: var(--button-bg);
+}
+
+.comment-count {
+    font-weight: 600;
+}
+
+.row-comments-detail td {
+    background: var(--page-bg);
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.comments-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.comments-panel strong {
+    color: var(--text-primary);
+}
+
+.comments-list {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.comment-task-label {
+    font-weight: 600;
+    color: var(--text-primary);
+}

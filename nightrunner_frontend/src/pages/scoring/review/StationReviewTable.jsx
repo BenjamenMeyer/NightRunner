@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import {
     buildReviewRows,
@@ -12,9 +12,10 @@ import {
 
 function formatSubmitted(iso) {
     if (!iso) return null;
-    const d = new Date(iso);
+    const normalized = iso.endsWith("Z") || iso.includes("+") ? iso : `${iso.replace(" ", "T")}Z`;
+    const d = new Date(normalized);
     if (Number.isNaN(d.getTime())) return null;
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
 /**
@@ -32,6 +33,7 @@ export default function StationReviewTable({
 }) {
     const tasks = station?.tasks || [];
     const [sort, setSort] = useState({ key: "number", direction: "asc" });
+    const [expandedPatrols, setExpandedPatrols] = useState({});
     const highlightRef = useRef(null);
 
     const rows = useMemo(
@@ -75,6 +77,13 @@ export default function StationReviewTable({
                 ? { key, direction: prev.direction === "asc" ? "desc" : "asc" }
                 : { key, direction: "asc" }
         );
+    }
+
+    function toggleExpand(patrolId) {
+        setExpandedPatrols((prev) => ({
+            ...prev,
+            [patrolId]: !prev[patrolId]
+        }));
     }
 
     function header(key, label, className = "") {
@@ -134,40 +143,84 @@ export default function StationReviewTable({
                                     isHighlighted ? "row-highlight" : ""
                                 ].filter(Boolean).join(" ");
 
+                                // Collect any comments/notes across tasks
+                                const comments = tasks
+                                    .map((t) => {
+                                        const entry = row.entries[taskId(t)];
+                                        if (entry?.submittedText) {
+                                            return { taskName: taskName(t), text: entry.submittedText };
+                                        }
+                                        return null;
+                                    })
+                                    .filter(Boolean);
+
+                                const isExpanded = Boolean(expandedPatrols[row.patrol.id]);
+
                                 return (
-                                    <tr
-                                        key={row.patrol.id}
-                                        className={classes || undefined}
-                                        ref={isHighlighted ? highlightRef : undefined}
-                                        data-patrol-id={row.patrol.id}
-                                    >
-                                        <td className="col-number">{row.patrol.number ?? ""}</td>
-                                        <th scope="row" className="col-patrol">
-                                            {row.patrol.name || "Patrol"}
-                                        </th>
+                                    <React.Fragment key={row.patrol.id}>
+                                        <tr
+                                            className={classes || undefined}
+                                            ref={isHighlighted ? highlightRef : undefined}
+                                            data-patrol-id={row.patrol.id}
+                                        >
+                                            <td className="col-number">{row.patrol.number ?? ""}</td>
+                                            <th scope="row" className="col-patrol">
+                                                <div className="patrol-cell-content">
+                                                    <span>{row.patrol.name || "Patrol"}</span>
+                                                    {comments.length > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            className={`comment-badge-button${isExpanded ? " is-active" : ""}`}
+                                                            onClick={() => toggleExpand(row.patrol.id)}
+                                                            title={`${comments.length} comment(s) - click to toggle view`}
+                                                            aria-label={`Toggle comments for ${row.patrol.name}`}
+                                                        >
+                                                            💬 <span className="comment-count">{comments.length}</span>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </th>
 
-                                        {row.status === "none" ? (
-                                            <td className="cell-no-entry" colSpan={tasks.length}>
-                                                No entry yet
+                                            {row.status === "none" ? (
+                                                <td className="cell-no-entry" colSpan={tasks.length}>
+                                                    No entry yet
+                                                </td>
+                                            ) : (
+                                                tasks.map((t) => {
+                                                    const shown = formatEntry(t, row.entries[taskId(t)]);
+                                                    return (
+                                                        <td key={taskId(t)} className={`col-task cell-${shown.kind}`}>
+                                                            <span className="cell-value">{shown.text}</span>
+                                                            {shown.detail && (
+                                                                <span className="cell-detail">{shown.detail}</span>
+                                                            )}
+                                                        </td>
+                                                    );
+                                                })
+                                            )}
+
+                                            <td className="col-submitted">
+                                                {formatSubmitted(row.submittedAt) ?? "—"}
                                             </td>
-                                        ) : (
-                                            tasks.map((t) => {
-                                                const shown = formatEntry(t, row.entries[taskId(t)]);
-                                                return (
-                                                    <td key={taskId(t)} className={`col-task cell-${shown.kind}`}>
-                                                        <span className="cell-value">{shown.text}</span>
-                                                        {shown.detail && (
-                                                            <span className="cell-detail">{shown.detail}</span>
-                                                        )}
-                                                    </td>
-                                                );
-                                            })
-                                        )}
+                                        </tr>
 
-                                        <td className="col-submitted">
-                                            {formatSubmitted(row.submittedAt) ?? "—"}
-                                        </td>
-                                    </tr>
+                                        {isExpanded && comments.length > 0 && (
+                                            <tr className="row-comments-detail">
+                                                <td colSpan={tasks.length + 3}>
+                                                    <div className="comments-panel">
+                                                        <strong>Judge / Scorer Comments:</strong>
+                                                        <ul className="comments-list">
+                                                            {comments.map((c, idx) => (
+                                                                <li key={idx}>
+                                                                    <span className="comment-task-label">{c.taskName}:</span> {c.text}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
                                 );
                             })}
                         </tbody>

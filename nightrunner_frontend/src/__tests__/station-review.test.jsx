@@ -246,4 +246,41 @@ describe("StationReviewTable", () => {
         render({ highlightPatrolId: "p3" });
         expect(container.querySelector('tr[data-patrol-id="p3"]').className).toContain("row-highlight");
     });
+
+    it("displays comment badge when a patrol has judge comments and toggles expandable panel", () => {
+        const stationWithAnswers = {
+            id: "st-1",
+            name: "Ropes",
+            tasks: [TASKS.base, TASKS.answer]
+        };
+        const reportWithComments = {
+            patrols: [
+                {
+                    patrolId: "p1",
+                    breakdown: [
+                        { taskId: "t-base", rawScore: 1 },
+                        { taskId: "t-answer", rawScore: 1, submittedText: "Great effort on knot tying!" }
+                    ]
+                }
+            ]
+        };
+
+        act(() => {
+            root.render(
+                <StationReviewTable station={stationWithAnswers} patrols={PATROLS} report={reportWithComments} />
+            );
+        });
+
+        const commentBtn = container.querySelector(".comment-badge-button");
+        expect(commentBtn).not.toBeNull();
+        expect(commentBtn.textContent).toContain("💬 1");
+
+        expect(container.querySelector(".row-comments-detail")).toBeNull();
+
+        act(() => commentBtn.click());
+
+        const detailRow = container.querySelector(".row-comments-detail");
+        expect(detailRow).not.toBeNull();
+        expect(detailRow.textContent).toContain("Answer: Great effort on knot tying!");
+    });
 });
