@@ -18,7 +18,8 @@ export default function EventCreator() {
         date: "",
         description: "",
         roundingPrecision: 1000,
-        theme: "night-ops"
+        theme: "night-ops",
+        scoringMode: "absolute"
     });
 
 
@@ -128,7 +129,10 @@ export default function EventCreator() {
                 form.roundingPrecision,
 
                 theme:
-                form.theme
+                form.theme,
+
+                scoringMode:
+                form.scoringMode
 
             });
 
@@ -340,6 +344,33 @@ export default function EventCreator() {
 
                             <small>
                                 Used when calculating scoring.
+                            </small>
+
+                        </div>
+
+                        <div className="form-group">
+
+                            <label htmlFor="event-scoring-mode">
+                                Default Scoring Mode
+                            </label>
+
+                            <select
+                                id="event-scoring-mode"
+                                name="scoringMode"
+                                value={form.scoringMode}
+                                onChange={handleChange}
+                                disabled={saving}
+                            >
+                                <option value="absolute">
+                                    Absolute Score (Weighted Sum)
+                                </option>
+                                <option value="relative">
+                                    Relative to Max Patrol (10pt Scale)
+                                </option>
+                            </select>
+
+                            <small>
+                                Initial scoring calculation mode for finalizer reports.
                             </small>
 
                         </div>
