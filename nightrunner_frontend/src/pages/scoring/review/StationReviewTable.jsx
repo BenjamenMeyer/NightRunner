@@ -7,7 +7,8 @@ import {
     formatEntry,
     sortRows,
     taskId,
-    taskName
+    taskName,
+    taskType
 } from "./reviewFormat.js";
 
 function formatSubmitted(iso) {
@@ -143,11 +144,13 @@ export default function StationReviewTable({
                                     isHighlighted ? "row-highlight" : ""
                                 ].filter(Boolean).join(" ");
 
-                                // Collect any comments/notes across tasks
+                                // Collect any comments/notes across tasks that aren't already displayed directly as the main cell value (e.g. general comments or disqualification reasons)
                                 const comments = tasks
                                     .map((t) => {
                                         const entry = row.entries[taskId(t)];
-                                        if (entry?.submittedText) {
+                                        const type = taskType(t);
+                                        // Skip text tasks as their submittedText is already rendered in the cell
+                                        if (entry?.submittedText && type !== "Text Answer" && type !== "Secret Cipher / Decoding") {
                                             return { taskName: taskName(t), text: entry.submittedText };
                                         }
                                         return null;

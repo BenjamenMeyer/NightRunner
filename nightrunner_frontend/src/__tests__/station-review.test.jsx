@@ -251,15 +251,15 @@ describe("StationReviewTable", () => {
         const stationWithAnswers = {
             id: "st-1",
             name: "Ropes",
-            tasks: [TASKS.base, TASKS.answer]
+            tasks: [TASKS.base, TASKS.knots]
         };
         const reportWithComments = {
             patrols: [
                 {
                     patrolId: "p1",
                     breakdown: [
-                        { taskId: "t-base", rawScore: 1 },
-                        { taskId: "t-answer", rawScore: 1, submittedText: "Great effort on knot tying!" }
+                        { taskId: "t-base", rawScore: 1, submittedText: "Great effort on knot tying!" },
+                        { taskId: "t-knots", rawScore: 4 }
                     ]
                 }
             ]
@@ -281,6 +281,6 @@ describe("StationReviewTable", () => {
 
         const detailRow = container.querySelector(".row-comments-detail");
         expect(detailRow).not.toBeNull();
-        expect(detailRow.textContent).toContain("Answer: Great effort on knot tying!");
+        expect(detailRow.textContent).toContain("Base: Great effort on knot tying!");
     });
 });
