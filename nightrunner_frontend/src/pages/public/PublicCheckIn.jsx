@@ -14,6 +14,7 @@ import {
 } from "../../api/PublicLinkService.js";
 
 import useEventTheme from "../../branding/useEventTheme.js";
+import ConfirmDialog, { patrolLabel } from "../../components/ConfirmDialog.jsx";
 
 import "./PublicPages.css";
 
@@ -62,7 +63,9 @@ export default function PublicCheckIn() {
     const [data, setData] = useState(null);
     const [stationId, setStationId] = useState(() => readStoredStation(token));
     const [choosingStation, setChoosingStation] = useState(false);
-    const [pendingPatrolId, setPendingPatrolId] = useState(null);
+    // { patrolId, action } awaiting confirmation. Both check-in and check-out
+    // ask first, the same as the signed-in page (#234).
+    const [pending, setPending] = useState(null);
     const [busyPatrolId, setBusyPatrolId] = useState(null);
 
     // Match the event's palette, the way EventContext does for signed-in users.
@@ -117,7 +120,6 @@ export default function PublicCheckIn() {
     async function act(patrolId, action) {
 
         setBusyPatrolId(patrolId);
-        setPendingPatrolId(null);
 
         try {
 
@@ -133,6 +135,7 @@ export default function PublicCheckIn() {
             setError(err?.message ?? "That did not save. Try again.");
         } finally {
             setBusyPatrolId(null);
+            setPending(null);
         }
 
     }
@@ -227,7 +230,6 @@ export default function PublicCheckIn() {
                         const isCompleted = visit?.status === "completed";
                         const isHere = Boolean(visit?.checkedInAt) && !visit?.checkedOutAt;
                         const isBusy = busyPatrolId === patrol.id;
-                        const isConfirming = pendingPatrolId === patrol.id;
 
                         let stateLabel = "Not arrived";
                         if (isCompleted) {
@@ -255,31 +257,11 @@ export default function PublicCheckIn() {
 
                                 {isCompleted ? (
                                     <span className="checkin-locked">Locked</span>
-                                ) : isConfirming ? (
-                                    <div className="checkin-confirm">
-                                        <button
-                                            type="button"
-                                            className="checkin-action danger"
-                                            onClick={() => act(patrol.id, "check-out")}
-                                            disabled={isBusy}
-                                        >
-                                            Confirm check out
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="checkin-action subtle"
-                                            onClick={() => setPendingPatrolId(null)}
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
                                 ) : isHere ? (
-                                    // Check-out ends the scoring window, so it
-                                    // asks first.
                                     <button
                                         type="button"
                                         className="checkin-action"
-                                        onClick={() => setPendingPatrolId(patrol.id)}
+                                        onClick={() => setPending({ patrolId: patrol.id, action: "check-out" })}
                                         disabled={isBusy}
                                     >
                                         {isBusy ? "Saving..." : "Check out"}
@@ -288,7 +270,7 @@ export default function PublicCheckIn() {
                                     <button
                                         type="button"
                                         className="checkin-action"
-                                        onClick={() => act(patrol.id, "check-in")}
+                                        onClick={() => setPending({ patrolId: patrol.id, action: "check-in" })}
                                         disabled={isBusy}
                                     >
                                         {isBusy ? "Saving..." : "Check in"}
@@ -300,6 +282,33 @@ export default function PublicCheckIn() {
 
                     })}
                 </ul>
+
+                {(() => {
+                    const pendingPatrol = pending
+                        ? (data?.patrols ?? []).find((p) => p.id === pending.patrolId)
+                        : null;
+                    const isCheckIn = pending?.action === "check-in";
+                    return (
+                        <ConfirmDialog
+                            open={Boolean(pendingPatrol)}
+                            title={isCheckIn ? "Check In?" : "Check Out?"}
+                            confirmLabel={isCheckIn ? "Yes, check in" : "Yes, check out"}
+                            busy={Boolean(pending) && busyPatrolId === pending.patrolId}
+                            onConfirm={() => act(pending.patrolId, pending.action)}
+                            onCancel={() => setPending(null)}
+                        >
+                            <p>
+                                Checking <strong>{patrolLabel(pendingPatrol)}</strong>{" "}
+                                <span className="confirm-dialog-direction">{isCheckIn ? "IN" : "OUT"}</span> at{" "}
+                                <strong>{currentStation.name}</strong>.
+                            </p>
+                            {!isCheckIn && (
+                                // Check-out ends the scoring window.
+                                <p>Checking out ends this patrol's time at the station.</p>
+                            )}
+                        </ConfirmDialog>
+                    );
+                })()}
 
             </div>
         </div>

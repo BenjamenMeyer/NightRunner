@@ -4,6 +4,7 @@ import ApiService from "../../api/ApiService.js";
 import { useEventContext } from "../../api/helpers/event/EventContext.jsx";
 
 import DataSelector from "../../api/helpers/qr/DataSelector.jsx";
+import ConfirmDialog, { patrolLabel } from "../../components/ConfirmDialog.jsx";
 
 import "./CheckInOut.css";
 
@@ -156,7 +157,10 @@ export default function CheckInOut() {
         setCompleted(false);
     }
 
+    // Every check-in and check-out asks first (#234): on a phone at night the
+    // button is easy to hit for the wrong patrol or the wrong station.
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
 
     function handleStationSelection(station) {
@@ -213,6 +217,7 @@ export default function CheckInOut() {
 
     async function executeCheckInOrOut() {
         try {
+            setIsSaving(true);
             setError(null);
             let res;
             if (action === ACTIONS.CHECK_IN) {
@@ -241,6 +246,7 @@ export default function CheckInOut() {
             console.error("Check-in/out error:", err);
             setError(err?.message ?? `Failed to perform ${actionName.toLowerCase()}.`);
         } finally {
+            setIsSaving(false);
             setShowConfirmModal(false);
         }
     }
@@ -258,13 +264,9 @@ export default function CheckInOut() {
             return;
         }
 
-        // If the patrol has already checked out from this station and action is check-in, prompt for confirmation
-        if (action === ACTIONS.CHECK_IN && isCurrentlyCheckedOut) {
-            setShowConfirmModal(true);
-            return;
-        }
-
-        await executeCheckInOrOut();
+        // Nothing is recorded until the volunteer confirms. A patrol that
+        // already checked out gets the warning version of the dialog.
+        setShowConfirmModal(true);
     }
 
     function reset() {
@@ -277,6 +279,8 @@ export default function CheckInOut() {
         action === ACTIONS.CHECK_IN
             ? "Check In"
             : "Check Out";
+
+    const isRecheckIn = action === ACTIONS.CHECK_IN && isCurrentlyCheckedOut;
 
     const canSubmit =
         selectedPatrol !== null &&
@@ -378,7 +382,7 @@ export default function CheckInOut() {
                                         )}
                                         <p>
                                             <strong>
-                                                {selectedPatrol.name}
+                                                {patrolLabel(selectedPatrol)}
                                             </strong>
                                             {" "}
                                             will be marked as{" "}
@@ -437,7 +441,7 @@ export default function CheckInOut() {
 
                             <p>
                                 <strong>
-                                    {selectedPatrol.name}
+                                    {patrolLabel(selectedPatrol)}
                                 </strong>
                                 {" "}
                                 has been{" "}
@@ -464,35 +468,31 @@ export default function CheckInOut() {
                 </>
             )}
 
-            {showConfirmModal && (
-                <div className="modal-overlay">
-                    <div className="modal-card warning-modal">
-                        <h2>⚠️ Warning: Re-Checking In Patrol</h2>
+            <ConfirmDialog
+                open={showConfirmModal && Boolean(selectedPatrol && selectedStation)}
+                variant={isRecheckIn ? "warning" : "neutral"}
+                title={isRecheckIn ? "Check this patrol in again?" : `${actionName}?`}
+                confirmLabel={isRecheckIn ? "Yes, check in again" : `Yes, ${actionName.toLowerCase()}`}
+                busy={isSaving}
+                onConfirm={executeCheckInOrOut}
+                onCancel={() => setShowConfirmModal(false)}
+            >
+                {isRecheckIn ? (
+                    <>
                         <p>
-                            <strong>{selectedPatrol?.name}</strong> has already completed and checked out from <strong>{selectedStation?.name}</strong>.
+                            <strong>{patrolLabel(selectedPatrol)}</strong> has already checked
+                            out from <strong>{selectedStation?.name}</strong>.
                         </p>
-                        <p>
-                            Are you sure you want to check them in again for another visit?
-                        </p>
-                        <div className="modal-actions">
-                            <button
-                                type="button"
-                                className="secondary-button"
-                                onClick={() => setShowConfirmModal(false)}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                className="primary-button warning-button"
-                                onClick={executeCheckInOrOut}
-                            >
-                                Yes, Check In Again
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                        <p>Check them in again for another visit?</p>
+                    </>
+                ) : (
+                    <p>
+                        Checking <strong>{patrolLabel(selectedPatrol)}</strong>{" "}
+                        <span className="confirm-dialog-direction">{action === ACTIONS.CHECK_IN ? "IN" : "OUT"}</span> at{" "}
+                        <strong>{selectedStation?.name}</strong>.
+                    </p>
+                )}
+            </ConfirmDialog>
 
         </div>
     );
