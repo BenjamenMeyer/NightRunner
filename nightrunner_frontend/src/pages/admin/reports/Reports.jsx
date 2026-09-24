@@ -269,7 +269,7 @@ export default function Reports() {
                                                         item.file_key?.endsWith(".ods") ||
                                                         item.content_type?.includes("spreadsheet");
                                                     const ext = isSpreadsheet ? "ods" : "pdf";
-                                                    const label = isSpreadsheet ? "Download Spreadsheet" : "Download PDF";
+                                                    const label = isSpreadsheet ? "Download Spreadsheet (ODS)" : "Download PDF";
                                                     const filename = `${item.name || "report"}.${ext}`;
 
                                                     return (

@@ -59,6 +59,6 @@ describe('Reports Page Registry', () => {
     expect(screen.getByText('Generating...')).toBeTruthy();
     expect(screen.getAllByText('View Report').length).toBeGreaterThan(0);
     expect(screen.getByText('Download PDF')).toBeTruthy();
-    expect(screen.getByText('Download Spreadsheet')).toBeTruthy();
+    expect(screen.getByText('Download Spreadsheet (ODS)')).toBeTruthy();
   });
 });
