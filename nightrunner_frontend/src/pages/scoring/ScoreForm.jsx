@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import ApiService from "../../api/ApiService.js";
 import UserService from "../../api/UserService.js";
 import ScoreField from "./ScoreField";
+import { formatDuration } from "./review/reviewFormat.js";
 
 import "./Scoring.css";
 
@@ -11,15 +12,24 @@ export default function ScoreForm({
                                       station,
                                       eventId,
                                       configurationId,
-                                      onScoreSubmitted
+                                      onScoreSubmitted,
+                                      // Set when correcting a patrol already scored here: the
+                                      // saved values (see prefill.js) the form opens with.
+                                      initialValues = null,
+                                      onCancel = null
                                   }) {
 
-    const [scores, setScores] = useState({});
-    const [comments, setComments] = useState("");
-    const [entryMode, setEntryMode] = useState("live"); // Default: "live"
+    const isCorrection = Boolean(initialValues);
+
+    const [scores, setScores] = useState(() => initialValues?.scores ?? {});
+    const [comments, setComments] = useState(() => initialValues?.comments ?? "");
+    const [entryMode, setEntryMode] = useState(() => initialValues?.entryMode ?? "live"); // Default: "live"
     const [isManualAllowed, setIsManualAllowed] = useState(false);
-    const [stationStartedAt, setStationStartedAt] = useState(null);
-    const [stationCompletedAt, setStationCompletedAt] = useState(null);
+    // A correction keeps the original activity times. They are submitted with
+    // the scores and written to the visit, so re-using them stops a later fix
+    // from stretching the patrol's recorded station time to "now".
+    const [stationStartedAt, setStationStartedAt] = useState(() => initialValues?.startedAt ?? null);
+    const [stationCompletedAt, setStationCompletedAt] = useState(() => initialValues?.completedAt ?? null);
 
     useEffect(() => {
         const userService = new UserService();
@@ -251,7 +261,7 @@ export default function ScoreForm({
 
                 <div>
 
-                    <h2>{patrol.programName}</h2>
+                    <h2>{patrol.programName || patrol.name}</h2>
 
                     <p>{station.name}</p>
 
@@ -269,6 +279,23 @@ export default function ScoreForm({
                 )}
 
             </div>
+
+            {isCorrection && (
+                <div className="correction-banner" role="status">
+                    <strong>Editing saved entries.</strong> The form shows what was entered
+                    before. Change what's wrong, then review and submit. The saved entries
+                    stay as they are until you submit.
+                    {onCancel && (
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={onCancel}
+                        >
+                            Cancel, keep saved entries
+                        </button>
+                    )}
+                </div>
+            )}
 
             {station.description && station.description.trim() !== "" && (
                 <div className="station-scenario-section" style={{
@@ -440,7 +467,7 @@ export default function ScoreForm({
 
                         <div className="review-summary-box" style={{ background: "var(--page-bg)", padding: "14px 18px", borderRadius: "8px", border: "1px solid var(--border)", marginBottom: "20px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                                <strong>Patrol:</strong> <span>{patrol.programName}</span>
+                                <strong>Patrol:</strong> <span>{patrol.programName || patrol.name}</span>
                             </div>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                                 <strong>Station:</strong> <span>{station.name}</span>
@@ -470,7 +497,8 @@ export default function ScoreForm({
                                 } else if (typeof rawVal === "object" && rawVal !== null && "rawValue" in rawVal) {
                                     displayVal = `${rawVal.rawValue} (Patrol Members: ${rawVal.participantCount || 1})`;
                                 } else if (typeof rawVal === "object" && rawVal !== null && "startTime" in rawVal) {
-                                    displayVal = "Timer Recorded";
+                                    const seconds = (new Date(rawVal.endTime) - new Date(rawVal.startTime)) / 1000;
+                                    displayVal = Number.isFinite(seconds) ? `⏱️ ${formatDuration(seconds)}` : "Timer Recorded";
                                 } else if (rawVal === undefined || rawVal === null || rawVal === "") {
                                     displayVal = "0 / None";
                                 }

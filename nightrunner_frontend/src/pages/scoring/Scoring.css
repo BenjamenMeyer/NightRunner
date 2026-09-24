@@ -271,6 +271,7 @@
 
 }
 
+.timer-prefill-note,
 .timer-rollover-note {
 
     margin: .5rem 0 0;
@@ -786,5 +787,35 @@
 .review-entries-link:hover {
 
     color: var(--link-hover);
+
+}
+
+/* Shown at the top of ScoreForm when it opens pre-filled to correct saved entries. */
+
+.correction-banner {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    align-items: center;
+
+    gap: .5rem 1rem;
+
+    margin-bottom: 16px;
+
+    padding: 12px 16px;
+
+    background: var(--page-bg);
+
+    border: 1px solid var(--border);
+
+    border-left: 4px solid var(--info);
+
+    border-radius: 8px;
+
+    color: var(--text-primary);
+
+    line-height: 1.5;
 
 }

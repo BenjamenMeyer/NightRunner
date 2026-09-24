@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import ApiService from "../../../api/ApiService.js";
 import { useEventContext } from "../../../api/helpers/event/EventContext.jsx";
@@ -178,6 +178,15 @@ export default function StationReview() {
                             patrols={patrols}
                             report={report}
                             highlightPatrolId={patrolParam}
+                            renderRowAction={(row) => (
+                                <Link
+                                    className="review-edit-link"
+                                    to={`/scoring?station=${encodeURIComponent(selectedStation.id)}&patrol=${encodeURIComponent(row.patrol.id)}`}
+                                    aria-label={`Edit entries for ${row.patrol.name || "patrol"}`}
+                                >
+                                    Edit
+                                </Link>
+                            )}
                         />
                     ) : (
                         <div className="loading-panel">Loading entries...</div>

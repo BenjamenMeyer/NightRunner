@@ -30,7 +30,11 @@ export default function StationReviewTable({
     station,
     patrols,
     report,
-    highlightPatrolId = null
+    highlightPatrolId = null,
+    // Optional (row) => node for a trailing per-row control, shown on scored
+    // rows only. The page passes an "Edit" link into the scoring form; the
+    // table itself stays read-only and router-free.
+    renderRowAction = null
 }) {
     const tasks = station?.tasks || [];
     const [sort, setSort] = useState({ key: "number", direction: "asc" });
@@ -132,6 +136,11 @@ export default function StationReviewTable({
                                 {header("name", "Patrol", "col-patrol")}
                                 {tasks.map((t) => header(String(taskId(t)), taskName(t), "col-task"))}
                                 {header("submitted", "Submitted", "col-submitted")}
+                                {renderRowAction && (
+                                    <th className="col-action">
+                                        <span className="visually-hidden">Actions</span>
+                                    </th>
+                                )}
                             </tr>
                         </thead>
                         <tbody>
@@ -209,11 +218,17 @@ export default function StationReviewTable({
                                             <td className="col-submitted">
                                                 {formatSubmitted(row.submittedAt) ?? "—"}
                                             </td>
+
+                                            {renderRowAction && (
+                                                <td className="col-action">
+                                                    {row.status === "scored" ? renderRowAction(row) : null}
+                                                </td>
+                                            )}
                                         </tr>
 
                                         {isExpanded && comments.length > 0 && (
                                             <tr className="row-comments-detail">
-                                                <td colSpan={tasks.length + 3}>
+                                                <td colSpan={tasks.length + (renderRowAction ? 4 : 3)}>
                                                     <div className="comments-panel">
                                                         <strong>Judge / Scorer Comments:</strong>
                                                         <ul className="comments-list">
