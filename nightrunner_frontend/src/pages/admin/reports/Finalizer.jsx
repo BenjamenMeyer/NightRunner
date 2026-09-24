@@ -533,6 +533,20 @@ export default function Finalizer() {
 
     async function handleGenerateReport(reportType = "event-scoring-draft") {
         if (!eventId) return;
+
+        if (mismatchWarnings.length > 0 && reportType !== "event-scoring-draft") {
+            const confirmSave = window.confirm(
+                "You have unsaved weight or scoring changes that differ from stored results in the database.\n\n" +
+                "Generating a report now will build it from the stored database results, NOT your unsaved on-screen changes.\n\n" +
+                "Would you like to save and finalize scores now before generating the report?"
+            );
+            if (confirmSave) {
+                await saveFinalizedResults();
+            } else {
+                return;
+            }
+        }
+
         try {
             setIsGeneratingPdf(true);
             setError(null);
