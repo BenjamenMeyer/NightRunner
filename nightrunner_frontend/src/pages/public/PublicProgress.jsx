@@ -136,6 +136,9 @@ export default function PublicProgress() {
                     identityColumns={PUBLIC_IDENTITY_COLUMNS}
                     tableWrapperRef={tableWrapperRef}
                     verboseLegend
+                    // Families get "X / Y stations" per patrol. The per-station
+                    // footer stays on the internal board (decision 2026-09-24).
+                    showPatrolTotals
                 />
 
             </div>
