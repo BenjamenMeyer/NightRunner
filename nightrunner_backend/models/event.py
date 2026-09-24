@@ -10,6 +10,7 @@ class Event:
     description: Optional[str] = None
     rounding_precision: int = 1000
     theme: str = "night-ops"
+    scoring_mode: str = "absolute"
     organizers: List[str] = field(default_factory=list)
     stations: List[str] = field(default_factory=list)
     patrols: List[str] = field(default_factory=list)
@@ -22,6 +23,7 @@ class Event:
             "description": self.description,
             "roundingPrecision": self.rounding_precision,
             "theme": self.theme,
+            "scoringMode": self.scoring_mode,
             "organizers": self.organizers,
             "stations": self.stations,
             "patrols": self.patrols,

@@ -4,7 +4,7 @@ import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
 import "./Finalizer.css";
 
 export default function Finalizer() {
-    const { eventId, loading: eventLoading, error: eventError } = useEventContext();
+    const { event, eventId, loading: eventLoading, error: eventError } = useEventContext();
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -94,6 +94,8 @@ export default function Finalizer() {
             )?.scoringMode;
             if (storedMode) {
                 setGlobalScoringMode(storedMode);
+            } else if (event?.scoringMode) {
+                setGlobalScoringMode(event.scoringMode);
             }
 
             const reports = {};

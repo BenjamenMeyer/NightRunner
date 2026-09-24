@@ -248,6 +248,11 @@ async def _background_generate_scoring_ods(report_id: str, event_id: str, event_
                     "patrols": st_patrols_list
                 })
         else:
+            events_store = EventsStore(driver)
+            evt = await events_store.get(event_id)
+            if evt and getattr(evt, "scoring_mode", None) in ("absolute", "relative"):
+                scoring_mode = evt.scoring_mode
+
             rows = await scores_store.aggregate_event(event_id)
             patrols_acc = {}
             st_acc = {}

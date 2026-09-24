@@ -34,7 +34,8 @@ export default function EventManager() {
         date: "",
         description: "",
         roundingPrecision: 1000,
-        theme: "night-ops"
+        theme: "night-ops",
+        scoringMode: "absolute"
     });
 
     const [stations, setStations] = useState([]);
@@ -57,7 +58,9 @@ export default function EventManager() {
             roundingPrecision:
                 event.roundingPrecision ?? 1000,
             theme:
-                event.theme ?? "night-ops"
+                event.theme ?? "night-ops",
+            scoringMode:
+                event.scoringMode ?? "absolute"
         });
 
         setError(null);
@@ -175,7 +178,10 @@ export default function EventManager() {
                             form.roundingPrecision,
 
                         theme:
-                            form.theme
+                            form.theme,
+
+                        scoringMode:
+                            form.scoringMode
                     }
                 );
 
@@ -194,7 +200,11 @@ export default function EventManager() {
 
                 theme:
                     updatedEvent.theme ??
-                    "night-ops"
+                    "night-ops",
+
+                scoringMode:
+                    updatedEvent.scoringMode ??
+                    "absolute"
             });
 
             /*
@@ -545,6 +555,36 @@ export default function EventManager() {
                             <small>
                                 Used when calculating
                                 scoring precision.
+                            </small>
+
+                        </div>
+
+                        <div className="form-group">
+
+                            <label htmlFor="event-scoring-mode">
+                                Default Scoring Mode
+                            </label>
+
+                            <select
+                                id="event-scoring-mode"
+                                name="scoringMode"
+                                value={form.scoringMode}
+                                onChange={handleChange}
+                                disabled={
+                                    saving ||
+                                    deleting
+                                }
+                            >
+                                <option value="absolute">
+                                    Absolute Score (Weighted Sum)
+                                </option>
+                                <option value="relative">
+                                    Relative to Max Patrol (10pt Scale)
+                                </option>
+                            </select>
+
+                            <small>
+                                Initial scoring calculation mode for finalizer reports.
                             </small>
 
                         </div>

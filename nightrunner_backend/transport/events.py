@@ -56,6 +56,11 @@ class EventsResource:
         theme_val = data.get("theme", "night-ops")
         theme = str(theme_val) if theme_val else "night-ops"
 
+        scoring_mode_val = data.get("scoringMode", "absolute")
+        scoring_mode = str(scoring_mode_val) if scoring_mode_val else "absolute"
+        if scoring_mode not in ("absolute", "relative"):
+            raise falcon.HTTPBadRequest(description="'scoringMode' must be either 'absolute' or 'relative'.")
+
         event = Event(
             id=str(uuid6.uuid7()),
             name=str(name),
@@ -63,6 +68,7 @@ class EventsResource:
             description=str(description) if description is not None and not isinstance(description, str) else description,
             rounding_precision=rounding_precision,
             theme=theme,
+            scoring_mode=scoring_mode,
             organizers=orgs,
             stations=stats,
             patrols=pats,
@@ -88,6 +94,13 @@ class EventResource:
         if not event:
             raise falcon.HTTPNotFound()
         data = await req.get_media()
+
+        if "scoringMode" in data:
+            scoring_mode_val = data.get("scoringMode")
+            if scoring_mode_val not in ("absolute", "relative"):
+                raise falcon.HTTPBadRequest(description="'scoringMode' must be either 'absolute' or 'relative'.")
+            event.scoring_mode = scoring_mode_val
+
         event.name = data.get("name", event.name)
         event.date = data.get("date", event.date)
         event.description = data.get("description", event.description)
