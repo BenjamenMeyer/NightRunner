@@ -17,8 +17,15 @@ export default class RosterService {
     // Troops
     //
 
-    async listTroops() {
-        const result = await this.transport.get("/troops");
+    /**
+     * Lists troops. Troops are shared across events, so pass an eventId to
+     * get only the troops with attendees in that event.
+     *
+     * @param {string} [eventId]
+     */
+    async listTroops(eventId = null) {
+        const query = eventId ? `?eventId=${encodeURIComponent(eventId)}` : "";
+        const result = await this.transport.get(`/troops${query}`);
         return result?.troops ?? [];
     }
 

@@ -30,10 +30,16 @@ export default function TroopMemberPicker({
 
     useEffect(() => {
 
+        if (!eventId) {
+            setTroops([]);
+            return undefined;
+        }
+
         let cancelled = false;
+        setTroopId("");
 
         ApiService.rosterData
-            .listTroops()
+            .listTroops(eventId)
             .then(result => {
                 if (!cancelled) {
                     setTroops(result);
@@ -49,7 +55,7 @@ export default function TroopMemberPicker({
             cancelled = true;
         };
 
-    }, []);
+    }, [eventId]);
 
     useEffect(() => {
 

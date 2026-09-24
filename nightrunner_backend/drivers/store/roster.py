@@ -6,6 +6,12 @@ from nightrunner_backend.drivers.base import DatabaseDriver
 from nightrunner_backend.models.roster import Arrival, EventAttendee, Troop
 
 LIST_TROOPS = "SELECT * FROM troops ORDER BY number ASC"
+LIST_TROOPS_FOR_EVENT = """
+    SELECT DISTINCT t.id, t.number, t.name FROM troops t
+    JOIN event_attendees a ON a.troop_id = t.id
+    WHERE a.event_id = :event_id
+    ORDER BY t.number ASC
+"""
 GET_TROOP = "SELECT * FROM troops WHERE id = :id"
 GET_TROOP_BY_NUMBER = "SELECT * FROM troops WHERE number = :number"
 CREATE_TROOP = "INSERT INTO troops (id, number, name) VALUES (:id, :number, :name)"
@@ -106,6 +112,16 @@ class RosterStore:
 
     async def list_troops(self) -> List[Troop]:
         rows = await self.driver.execute(LIST_TROOPS)
+        return [self._row_to_troop(row) for row in rows or []]
+
+    async def list_troops_for_event(self, event_id: str) -> List[Troop]:
+        """
+        Troops with at least one attendee in this event.
+
+        Troops are shared across events, so the full list includes troops
+        from every other event too.
+        """
+        rows = await self.driver.execute(LIST_TROOPS_FOR_EVENT, {"event_id": event_id})
         return [self._row_to_troop(row) for row in rows or []]
 
     async def get_troop(self, troop_id: str) -> Optional[Troop]:

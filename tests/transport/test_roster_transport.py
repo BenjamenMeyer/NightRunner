@@ -139,3 +139,36 @@ class TestRosterAuthAndCompliance:
         assert resp.json["firstName"] == "Adult"
         assert resp.json["category"] == "Adult"
         assert resp.json["youthProtectionCompleted"] is True
+
+
+class TestTroopsForEvent:
+
+    async def test_event_id_filter_returns_only_that_events_troops(self, test_client, token_factory):
+        import uuid6
+        from nightrunner_backend.drivers.store.roster import RosterStore
+        from nightrunner_backend.models.roster import EventAttendee, build_source_key
+
+        store = RosterStore(get_driver())
+        ours = await store.ensure_troop("GA-0594")
+        theirs = await store.ensure_troop("GA-0122")
+        for event_id, troop in (("event-1", ours), ("event-2", theirs)):
+            await store.create_attendee(EventAttendee(
+                id=str(uuid6.uuid7()),
+                event_id=event_id,
+                troop_id=troop.id,
+                first_name="Sam",
+                last_name="Jones",
+                category="Youth",
+                source_key=build_source_key(troop.number, "Jones", "Sam"),
+                key_ordinal=1,
+            ))
+
+        await seed_user(is_admin=True)
+        headers = token_factory(roles={}, is_admin=True)
+
+        filtered = await test_client.simulate_get("/v1/troops?eventId=event-1", headers=headers)
+        assert filtered.status == falcon.HTTP_200
+        assert [t["number"] for t in filtered.json["troops"]] == ["GA-0594"]
+
+        everything = await test_client.simulate_get("/v1/troops", headers=headers)
+        assert len(everything.json["troops"]) == 2
