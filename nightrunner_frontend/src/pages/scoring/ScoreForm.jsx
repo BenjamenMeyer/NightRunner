@@ -253,6 +253,20 @@ export default function ScoreForm({
 
     const [isDescCollapsed, setIsDescCollapsed] = useState(false);
 
+    // Tasks with nothing entered, listed in the review modal so the scorer
+    // sees the gap before it becomes a zero (#235). Pass / Fail, Checkpoint
+    // and Completed are the ones that reach the modal unanswered: the
+    // missing-task check above exempts them, and an untouched one is still
+    // submitted as Fail (0) until the Required flag (#243) exists. An untouched
+    // Disqualification means "not disqualified", so it is not listed.
+    const unansweredTasks = (station.tasks ?? []).filter((task, idx) => {
+        const taskId = task.id || task._id || `task-${idx}`;
+        const type = task.scoreValue?.type || task.type;
+        if (type === "Automatic Station Disqualification") return false;
+        const value = scores[taskId];
+        return value === undefined || value === null || value === "";
+    });
+
     return (
 
         <div className="score-card">
@@ -480,6 +494,25 @@ export default function ScoreForm({
                             </div>
                         </div>
 
+                        {unansweredTasks.length > 0 && (
+                            <div className="review-unanswered" role="alert">
+                                <strong>
+                                    {unansweredTasks.length === 1
+                                        ? "1 task has no answer:"
+                                        : `${unansweredTasks.length} tasks have no answer:`}
+                                </strong>
+                                <ul>
+                                    {unansweredTasks.map((task, idx) => (
+                                        <li key={task.id || task._id || idx}>{task.name || `Task ${idx + 1}`}</li>
+                                    ))}
+                                </ul>
+                                <p>
+                                    If you submit now, each one is recorded as <strong>Fail (0 points)</strong>.
+                                    Press <strong>Back to Edit</strong> to answer them.
+                                </p>
+                            </div>
+                        )}
+
                         <h4 style={{ margin: "16px 0 10px 0", fontSize: "1rem" }}>Task Completion Summary</h4>
                         <div className="review-tasks-list" style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "300px", overflowY: "auto", marginBottom: "20px", paddingRight: "6px" }}>
                             {(station.tasks ?? []).map((task, idx) => {
@@ -489,7 +522,9 @@ export default function ScoreForm({
                                 let displayVal = rawVal;
 
                                 if (type === "Completed" || type === "Pass / Fail" || type === "Checkpoint") {
-                                    displayVal = rawVal ? "✓ Completed / Pass" : "✕ Not Completed / Fail";
+                                    displayVal = rawVal === undefined || rawVal === null
+                                        ? "⚠️ Not answered (counts as Fail)"
+                                        : (rawVal ? "✓ Pass" : "✕ Fail");
                                 } else if (type === "Automatic Station Disqualification") {
                                     displayVal = (typeof rawVal === "object" && rawVal?.disqualified) ? `⚠️ DISQUALIFIED: "${rawVal.reason}"` : "Normal (Not Disqualified)";
                                 } else if (type === "Secret Cipher / Decoding") {
