@@ -8,10 +8,10 @@ GET_ACTIVE_VISIT = "SELECT * FROM station_visits WHERE event_id = :event_id AND 
 CREATE_VISIT = """
     INSERT INTO station_visits (
         id, event_id, station_id, patrol_id,
-        checked_in_at, checked_out_at, tasks_started_at, tasks_completed_at, entry_mode, status, unlocked_by, created_at
+        checked_in_at, checked_out_at, tasks_started_at, tasks_completed_at, entry_mode, status, unlocked_by, comments, created_at
     ) VALUES (
         :id, :event_id, :station_id, :patrol_id,
-        :checked_in_at, :checked_out_at, :tasks_started_at, :tasks_completed_at, :entry_mode, :status, :unlocked_by, :created_at
+        :checked_in_at, :checked_out_at, :tasks_started_at, :tasks_completed_at, :entry_mode, :status, :unlocked_by, :comments, :created_at
     )
 """
 UPDATE_VISIT = """
@@ -22,7 +22,8 @@ UPDATE_VISIT = """
         tasks_completed_at = :tasks_completed_at,
         entry_mode = :entry_mode,
         status = :status,
-        unlocked_by = :unlocked_by
+        unlocked_by = :unlocked_by,
+        comments = :comments
     WHERE id = :id
 """
 
@@ -47,6 +48,7 @@ class StationVisitsStore:
             entry_mode=row.get("entry_mode") or "live",
             status=row.get("status") or "checked_in",
             unlocked_by=row.get("unlocked_by"),
+            comments=row.get("comments"),
             created_at=row.get("created_at"),
         )
 
@@ -90,6 +92,7 @@ class StationVisitsStore:
             "entry_mode": visit.entry_mode or "live",
             "status": visit.status or "checked_in",
             "unlocked_by": visit.unlocked_by,
+            "comments": visit.comments,
             "created_at": created_at_val,
         })
         return visit
@@ -104,6 +107,7 @@ class StationVisitsStore:
             "entry_mode": visit.entry_mode or "live",
             "status": visit.status or "checked_in",
             "unlocked_by": visit.unlocked_by,
+            "comments": visit.comments,
         })
         return visit
 

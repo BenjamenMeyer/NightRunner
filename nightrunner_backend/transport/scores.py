@@ -182,10 +182,13 @@ class ScoresResource:
         
         comp_at = payload.get("completedAt") or payload.get("timestamp")
         start_at = payload.get("startedAt") or comp_at
+        submission_comments = payload.get("comments")
 
         if active_visit:
             active_visit.status = "completed"
             active_visit.tasks_completed_at = comp_at or active_visit.tasks_completed_at
+            if submission_comments:
+                active_visit.comments = submission_comments
             if not active_visit.checked_in_at:
                 active_visit.checked_in_at = start_at or comp_at
             if not active_visit.checked_out_at:
@@ -203,7 +206,8 @@ class ScoresResource:
                 tasks_started_at=start_at,
                 tasks_completed_at=comp_at,
                 entry_mode=payload.get("entryMode", "live"),
-                status="completed"
+                status="completed",
+                comments=submission_comments
             )
             await visit_store.create(new_visit)
 

@@ -254,6 +254,7 @@ export function buildReviewRows(patrols, report) {
             patrol,
             entries,
             submittedAt,
+            comments: reported?.comments && reported.comments !== "None." ? reported.comments : null,
             status: hasEntries ? "scored" : "none"
         };
     });

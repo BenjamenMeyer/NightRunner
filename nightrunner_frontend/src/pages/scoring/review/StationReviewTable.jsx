@@ -157,6 +157,10 @@ export default function StationReviewTable({
                                     })
                                     .filter(Boolean);
 
+                                if (row.comments) {
+                                    comments.unshift({ taskName: "General Comment", text: row.comments });
+                                }
+
                                 const isExpanded = Boolean(expandedPatrols[row.patrol.id]);
 
                                 return (

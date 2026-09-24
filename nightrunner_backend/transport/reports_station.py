@@ -36,7 +36,7 @@ class StationReportResource:
                 'breakdown': []
             })
 
-            # Populate visit timing if available
+            # Populate visit timing & comments if available
             v = visit_map.get(pid)
             if v:
                 c_in = v.checked_in_at.isoformat() if hasattr(v.checked_in_at, 'isoformat') else v.checked_in_at
@@ -47,6 +47,7 @@ class StationReportResource:
                 patrol['checkedOutAt'] = c_out
                 patrol['tasksStartedAt'] = t_start
                 patrol['tasksCompletedAt'] = t_comp
+                patrol['comments'] = v.comments
 
             weighted = r['weighted_score']
             submitted_at = r.get('submitted_at')
