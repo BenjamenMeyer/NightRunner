@@ -34,6 +34,25 @@ class TestTroops:
         assert first.id == second.id
         assert len(await store.list_troops()) == 1
 
+    async def test_list_troops_for_event_excludes_other_events(self):
+        """
+        Troops are shared across events. A new event must not be offered
+        troops that only have attendees in some other event.
+        """
+        store = RosterStore(get_driver())
+        ours = await store.ensure_troop("GA-0594")
+        theirs = await store.ensure_troop("GA-0122")
+        await store.ensure_troop("GA-0999")  # no attendees anywhere
+
+        await store.create_attendee(make_attendee("event-1", ours.id, "GA-0594", "John", "Smith"))
+        await store.create_attendee(make_attendee("event-1", ours.id, "GA-0594", "Jane", "Smith"))
+        await store.create_attendee(make_attendee("event-2", theirs.id, "GA-0122", "Sam", "Jones"))
+
+        troops = await store.list_troops_for_event("event-1")
+
+        assert [t.id for t in troops] == [ours.id]
+        assert len(await store.list_troops()) == 3
+
 
 class TestAttendees:
 

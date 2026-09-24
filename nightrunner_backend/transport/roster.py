@@ -48,11 +48,20 @@ def _require_admin(req: falcon.Request, event_id: str = None) -> dict:
 
 
 class TroopsResource:
-    """GET /v1/troops — list known troops."""
+    """
+    GET /v1/troops — list known troops.
+
+    Query parameters:
+      eventId   restrict to troops with attendees in this event
+    """
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response):
         store = RosterStore(get_driver())
-        troops = await store.list_troops()
+        event_id = req.get_param("eventId")
+        if event_id:
+            troops = await store.list_troops_for_event(event_id)
+        else:
+            troops = await store.list_troops()
         resp.media = {"troops": [t.to_api_dict() for t in troops]}
         resp.status = falcon.HTTP_200
 
