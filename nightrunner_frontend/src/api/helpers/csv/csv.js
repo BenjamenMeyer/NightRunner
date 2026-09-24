@@ -158,13 +158,15 @@ export function parseCsvToObjects(text) {
  * someone removed does not break the import.
  */
 export const SHEET_COLUMNS = {
-    troopName: { label: "Troop Name", required: true },
-    firstName: { label: "Participant First Name", required: true },
-    lastName: { label: "Participant Last Name", required: true },
-    category: { label: "Youth or Adult or Non-Participant", required: true },
-    phone: { label: "IF ADULT: Cell Phone Number", required: false },
-    emergencyContact1: { label: "Emergency Contact Person & Phone Number", required: false },
-    emergencyContact2: { label: "Emergency Contact Person & Phone Number 2", required: false }
+    troopName: { label: "Troop Name", aliases: ["Troop", "Troop Number", "Troop Code"], required: true },
+    firstName: { label: "Participant First Name", aliases: ["First Name", "First"], required: true },
+    lastName: { label: "Participant Last Name", aliases: ["Last Name", "Last"], required: true },
+    category: { label: "Youth or Adult or Non-Participant", aliases: ["Category", "Role", "Type"], required: true },
+    phone: { label: "IF ADULT: Cell Phone Number", aliases: ["Phone", "Cell Phone", "Mobile Phone"], required: false },
+    emergencyContact1: { label: "Emergency Contact Person & Phone Number", aliases: ["Emergency Contact 1", "Emergency Contact"], required: false },
+    emergencyContact2: { label: "Emergency Contact Person & Phone Number 2", aliases: ["Emergency Contact 2"], required: false },
+    primaryEmail: { label: "Parent Email", aliases: ["Primary Email", "Parent Email Address", "Email"], required: false },
+    secondaryEmail: { label: "Youth Email", aliases: ["Secondary Email", "Youth Email Address"], required: false }
 };
 
 
@@ -193,16 +195,24 @@ export function mapSheetColumns(headers) {
 
     Object.entries(SHEET_COLUMNS).forEach(([field, column]) => {
 
-        const target = squash(column.label);
+        const targets = [squash(column.label), ...(column.aliases || []).map(squash)];
 
-        // "Emergency Contact ... Number" is a prefix of "... Number 2", so an
-        // exact match is tried before falling back to a prefix match.
-        let position = squashedHeaders.findIndex(header => header === target);
+        let position = -1;
 
+        // Try exact match first against primary label or aliases
+        for (const target of targets) {
+            position = squashedHeaders.findIndex(header => header === target);
+            if (position !== -1) break;
+        }
+
+        // Fallback to startsWith match if exact match not found
         if (position === -1) {
-            position = squashedHeaders.findIndex(
-                header => header.startsWith(target) && header !== squash(SHEET_COLUMNS.emergencyContact2.label)
-            );
+            for (const target of targets) {
+                position = squashedHeaders.findIndex(
+                    header => header.startsWith(target) && header !== squash(SHEET_COLUMNS.emergencyContact2.label)
+                );
+                if (position !== -1) break;
+            }
         }
 
         if (position === -1) {

@@ -176,4 +176,44 @@ describe('toRosterRows', () => {
         });
     });
 
+    it('parses sample Trail Life CSV roster file with primary/secondary email fields', () => {
+        const sampleCsv = `Troop,First Name,Last Name,Category,Phone,Parent Email,Youth Email,Emergency Contact 1,Emergency Contact 2
+TL-0594,Caleb,Smith,Youth,555-0101,parent.smith@example.com,caleb.smith@example.com,Mary Smith (Mother) 555-0102,John Smith (Father) 555-0103`;
+        
+        const { headers, rows } = parseCsvToObjects(sampleCsv);
+        const { mapping, missing } = mapSheetColumns(headers);
+        expect(missing).toEqual([]);
+
+        const rosterRows = toRosterRows(rows, mapping);
+        expect(rosterRows).toHaveLength(1);
+        expect(rosterRows[0]).toMatchObject({
+            troopName: 'TL-0594',
+            firstName: 'Caleb',
+            lastName: 'Smith',
+            category: 'Youth',
+            primaryEmail: 'parent.smith@example.com',
+            secondaryEmail: 'caleb.smith@example.com'
+        });
+    });
+
+    it('parses sample AHG CSV roster file with primary/secondary email fields', () => {
+        const sampleCsv = `Troop,First Name,Last Name,Category,Phone,Primary Email,Secondary Email,Emergency Contact 1,Emergency Contact 2
+AHG-0142,Abigail,Anderson,Youth,555-0301,parent.anderson@example.com,abigail.a@example.com,Rachel Anderson (Mother) 555-0302,Tom Anderson (Father) 555-0303`;
+
+        const { headers, rows } = parseCsvToObjects(sampleCsv);
+        const { mapping, missing } = mapSheetColumns(headers);
+        expect(missing).toEqual([]);
+
+        const rosterRows = toRosterRows(rows, mapping);
+        expect(rosterRows).toHaveLength(1);
+        expect(rosterRows[0]).toMatchObject({
+            troopName: 'AHG-0142',
+            firstName: 'Abigail',
+            lastName: 'Anderson',
+            category: 'Youth',
+            primaryEmail: 'parent.anderson@example.com',
+            secondaryEmail: 'abigail.a@example.com'
+        });
+    });
+
 });
