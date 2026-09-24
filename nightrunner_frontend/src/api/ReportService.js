@@ -113,7 +113,7 @@ export default class ReportService {
 
     }
 
-    async downloadCompiledReport(reportId, filename = "report.pdf") {
+    async downloadCompiledReport(reportId, defaultFilename = "report.pdf") {
 
         if (!reportId) {
             throw new Error("A report ID is required.");
@@ -138,11 +138,21 @@ export default class ReportService {
             throw new Error(errorText || `Failed to download report (${response.status})`);
         }
 
+        // Extract filename from Content-Disposition header if provided by server
+        let targetFilename = defaultFilename;
+        const disposition = response.headers.get("Content-Disposition");
+        if (disposition && disposition.includes("filename=")) {
+            const match = disposition.match(/filename=["']?([^"';]+)["']?/);
+            if (match && match[1]) {
+                targetFilename = match[1];
+            }
+        }
+
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = blobUrl;
-        link.download = filename;
+        link.download = targetFilename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

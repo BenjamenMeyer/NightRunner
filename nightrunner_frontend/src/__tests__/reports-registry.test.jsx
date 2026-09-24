@@ -32,9 +32,17 @@ vi.mock('@/api/ApiService.js', () => ({
             created_at: '2026-09-14T11:00:00Z',
             size_bytes: 12345,
           },
+          {
+            id: 'rep-3',
+            name: 'Scoring Spreadsheet (Test Event)',
+            report_type: 'event-scoring-ods',
+            status: 'ready',
+            created_at: '2026-09-14T10:00:00Z',
+            size_bytes: 54321,
+          },
         ],
       }),
-      generateReportJob: async () => ({ id: 'rep-3' }),
+      generateReportJob: async () => ({ id: 'rep-4' }),
       deleteCompiledReport: async () => {},
       getCompiledReportDownloadUrl: (id) => `http://localhost:8000/v1/compiled-reports/${id}/download`,
     },
@@ -47,8 +55,10 @@ describe('Reports Page Registry', () => {
     const item1 = await screen.findByText('Patrol QR Badges (Test Event)');
     expect(item1).toBeTruthy();
     expect(screen.getByText('Final Scoring Report (Test Event)')).toBeTruthy();
+    expect(screen.getByText('Scoring Spreadsheet (Test Event)')).toBeTruthy();
     expect(screen.getByText('Generating...')).toBeTruthy();
-    expect(screen.getByText('View Report')).toBeTruthy();
-    expect(screen.getAllByText('Download PDF').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('View Report').length).toBeGreaterThan(0);
+    expect(screen.getByText('Download PDF')).toBeTruthy();
+    expect(screen.getByText('Download Spreadsheet (ODS)')).toBeTruthy();
   });
 });
