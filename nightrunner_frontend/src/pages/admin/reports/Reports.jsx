@@ -263,22 +263,31 @@ export default function Reports() {
                                                         View Report
                                                     </a>
                                                 )}
-                                                {item.status === "ready" && (
-                                                    <button
-                                                        type="button"
-                                                        className="reports-button"
-                                                        style={{ marginRight: "8px" }}
-                                                        onClick={() => {
-                                                            const filename = `${item.name || "report"}.pdf`;
-                                                            ApiService.reportData.downloadCompiledReport(item.id, filename).catch((err) => {
-                                                                console.error("Failed to download report:", err);
-                                                                setError(err?.message || "Failed downloading report artifact.");
-                                                            });
-                                                        }}
-                                                    >
-                                                        Download PDF
-                                                    </button>
-                                                )}
+                                                {item.status === "ready" && (() => {
+                                                    const isSpreadsheet =
+                                                        item.report_type?.endsWith("-ods") ||
+                                                        item.file_key?.endsWith(".ods") ||
+                                                        item.content_type?.includes("spreadsheet");
+                                                    const ext = isSpreadsheet ? "ods" : "pdf";
+                                                    const label = isSpreadsheet ? "Download Spreadsheet" : "Download PDF";
+                                                    const filename = `${item.name || "report"}.${ext}`;
+
+                                                    return (
+                                                        <button
+                                                            type="button"
+                                                            className="reports-button"
+                                                            style={{ marginRight: "8px" }}
+                                                            onClick={() => {
+                                                                ApiService.reportData.downloadCompiledReport(item.id, filename).catch((err) => {
+                                                                    console.error("Failed to download report:", err);
+                                                                    setError(err?.message || "Failed downloading report artifact.");
+                                                                });
+                                                            }}
+                                                        >
+                                                            {label}
+                                                        </button>
+                                                    );
+                                                })()}
                                                 <button
                                                     type="button"
                                                     className="reports-button"
