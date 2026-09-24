@@ -1,0 +1,148 @@
+/* Live Status summary view. Theme variables only. */
+
+.summary-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.summary-heading {
+    margin: 0 0 .75rem;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+/* ---------- Station cards ---------- */
+
+.summary-station-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .75rem;
+}
+
+.summary-station-card {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    padding: .9rem 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+}
+
+.summary-station-card h3 {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.summary-station-headline {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.summary-station-headline strong {
+    font-size: 1.6rem;
+    color: var(--text-primary);
+}
+
+/* Finished and scored share one track: scored is the solid part, finished
+   runs past it at lower strength, so the gap is the patrols still waiting
+   for a score. */
+.summary-progress {
+    position: relative;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--border);
+    overflow: hidden;
+}
+
+.summary-progress-finished,
+.summary-progress-scored {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--success);
+}
+
+.summary-progress-finished {
+    opacity: .4;
+}
+
+.summary-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem .9rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: .9rem;
+    color: var(--text-secondary);
+}
+
+/* The one number that needs somebody to act. Text colour stays the normal
+   one (--warning is too pale for text in the light themes); the marker
+   carries the signal. */
+.summary-fact-attention {
+    color: var(--text-primary);
+    font-weight: 700;
+    padding-left: .5rem;
+    border-left: 3px solid var(--warning);
+}
+
+/* ---------- Patrol rows ---------- */
+
+.summary-patrol-list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.summary-patrol-row {
+    display: grid;
+    grid-template-columns: minmax(12rem, 16rem) 1fr auto;
+    align-items: baseline;
+    gap: .25rem 1rem;
+    padding: .6rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.summary-patrol-row:last-child {
+    border-bottom: none;
+}
+
+.summary-patrol-name {
+    font-weight: 700;
+}
+
+.summary-patrol-counts {
+    color: var(--text-secondary);
+}
+
+.summary-patrol-counts strong {
+    color: var(--text-primary);
+}
+
+.summary-patrol-here {
+    font-size: .85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+
+    .summary-patrol-row {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-patrol-here {
+        white-space: normal;
+    }
+
+}

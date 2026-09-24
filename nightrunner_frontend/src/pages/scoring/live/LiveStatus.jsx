@@ -9,9 +9,31 @@ import {
 } from "../../../api/helpers/event/EventContext.jsx";
 
 import { getLiveScoring } from "./LiveStatusService.js";
-import ProgressGrid from "./ProgressGrid.jsx";
+import ProgressGrid, { NUMBERED_IDENTITY_COLUMNS } from "./ProgressGrid.jsx";
+import SummaryView from "./SummaryView.jsx";
 
 import "./LiveStatus.css";
+
+// Which view this device last used. A per-screen convenience only: the board
+// is often left open on one laptop all night.
+const VIEW_STORAGE_KEY = "nr.liveStatus.view";
+
+function readStoredView() {
+    try {
+        const stored = localStorage.getItem(VIEW_STORAGE_KEY);
+        return stored === "table" ? "table" : "summary";
+    } catch {
+        return "summary";
+    }
+}
+
+function storeView(view) {
+    try {
+        localStorage.setItem(VIEW_STORAGE_KEY, view);
+    } catch {
+        // Private browsing or storage disabled; the default is fine.
+    }
+}
 
 export default function LiveStatus() {
     const {
@@ -24,6 +46,7 @@ export default function LiveStatus() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [data, setData] = useState(null);
+    const [view, setView] = useState(readStoredView);
     const [displayMode, setDisplayMode] = useState("fit");
     const [refreshInterval, setRefreshInterval] = useState(15000);
     const [lastUpdated, setLastUpdated] = useState(null);
@@ -73,8 +96,14 @@ export default function LiveStatus() {
         }
     }, [eventId, eventLoading, eventError, refreshInterval]);
 
+    function toggleView() {
+        const next = view === "summary" ? "table" : "summary";
+        setView(next);
+        storeView(next);
+    }
+
     useEffect(() => {
-        if (displayMode !== "auto") return;
+        if (view !== "table" || displayMode !== "auto") return;
 
         const wrapper = tableWrapperRef.current;
         if (!wrapper) return;
@@ -97,7 +126,7 @@ export default function LiveStatus() {
 
         animationId = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(animationId);
-    }, [displayMode, data]);
+    }, [view, displayMode, data]);
 
     if (eventLoading || loading) {
         return <p>Loading live scoring...</p>;
@@ -171,6 +200,15 @@ export default function LiveStatus() {
                             )}
                         </div>
 
+                        <button
+                            type="button"
+                            className="secondary-button view-toggle"
+                            onClick={toggleView}
+                        >
+                            {view === "summary" ? "Switch to table view" : "Switch to summary"}
+                        </button>
+
+                        {view === "table" && (
                         <div className="view-buttons">
                             <button
                                 className={`primary-button ${displayMode === "fit" ? "active" : ""}`}
@@ -191,16 +229,28 @@ export default function LiveStatus() {
                                 Manual
                             </button>
                         </div>
+                        )}
                     </div>
                 </div>
 
-                <ProgressGrid
-                    stations={data.stations}
-                    patrols={data.patrols}
-                    visits={data.visits}
-                    displayMode={displayMode}
-                    tableWrapperRef={tableWrapperRef}
-                />
+                {view === "summary" ? (
+                    <SummaryView
+                        stations={data.stations}
+                        patrols={data.patrols}
+                        visits={data.visits}
+                    />
+                ) : (
+                    <ProgressGrid
+                        stations={data.stations}
+                        patrols={data.patrols}
+                        visits={data.visits}
+                        displayMode={displayMode}
+                        tableWrapperRef={tableWrapperRef}
+                        identityColumns={NUMBERED_IDENTITY_COLUMNS}
+                        showStationTotals
+                        showPatrolTotals
+                    />
+                )}
 
             </div>
         </div>

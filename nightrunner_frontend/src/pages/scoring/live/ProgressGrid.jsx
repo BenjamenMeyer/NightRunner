@@ -20,6 +20,20 @@ export const DEFAULT_IDENTITY_COLUMNS = [
     }
 ];
 
+// Internal table view: the number on the patrol's badge, then the name.
+export const NUMBERED_IDENTITY_COLUMNS = [
+    {
+        key: "number",
+        label: "#",
+        render: (patrol) => (patrol.number ?? "")
+    },
+    {
+        key: "name",
+        label: "Patrol",
+        render: (patrol) => patrol.programName || patrol.name
+    }
+];
+
 export const PUBLIC_IDENTITY_COLUMNS = [
     {
         key: "number",
@@ -86,8 +100,25 @@ export function buildVisitMap(visits) {
 }
 
 
-/** Work out what one patrol/station cell should show. */
-export function cellState(patrol, station, visit) {
+/**
+ * Where one patrol stands at one station. The single source for both the
+ * grid's cell symbols and the summary view's counts, so the two can never
+ * disagree.
+ *
+ *   "skipped"      declared not attempted (visit status "skipped", #245)
+ *   "scored"       scoring submitted and locked (visit status "completed")
+ *   "finished"     checked out, no score yet
+ *   "in-progress"  at the station, tasks started
+ *   "here"         checked in at the station
+ *   "none"         not arrived
+ *
+ * "scored" implies finished: submitting a score checks the patrol out.
+ */
+export function visitStatus(patrol, station, visit) {
+
+    if (visit?.status === "skipped") {
+        return "skipped";
+    }
 
     const isCompletedScoring = visit?.status === "completed";
 
@@ -109,23 +140,105 @@ export function cellState(patrol, station, visit) {
         patrol.completed?.[station.id]
     );
 
-    if (isCompletedScoring) {
-        return { className: "completed", value: "★", title: "Scoring Completed / Locked Attempt" };
-    }
+    if (isCompletedScoring) return "scored";
+    if (isCheckedOut) return "finished";
+    if (isInProgress) return "in-progress";
+    if (isCheckedIn) return "here";
+    return "none";
 
-    if (isCheckedOut) {
-        return { className: "completed", value: "✓", title: "Checked Out / Attempt Finished" };
-    }
+}
 
-    if (isInProgress) {
-        return { className: "in-progress", value: "⚡", title: "In Progress" };
-    }
 
-    if (isCheckedIn) {
-        return { className: "checked-in", value: "⏳", title: "Checked In" };
-    }
+const CELL_STATES = {
+    // A darker green than a plain check-out, so "scored" reads as a
+    // different state from "finished", not just a different symbol.
+    "scored": { className: "completed-scored", value: "★", title: "Scored (attempt locked)" },
+    "finished": { className: "completed", value: "✓", title: "Checked out, not scored yet" },
+    "in-progress": { className: "in-progress", value: "⚡", title: "In Progress" },
+    "here": { className: "checked-in", value: "⏳", title: "Checked In" },
+    "skipped": { className: "skipped", value: "–", title: "Skipped" },
+    "none": { className: "not-arrived", value: "", title: "Not Arrived" }
+};
 
-    return { className: "not-arrived", value: "", title: "Not Arrived" };
+
+/** Work out what one patrol/station cell should show. */
+export function cellState(patrol, station, visit) {
+    return CELL_STATES[visitStatus(patrol, station, visit)];
+}
+
+
+/**
+ * Patrols in badge-number order, with unnumbered patrols after numbered ones
+ * and then by name. The API returns them in creation order.
+ */
+export function sortPatrolsByNumber(patrols) {
+
+    return [...(patrols || [])].sort((a, b) => {
+        const an = a.number ?? null;
+        const bn = b.number ?? null;
+        if (an !== null && bn !== null && Number(an) !== Number(bn)) {
+            return Number(an) - Number(bn);
+        }
+        if (an === null && bn !== null) return 1;
+        if (an !== null && bn === null) return -1;
+        return (a.programName || a.name || "").localeCompare(b.programName || b.name || "");
+    });
+
+}
+
+
+/**
+ * Per-station and per-patrol counts for the summary view and the grid's
+ * totals. "finished" includes "scored". "waiting" is finished but not yet
+ * scored: patrols through the door whose scores have not been entered.
+ */
+export function summarise(stations = [], patrols = [], visits = []) {
+
+    const visitMap = buildVisitMap(visits);
+    const blank = () => ({ finished: 0, scored: 0, here: 0, skipped: 0 });
+
+    const byStation = {};
+    const byPatrol = {};
+    stations.forEach((s) => { byStation[s.id] = blank(); });
+    patrols.forEach((p) => { byPatrol[p.id] = { ...blank(), hereAt: [] }; });
+
+    patrols.forEach((patrol) => {
+        stations.forEach((station) => {
+            const status = visitStatus(patrol, station, visitMap[`${patrol.id}_${station.id}`]);
+            const st = byStation[station.id];
+            const pt = byPatrol[patrol.id];
+
+            if (status === "scored" || status === "finished") {
+                st.finished += 1;
+                pt.finished += 1;
+            }
+            if (status === "scored") {
+                st.scored += 1;
+                pt.scored += 1;
+            }
+            if (status === "here" || status === "in-progress") {
+                st.here += 1;
+                pt.here += 1;
+                pt.hereAt.push(station);
+            }
+            if (status === "skipped") {
+                st.skipped += 1;
+                pt.skipped += 1;
+            }
+        });
+    });
+
+    const finish = (counts, total) => ({
+        ...counts,
+        total,
+        waiting: counts.finished - counts.scored,
+        remaining: Math.max(0, total - counts.finished - counts.here - counts.skipped)
+    });
+
+    Object.keys(byStation).forEach((id) => { byStation[id] = finish(byStation[id], patrols.length); });
+    Object.keys(byPatrol).forEach((id) => { byPatrol[id] = finish(byPatrol[id], stations.length); });
+
+    return { stations: byStation, patrols: byPatrol };
 
 }
 
@@ -137,17 +250,24 @@ export default function ProgressGrid({
     displayMode = "fit",
     identityColumns = DEFAULT_IDENTITY_COLUMNS,
     tableWrapperRef = null,
-    verboseLegend = false
+    verboseLegend = false,
+    // Footer row with "X / Y finished" under each station.
+    showStationTotals = false,
+    // Final column with "X / Y" stations finished per patrol.
+    showPatrolTotals = false
 }) {
 
     const visitMap = buildVisitMap(visits);
+    const totals = summarise(stations, patrols, visits);
+    const orderedPatrols = sortPatrolsByNumber(patrols);
+    const anySkipped = Object.values(totals.stations).some((s) => s.skipped > 0);
 
     // Auto-scroll needs the rows duplicated so the loop has something to run
     // into; below that many patrols there is nothing to scroll.
     const patrolsToMap =
-        patrols.length > 10 && displayMode === "auto"
-            ? [...patrols, ...patrols]
-            : patrols;
+        orderedPatrols.length > 10 && displayMode === "auto"
+            ? [...orderedPatrols, ...orderedPatrols]
+            : orderedPatrols;
 
     return (
         <>
@@ -166,6 +286,11 @@ export default function ProgressGrid({
                             {stations.map((station) => (
                                 <th key={station.id}>{station.name}</th>
                             ))}
+                            {showPatrolTotals && (
+                                <th className="totals-col" title="Stations finished out of all stations">
+                                    Stations
+                                </th>
+                            )}
                         </tr>
                     </thead>
 
@@ -200,9 +325,35 @@ export default function ProgressGrid({
                                     );
 
                                 })}
+
+                                {showPatrolTotals && (
+                                    <td className="totals-col" data-testid={`patrol-total-${patrol.id}`}>
+                                        {totals.patrols[patrol.id].finished} / {stations.length}
+                                    </td>
+                                )}
                             </tr>
                         ))}
                     </tbody>
+
+                    {showStationTotals && (
+                        <tfoot>
+                            <tr className="totals-row">
+                                <th
+                                    colSpan={identityColumns.length}
+                                    className="sticky-column totals-label"
+                                    scope="row"
+                                >
+                                    Finished
+                                </th>
+                                {stations.map((station) => (
+                                    <td key={station.id} data-testid={`station-total-${station.id}`}>
+                                        {totals.stations[station.id].finished} / {patrols.length}
+                                    </td>
+                                ))}
+                                {showPatrolTotals && <td className="totals-col" aria-hidden="true" />}
+                            </tr>
+                        </tfoot>
+                    )}
                 </table>
             </div>
 
@@ -224,8 +375,20 @@ export default function ProgressGrid({
 
                 <span className="legend-item">
                     <span className="legend-box completed"></span>
-                    {verboseLegend ? "Finished this station (✓)" : "Checked Out / Completed (✓)"}
+                    {verboseLegend ? "Finished this station (✓)" : "Checked Out, not scored yet (✓)"}
                 </span>
+
+                <span className="legend-item">
+                    <span className="legend-box completed-scored"></span>
+                    {verboseLegend ? "Finished and scored (★)" : "Scored (★)"}
+                </span>
+
+                {anySkipped && (
+                    <span className="legend-item">
+                        <span className="legend-box skipped"></span>
+                        Skipped (–)
+                    </span>
+                )}
             </div>
         </>
     );

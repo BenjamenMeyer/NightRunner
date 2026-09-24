@@ -340,6 +340,79 @@
 
 }
 
+/* Declared not attempted (#245). Deliberately quiet: a dash on the theme's
+   neutral fill, so it reads as "done with, nothing here", not as a state
+   anyone needs to act on. */
+.skipped {
+
+    background: var(--border);
+
+    color: var(--text-secondary);
+
+    font-weight: bold;
+
+}
+
+/* ---------- Totals ---------- */
+
+.live-table .totals-col {
+
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    color: var(--text-primary);
+
+    background: var(--page-bg);
+
+}
+
+.live-table th.totals-col {
+
+    background: var(--header-bg);
+
+    color: var(--header-text);
+
+}
+
+/* Pinned to the bottom of the scroll area so the per-station counts stay in
+   view in Manual and Auto Scroll modes. */
+.live-table tfoot td,
+.live-table tfoot th {
+
+    position: sticky;
+
+    bottom: 0;
+
+    z-index: 3;
+
+    background: var(--page-bg);
+
+    color: var(--text-primary);
+
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    border-top: 2px solid var(--text-secondary);
+
+}
+
+/* Needs the extra specificity: `.live-table th.sticky-column` paints header
+   cells with --header-bg, which would put the footer label's dark text on
+   the header colour. */
+.live-table tfoot th.sticky-column {
+
+    z-index: 4;
+
+    text-align: left;
+
+    background: var(--page-bg);
+
+    color: var(--text-primary);
+
+}
+
 /* ---------- Legend ---------- */
 
 .legend {
@@ -409,6 +482,12 @@
 .legend-box.completed-scored {
 
     background: #2E7D32;
+
+}
+
+.legend-box.skipped {
+
+    background: var(--border);
 
 }
 
