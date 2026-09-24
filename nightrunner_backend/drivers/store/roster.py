@@ -19,8 +19,8 @@ CREATE_TROOP = "INSERT INTO troops (id, number, name) VALUES (:id, :number, :nam
 
 ATTENDEE_COLUMNS = """
     id, event_id, troop_id, first_name, last_name, category, source_category,
-    phone, emergency_contact_1, emergency_contact_2, member_id, youth_protection_completed,
-    source_key, key_ordinal, status, status_note, created_at, updated_at
+    phone, emergency_contact_1, emergency_contact_2, primary_email, secondary_email,
+    member_id, youth_protection_completed, source_key, key_ordinal, status, status_note, created_at, updated_at
 """
 
 LIST_ATTENDEES_FOR_EVENT = f"""
@@ -56,12 +56,12 @@ LIST_ORDINALS_BY_KEY = """
 CREATE_ATTENDEE = """
     INSERT INTO event_attendees (
         id, event_id, troop_id, first_name, last_name, category, source_category,
-        phone, emergency_contact_1, emergency_contact_2, member_id, youth_protection_completed,
-        source_key, key_ordinal, status, status_note, created_at, updated_at
+        phone, emergency_contact_1, emergency_contact_2, primary_email, secondary_email,
+        member_id, youth_protection_completed, source_key, key_ordinal, status, status_note, created_at, updated_at
     ) VALUES (
         :id, :event_id, :troop_id, :first_name, :last_name, :category, :source_category,
-        :phone, :emergency_contact_1, :emergency_contact_2, :member_id, :youth_protection_completed,
-        :source_key, :key_ordinal, :status, :status_note, :created_at, :updated_at
+        :phone, :emergency_contact_1, :emergency_contact_2, :primary_email, :secondary_email,
+        :member_id, :youth_protection_completed, :source_key, :key_ordinal, :status, :status_note, :created_at, :updated_at
     )
 """
 
@@ -75,6 +75,8 @@ UPDATE_ATTENDEE = """
         phone = :phone,
         emergency_contact_1 = :emergency_contact_1,
         emergency_contact_2 = :emergency_contact_2,
+        primary_email = :primary_email,
+        secondary_email = :secondary_email,
         member_id = :member_id,
         youth_protection_completed = :youth_protection_completed,
         status = :status,
@@ -175,6 +177,8 @@ class RosterStore:
             phone=row.get("phone"),
             emergency_contact_1=row.get("emergency_contact_1"),
             emergency_contact_2=row.get("emergency_contact_2"),
+            primary_email=row.get("primary_email"),
+            secondary_email=row.get("secondary_email"),
             member_id=row.get("member_id"),
             youth_protection_completed=bool(row.get("youth_protection_completed")),
             source_key=row.get("source_key") or "",
@@ -252,6 +256,8 @@ class RosterStore:
             "phone": attendee.phone,
             "emergency_contact_1": attendee.emergency_contact_1,
             "emergency_contact_2": attendee.emergency_contact_2,
+            "primary_email": attendee.primary_email,
+            "secondary_email": attendee.secondary_email,
             "member_id": attendee.member_id,
             "youth_protection_completed": attendee.youth_protection_completed,
             "source_key": attendee.source_key,
@@ -274,6 +280,8 @@ class RosterStore:
             "phone": attendee.phone,
             "emergency_contact_1": attendee.emergency_contact_1,
             "emergency_contact_2": attendee.emergency_contact_2,
+            "primary_email": attendee.primary_email,
+            "secondary_email": attendee.secondary_email,
             "member_id": attendee.member_id,
             "youth_protection_completed": attendee.youth_protection_completed,
             "status": attendee.status,

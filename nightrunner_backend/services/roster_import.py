@@ -82,6 +82,8 @@ def parse_row(raw: Dict[str, Any]) -> Dict[str, Any]:
         "phone": (raw.get("phone") or "").strip() or None,
         "emergencyContact1": (raw.get("emergencyContact1") or "").strip() or None,
         "emergencyContact2": (raw.get("emergencyContact2") or "").strip() or None,
+        "primaryEmail": (raw.get("primaryEmail") or raw.get("primary_email") or raw.get("parentEmail") or raw.get("parent_email") or raw.get("email") or "").strip() or None,
+        "secondaryEmail": (raw.get("secondaryEmail") or raw.get("secondary_email") or raw.get("youthEmail") or raw.get("youth_email") or "").strip() or None,
         "sourceKey": (
             build_source_key(troop_number, last_name, first_name)
             if troop_number and first_name and last_name else None

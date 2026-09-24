@@ -21,6 +21,11 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+async def _troop_number_map(store: RosterStore) -> Dict[str, str]:
+    troops = await store.list_troops()
+    return {t.id: t.number for t in troops}
+
+
 def _require_object(payload: Any) -> Dict[str, Any]:
     if not isinstance(payload, dict):
         raise falcon.HTTPBadRequest(description="Request body must be a JSON object.")
@@ -194,6 +199,8 @@ class EventAttendeesResource:
             phone=payload.get("phone"),
             emergency_contact_1=payload.get("emergencyContact1"),
             emergency_contact_2=payload.get("emergencyContact2"),
+            primary_email=payload.get("primaryEmail") or payload.get("primary_email") or payload.get("parentEmail"),
+            secondary_email=payload.get("secondaryEmail") or payload.get("secondary_email") or payload.get("youthEmail"),
             member_id=member_id,
             youth_protection_completed=youth_protection_completed,
             source_key=source_key,
@@ -303,6 +310,8 @@ class RosterImportApplyResource:
                 existing.phone = parsed["phone"]
                 existing.emergency_contact_1 = parsed["emergencyContact1"]
                 existing.emergency_contact_2 = parsed["emergencyContact2"]
+                existing.primary_email = parsed["primaryEmail"]
+                existing.secondary_email = parsed["secondaryEmail"]
                 existing.updated_at = _now()
                 await store.update_attendee(existing)
                 updated += 1
@@ -321,6 +330,8 @@ class RosterImportApplyResource:
                     attendee.phone = parsed["phone"]
                     attendee.emergency_contact_1 = parsed["emergencyContact1"]
                     attendee.emergency_contact_2 = parsed["emergencyContact2"]
+                    attendee.primary_email = parsed["primaryEmail"]
+                    attendee.secondary_email = parsed["secondaryEmail"]
                     attendee.source_key = source_key
                     attendee.updated_at = _now()
                     await store.update_attendee(attendee)
@@ -343,6 +354,8 @@ class RosterImportApplyResource:
                 phone=parsed["phone"],
                 emergency_contact_1=parsed["emergencyContact1"],
                 emergency_contact_2=parsed["emergencyContact2"],
+                primary_email=parsed["primaryEmail"],
+                secondary_email=parsed["secondaryEmail"],
                 source_key=source_key,
                 key_ordinal=create_ordinal,
                 created_at=_now(),
