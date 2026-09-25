@@ -33,6 +33,8 @@ export default function Patrols() {
     const [qrPatrol, setQrPatrol] = useState(null);
     const [showScanner, setShowScanner] = useState(false);
 
+    const canManage = ApiService.userData.isPatrolManager(eventId);
+
     useEffect(() => {
         if (eventLoading) {
             return;
@@ -217,16 +219,18 @@ export default function Patrols() {
                         📷 Scan Patrol QR
                     </button>
 
-                    <button
-                        type="button"
-                        className="primary-button"
-                        onClick={() =>
-                            navigate("/admin/patrols/create")
-                        }
-                        disabled={!eventId}
-                    >
-                        + Create Patrol
-                    </button>
+                    {canManage && (
+                        <button
+                            type="button"
+                            className="primary-button"
+                            onClick={() =>
+                                navigate("/admin/patrols/create")
+                            }
+                            disabled={!eventId}
+                        >
+                            + Create Patrol
+                        </button>
+                    )}
                 </div>
             </header>
 
@@ -280,8 +284,9 @@ export default function Patrols() {
                         <h2>Patrols</h2>
 
                         <p>
-                            Select a patrol to edit its
-                            information and members.
+                            {canManage
+                                ? "Select a patrol to edit its information and members."
+                                : "View patrols and their members."}
                         </p>
                     </div>
                 </div>
@@ -413,31 +418,35 @@ export default function Patrols() {
                                                 QR Code
                                             </button>
 
-                                            <button
-                                                type="button"
-                                                className="secondary-button small"
-                                                onClick={() =>
-                                                    navigate(
-                                                        `/admin/patrols/edit?patrolId=${encodeURIComponent(
-                                                            patrol.id
-                                                        )}`
-                                                    )
-                                                }
-                                            >
-                                                Edit
-                                            </button>
+                                            {canManage && (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        className="secondary-button small"
+                                                        onClick={() =>
+                                                            navigate(
+                                                                `/admin/patrols/edit?patrolId=${encodeURIComponent(
+                                                                    patrol.id
+                                                                )}`
+                                                            )
+                                                        }
+                                                    >
+                                                        Edit
+                                                    </button>
 
-                                            <button
-                                                type="button"
-                                                className="danger small"
-                                                onClick={() =>
-                                                    deletePatrol(
-                                                        patrol.id
-                                                    )
-                                                }
-                                            >
-                                                Delete
-                                            </button>
+                                                    <button
+                                                        type="button"
+                                                        className="danger small"
+                                                        onClick={() =>
+                                                            deletePatrol(
+                                                                patrol.id
+                                                            )
+                                                        }
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
