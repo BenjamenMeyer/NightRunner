@@ -370,23 +370,13 @@ class ArrivalsResource:
         store = RosterStore(get_driver())
         attendees = await store.list_attendees(event_id)
         arrivals = {a.attendee_id: a for a in await store.list_arrivals(event_id)}
-        all_troops = await store.list_troops()
-        troop_numbers = {t.id: t.number for t in all_troops}
+        troop_numbers = await _troop_number_map(store)
 
+        # Only troops with attendees in this event. Troops are shared across
+        # events, so seeding every known troop here put other events' troops on
+        # the dashboard, the gate dropdown and the print roster. The gate's Add
+        # Attendees picker lists all troops itself via GET /v1/troops.
         by_troop: Dict[str, Dict[str, Any]] = {}
-        # Pre-seed all known troops so empty/newly created troops appear in the gate dropdown
-        for troop in all_troops:
-            by_troop[troop.id] = {
-                "troopId": troop.id,
-                "troopNumber": troop.number,
-                "expected": 0,
-                "arrived": 0,
-                "here": 0,
-                "coming": 0,
-                "notComing": 0,
-                "attendees": [],
-            }
-
         total_not_coming = 0
 
         for attendee in attendees:
