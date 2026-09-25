@@ -606,6 +606,7 @@ export default function Arrivals() {
                                 showTroop
                                 busy={pending[attendee.id]}
                                 onCheckIn={checkIn}
+                                onInitiateCheckIn={initiateCheckIn}
                                 onUndo={undo}
                                 onSetStatus={setAttendeeStatus}
                                 onSelectDetail={setSelectedDetailAttendee}
@@ -656,6 +657,7 @@ export default function Arrivals() {
                                 attendee={attendee}
                                 busy={pending[attendee.id]}
                                 onCheckIn={checkIn}
+                                onInitiateCheckIn={initiateCheckIn}
                                 onUndo={undo}
                                 onSetStatus={setAttendeeStatus}
                                 onSelectDetail={setSelectedDetailAttendee}
@@ -1180,7 +1182,7 @@ export default function Arrivals() {
 }
 
 
-function AttendeeRow({ attendee, showTroop, busy, onCheckIn, onUndo, onSetStatus, onSelectDetail, formatTime }) {
+function AttendeeRow({ attendee, showTroop, busy, onCheckIn, onInitiateCheckIn, onUndo, onSetStatus, onSelectDetail, formatTime }) {
 
     const arrived = Boolean(attendee.arrival);
     const isNotComing = attendee.status === "not_coming";
@@ -1243,7 +1245,7 @@ function AttendeeRow({ attendee, showTroop, busy, onCheckIn, onUndo, onSetStatus
                             type="button"
                             className="arrivals__checkin"
                             disabled={busy}
-                            onClick={() => initiateCheckIn(attendee)}
+                            onClick={() => (onInitiateCheckIn ? onInitiateCheckIn(attendee) : onCheckIn(attendee))}
                         >
                             Check in
                         </button>
