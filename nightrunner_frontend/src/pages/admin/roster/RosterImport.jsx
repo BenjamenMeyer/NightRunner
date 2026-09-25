@@ -335,6 +335,7 @@ export default function RosterImport() {
                                                  row.sourceCategory !== row.category
                                                     ? ` (sheet said ${row.sourceCategory})`
                                                     : ""}
+                                                {row.phone ? ` · Phone: ${row.phone}` : ""}
                                                 {row.primaryEmail ? ` · Primary: ${row.primaryEmail}` : ""}
                                                 {row.secondaryEmail ? ` · Secondary: ${row.secondaryEmail}` : ""}
                                             </span>

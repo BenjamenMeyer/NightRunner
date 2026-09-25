@@ -901,6 +901,7 @@ function AttendeeRow({ attendee, showTroop, busy, onCheckIn, onUndo, onSetStatus
                         ? `${attendee.troopNumber} · `
                         : ""}
                     {attendee.category}
+                    {attendee.phone ? ` · Phone: ${attendee.phone}` : ""}
                     {attendee.primaryEmail || attendee.primary_email ? ` · Primary: ${attendee.primaryEmail || attendee.primary_email}` : ""}
                     {attendee.secondaryEmail || attendee.secondary_email ? ` · Secondary: ${attendee.secondaryEmail || attendee.secondary_email}` : ""}
                     {arrived && ` · arrived ${formatTime(attendee.arrival.arrivedAt)}`}
