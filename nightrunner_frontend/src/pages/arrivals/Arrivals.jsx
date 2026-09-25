@@ -285,6 +285,8 @@ export default function Arrivals() {
                 emergencyContact1Phone: "",
                 emergencyContact2Name: "",
                 emergencyContact2Phone: "",
+                primaryEmail: "",
+                secondaryEmail: "",
                 youthProtectionCompleted: false,
                 organizerApprovedMemberIdWaiver: false,
             }
@@ -314,6 +316,8 @@ export default function Arrivals() {
                 emergencyContact1Phone: "",
                 emergencyContact2Name: "",
                 emergencyContact2Phone: "",
+                primaryEmail: "",
+                secondaryEmail: "",
                 youthProtectionCompleted: false,
                 organizerApprovedMemberIdWaiver: false,
             }
@@ -370,6 +374,8 @@ export default function Arrivals() {
                     memberId: r.memberId.trim() || null,
                     emergencyContact1: ec1,
                     emergencyContact2: ec2,
+                    primaryEmail: (r.primaryEmail || "").trim() || null,
+                    secondaryEmail: (r.secondaryEmail || "").trim() || null,
                     youthProtectionCompleted: Boolean(r.youthProtectionCompleted),
                     organizerApprovedMemberIdWaiver: Boolean(r.organizerApprovedMemberIdWaiver),
                 };
@@ -800,6 +806,26 @@ export default function Arrivals() {
                                                     />
                                                 </div>
                                             </div>
+
+                                            <div className="arrivals__batch-col">
+                                                <label className="arrivals__batch-sublabel">Primary Email</label>
+                                                <input
+                                                    type="email"
+                                                    placeholder="Parent / Primary Email"
+                                                    value={row.primaryEmail}
+                                                    onChange={e => updateBatchRow(idx, "primaryEmail", e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="arrivals__batch-col">
+                                                <label className="arrivals__batch-sublabel">Secondary Email</label>
+                                                <input
+                                                    type="email"
+                                                    placeholder="Youth / Secondary Email"
+                                                    value={row.secondaryEmail}
+                                                    onChange={e => updateBatchRow(idx, "secondaryEmail", e.target.value)}
+                                                />
+                                            </div>
                                         </div>
 
                                         {row.category === "Adult" && (
@@ -875,6 +901,8 @@ function AttendeeRow({ attendee, showTroop, busy, onCheckIn, onUndo, onSetStatus
                         ? `${attendee.troopNumber} · `
                         : ""}
                     {attendee.category}
+                    {attendee.primaryEmail || attendee.primary_email ? ` · Primary: ${attendee.primaryEmail || attendee.primary_email}` : ""}
+                    {attendee.secondaryEmail || attendee.secondary_email ? ` · Secondary: ${attendee.secondaryEmail || attendee.secondary_email}` : ""}
                     {arrived && ` · arrived ${formatTime(attendee.arrival.arrivedAt)}`}
                 </span>
             </div>
