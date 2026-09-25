@@ -46,7 +46,20 @@ function canAccess(route, eventId = null) {
     }
 
     if (route.access === ACCESS.PATROL_MANAGER) {
-        return ApiService.userData.isPatrolManager(eventId);
+        if (ApiService.userData.isPatrolManager(eventId)) {
+            return true;
+        }
+        const eventRole = ApiService.userData.getEventRole(eventId);
+        const rolesList = Array.isArray(eventRole)
+            ? eventRole
+            : [eventRole, ...(cachedUser.roles ? Object.values(cachedUser.roles) : [])];
+        const allowedScoringRoles = [
+            "station_leader", "station-leader", "station_lead", "station-lead",
+            "station_member", "station-member",
+            "scorer", "volunteer",
+            "scoring_lead", "scoring-lead", "scoring_center", "scoring-center"
+        ];
+        return rolesList.some(r => allowedScoringRoles.includes(r));
     }
 
     if (route.access === ACCESS.ADMIN) {
@@ -130,8 +143,7 @@ function Sidebar({ open, close }) {
                 "/admin/roster",
                 "/admin/users",
                 "/admin/configurations"
-            ],
-            adminOnly: true
+            ]
         },
         {
             key: "reports",

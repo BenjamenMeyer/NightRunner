@@ -77,8 +77,8 @@ export const ROLES = [
         name: "Patrol Management",
         summary: "Patrol Management users register patrols and keep their details up to date.",
         details: [
-            "Can create and edit patrols on the Patrol Manager screen.",
-            "Patrol Manager does not show in their menu yet. Share the direct link: /admin/patrols.",
+            "Can create, edit, and delete patrols on the Patrol Manager screen.",
+            "Scoring and station roles have read-only view access to Patrol Manager to look up patrols and rosters.",
             "Also has everything a Standard User has."
         ]
     },
@@ -154,9 +154,9 @@ export const ROLE_GRID = [
             { screen: "Station Manager", roles: ADMINS },
             {
                 screen: "Patrol Manager",
-                roles: ADMINS,
-                partial: ["patrol-management"],
-                note: "Not in the Patrol Management menu yet. Use the direct link /admin/patrols."
+                roles: [...ADMINS, "patrol-management"],
+                partial: ["scoring-station", "user"],
+                note: "Read-only access for scoring, station, and standard users to look up patrols and rosters."
             },
             { screen: "Import Roster", roles: ADMINS },
             { screen: "User Manager", roles: ADMINS },
