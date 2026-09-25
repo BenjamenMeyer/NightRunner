@@ -89,12 +89,13 @@
     margin-left: .75rem;
 }
 
-/* -------- Manual Selection ------- */
+/* -------- Manual Selection / Combobox ------- */
 
 .manual-selection {
     display: flex;
     flex-direction: column;
     gap: .75rem;
+    position: relative;
 }
 
 .manual-selection label {
@@ -102,18 +103,99 @@
     color: var(--text-primary);
 }
 
-.manual-selection select {
-    padding: .9rem 1rem;
+.combobox-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.combobox-input {
+    width: 100%;
+    padding: .9rem 4rem .9rem 1rem;
     border: 1px solid var(--border);
     border-radius: 10px;
     font-size: 1rem;
     background: var(--card-bg);
     color: var(--text-primary);
+    box-sizing: border-box;
 }
 
-.manual-selection select:focus {
+.combobox-input:focus {
     outline: none;
     border-color: var(--button-bg);
+    box-shadow: 0 0 0 2px rgba(var(--button-bg-rgb, 59, 130, 246), 0.2);
+}
+
+.combobox-actions {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.combobox-clear-btn,
+.combobox-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0.25rem 0.4rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.combobox-clear-btn:hover,
+.combobox-toggle-btn:hover {
+    color: var(--text-primary);
+    background: var(--border);
+}
+
+.combobox-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    list-style: none;
+    margin: 0;
+    padding: 0.4rem 0;
+}
+
+.combobox-option {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    transition: background-color 0.1s ease;
+}
+
+.combobox-option:hover {
+    background: var(--border);
+}
+
+.combobox-option.selected {
+    background: var(--button-bg);
+    color: var(--button-text, #ffffff);
+    font-weight: 600;
+}
+
+.combobox-no-options {
+    padding: 0.85rem 1rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 0.9rem;
+    text-align: center;
 }
 
 /* -------- Selected Data ------- */
