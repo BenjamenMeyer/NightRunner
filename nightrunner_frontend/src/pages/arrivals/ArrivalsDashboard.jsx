@@ -25,6 +25,7 @@ export default function ArrivalsDashboard() {
     const [expanded, setExpanded] = useState({});
     const [updatedAt, setUpdatedAt] = useState(null);
     const [error, setError] = useState(null);
+    const [selectedDetailAttendee, setSelectedDetailAttendee] = useState(null);
 
     const load = useCallback(async () => {
 
@@ -237,6 +238,8 @@ export default function ArrivalsDashboard() {
                                                         ? "dashboard__person dashboard__person--not-coming"
                                                         : "dashboard__person"
                                                 }
+                                                onClick={() => setSelectedDetailAttendee({ ...attendee, troopNumber: attendee.troopNumber || troop.troopNumber })}
+                                                style={{ cursor: "pointer" }}
                                             >
                                                 <span className="dashboard__tick" aria-hidden="true">
                                                     {attendee.arrival ? "✓" : attendee.status === "not_coming" ? "✕" : "·"}
@@ -268,6 +271,81 @@ export default function ArrivalsDashboard() {
                 </ul>
 
             </section>
+
+            {/* Modal: Attendee Details */}
+            {selectedDetailAttendee && (
+                <div className="arrivals__modal-overlay" onClick={() => setSelectedDetailAttendee(null)}>
+                    <div className="arrivals__modal" onClick={e => e.stopPropagation()} style={{ maxWidth: "36rem" }}>
+                        <h2>Attendee Details</h2>
+                        <div className="arrivals__detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", margin: "1rem 0" }}>
+                            <div>
+                                <label className="arrivals__batch-sublabel" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Full Name</label>
+                                <p style={{ margin: "0.2rem 0", fontWeight: "600", fontSize: "1.05rem", color: "var(--text-primary)" }}>{selectedDetailAttendee.fullName}</p>
+                            </div>
+                            <div>
+                                <label className="arrivals__batch-sublabel" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Category / Role</label>
+                                <p style={{ margin: "0.2rem 0", fontWeight: "600", color: "var(--text-primary)" }}>{selectedDetailAttendee.category}</p>
+                            </div>
+                            <div>
+                                <label className="arrivals__batch-sublabel" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Troop Number</label>
+                                <p style={{ margin: "0.2rem 0", color: "var(--text-primary)" }}>{selectedDetailAttendee.troopNumber || "—"}</p>
+                            </div>
+                            <div>
+                                <label className="arrivals__batch-sublabel" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Member ID</label>
+                                <p style={{ margin: "0.2rem 0", color: "var(--text-primary)" }}>{selectedDetailAttendee.memberId || "—"}</p>
+                            </div>
+                            <div>
+                                <label className="arrivals__batch-sublabel" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Phone Number</label>
+                                <p style={{ margin: "0.2rem 0", color: "var(--text-primary)" }}>{selectedDetailAttendee.phone || "—"}</p>
+                            </div>
+                            <div>
+                                <label className="arrivals__batch-sublabel" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Arrival Status</label>
+                                <p style={{ margin: "0.2rem 0", color: "var(--text-primary)" }}>
+                                    {selectedDetailAttendee.arrival
+                                        ? `Checked in (${formatTime(selectedDetailAttendee.arrival.arrivedAt)})`
+                                        : selectedDetailAttendee.status === "not_coming"
+                                        ? "Not Coming"
+                                        : "Not Arrived"}
+                                </p>
+                            </div>
+                            <div>
+                                <label className="arrivals__batch-sublabel" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Primary Email (Parent / Main)</label>
+                                <p style={{ margin: "0.2rem 0", color: "var(--text-primary)" }}>{selectedDetailAttendee.primaryEmail || selectedDetailAttendee.primary_email || "—"}</p>
+                            </div>
+                            <div>
+                                <label className="arrivals__batch-sublabel" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Secondary Email (Youth / Alt)</label>
+                                <p style={{ margin: "0.2rem 0", color: "var(--text-primary)" }}>{selectedDetailAttendee.secondaryEmail || selectedDetailAttendee.secondary_email || "—"}</p>
+                            </div>
+                            <div style={{ gridColumn: "span 2" }}>
+                                <label className="arrivals__batch-sublabel" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Emergency Contact 1</label>
+                                <p style={{ margin: "0.2rem 0", color: "var(--text-primary)" }}>{selectedDetailAttendee.emergencyContact1 || selectedDetailAttendee.emergency_contact_1 || "—"}</p>
+                            </div>
+                            <div style={{ gridColumn: "span 2" }}>
+                                <label className="arrivals__batch-sublabel" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Emergency Contact 2</label>
+                                <p style={{ margin: "0.2rem 0", color: "var(--text-primary)" }}>{selectedDetailAttendee.emergencyContact2 || selectedDetailAttendee.emergency_contact_2 || "—"}</p>
+                            </div>
+                            {selectedDetailAttendee.category === "Adult" && (
+                                <div style={{ gridColumn: "span 2" }}>
+                                    <label className="arrivals__batch-sublabel" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Youth Protection Training</label>
+                                    <p style={{ margin: "0.2rem 0", color: "var(--text-primary)" }}>
+                                        {selectedDetailAttendee.youthProtectionCompleted ? "✓ Completed" : "✕ Not Completed"}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="arrivals__modal-actions" style={{ display: "flex", justifyContent: "flex-end", marginTop: "1.5rem" }}>
+                            <button
+                                type="button"
+                                className="arrivals__btn-primary"
+                                onClick={() => setSelectedDetailAttendee(null)}
+                                style={{ padding: "0.6rem 1.2rem", background: "var(--button-bg)", color: "var(--button-text)", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
 
