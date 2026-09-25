@@ -184,30 +184,8 @@
     cursor: default;
 }
 
-/* Check-out ends the scoring window, so it reads as destructive. White on the
-   theme's error red is legible in every palette. */
-.checkin-action.danger {
-    background: var(--error);
-    color: #ffffff;
-}
-
-.checkin-action.danger:hover {
-    background: var(--error);
-    filter: brightness(0.92);
-}
-
-.checkin-action.subtle {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    min-width: 90px;
-}
-
-.checkin-confirm {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-}
+/* Confirming a check-in or check-out now happens in the shared ConfirmDialog
+   (components/ConfirmDialog.css), not inline in the row. */
 
 .checkin-locked {
     color: var(--text-secondary);
@@ -222,14 +200,8 @@
         align-items: stretch;
     }
 
-    .checkin-action,
-    .checkin-confirm {
+    .checkin-action {
         width: 100%;
-    }
-
-    .checkin-confirm .checkin-action {
-        flex: 1;
-        min-width: 0;
     }
 
 }

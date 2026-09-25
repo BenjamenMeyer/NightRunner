@@ -251,15 +251,15 @@ describe('Public and admin-panel styles stay themeable', () => {
 
     const STYLESHEETS = [
         'src/pages/public/PublicPages.css',
-        'src/pages/admin/events/PublicLinksPanel.css'
+        'src/pages/admin/events/PublicLinksPanel.css',
+        // Loaded by the public check-in page as well as the signed-in app.
+        'src/components/ConfirmDialog.css'
     ];
 
     // Colours that are deliberately literal, with the reason they have to be.
     const ALLOWED_LITERALS = {
         // A QR code needs a light quiet zone or scanners cannot read it.
-        'src/pages/admin/events/PublicLinksPanel.css': ['#ffffff'],
-        // White on the theme's error red, which is dark in every palette.
-        'src/pages/public/PublicPages.css': ['#ffffff']
+        'src/pages/admin/events/PublicLinksPanel.css': ['#ffffff']
     };
 
     function read(relative) {

@@ -1,0 +1,107 @@
+/* Shared confirmation dialog. Theme variables only: it is used on the public
+   check-in page as well as the signed-in app (see publicLinks.test.jsx). */
+
+.confirm-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: var(--overlay-bg);
+}
+
+.confirm-dialog {
+    width: 100%;
+    max-width: 440px;
+    padding: 1.25rem 1.25rem 1rem;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+}
+
+.confirm-dialog--warning {
+    border: 2px solid var(--error);
+}
+
+.confirm-dialog-title {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin: 0 0 .75rem;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+}
+
+.confirm-dialog--warning .confirm-dialog-title {
+    color: var(--error);
+}
+
+.confirm-dialog-body {
+    font-size: 1.05rem;
+    line-height: 1.5;
+}
+
+.confirm-dialog-body p {
+    margin: 0 0 .5rem;
+}
+
+/* The IN / OUT word: the one thing a volunteer must not misread, so it sits
+   in its own box. --border is a light grey in the light themes but only a
+   step lighter than the card in night-ops, so the outline gives it an edge
+   in every palette. */
+.confirm-dialog-direction {
+    display: inline-block;
+    padding: .1rem .55rem;
+    margin: 0 .1rem;
+    background: var(--border);
+    border: 1px solid var(--text-secondary);
+    color: var(--text-primary);
+    border-radius: 6px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    line-height: 1.4;
+}
+
+.confirm-dialog-actions {
+    display: flex;
+    gap: .75rem;
+    margin-top: 1.25rem;
+}
+
+/* Big, equal targets: this is tapped in the dark, often with gloves on. */
+.confirm-dialog-button {
+    flex: 1;
+    min-height: 48px;
+    padding: .7rem 1rem;
+    border-radius: 10px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.confirm-dialog-button:disabled {
+    opacity: .6;
+    cursor: default;
+}
+
+.confirm-dialog-button--cancel {
+    background: var(--page-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.confirm-dialog-button--confirm {
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--button-bg);
+}
+
+.confirm-dialog--warning .confirm-dialog-button--confirm {
+    background: var(--error);
+    border-color: var(--error);
+    color: var(--button-text);
+}
