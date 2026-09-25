@@ -902,10 +902,15 @@ function AttendeeRow({ attendee, showTroop, busy, onCheckIn, onUndo, onSetStatus
                         : ""}
                     {attendee.category}
                     {attendee.phone ? ` · Phone: ${attendee.phone}` : ""}
-                    {attendee.primaryEmail || attendee.primary_email ? ` · Primary: ${attendee.primaryEmail || attendee.primary_email}` : ""}
-                    {attendee.secondaryEmail || attendee.secondary_email ? ` · Secondary: ${attendee.secondaryEmail || attendee.secondary_email}` : ""}
                     {arrived && ` · arrived ${formatTime(attendee.arrival.arrivedAt)}`}
                 </span>
+                {(attendee.primaryEmail || attendee.primary_email || attendee.secondaryEmail || attendee.secondary_email) && (
+                    <span className="arrivals__meta arrivals__meta--emails">
+                        {attendee.primaryEmail || attendee.primary_email ? `Primary: ${attendee.primaryEmail || attendee.primary_email}` : ""}
+                        {(attendee.primaryEmail || attendee.primary_email) && (attendee.secondaryEmail || attendee.secondary_email) ? " · " : ""}
+                        {attendee.secondaryEmail || attendee.secondary_email ? `Secondary: ${attendee.secondaryEmail || attendee.secondary_email}` : ""}
+                    </span>
+                )}
                 {(attendee.emergencyContact1 || attendee.emergency_contact_1 || attendee.emergencyContact2 || attendee.emergency_contact_2) && (
                     <span className="arrivals__meta arrivals__meta--contacts">
                         {attendee.emergencyContact1 || attendee.emergency_contact_1 ? `EC1: ${attendee.emergencyContact1 || attendee.emergency_contact_1}` : ""}
