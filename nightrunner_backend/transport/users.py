@@ -21,9 +21,10 @@ class UsersResource:
         if not current_user:
             raise falcon.HTTPUnauthorized(title="Not authenticated", description="Authentication required.")
 
-        # Fetch users with their status, admin status, roles, and station staff assignments
+        # Fetch users with their status, admin status, roles, created_at, last_active_at, and station staff assignments
         users_rows = await self.db.execute("""
-            SELECT u.id, u.external_id, u.username, u.email, u.display_name, u.is_admin, COALESCE(u.status, 'active') AS status
+            SELECT u.id, u.external_id, u.username, u.email, u.display_name, u.is_admin,
+                   COALESCE(u.status, 'active') AS status, u.created_at, u.last_active_at
             FROM users u
         """)
         if not isinstance(users_rows, list):
@@ -74,6 +75,8 @@ class UsersResource:
                 "name": u.get("display_name"),
                 "isAdmin": bool(u.get("is_admin")),
                 "status": u.get("status") or "active",
+                "createdAt": str(u.get("created_at")) if u.get("created_at") else None,
+                "lastActiveAt": str(u.get("last_active_at")) if u.get("last_active_at") else None,
                 "roles": roles_map_by_user.get(uid, {}),
                 "rolesList": roles_by_user.get(uid, []),
                 "stationStaff": stations_by_user.get(uid, [])

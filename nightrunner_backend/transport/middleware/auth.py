@@ -202,6 +202,15 @@ class AuthMiddleware:
             if user_status == "blocked":
                 raise falcon.HTTPForbidden(title="Account Blocked", description="Your account has been blocked by an administrator.")
 
+            # Update last_active_at timestamp asynchronously
+            try:
+                await self.db.execute(
+                    "UPDATE users SET last_active_at = CURRENT_TIMESTAMP WHERE id = :id",
+                    {"id": rows[0]["id"]}
+                )
+            except Exception as e:
+                logger.debug("Failed to update last_active_at for user %s: %s", rows[0]["id"], e)
+
             # First row has user info (same for all rows)
             user = {
                 "id": rows[0]["id"],

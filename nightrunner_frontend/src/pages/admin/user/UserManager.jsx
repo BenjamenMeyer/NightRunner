@@ -17,6 +17,23 @@ const EVENT_ROLES = [
     "volunteer"
 ];
 
+function formatRelativeTime(dateStr) {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return null;
+    const diffMs = Date.now() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 5) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 30) return `${diffDays}d ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
+    return `${Math.floor(diffDays / 365)}y ago`;
+}
+
 export default function UserManager() {
     const {
         eventId,
@@ -135,34 +152,79 @@ export default function UserManager() {
         eventId
     ]);
 
+    const [eventScopeFilter, setEventScopeFilter] = useState("all");
+    const [activityFilter, setActivityFilter] = useState("all");
+    const [roleFilter, setRoleFilter] = useState("all");
+
     const filteredUsers = useMemo(() => {
         let result = visibleUsers;
 
+        // Status Filter
         if (statusFilter !== "all") {
             result = result.filter(u => u.status === statusFilter);
         }
 
-        const query =
-            search.trim().toLowerCase();
+        // Event Scope Filter: "assigned" (has role in current event), "unassigned" (no role in current event)
+        if (eventScopeFilter === "assigned" && eventId) {
+            result = result.filter(u => u.roles?.[eventId] != null || (u.roles && typeof u.roles === 'object' && Object.keys(u.roles).includes(eventId)));
+        } else if (eventScopeFilter === "unassigned" && eventId) {
+            result = result.filter(u => !u.roles?.[eventId] && !(u.roles && typeof u.roles === 'object' && Object.keys(u.roles).includes(eventId)));
+        }
 
+        // Role Filter
+        if (roleFilter !== "all") {
+            if (roleFilter === "system-admin") {
+                result = result.filter(u => u.isAdmin);
+            } else if (eventId) {
+                result = result.filter(u => u.roles?.[eventId] === roleFilter);
+            }
+        }
+
+        // Activity Filter
+        if (activityFilter !== "all") {
+            const now = Date.now();
+            result = result.filter(u => {
+                const createdTs = u.createdAt ? new Date(u.createdAt).getTime() : 0;
+                const activeTs = u.lastActiveAt ? new Date(u.lastActiveAt).getTime() : 0;
+                const latestTs = Math.max(createdTs, activeTs);
+
+                if (activityFilter === "new_14") {
+                    // Created within last 14 days
+                    return createdTs > 0 && (now - createdTs) <= (14 * 24 * 60 * 60 * 1000);
+                }
+                if (activityFilter === "active_30") {
+                    // Active within last 30 days
+                    return latestTs > 0 && (now - latestTs) <= (30 * 24 * 60 * 60 * 1000);
+                }
+                if (activityFilter === "active_180") {
+                    // Active within last 180 days (6 months / season)
+                    return latestTs > 0 && (now - latestTs) <= (180 * 24 * 60 * 60 * 1000);
+                }
+                if (activityFilter === "inactive") {
+                    // No activity in last 180 days or never
+                    return latestTs === 0 || (now - latestTs) > (180 * 24 * 60 * 60 * 1000);
+                }
+                return true;
+            });
+        }
+
+        const query = search.trim().toLowerCase();
         if (!query) {
             return result;
         }
 
         return result.filter(user =>
-            user.username
-                ?.toLowerCase()
-                .includes(query) ||
-            user.name
-                ?.toLowerCase()
-                .includes(query) ||
-            user.email
-                ?.toLowerCase()
-                .includes(query)
+            user.username?.toLowerCase().includes(query) ||
+            user.name?.toLowerCase().includes(query) ||
+            user.email?.toLowerCase().includes(query)
         );
     }, [
         visibleUsers,
         statusFilter,
+        eventScopeFilter,
+        activityFilter,
+        roleFilter,
+        eventId,
         search
     ]);
 
@@ -473,13 +535,51 @@ export default function UserManager() {
                 <div className="filter-wrapper">
                     <select
                         className="status-filter-select"
+                        value={eventScopeFilter}
+                        onChange={e => setEventScopeFilter(e.target.value)}
+                        title="Filter by event assignment scope"
+                    >
+                        <option value="all">All Event Assignments</option>
+                        <option value="assigned">Assigned to Current Event</option>
+                        <option value="unassigned">Unassigned / Other Events</option>
+                    </select>
+
+                    <select
+                        className="status-filter-select"
+                        value={activityFilter}
+                        onChange={e => setActivityFilter(e.target.value)}
+                        title="Filter by user activity"
+                    >
+                        <option value="all">All Activity Times</option>
+                        <option value="new_14">New (Past 14 Days)</option>
+                        <option value="active_30">Active Recently (&lt; 30 Days)</option>
+                        <option value="active_180">Active This Season (&lt; 180 Days)</option>
+                        <option value="inactive">Inactive (&gt; 180 Days)</option>
+                    </select>
+
+                    <select
+                        className="status-filter-select"
                         value={statusFilter}
                         onChange={e => setStatusFilter(e.target.value)}
+                        title="Filter by account status"
                     >
                         <option value="all">All Statuses</option>
                         <option value="pending">Pending Approval (Holding Area)</option>
                         <option value="active">Active</option>
                         <option value="blocked">Blocked</option>
+                    </select>
+
+                    <select
+                        className="status-filter-select"
+                        value={roleFilter}
+                        onChange={e => setRoleFilter(e.target.value)}
+                        title="Filter by role"
+                    >
+                        <option value="all">All Roles</option>
+                        <option value="system-admin">System Admin</option>
+                        {EVENT_ROLES.map(r => (
+                            <option key={r} value={r}>{formatRole(r)}</option>
+                        ))}
                     </select>
                 </div>
 
@@ -518,9 +618,11 @@ export default function UserManager() {
                             </div>
                         ) : (
                             filteredUsers.map(user => {
-                                const role =
-                                    getEventRole(user);
+                                const role = getEventRole(user);
                                 const userStatus = user.status || "active";
+                                const isAssignedToEvent = eventId && (user.roles?.[eventId] != null || (user.roles && typeof user.roles === 'object' && Object.keys(user.roles).includes(eventId)));
+                                const relativeActivity = formatRelativeTime(user.lastActiveAt) || formatRelativeTime(user.createdAt);
+                                const isNewUser = user.createdAt && (Date.now() - new Date(user.createdAt).getTime()) <= (14 * 24 * 60 * 60 * 1000);
 
                                 return (
                                     <button
@@ -545,13 +647,28 @@ export default function UserManager() {
 
                                         <span className="user-card-content">
                                             <strong>
-                                                {user.name ||
-                                                    user.username}
+                                                {user.name || user.username}
+                                                {isNewUser && (
+                                                    <span className="badge-new-tag" title="Joined within last 14 days">✨ New</span>
+                                                )}
                                             </strong>
 
                                             <span>
                                                 @{user.username}
                                             </span>
+
+                                            <div className="user-card-submeta">
+                                                {eventId && (
+                                                    <span className={`event-scope-badge ${isAssignedToEvent ? "assigned" : "unassigned"}`}>
+                                                        {isAssignedToEvent ? "Current Event" : "Unassigned"}
+                                                    </span>
+                                                )}
+                                                {relativeActivity && (
+                                                    <span className="activity-meta-tag">
+                                                        ⏱ {relativeActivity}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </span>
 
                                         <span

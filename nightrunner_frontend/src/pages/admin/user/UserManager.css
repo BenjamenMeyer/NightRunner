@@ -164,14 +164,20 @@
 
 }
 
+.filter-wrapper {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 .filter-wrapper .status-filter-select {
-    padding: 12px 14px;
+    padding: 10px 12px;
     border: 1px solid var(--border);
     border-radius: 8px;
     background: var(--card-bg);
     color: var(--text-primary);
     outline: none;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
 }
 
@@ -183,6 +189,49 @@
 
     font-size: 14px;
 
+}
+
+/* ==========================================
+   Submeta & Badges
+   ========================================== */
+
+.badge-new-tag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(234, 179, 8, 0.2);
+    color: #ca8a04;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.user-card-submeta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 11px;
+}
+
+.event-scope-badge {
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.event-scope-badge.assigned {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+}
+
+.event-scope-badge.unassigned {
+    background: var(--border);
+    color: var(--text-secondary);
+}
+
+.activity-meta-tag {
+    color: var(--text-secondary);
 }
 
 /* ==========================================
