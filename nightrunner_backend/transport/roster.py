@@ -27,6 +27,11 @@ def _require_object(payload: Any) -> Dict[str, Any]:
     return payload
 
 
+async def _troop_number_map(store: RosterStore) -> Dict[str, str]:
+    troops = await store.list_troops()
+    return {troop.id: troop.number for troop in troops}
+
+
 def _require_admin(req: falcon.Request, event_id: str = None) -> dict:
     user = getattr(req.context, "user", None) or {}
     roles = getattr(req.context, "roles", []) or []
