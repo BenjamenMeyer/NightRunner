@@ -1,8 +1,8 @@
 Troop,First Name,Last Name,Category,Phone,Parent Email,Youth Email,Emergency Contact 1,Emergency Contact 2
 TL-0594,Caleb,Smith,Youth,555-0101,parent.smith@example.com,caleb.smith@example.com,Mary Smith (Mother) 555-0102,John Smith (Father) 555-0103
-TL-0594,Ethan,Johnson,Youth,555-0104,parent.johnson@example.com,ethan.j@example.com,Sarah Johnson (Mother) 555-0105,
-TL-0594,Joshua,Williams,Youth,555-0106,parent.williams@example.com,,David Williams (Father) 555-0107,
-TL-0594,Robert,Davis,Adult,555-0108,robert.davis@example.com,,Lisa Davis (Wife) 555-0109,
-TL-1234,Benjamin,Brown,Youth,555-0201,parent.brown@example.com,ben.brown@example.com,Karen Brown (Mother) 555-0202,
-TL-1234,Samuel,Taylor,Youth,555-0203,parent.taylor@example.com,,Mark Taylor (Father) 555-0204,
-TL-1234,Michael,Miller,Adult,555-0205,michael.miller@example.com,,Jennifer Miller (Wife) 555-0206,
+TL-0594,Ethan,Johnson,Youth,555-0104,parent.johnson@example.com,ethan.j@example.com,Sarah Johnson (Mother) 555-0105,Robert Johnson (Father) 555-0110
+TL-0594,Joshua,Williams,Youth,555-0106,parent.williams@example.com,joshua.w@example.com,David Williams (Father) 555-0107,Amy Williams (Mother) 555-0111
+TL-0594,Robert,Davis,Adult,555-0108,robert.davis@example.com,robert.davis.alt@example.com,Lisa Davis (Wife) 555-0109,James Davis (Brother) 555-0112
+TL-1234,Benjamin,Brown,Youth,555-0201,parent.brown@example.com,ben.brown@example.com,Karen Brown (Mother) 555-0202,Steven Brown (Father) 555-0207
+TL-1234,Samuel,Taylor,Youth,555-0203,parent.taylor@example.com,sam.taylor@example.com,Mark Taylor (Father) 555-0204,Jessica Taylor (Mother) 555-0208
+TL-1234,Michael,Miller,Adult,555-0205,michael.miller@example.com,michael.miller.alt@example.com,Jennifer Miller (Wife) 555-0206,Chris Miller (Brother) 555-0209
