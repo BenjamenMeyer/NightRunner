@@ -155,6 +155,15 @@ export default function Reports() {
                     <button
                         type="button"
                         className="reports-button reports-button--primary"
+                        onClick={() => handleGenerateCompiledReport("attendance-pdf")}
+                        disabled={generatingReport}
+                    >
+                        {generatingReport ? "Queueing..." : "Generate Attendance Report (PDF)"}
+                    </button>
+
+                    <button
+                        type="button"
+                        className="reports-button"
                         onClick={() => handleGenerateCompiledReport("patrols-pdf")}
                         disabled={generatingReport}
                     >

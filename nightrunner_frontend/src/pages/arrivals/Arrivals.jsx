@@ -40,6 +40,24 @@ export default function Arrivals() {
     // with the moment they were typed in.
     const [backdate, setBackdate] = useState("");
 
+    const [selectedDetailAttendee, setSelectedDetailAttendee] = useState(null);
+    const [checkinConfirmAttendee, setCheckinConfirmAttendee] = useState(false);
+    const [isEditingModal, setIsEditingModal] = useState(false);
+    const [savingEdit, setSavingEdit] = useState(false);
+    const [editForm, setEditForm] = useState({
+        firstName: "",
+        lastName: "",
+        troopNumber: "",
+        category: "Youth",
+        phone: "",
+        primaryEmail: "",
+        secondaryEmail: "",
+        emergencyContact1: "",
+        emergencyContact2: "",
+        memberId: "",
+        youthProtectionCompleted: false,
+    });
+
     const load = useCallback(async () => {
 
         if (!eventId) {
@@ -118,6 +136,58 @@ export default function Arrivals() {
         const parsed = new Date(backdate);
         return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 
+    }
+
+    function initiateCheckIn(attendee) {
+        setSelectedDetailAttendee(attendee);
+        setCheckinConfirmAttendee(true);
+        setIsEditingModal(false);
+    }
+
+    async function confirmCheckInFromModal() {
+        if (!selectedDetailAttendee) return;
+        const att = selectedDetailAttendee;
+        setSelectedDetailAttendee(null);
+        setCheckinConfirmAttendee(false);
+        await checkIn(att);
+    }
+
+    function startEditingModal() {
+        if (!selectedDetailAttendee) return;
+        const a = selectedDetailAttendee;
+        setEditForm({
+            firstName: a.firstName || a.first_name || "",
+            lastName: a.lastName || a.last_name || "",
+            troopNumber: a.troopNumber || "",
+            category: a.category || "Youth",
+            phone: a.phone || "",
+            primaryEmail: a.primaryEmail || a.primary_email || "",
+            secondaryEmail: a.secondaryEmail || a.secondary_email || "",
+            emergencyContact1: a.emergencyContact1 || a.emergency_contact_1 || "",
+            emergencyContact2: a.emergencyContact2 || a.emergency_contact_2 || "",
+            memberId: a.memberId || a.member_id || "",
+            youthProtectionCompleted: Boolean(a.youthProtectionCompleted || a.youth_protection_completed),
+        });
+        setIsEditingModal(true);
+    }
+
+    async function saveModalEdit() {
+        if (!selectedDetailAttendee) return;
+        setSavingEdit(true);
+        try {
+            const updated = await ApiService.rosterData.updateAttendee(
+                eventId,
+                selectedDetailAttendee.id,
+                editForm
+            );
+            setSelectedDetailAttendee({ ...selectedDetailAttendee, ...updated, troopNumber: editForm.troopNumber || selectedDetailAttendee.troopNumber });
+            setIsEditingModal(false);
+            await load();
+        } catch {
+            setError(`Could not update details for ${selectedDetailAttendee.fullName || selectedDetailAttendee.first_name}.`);
+        } finally {
+            setSavingEdit(false);
+        }
     }
 
     async function checkIn(attendee) {
@@ -237,7 +307,6 @@ export default function Arrivals() {
     const [allTroops, setAllTroops] = useState([]);
     const [autoCheckInNew, setAutoCheckInNew] = useState(true);
     const [addingAttendees, setAddingAttendees] = useState(false);
-    const [selectedDetailAttendee, setSelectedDetailAttendee] = useState(null);
     const [batchRows, setBatchRows] = useState([
         { id: 1, firstName: "", lastName: "", category: "Youth" },
         { id: 2, firstName: "", lastName: "", category: "Youth" },
@@ -878,76 +947,229 @@ export default function Arrivals() {
                 </div>
             )}
 
-            {/* Modal: Attendee Details */}
+            {/* Modal: Attendee Details & Confirmation */}
             {selectedDetailAttendee && (
                 <div className="arrivals__modal-overlay" onClick={() => setSelectedDetailAttendee(null)}>
-                    <div className="arrivals__modal" onClick={e => e.stopPropagation()} style={{ maxWidth: "36rem" }}>
-                        <h2>Attendee Details</h2>
-                        <div className="arrivals__detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", margin: "1rem 0" }}>
-                            <div>
-                                <label className="arrivals__batch-sublabel">Full Name</label>
-                                <p style={{ margin: "0.2rem 0", fontWeight: "600", fontSize: "1.05rem" }}>{selectedDetailAttendee.fullName}</p>
-                            </div>
-                            <div>
-                                <label className="arrivals__batch-sublabel">Category / Role</label>
-                                <p style={{ margin: "0.2rem 0", fontWeight: "600" }}>{selectedDetailAttendee.category}</p>
-                            </div>
-                            <div>
-                                <label className="arrivals__batch-sublabel">Troop Number</label>
-                                <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.troopNumber || "—"}</p>
-                            </div>
-                            <div>
-                                <label className="arrivals__batch-sublabel">Member ID</label>
-                                <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.memberId || "—"}</p>
-                            </div>
-                            <div>
-                                <label className="arrivals__batch-sublabel">Phone Number</label>
-                                <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.phone || "—"}</p>
-                            </div>
-                            <div>
-                                <label className="arrivals__batch-sublabel">Arrival Status</label>
-                                <p style={{ margin: "0.2rem 0" }}>
-                                    {selectedDetailAttendee.arrival
-                                        ? `Checked in (${formatTime(selectedDetailAttendee.arrival.arrivedAt)})`
-                                        : selectedDetailAttendee.status === "not_coming"
-                                        ? "Not Coming"
-                                        : "Not Arrived"}
-                                </p>
-                            </div>
-                            <div>
-                                <label className="arrivals__batch-sublabel">Primary Email (Parent / Main)</label>
-                                <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.primaryEmail || selectedDetailAttendee.primary_email || "—"}</p>
-                            </div>
-                            <div>
-                                <label className="arrivals__batch-sublabel">Secondary Email (Youth / Alt)</label>
-                                <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.secondaryEmail || selectedDetailAttendee.secondary_email || "—"}</p>
-                            </div>
-                            <div style={{ gridColumn: "span 2" }}>
-                                <label className="arrivals__batch-sublabel">Emergency Contact 1</label>
-                                <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.emergencyContact1 || selectedDetailAttendee.emergency_contact_1 || "—"}</p>
-                            </div>
-                            <div style={{ gridColumn: "span 2" }}>
-                                <label className="arrivals__batch-sublabel">Emergency Contact 2</label>
-                                <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.emergencyContact2 || selectedDetailAttendee.emergency_contact_2 || "—"}</p>
-                            </div>
-                            {selectedDetailAttendee.category === "Adult" && (
-                                <div style={{ gridColumn: "span 2" }}>
-                                    <label className="arrivals__batch-sublabel">Youth Protection Training</label>
-                                    <p style={{ margin: "0.2rem 0" }}>
-                                        {selectedDetailAttendee.youthProtectionCompleted ? "✓ Completed" : "✕ Not Completed"}
-                                    </p>
+                    <div className="arrivals__modal" onClick={e => e.stopPropagation()} style={{ maxWidth: "38rem" }}>
+                        <h2>{checkinConfirmAttendee ? "Confirm Check-in Information" : "Attendee Details"}</h2>
+                        {checkinConfirmAttendee && (
+                            <p className="arrivals__modal-subtitle">
+                                Please confirm attendee information before recording check-in. Click &quot;Edit Info&quot; if updates are needed.
+                            </p>
+                        )}
+
+                        {isEditingModal ? (
+                            <div className="arrivals__modal-form" style={{ display: "flex", flexDirection: "column", gap: "0.8rem", margin: "1rem 0" }}>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.8rem" }}>
+                                    <div className="arrivals__field">
+                                        <label>First Name</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.firstName}
+                                            onChange={e => setEditForm({ ...editForm, firstName: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="arrivals__field">
+                                        <label>Last Name</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.lastName}
+                                            onChange={e => setEditForm({ ...editForm, lastName: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="arrivals__field">
+                                        <label>Troop Number</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.troopNumber}
+                                            onChange={e => setEditForm({ ...editForm, troopNumber: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="arrivals__field">
+                                        <label>Category / Role</label>
+                                        <select
+                                            value={editForm.category}
+                                            onChange={e => setEditForm({ ...editForm, category: e.target.value })}
+                                        >
+                                            <option value="Youth">Youth</option>
+                                            <option value="Adult">Adult</option>
+                                            <option value="Non-participant Youth">Non-participant Youth</option>
+                                        </select>
+                                    </div>
+                                    <div className="arrivals__field">
+                                        <label>Member ID</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.memberId}
+                                            onChange={e => setEditForm({ ...editForm, memberId: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="arrivals__field">
+                                        <label>Phone Number</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.phone}
+                                            onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="arrivals__field">
+                                        <label>Primary Email</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.primaryEmail}
+                                            onChange={e => setEditForm({ ...editForm, primaryEmail: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="arrivals__field">
+                                        <label>Secondary Email</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.secondaryEmail}
+                                            onChange={e => setEditForm({ ...editForm, secondaryEmail: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="arrivals__field" style={{ gridColumn: "span 2" }}>
+                                        <label>Emergency Contact 1</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.emergencyContact1}
+                                            onChange={e => setEditForm({ ...editForm, emergencyContact1: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="arrivals__field" style={{ gridColumn: "span 2" }}>
+                                        <label>Emergency Contact 2</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.emergencyContact2}
+                                            onChange={e => setEditForm({ ...editForm, emergencyContact2: e.target.value })}
+                                        />
+                                    </div>
+                                    {editForm.category === "Adult" && (
+                                        <div className="arrivals__field" style={{ gridColumn: "span 2" }}>
+                                            <label className="arrivals__checkbox-label">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={editForm.youthProtectionCompleted}
+                                                    onChange={e => setEditForm({ ...editForm, youthProtectionCompleted: e.target.checked })}
+                                                />
+                                                Youth Protection Training Completed
+                                            </label>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                        <div className="arrivals__modal-actions">
-                            <button
-                                type="button"
-                                className="arrivals__btn-primary"
-                                onClick={() => setSelectedDetailAttendee(null)}
-                            >
-                                Close
-                            </button>
-                        </div>
+                                <div className="arrivals__modal-actions">
+                                    <button
+                                        type="button"
+                                        className="arrivals__btn-secondary"
+                                        onClick={() => setIsEditingModal(false)}
+                                    >
+                                        Cancel Edit
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="arrivals__btn-primary"
+                                        onClick={saveModalEdit}
+                                        disabled={savingEdit}
+                                    >
+                                        {savingEdit ? "Saving..." : "Save Changes"}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="arrivals__detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", margin: "1rem 0" }}>
+                                    <div>
+                                        <label className="arrivals__batch-sublabel">Full Name</label>
+                                        <p style={{ margin: "0.2rem 0", fontWeight: "600", fontSize: "1.05rem" }}>{selectedDetailAttendee.fullName}</p>
+                                    </div>
+                                    <div>
+                                        <label className="arrivals__batch-sublabel">Category / Role</label>
+                                        <p style={{ margin: "0.2rem 0", fontWeight: "600" }}>{selectedDetailAttendee.category}</p>
+                                    </div>
+                                    <div>
+                                        <label className="arrivals__batch-sublabel">Troop Number</label>
+                                        <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.troopNumber || "—"}</p>
+                                    </div>
+                                    <div>
+                                        <label className="arrivals__batch-sublabel">Member ID</label>
+                                        <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.memberId || "—"}</p>
+                                    </div>
+                                    <div>
+                                        <label className="arrivals__batch-sublabel">Phone Number</label>
+                                        <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.phone || "—"}</p>
+                                    </div>
+                                    <div>
+                                        <label className="arrivals__batch-sublabel">Arrival Status</label>
+                                        <p style={{ margin: "0.2rem 0" }}>
+                                            {selectedDetailAttendee.arrival
+                                                ? `Checked in (${formatTime(selectedDetailAttendee.arrival.arrivedAt)})`
+                                                : selectedDetailAttendee.status === "not_coming"
+                                                ? "Not Coming"
+                                                : "Not Arrived"}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="arrivals__batch-sublabel">Primary Email (Parent / Main)</label>
+                                        <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.primaryEmail || selectedDetailAttendee.primary_email || "—"}</p>
+                                    </div>
+                                    <div>
+                                        <label className="arrivals__batch-sublabel">Secondary Email (Youth / Alt)</label>
+                                        <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.secondaryEmail || selectedDetailAttendee.secondary_email || "—"}</p>
+                                    </div>
+                                    <div style={{ gridColumn: "span 2" }}>
+                                        <label className="arrivals__batch-sublabel">Emergency Contact 1</label>
+                                        <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.emergencyContact1 || selectedDetailAttendee.emergency_contact_1 || "—"}</p>
+                                    </div>
+                                    <div style={{ gridColumn: "span 2" }}>
+                                        <label className="arrivals__batch-sublabel">Emergency Contact 2</label>
+                                        <p style={{ margin: "0.2rem 0" }}>{selectedDetailAttendee.emergencyContact2 || selectedDetailAttendee.emergency_contact_2 || "—"}</p>
+                                    </div>
+                                    {selectedDetailAttendee.category === "Adult" && (
+                                        <div style={{ gridColumn: "span 2" }}>
+                                            <label className="arrivals__batch-sublabel">Youth Protection Training</label>
+                                            <p style={{ margin: "0.2rem 0" }}>
+                                                {selectedDetailAttendee.youthProtectionCompleted ? "✓ Completed" : "✕ Not Completed"}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="arrivals__modal-actions" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <button
+                                        type="button"
+                                        className="arrivals__btn-secondary"
+                                        onClick={startEditingModal}
+                                    >
+                                        ✏ Edit Info
+                                    </button>
+                                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                                        <button
+                                            type="button"
+                                            className="arrivals__btn-secondary"
+                                            onClick={() => { setSelectedDetailAttendee(null); setCheckinConfirmAttendee(false); }}
+                                        >
+                                            Cancel
+                                        </button>
+                                        {checkinConfirmAttendee ? (
+                                            <button
+                                                type="button"
+                                                className="arrivals__btn-primary"
+                                                onClick={confirmCheckInFromModal}
+                                            >
+                                                Confirm & Check In
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                className="arrivals__btn-primary"
+                                                onClick={() => setSelectedDetailAttendee(null)}
+                                            >
+                                                Close
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -1021,7 +1243,7 @@ function AttendeeRow({ attendee, showTroop, busy, onCheckIn, onUndo, onSetStatus
                             type="button"
                             className="arrivals__checkin"
                             disabled={busy}
-                            onClick={() => onCheckIn(attendee)}
+                            onClick={() => initiateCheckIn(attendee)}
                         >
                             Check in
                         </button>

@@ -214,7 +214,83 @@ class EventAttendeesResource:
 
 
 class EventAttendeeResource:
-    """DELETE /v1/events/{event_id}/attendees/{attendee_id}"""
+    """
+    GET    /v1/events/{event_id}/attendees/{attendee_id}
+    PUT    /v1/events/{event_id}/attendees/{attendee_id} — update attendee fields & write audit log.
+    DELETE /v1/events/{event_id}/attendees/{attendee_id}
+    """
+
+    async def on_get(self, req: falcon.Request, resp: falcon.Response, event_id: str, attendee_id: str):
+        store = RosterStore(get_driver())
+        attendee = await store.get_attendee(attendee_id)
+        if not attendee or attendee.event_id != event_id:
+            raise falcon.HTTPNotFound(description="Attendee not found for this event.")
+        resp.media = attendee.to_api_dict()
+        resp.status = falcon.HTTP_200
+
+    async def on_put(self, req: falcon.Request, resp: falcon.Response, event_id: str, attendee_id: str):
+        payload = _require_object(await req.get_media())
+        store = RosterStore(get_driver())
+        attendee = await store.get_attendee(attendee_id)
+        if not attendee or attendee.event_id != event_id:
+            raise falcon.HTTPNotFound(description="Attendee not found for this event.")
+
+        user = getattr(req.context, "user", None) or {}
+        updated_by = user.get("id") or user.get("username") or "user"
+
+        # Field tracking map for audit logging
+        field_mappings = [
+            ("firstName", "first_name", getattr(attendee, "first_name", "")),
+            ("lastName", "last_name", getattr(attendee, "last_name", "")),
+            ("category", "category", getattr(attendee, "category", "Youth")),
+            ("phone", "phone", getattr(attendee, "phone", None)),
+            ("emergencyContact1", "emergency_contact_1", getattr(attendee, "emergency_contact_1", None)),
+            ("emergencyContact2", "emergency_contact_2", getattr(attendee, "emergency_contact_2", None)),
+            ("primaryEmail", "primary_email", getattr(attendee, "primary_email", None)),
+            ("secondaryEmail", "secondary_email", getattr(attendee, "secondary_email", None)),
+            ("memberId", "member_id", getattr(attendee, "member_id", None)),
+            ("youthProtectionCompleted", "youth_protection_completed", getattr(attendee, "youth_protection_completed", False)),
+        ]
+
+        # If troopNumber passed, resolve or update troop
+        if "troopNumber" in payload and payload["troopNumber"]:
+            num = normalise_troop_number(payload["troopNumber"])
+            if num:
+                troop = await store.ensure_troop(num)
+                if attendee.troop_id != troop.id:
+                    old_troop_id = attendee.troop_id
+                    attendee.troop_id = troop.id
+                    await store.add_audit_entry(
+                        event_id=event_id,
+                        attendee_id=attendee_id,
+                        field_name="troop_id",
+                        old_value=old_troop_id,
+                        new_value=troop.id,
+                        updated_by=updated_by,
+                    )
+
+        now_str = _now()
+        attendee.updated_at = now_str
+
+        for key_camel, key_snake, old_val in field_mappings:
+            if key_camel in payload:
+                new_val = payload[key_camel]
+                # Compare as strings / booleans
+                if str(old_val if old_val is not None else "") != str(new_val if new_val is not None else ""):
+                    setattr(attendee, key_snake, new_val)
+                    await store.add_audit_entry(
+                        event_id=event_id,
+                        attendee_id=attendee_id,
+                        field_name=key_snake,
+                        old_value=old_val,
+                        new_value=new_val,
+                        updated_by=updated_by,
+                        timestamp=now_str,
+                    )
+
+        await store.update_attendee(attendee)
+        resp.media = attendee.to_api_dict()
+        resp.status = falcon.HTTP_200
 
     async def on_delete(self, req: falcon.Request, resp: falcon.Response, event_id: str, attendee_id: str):
         store = RosterStore(get_driver())

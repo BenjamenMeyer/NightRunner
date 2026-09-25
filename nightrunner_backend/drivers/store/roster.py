@@ -93,7 +93,24 @@ UPDATE_ATTENDEE_STATUS = """
     WHERE id = :id
 """
 
-DELETE_ATTENDEE = "DELETE FROM event_attendees WHERE id = :id"
+CREATE_ATTENDEE_AUDIT_LOG = """
+    INSERT INTO attendee_audit_log (id, event_id, attendee_id, field_name, old_value, new_value, updated_by, timestamp)
+    VALUES (:id, :event_id, :attendee_id, :field_name, :old_value, :new_value, :updated_by, :timestamp)
+"""
+
+LIST_ATTENDEE_AUDIT_LOGS_FOR_EVENT = """
+    SELECT id, event_id, attendee_id, field_name, old_value, new_value, updated_by, timestamp
+    FROM attendee_audit_log
+    WHERE event_id = :event_id
+    ORDER BY timestamp ASC
+"""
+
+LIST_ATTENDEE_AUDIT_LOGS_FOR_ATTENDEE = """
+    SELECT id, event_id, attendee_id, field_name, old_value, new_value, updated_by, timestamp
+    FROM attendee_audit_log
+    WHERE attendee_id = :attendee_id
+    ORDER BY timestamp ASC
+"""
 
 LIST_ARRIVALS_FOR_EVENT = "SELECT * FROM arrivals WHERE event_id = :event_id"
 GET_ARRIVAL_FOR_ATTENDEE = "SELECT * FROM arrivals WHERE attendee_id = :attendee_id"
@@ -302,6 +319,75 @@ class RosterStore:
 
     async def delete_attendee(self, attendee_id: str) -> None:
         await self.driver.execute(DELETE_ATTENDEE, {"id": attendee_id})
+
+    #
+    # Audit Logs
+    #
+
+    async def add_audit_entry(
+        self,
+        event_id: str,
+        attendee_id: str,
+        field_name: str,
+        old_value: Optional[str],
+        new_value: Optional[str],
+        updated_by: Optional[str] = None,
+        timestamp: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        entry_id = str(uuid6.uuid7())
+        ts = timestamp or datetime.now(timezone.utc).isoformat()
+        await self.driver.execute(CREATE_ATTENDEE_AUDIT_LOG, {
+            "id": entry_id,
+            "event_id": event_id,
+            "attendee_id": attendee_id,
+            "field_name": field_name,
+            "old_value": str(old_value) if old_value is not None else None,
+            "new_value": str(new_value) if new_value is not None else None,
+            "updated_by": updated_by,
+            "timestamp": ts,
+        })
+        return {
+            "id": entry_id,
+            "eventId": event_id,
+            "attendeeId": attendee_id,
+            "fieldName": field_name,
+            "oldValue": old_value,
+            "newValue": new_value,
+            "updatedBy": updated_by,
+            "timestamp": ts,
+        }
+
+    async def list_audit_logs_for_event(self, event_id: str) -> List[Dict[str, Any]]:
+        rows = await self.driver.execute(LIST_ATTENDEE_AUDIT_LOGS_FOR_EVENT, {"event_id": event_id})
+        return [
+            {
+                "id": r["id"],
+                "eventId": r["event_id"],
+                "attendeeId": r["attendee_id"],
+                "fieldName": r["field_name"],
+                "oldValue": r.get("old_value"),
+                "newValue": r.get("new_value"),
+                "updatedBy": r.get("updated_by"),
+                "timestamp": r["timestamp"],
+            }
+            for r in (rows or [])
+        ]
+
+    async def list_audit_logs_for_attendee(self, attendee_id: str) -> List[Dict[str, Any]]:
+        rows = await self.driver.execute(LIST_ATTENDEE_AUDIT_LOGS_FOR_ATTENDEE, {"attendee_id": attendee_id})
+        return [
+            {
+                "id": r["id"],
+                "eventId": r["event_id"],
+                "attendeeId": r["attendee_id"],
+                "fieldName": r["field_name"],
+                "oldValue": r.get("old_value"),
+                "newValue": r.get("new_value"),
+                "updatedBy": r.get("updated_by"),
+                "timestamp": r["timestamp"],
+            }
+            for r in (rows or [])
+        ]
 
     #
     # Arrivals

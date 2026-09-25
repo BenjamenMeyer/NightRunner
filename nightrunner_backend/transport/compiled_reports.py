@@ -12,7 +12,51 @@ from nightrunner_backend.reports_gcs import upload_report_bytes, download_report
 from nightrunner_backend.drivers.store.scores import ScoresStore
 from nightrunner_backend.reports_scoring_pdf import generate_event_scoring_pdf
 
+from nightrunner_backend.reports_attendance_pdf import generate_attendance_report_pdf
+from nightrunner_backend.drivers.store.roster import RosterStore
+
 logger = logging.getLogger(__name__)
+
+
+async def _background_generate_attendance_pdf(report_id: str, event_id: str, event_name: str):
+    driver = get_driver()
+    reports_store = ReportsStore(driver)
+    roster_store = RosterStore(driver)
+    try:
+        arrivals_data = await roster_store.list_arrivals(event_id)
+        attendees = await roster_store.list_attendees(event_id)
+        troops = await roster_store.list_troops_for_event(event_id)
+        audit_logs = await roster_store.list_audit_logs_for_event(event_id)
+
+        # Build arrival lookup map
+        arrivals_map = {arr.attendee_id: arr.to_api_dict() for arr in arrivals_data}
+
+        # Build troops dictionary with attendees
+        troops_dict = {t.id: {"troopId": t.id, "troopNumber": t.number, "name": t.name, "attendees": []} for t in troops}
+
+        for att in attendees:
+            att_dict = att.to_api_dict()
+            if att.id in arrivals_map:
+                att_dict["arrival"] = arrivals_map[att.id]
+            t_entry = troops_dict.get(att.troop_id)
+            if t_entry:
+                t_entry["attendees"].append(att_dict)
+            else:
+                # Fallback for unassigned troop
+                unassigned = troops_dict.setdefault("unassigned", {"troopId": "unassigned", "troopNumber": "—", "name": "Unassigned", "attendees": []})
+                unassigned["attendees"].append(att_dict)
+
+        pdf_bytes = generate_attendance_report_pdf(
+            event_name=event_name,
+            troops_data=list(troops_dict.values()),
+            audit_logs=audit_logs,
+        )
+        file_key = f"events/{event_id}/reports/{report_id}-attendance.pdf"
+        upload_report_bytes(file_key, pdf_bytes, content_type="application/pdf")
+        await reports_store.mark_report_ready(report_id, file_key, len(pdf_bytes))
+    except Exception as ex:
+        logger.exception(f"Failed generating attendance report {report_id}: {ex}")
+        await reports_store.mark_report_failed(report_id, str(ex))
 
 
 def _patrol_identity_maps(patrols):
@@ -350,6 +394,8 @@ class CompiledReportsResource:
             report_name = f"Final Scoring Report ({event_name})"
         elif report_type == "event-scoring-ods":
             report_name = f"Scoring Spreadsheet ODS ({event_name})"
+        elif report_type == "attendance-pdf":
+            report_name = f"Event Attendance Report ({event_name})"
         else:
             report_name = f"Patrol QR Badges ({event_name})"
 
@@ -361,6 +407,8 @@ class CompiledReportsResource:
         elif report_type in ("event-scoring", "event-scoring-draft"):
             is_draft = (report_type == "event-scoring-draft")
             asyncio.create_task(_background_generate_scoring_pdf(report_id, event_id, event_name, is_draft=is_draft))
+        elif report_type == "attendance-pdf":
+            asyncio.create_task(_background_generate_attendance_pdf(report_id, event_id, event_name))
         else:
             asyncio.create_task(_background_generate_patrol_qr_pdf(report_id, event_id, event_name))
 
