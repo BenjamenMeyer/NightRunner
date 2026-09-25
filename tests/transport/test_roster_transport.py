@@ -286,3 +286,37 @@ class TestAttendeeStatusAndArrivals:
         attendee = next(a for a in get_resp.json["attendees"] if a["id"] == data["id"])
         assert attendee["primaryEmail"] == "parent@example.com"
         assert attendee["secondaryEmail"] == "youth@example.com"
+
+    async def test_update_attendee_records_audit_log(self, test_client, token_factory):
+        await seed_user(role="event-admin")
+        headers = token_factory(roles={"event-1": "event-admin"}, is_admin=False)
+
+        # 1. Create attendee
+        create_resp = await test_client.simulate_post(
+            "/v1/events/event-1/attendees",
+            headers=headers,
+            json={
+                "troopNumber": "GA-0300",
+                "firstName": "Edward",
+                "lastName": "Davis",
+                "category": "Youth",
+                "phone": "555-1111",
+            },
+        )
+        assert create_resp.status == falcon.HTTP_201
+        att_id = create_resp.json["id"]
+
+        # 2. Update attendee via PUT
+        put_resp = await test_client.simulate_put(
+            f"/v1/events/event-1/attendees/{att_id}",
+            headers=headers,
+            json={
+                "firstName": "Edward",
+                "lastName": "Davis",
+                "phone": "555-9999",
+                "primaryEmail": "edward.parent@example.com",
+            },
+        )
+        assert put_resp.status == falcon.HTTP_200
+        assert put_resp.json["phone"] == "555-9999"
+        assert put_resp.json["primaryEmail"] == "edward.parent@example.com"

@@ -26,6 +26,8 @@ export default function ArrivalsDashboard() {
     const [updatedAt, setUpdatedAt] = useState(null);
     const [error, setError] = useState(null);
     const [selectedDetailAttendee, setSelectedDetailAttendee] = useState(null);
+    const [generatingReport, setGeneratingReport] = useState(false);
+    const [reportNotice, setReportNotice] = useState(null);
 
     const load = useCallback(async () => {
 
@@ -60,6 +62,20 @@ export default function ArrivalsDashboard() {
 
     function toggle(troopId) {
         setExpanded(current => ({ ...current, [troopId]: !current[troopId] }));
+    }
+
+    async function handleGenerateAttendanceReport() {
+        if (!eventId) return;
+        setGeneratingReport(true);
+        setReportNotice(null);
+        try {
+            await ApiService.reportData.generateReportJob(eventId, "attendance-pdf");
+            setReportNotice("Attendance Report generation queued! View it in Event Reports.");
+        } catch {
+            setReportNotice("Failed to queue Attendance Report.");
+        } finally {
+            setGeneratingReport(false);
+        }
     }
 
     function formatTime(iso) {
@@ -111,10 +127,35 @@ export default function ArrivalsDashboard() {
                         {" · refreshes automatically"}
                     </p>
                 </div>
-                <Link className="dashboard__gate-link" to="/arrivals">
-                    Go to gate check-in
-                </Link>
+                <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                    <button
+                        type="button"
+                        onClick={handleGenerateAttendanceReport}
+                        disabled={generatingReport}
+                        style={{
+                            padding: "0.5rem 1rem",
+                            background: "var(--button-bg)",
+                            color: "var(--button-text)",
+                            border: "none",
+                            borderRadius: "6px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            fontSize: "0.9rem"
+                        }}
+                    >
+                        {generatingReport ? "Queueing Report..." : "📄 Generate Attendance Report (PDF)"}
+                    </button>
+                    <Link className="dashboard__gate-link" to="/arrivals">
+                        Go to gate check-in
+                    </Link>
+                </div>
             </header>
+
+            {reportNotice && (
+                <div style={{ padding: "0.75rem 1rem", background: "var(--card-bg)", border: "1px solid var(--button-bg)", color: "var(--text-primary)", borderRadius: "6px", marginBottom: "1rem", fontSize: "0.9rem" }}>
+                    {reportNotice} <Link to="/admin/reports" style={{ color: "var(--button-bg)", fontWeight: "600" }}>Go to Event Reports →</Link>
+                </div>
+            )}
 
             {error && (
                 <div className="dashboard__error" role="alert">{error}</div>

@@ -101,6 +101,16 @@ export default class RosterService {
         );
     }
 
+    async updateAttendee(eventId, attendeeId, attendeeData) {
+        if (!eventId || !attendeeId) {
+            throw new Error("Event ID and Attendee ID are required.");
+        }
+        return await this.transport.put(
+            `/events/${encodeURIComponent(eventId)}/attendees/${encodeURIComponent(attendeeId)}`,
+            attendeeData
+        );
+    }
+
     async updateAttendeeStatus(eventId, attendeeId, status, statusNote = null) {
         return await this.transport.patch(
             `/events/${encodeURIComponent(eventId)}/attendees/${encodeURIComponent(attendeeId)}/status`,
