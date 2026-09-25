@@ -263,23 +263,62 @@ def generate_attendance_report_pdf(
                 att_id = a.get("id")
                 att_audits = audit_map.get(att_id, [])
                 if att_audits:
-                    changes_formatted = []
+                    # Group audit changes by column index
+                    # Col 0: Name (first_name, last_name, category)
+                    # Col 1: Member ID (member_id)
+                    # Col 2: Contact Phone / Emails (phone, primary_email, secondary_email)
+                    # Col 3: Emergency Contacts (emergency_contact_1, emergency_contact_2)
+                    # Col 4: Status (status, status_note)
+                    # Col 5: YPT (youth_protection_completed)
+                    col_changes: Dict[int, List[str]] = {0: [], 1: [], 2: [], 3: [], 4: [], 5: []}
+
+                    field_display_names = {
+                        "first_name": "First Name",
+                        "last_name": "Last Name",
+                        "category": "Category",
+                        "member_id": "Member ID",
+                        "phone": "Phone",
+                        "primary_email": "Primary Email",
+                        "secondary_email": "Secondary Email",
+                        "emergency_contact_1": "EC1",
+                        "emergency_contact_2": "EC2",
+                        "status": "Status",
+                        "status_note": "Status Note",
+                        "youth_protection_completed": "YPT",
+                        "troop_id": "Troop",
+                    }
+
                     for entry in att_audits:
                         fname = entry.get("fieldName") or entry.get("field_name")
                         old_v = entry.get("oldValue") or entry.get("old_value") or "(none)"
                         new_v = entry.get("newValue") or entry.get("new_value") or "(none)"
-                        changes_formatted.append(f"• <b>{fname}</b>: '{old_v}' → '{new_v}'")
+                        label = field_display_names.get(fname, fname)
+                        fmt_change = f"<b>{label}:</b><br/>'{old_v}' → '{new_v}'"
 
-                    audit_text = "<br/>".join(changes_formatted)
-                    # Add a full width row for audit changes
-                    table_data.append([
-                        Paragraph("<b>Recorded Edits / Changes:</b>", audit_heading_style),
-                        Paragraph(audit_text, audit_cell_style),
-                        Paragraph("", audit_cell_style),
-                        Paragraph("", audit_cell_style),
-                        Paragraph("", audit_cell_style),
-                        Paragraph("", audit_cell_style),
-                    ])
+                        if fname in ("first_name", "last_name", "category", "troop_id"):
+                            col_changes[0].append(fmt_change)
+                        elif fname == "member_id":
+                            col_changes[1].append(fmt_change)
+                        elif fname in ("phone", "primary_email", "secondary_email"):
+                            col_changes[2].append(fmt_change)
+                        elif fname in ("emergency_contact_1", "emergency_contact_2"):
+                            col_changes[3].append(fmt_change)
+                        elif fname in ("status", "status_note"):
+                            col_changes[4].append(fmt_change)
+                        elif fname == "youth_protection_completed":
+                            col_changes[5].append(fmt_change)
+                        else:
+                            col_changes[0].append(fmt_change)
+
+                    audit_row = [
+                        Paragraph("<br/>".join(col_changes[0]) if col_changes[0] else "", audit_cell_style),
+                        Paragraph("<br/>".join(col_changes[1]) if col_changes[1] else "", audit_cell_style),
+                        Paragraph("<br/>".join(col_changes[2]) if col_changes[2] else "", audit_cell_style),
+                        Paragraph("<br/>".join(col_changes[3]) if col_changes[3] else "", audit_cell_style),
+                        Paragraph("<br/>".join(col_changes[4]) if col_changes[4] else "", audit_cell_style),
+                        Paragraph("<br/>".join(col_changes[5]) if col_changes[5] else "", audit_cell_style),
+                    ]
+                    table_data.append(audit_row)
 
             t = Table(table_data, colWidths=col_widths)
             t_style = [
@@ -291,13 +330,12 @@ def generate_attendance_report_pdf(
                 ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#e2e8f0")),
             ]
 
-            # Span audit rows across remaining columns
+            # Style audit rows with a subtle highlight background
             row_idx = 1
             for a in attendees_list:
                 row_idx += 1
                 att_id = a.get("id")
                 if audit_map.get(att_id):
-                    t_style.append(("SPAN", (1, row_idx - 1), (-1, row_idx - 1)))
                     t_style.append(("BACKGROUND", (0, row_idx - 1), (-1, row_idx - 1), colors.HexColor("#fff5f5")))
                     row_idx += 1
 
