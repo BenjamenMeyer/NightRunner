@@ -56,7 +56,8 @@ function canAccess(route, eventId = null) {
         const allowedScoringRoles = [
             "station_leader", "station-leader", "station_lead", "station-lead",
             "station_member", "station-member",
-            "scorer", "scoring_lead", "scoring-lead", "scoring_center", "scoring-center"
+            "scorer", "volunteer",
+            "scoring_lead", "scoring-lead", "scoring_center", "scoring-center"
         ];
         return rolesList.some(r => allowedScoringRoles.includes(r));
     }
