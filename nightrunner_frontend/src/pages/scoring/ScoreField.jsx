@@ -536,6 +536,9 @@ export default function ScoreField({
         case "Completed":
         case "Pass / Fail":
         case "Checkpoint":
+            // Accept a stored 1 / 0 as well as true / false.
+            const isPass = value === true || value === 1;
+            const isFail = value === false || value === 0;
 
             return (
 
@@ -544,19 +547,40 @@ export default function ScoreField({
                     {renderInstructionsBubble()}
                     {renderNotesBubble()}
 
-                    <label className="checkbox-option">
+                    {/* Two explicit buttons, neither selected until tapped (#235).
+                        A single checkbox could not tell "not answered" from
+                        "Fail", so an untouched one submitted 0 with nothing on
+                        screen. The value is still true / false, stored as 1 / 0. */}
+                    <span className="pass-fail-title" id={`${task.id}-pass-fail-label`}>
+                        {taskTitle}
+                    </span>
 
-                        <input
-                            type="checkbox"
-                            checked={value ?? false}
-                            onChange={(e) =>
-                                onChange(e.target.checked)
-                            }
-                        />
+                    <div
+                        className="pass-fail-buttons"
+                        role="group"
+                        aria-labelledby={`${task.id}-pass-fail-label`}
+                    >
+                        <button
+                            type="button"
+                            className={`pass-fail-button pass-fail-button--pass${isPass ? " is-selected" : ""}`}
+                            aria-pressed={isPass}
+                            onClick={() => onChange(true)}
+                        >
+                            {isPass ? "✓ " : ""}Pass
+                        </button>
+                        <button
+                            type="button"
+                            className={`pass-fail-button pass-fail-button--fail${isFail ? " is-selected" : ""}`}
+                            aria-pressed={isFail}
+                            onClick={() => onChange(false)}
+                        >
+                            {isFail ? "✗ " : ""}Fail
+                        </button>
+                    </div>
 
-                        {taskTitle} ({fieldType === "Pass / Fail" ? "Pass" : "Completed"})
-
-                    </label>
+                    {!isPass && !isFail && (
+                        <small className="pass-fail-unanswered">Not answered yet</small>
+                    )}
 
                 </div>
 
