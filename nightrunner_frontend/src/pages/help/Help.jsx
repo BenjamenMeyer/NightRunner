@@ -1,7 +1,11 @@
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+
 import "./Help.css";
 
 import {
     GRID_ROLES,
+    HELP_SECTIONS,
     HELP_UPDATED,
     ROLES,
     ROLE_GRID
@@ -46,12 +50,189 @@ function AccessCell({ access }) {
 }
 
 
-export default function Help() {
+function RolesSection() {
+
+    const rows =
+        ROLE_GRID.flatMap(group => group.rows);
+
+    const hasPartial =
+        rows.some(row => row.partial?.length);
 
     const notes =
-        ROLE_GRID
-            .flatMap(group => group.rows)
-            .filter(row => row.note);
+        rows.filter(row => row.note);
+
+    return (
+        <>
+            <p className="help-intro">
+                Every role except System Admin is given per event. If you
+                have a role for one event, you only have it while that
+                event is selected. Ask an Event Admin or System Admin to
+                change your role.
+            </p>
+
+            <div className="help-role-list">
+                {ROLES.map(role => (
+                    <article key={role.key} className="help-role-card">
+                        <h3>{role.name}</h3>
+                        <p className="help-role-summary">{role.summary}</p>
+                        <ul>
+                            {role.details.map(detail => (
+                                <li key={detail}>{detail}</li>
+                            ))}
+                        </ul>
+                    </article>
+                ))}
+            </div>
+
+            <h3 className="help-subheading">Quick reference</h3>
+
+            <p className="help-intro">
+                Which screens each role sees in the menu.
+            </p>
+
+            <div className="help-legend" aria-hidden="true">
+                <span><span className="help-cell-yes">✓</span> Yes</span>
+                {hasPartial && (
+                    <span><span className="help-cell-partial">◐</span> Direct link only</span>
+                )}
+                <span><span className="help-cell-no">–</span> No</span>
+            </div>
+
+            <div className="help-table-wrap">
+                <table className="help-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Screen</th>
+                            {GRID_ROLES.map(role => (
+                                <th key={role.key} scope="col">
+                                    {role.label}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+
+                    {ROLE_GRID.map(group => (
+                        <tbody key={group.section}>
+                            <tr className="help-table-group">
+                                <th
+                                    scope="colgroup"
+                                    colSpan={GRID_ROLES.length + 1}
+                                >
+                                    {group.section}
+                                </th>
+                            </tr>
+
+                            {group.rows.map(row => (
+                                <tr key={row.screen}>
+                                    <th scope="row">{row.screen}</th>
+                                    {GRID_ROLES.map(role => (
+                                        <AccessCell
+                                            key={role.key}
+                                            access={accessFor(row, role.key)}
+                                        />
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    ))}
+                </table>
+            </div>
+
+            {notes.length > 0 && (
+                <ul className="help-notes">
+                    {notes.map(row => (
+                        <li key={row.screen}>
+                            <strong>{row.screen}:</strong> {row.note}
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </>
+    );
+
+}
+
+
+function VideoSection({ section, open }) {
+
+    const watchUrl =
+        `https://youtu.be/${section.videoId}`;
+
+    return (
+        <>
+            {/* Mounted only while open, so a closed section loads nothing. */}
+            {open && (
+                <div className="help-video">
+                    <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${section.videoId}?rel=0`}
+                        title={section.title}
+                        loading="lazy"
+                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                    />
+                </div>
+            )}
+
+            <p className="help-video-link">
+                Video not playing?{" "}
+                <a href={watchUrl} target="_blank" rel="noopener noreferrer">
+                    Watch it on YouTube
+                </a>
+            </p>
+        </>
+    );
+
+}
+
+
+function HelpSection({ section, open, onToggle }) {
+
+    return (
+        <details
+            id={section.id}
+            className="help-accordion"
+            open={open}
+            onToggle={event => onToggle(section.id, event.currentTarget.open)}
+        >
+            <summary>
+                <span className="help-accordion-title">{section.title}</span>
+                {section.kind === "video" && (
+                    <span className="help-accordion-tag">Video</span>
+                )}
+            </summary>
+
+            <div className="help-accordion-body">
+                {section.kind === "roles" && <RolesSection />}
+                {section.kind === "video" && <VideoSection section={section} open={open} />}
+            </div>
+        </details>
+    );
+
+}
+
+
+export default function Help() {
+
+    const location =
+        useLocation();
+
+    const [openIds, setOpenIds] =
+        useOpenSections(location.hash);
+
+    function toggle(id, isOpen) {
+        setOpenIds(current => {
+            if (isOpen === current.has(id)) {
+                return current;
+            }
+            const next = new Set(current);
+            if (isOpen) {
+                next.add(id);
+            } else {
+                next.delete(id);
+            }
+            return next;
+        });
+    }
 
     return (
         <div className="help-container">
@@ -59,107 +240,47 @@ export default function Help() {
             <header className="help-header">
                 <h1>Help &amp; Docs</h1>
                 <p>
-                    How Night Runner works, and who can do what.
-                    Last updated {HELP_UPDATED}.
+                    How Night Runner works, and who can do what. Open a topic
+                    below. Last updated {HELP_UPDATED}.
                 </p>
             </header>
 
-
-            <section className="help-section" aria-labelledby="help-roles">
-
-                <h2 id="help-roles">Roles and permissions</h2>
-
-                <p className="help-intro">
-                    Every role except System Admin is given per event. If you
-                    have a role for one event, you only have it while that
-                    event is selected. Ask an Event Admin or System Admin to
-                    change your role.
-                </p>
-
-                <div className="help-role-list">
-                    {ROLES.map(role => (
-                        <article key={role.key} className="help-role-card">
-                            <h3>{role.name}</h3>
-                            <p className="help-role-summary">{role.summary}</p>
-                            <ul>
-                                {role.details.map(detail => (
-                                    <li key={detail}>{detail}</li>
-                                ))}
-                            </ul>
-                        </article>
-                    ))}
-                </div>
-
-            </section>
-
-
-            <section className="help-section" aria-labelledby="help-grid">
-
-                <h2 id="help-grid">Quick reference</h2>
-
-                <p className="help-intro">
-                    Which screens each role sees in the menu.
-                </p>
-
-                <div className="help-legend" aria-hidden="true">
-                    <span><span className="help-cell-yes">✓</span> Yes</span>
-                    <span><span className="help-cell-partial">◐</span> Direct link only</span>
-                    <span><span className="help-cell-no">–</span> No</span>
-                </div>
-
-                <div className="help-table-wrap">
-                    <table className="help-table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Screen</th>
-                                {GRID_ROLES.map(role => (
-                                    <th key={role.key} scope="col">
-                                        {role.label}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-
-                        {ROLE_GRID.map(group => (
-                            <tbody key={group.section}>
-                                <tr className="help-table-group">
-                                    <th
-                                        scope="colgroup"
-                                        colSpan={GRID_ROLES.length + 1}
-                                    >
-                                        {group.section}
-                                    </th>
-                                </tr>
-
-                                {group.rows.map(row => (
-                                    <tr key={row.screen}>
-                                        <th scope="row">{row.screen}</th>
-                                        {GRID_ROLES.map(role => (
-                                            <AccessCell
-                                                key={role.key}
-                                                access={accessFor(row, role.key)}
-                                            />
-                                        ))}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        ))}
-                    </table>
-                </div>
-
-                {notes.length > 0 && (
-                    <ul className="help-notes">
-                        {notes.map(row => (
-                            <li key={row.screen}>
-                                <strong>{row.screen}:</strong> {row.note}
-                            </li>
-                        ))}
-                    </ul>
-                )}
-
-            </section>
+            <div className="help-sections">
+                {HELP_SECTIONS.map(section => (
+                    <HelpSection
+                        key={section.id}
+                        section={section}
+                        open={openIds.has(section.id)}
+                        onToggle={toggle}
+                    />
+                ))}
+            </div>
 
         </div>
     );
+
+}
+
+
+// All sections start closed, except one named in the URL (/help#user-manager),
+// which opens and scrolls into view.
+function useOpenSections(hash) {
+
+    const [openIds, setOpenIds] =
+        useState(() => {
+            const id = hash?.replace(/^#/, "");
+            return new Set(HELP_SECTIONS.some(s => s.id === id) ? [id] : []);
+        });
+
+    useEffect(() => {
+        const id = hash?.replace(/^#/, "");
+        if (!id || !HELP_SECTIONS.some(s => s.id === id)) {
+            return;
+        }
+        setOpenIds(current => current.has(id) ? current : new Set([...current, id]));
+        document.getElementById(id)?.scrollIntoView?.({ block: "start" });
+    }, [hash, setOpenIds]);
+
+    return [openIds, setOpenIds];
 
 }

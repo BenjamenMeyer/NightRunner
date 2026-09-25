@@ -10,6 +10,37 @@
 export const HELP_UPDATED = "September 2026";
 
 
+// The page's accordion sections, in order. `kind` picks the layout:
+//   "roles" - the role cards and quick reference grid below
+//   "video" - an embedded YouTube video; `videoId` is the part after youtu.be/
+// `id` is also the link anchor, so /help#user-manager opens that section.
+export const HELP_SECTIONS = [
+    {
+        id: "roles",
+        title: "What are the user roles and permissions?",
+        kind: "roles"
+    },
+    {
+        id: "print-patrol-qr-codes",
+        title: "Where to find and print the patrol QR codes",
+        kind: "video",
+        videoId: "aoq9d6dwpxQ"
+    },
+    {
+        id: "user-manager",
+        title: "How to use the User Manager",
+        kind: "video",
+        videoId: "KwD2yE8EKCc"
+    },
+    {
+        id: "field-qr-codes",
+        title: "Where to find the QR codes for patrol check-in/out and patrol tracking",
+        kind: "video",
+        videoId: "Qr4GDAYuGXQ"
+    }
+];
+
+
 export const ROLES = [
     {
         key: "system-admin",
@@ -18,8 +49,7 @@ export const ROLES = [
         details: [
             "Sees every event, including new events that have no Event Admin yet.",
             "The only role that can open the Configuration Manager.",
-            "Approves new accounts, blocks users, and grants System Admin to others.",
-            "Can reopen a finished station attempt at any time."
+            "Approves new accounts, blocks users, and grants System Admin to others."
         ]
     },
     {
@@ -68,7 +98,7 @@ export const ROLES = [
         details: [
             "Can view events, patrols, and stations.",
             "Can score, review score entries, and watch Live Status.",
-            "Can reopen a station attempt within 5 minutes of finishing it. After that, a System Admin has to reopen it."
+            "Can reopen a station attempt within 5 minutes of finishing it. After 5 minutes it can't be reopened by anyone right now; a fix is on the way."
         ]
     },
     {
@@ -149,7 +179,8 @@ export const ROLE_GRID = [
             },
             {
                 screen: "Reopen a station attempt (after 5 minutes)",
-                roles: ["system-admin"]
+                roles: [],
+                note: "Not working for anyone right now. A fix is on the way."
             }
         ]
     }
