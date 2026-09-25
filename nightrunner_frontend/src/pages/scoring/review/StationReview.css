@@ -226,3 +226,34 @@
     font-weight: 600;
     color: var(--text-primary);
 }
+
+/* Trailing "Edit" link on scored rows; opens the scoring form pre-filled. */
+.review-table .col-action {
+    white-space: nowrap;
+    text-align: right;
+}
+
+.review-edit-link {
+    display: inline-block;
+    padding: .3rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card-bg);
+    color: var(--link);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.review-edit-link:hover {
+    color: var(--link-hover);
+    border-color: var(--link);
+}
+
+.station-review-page .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}

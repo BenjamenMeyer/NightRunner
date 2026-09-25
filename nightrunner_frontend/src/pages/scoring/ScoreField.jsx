@@ -14,25 +14,54 @@ export default function ScoreField({
 
     /* Stopwatch State */
 
-    const [startedAt, setStartedAt] = useState(null);
-    const [endedAt, setEndedAt] = useState(null);
-    const [running, setRunning] = useState(false);
-    const [elapsed, setElapsed] = useState(0);
+    // A finished run passed in as `value` (a correction pre-filled from saved
+    // scores) seeds the stopwatch, so it opens showing that time rather than
+    // 00:00. Read once, on mount; after that the field owns its state.
+    const [initialRun] = useState(() => {
+        if (!value || typeof value !== "object" || value.running || !value.startTime || !value.endTime) {
+            return null;
+        }
+        const start = new Date(value.startTime);
+        const end = new Date(value.endTime);
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+            return null;
+        }
+        return { start, end, elapsed: Math.max(0, end.getTime() - start.getTime()), prefilled: Boolean(value.prefilled) };
+    });
 
-    const [manual, setManual] = useState({
-        hours: "00",
-        minutes: "00",
-        seconds: "00",
-        milliseconds: "000"
+    const [startedAt, setStartedAt] = useState(initialRun?.start ?? null);
+    const [endedAt, setEndedAt] = useState(initialRun?.end ?? null);
+    const [running, setRunning] = useState(false);
+    const [elapsed, setElapsed] = useState(initialRun?.elapsed ?? 0);
+
+    const [manual, setManual] = useState(() => {
+        const ms = initialRun?.elapsed ?? 0;
+        return {
+            hours: String(Math.floor(ms / 3600000)).padStart(2, "0"),
+            minutes: String(Math.floor((ms % 3600000) / 60000)).padStart(2, "0"),
+            seconds: String(Math.floor((ms % 60000) / 1000)).padStart(2, "0"),
+            milliseconds: String(ms % 1000).padStart(3, "0")
+        };
     });
 
     // Clock times as typed into the Started / Finished inputs ("HH:MM:SS").
     // These are the source of truth for those two inputs; startedAt / endedAt
     // are derived from them so a scorer can copy the times off a paper
     // scoresheet instead of working out the duration themselves.
-    const [startClock, setStartClock] = useState("");
-    const [endClock, setEndClock] = useState("");
-    const [rolledOver, setRolledOver] = useState(false);
+    const clockOf = (date) =>
+        [date.getHours(), date.getMinutes(), date.getSeconds()]
+            .map(part => String(part).padStart(2, "0"))
+            .join(":");
+    const [startClock, setStartClock] = useState(initialRun ? clockOf(initialRun.start) : "");
+    const [endClock, setEndClock] = useState(initialRun ? clockOf(initialRun.end) : "");
+    const [rolledOver, setRolledOver] = useState(
+        initialRun ? initialRun.end.getDate() !== initialRun.start.getDate() : false
+    );
+
+    // True while the stopwatch still shows a pre-filled run the scorer has not
+    // touched. Only the elapsed time was saved, so the clock times are
+    // placeholders and the field says so.
+    const [showPrefillNote, setShowPrefillNote] = useState(Boolean(initialRun?.prefilled));
 
     const divideByPatrolSize = task.divideByPatrolSize ?? scoreValue.divideByPatrolSize ?? false;
     const initialRawValue = (typeof value === "object" && value !== null && "rawValue" in value) ? value.rawValue : (typeof value === "object" ? value : value);
@@ -178,6 +207,7 @@ export default function ScoreField({
         setElapsed(end.getTime() - start.getTime());
         setRolledOver(crossesMidnight);
         setManualDirty(false);
+        setShowPrefillNote(false);
 
         onChange(stopwatchPayload(
             start.toISOString(),
@@ -207,6 +237,7 @@ export default function ScoreField({
         setElapsed(0);
         setRunning(true);
         setManualDirty(false);
+        setShowPrefillNote(false);
         setStartClock(formatClock(now));
         setEndClock("");
         setRolledOver(false);
@@ -297,6 +328,7 @@ export default function ScoreField({
 
         setEndedAt(adjustedEnd);
         setManualDirty(false);
+        setShowPrefillNote(false);
         setStartClock(formatClock(startedAt));
         setEndClock(formatClock(adjustedEnd));
         setRolledOver(adjustedEnd.getDate() !== startedAt.getDate());
@@ -795,6 +827,15 @@ export default function ScoreField({
                             </div>
 
                         </div>
+
+                        {showPrefillNote && (
+                            <p className="timer-prefill-note">
+                                This is the saved time. Only the length of the run was
+                                saved, so the Started and Finished clock times above are
+                                placeholders. To change the time, use Adjust Recorded Time
+                                below or type both clock times.
+                            </p>
+                        )}
 
                         {rolledOver && (
                             <p className="timer-rollover-note">

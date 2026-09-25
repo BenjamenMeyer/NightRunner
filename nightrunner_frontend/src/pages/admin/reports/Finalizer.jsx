@@ -1001,11 +1001,18 @@ export default function Finalizer() {
                                                                                 className="cipher-override-input"
                                                                                 value={currentScore}
                                                                                 onChange={(e) => handleTaskScoreOverride(st.id, p.id, taskId, e.target.value)}
-                                                                                title="Editable character match count score override"
+                                                                                title="Character match count override. Not saved with the score: it is lost on reload and must be re-entered before every Save & Finalize."
                                                                                 style={{ width: "55px", padding: "2px 4px", fontSize: "0.85rem", fontWeight: "bold", textAlign: "center", borderRadius: "4px", border: customOverrides[overrideKey] !== undefined ? "2px solid #3b82f6" : "1px solid var(--border)" }}
                                                                             />
                                                                             <small style={{ color: "var(--text-secondary)" }}>/ {expectedStr.length || t.maxScore || 0}</small>
                                                                         </div>
+                                                                        {/* Kept only as the workaround for positional cipher
+                                                                            scoring (#231). Remove with that fix. */}
+                                                                        {customOverrides[overrideKey] !== undefined && (
+                                                                            <small className="override-unsaved-warning" style={{ color: "var(--error)", fontWeight: 600, fontSize: "0.72rem", whiteSpace: "normal", maxWidth: "140px", textAlign: "center" }}>
+                                                                                Not saved. Lost on reload. Re-enter before every Save &amp; Finalize.
+                                                                            </small>
+                                                                        )}
 
                                                                         {/* Rich Character Alignment Hover Popover */}
                                                                         <div className="cipher-hover-popover" style={{

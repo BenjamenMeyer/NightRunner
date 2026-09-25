@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 
 import ApiService from "../../api/ApiService.js";
 import { useEventContext } from "../../api/helpers/event/EventContext.jsx";
 
 import DataSelector from "../../api/helpers/qr/DataSelector.jsx";
 import ScoreForm from "./ScoreForm";
+import { buildCorrectionValues } from "./prefill.js";
 
 import "./Scoring.css";
 
@@ -29,6 +30,17 @@ export default function Scoring() {
     const [scoringStarted, setScoringStarted] = useState(false);
     const [isAlreadyScored, setIsAlreadyScored] = useState(false);
     const [lastScoredAt, setLastScoredAt] = useState(null);
+
+    // The patrol's active score rows at the selected station, kept so a
+    // correction can open pre-filled, and the values built from them.
+    const [savedRows, setSavedRows] = useState([]);
+    const [correctionValues, setCorrectionValues] = useState(null);
+    const [preparingCorrection, setPreparingCorrection] = useState(false);
+
+    // ?station=<id>&patrol=<id> pre-selects both, e.g. from "Edit" on the
+    // review page. Applied once, after the lists have loaded.
+    const [searchParams] = useSearchParams();
+    const appliedParams = useRef(false);
 
     useEffect(() => {
         if (eventLoading) {
@@ -70,6 +82,7 @@ export default function Scoring() {
         if (!selectedPatrol || !selectedStation || !eventId) {
             setIsAlreadyScored(false);
             setLastScoredAt(null);
+            setSavedRows([]);
             return;
         }
 
@@ -80,12 +93,14 @@ export default function Scoring() {
                 if (isMounted && res) {
                     setIsAlreadyScored(Boolean(res.isAlreadyScored));
                     setLastScoredAt(res.lastScoredAt || null);
+                    setSavedRows(Array.isArray(res.scores) ? res.scores : []);
                 }
             })
             .catch(() => {
                 if (isMounted) {
                     setIsAlreadyScored(false);
                     setLastScoredAt(null);
+                    setSavedRows([]);
                 }
             });
 
@@ -93,6 +108,20 @@ export default function Scoring() {
             isMounted = false;
         };
     }, [eventId, selectedPatrol, selectedStation]);
+
+    useEffect(() => {
+        if (appliedParams.current || loading || stations.length === 0) {
+            return;
+        }
+        appliedParams.current = true;
+
+        const stationParam = searchParams.get("station");
+        const patrolParam = searchParams.get("patrol");
+        const station = stations.find((s) => String(s.id) === String(stationParam));
+        const patrol = patrols.find((p) => String(p.id) === String(patrolParam));
+        if (station) setSelectedStation(station);
+        if (patrol) setSelectedPatrol(patrol);
+    }, [loading, stations, patrols, searchParams]);
 
     async function loadData(selectedEventId) {
         try {
@@ -146,31 +175,41 @@ export default function Scoring() {
             return;
         }
 
-        if (isAlreadyScored) {
-            const confirmed = window.confirm(
-                `⚠️ WARNING: Patrol "${selectedPatrol.name}" was already scored at station "${selectedStation.name}".\n\n` +
-                `Are you sure you want to restart scoring for this patrol?\n\n` +
-                `This will deactivate the previous score and record a new score entry. This action cannot be undone.`
-            );
-
-            if (!confirmed) {
-                return;
-            }
-
-            try {
-                await ApiService.backendTransport.post("/scores", {
-                    action: "deactivate",
-                    eventId,
-                    stationId: selectedStation.id,
-                    patrolId: selectedPatrol.id
-                });
-                setIsAlreadyScored(false);
-            } catch (err) {
-                console.error("Failed to deactivate previous scores:", err);
-            }
+        if (!isAlreadyScored) {
+            setCorrectionValues(null);
+            setScoringStarted(true);
+            return;
         }
 
+        // Correcting an already-scored patrol. Nothing is deactivated here:
+        // POST /v1/scores replaces each task's previous row as the new one is
+        // written, so the saved entries stay live until the corrected form is
+        // submitted. Walking away mid-correction loses nothing.
+        //
+        // The judge comment lives on the visit, not on the score rows, so it
+        // comes from the station report. Losing it is not worth blocking a
+        // correction over.
+        setPreparingCorrection(true);
+        let comments = "";
+        try {
+            const report = await ApiService.reportData.getStationReport(selectedStation.id, eventId);
+            const entry = (report?.patrols || []).find(
+                (p) => String(p.patrolId) === String(selectedPatrol.id)
+            );
+            comments = entry?.comments || "";
+        } catch (err) {
+            console.error("Failed to load saved comments for correction:", err);
+        } finally {
+            setPreparingCorrection(false);
+        }
+
+        setCorrectionValues(buildCorrectionValues(selectedStation.tasks || [], savedRows, comments));
         setScoringStarted(true);
+    }
+
+    function cancelCorrection() {
+        setCorrectionValues(null);
+        setScoringStarted(false);
     }
 
     return (
@@ -301,20 +340,27 @@ export default function Scoring() {
                     {selectedPatrol && selectedStation ? (
                         scoringStarted ? (
                             <ScoreForm
+                                // Remount per patrol/station/mode so a correction's
+                                // pre-filled values are read fresh every time.
+                                key={`${selectedStation.id}:${selectedPatrol.id}:${correctionValues ? "edit" : "new"}`}
                                 patrol={selectedPatrol}
                                 station={selectedStation}
                                 eventId={eventId}
+                                initialValues={correctionValues}
+                                onCancel={correctionValues ? cancelCorrection : null}
                                 onScoreSubmitted={() => {
                                     setSelectedPatrol(null);
                                     setScoringStarted(false);
                                     setIsAlreadyScored(false);
                                     setLastScoredAt(null);
+                                    setSavedRows([]);
+                                    setCorrectionValues(null);
                                 }}
                             />
                         ) : isAlreadyScored ? (
-                            <div className="ready-panel warning-panel" style={{ border: "2px solid #ef4444", background: "var(--card-bg)" }}>
+                            <div className="ready-panel warning-panel" style={{ border: "2px solid var(--error)", background: "var(--card-bg)" }}>
 
-                                <h2 style={{ color: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                                <h2 style={{ color: "var(--error)", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
                                     <span>⚠️</span> Patrol Already Scored
                                 </h2>
 
@@ -334,10 +380,12 @@ export default function Scoring() {
 
                                 </p>
 
-                                <div style={{ background: "rgba(239, 68, 68, 0.12)", border: "1px solid #ef4444", padding: "12px 16px", borderRadius: "8px", color: "var(--text-primary)", fontSize: "0.9rem", textAlign: "center", maxWidth: "500px" }}>
+                                <div style={{ background: "var(--page-bg)", border: "1px solid var(--error)", padding: "12px 16px", borderRadius: "8px", color: "var(--text-primary)", fontSize: "0.9rem", textAlign: "center", maxWidth: "500px" }}>
                                     <strong>Notice:</strong> This patrol has already been scored at this station{lastScoredAt ? ` (last scored ${new Date(lastScoredAt).toLocaleTimeString()})` : ""}.
                                     <br /><br />
-                                    Starting a new score session will <strong>deactivate the previous score</strong> and record new scores for this patrol.
+                                    To fix an entry, open the saved entries below. The form opens with what was
+                                    entered. Change what's wrong and submit. <strong>Nothing changes until you
+                                    submit.</strong> The earlier entries are kept in the history.
                                 </div>
 
                                 <Link
@@ -349,10 +397,10 @@ export default function Scoring() {
 
                                 <button
                                     className="primary-button"
-                                    style={{ background: "#dc2626", borderColor: "#b91c1c", color: "#ffffff" }}
                                     onClick={startScoring}
+                                    disabled={preparingCorrection}
                                 >
-                                    Restart Scoring (Re-Score Patrol)
+                                    {preparingCorrection ? "Loading saved entries..." : "Edit Saved Entries"}
                                 </button>
 
                             </div>
