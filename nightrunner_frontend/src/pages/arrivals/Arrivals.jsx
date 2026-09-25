@@ -904,6 +904,8 @@ function AttendeeRow({ attendee, showTroop, busy, onCheckIn, onUndo, onSetStatus
                     {attendee.phone ? ` · Phone: ${attendee.phone}` : ""}
                     {attendee.primaryEmail || attendee.primary_email ? ` · Primary: ${attendee.primaryEmail || attendee.primary_email}` : ""}
                     {attendee.secondaryEmail || attendee.secondary_email ? ` · Secondary: ${attendee.secondaryEmail || attendee.secondary_email}` : ""}
+                    {attendee.emergencyContact1 || attendee.emergency_contact_1 ? ` · EC1: ${attendee.emergencyContact1 || attendee.emergency_contact_1}` : ""}
+                    {attendee.emergencyContact2 || attendee.emergency_contact_2 ? ` · EC2: ${attendee.emergencyContact2 || attendee.emergency_contact_2}` : ""}
                     {arrived && ` · arrived ${formatTime(attendee.arrival.arrivedAt)}`}
                 </span>
             </div>

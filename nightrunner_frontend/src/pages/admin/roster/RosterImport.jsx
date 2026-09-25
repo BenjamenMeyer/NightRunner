@@ -338,6 +338,8 @@ export default function RosterImport() {
                                                 {row.phone ? ` · Phone: ${row.phone}` : ""}
                                                 {row.primaryEmail ? ` · Primary: ${row.primaryEmail}` : ""}
                                                 {row.secondaryEmail ? ` · Secondary: ${row.secondaryEmail}` : ""}
+                                                {row.emergencyContact1 ? ` · EC1: ${row.emergencyContact1}` : ""}
+                                                {row.emergencyContact2 ? ` · EC2: ${row.emergencyContact2}` : ""}
                                             </span>
 
                                             {row.error && (
