@@ -232,6 +232,9 @@ export default function Arrivals() {
 
     const [showAddAttendeesModal, setShowAddAttendeesModal] = useState(false);
     const [targetTroopNumber, setTargetTroopNumber] = useState("");
+    // Every known troop, not just this event's, so people can be added to a
+    // troop that has nobody here yet (including one just created).
+    const [allTroops, setAllTroops] = useState([]);
     const [autoCheckInNew, setAutoCheckInNew] = useState(true);
     const [addingAttendees, setAddingAttendees] = useState(false);
     const [batchRows, setBatchRows] = useState([
@@ -252,16 +255,12 @@ export default function Arrivals() {
             setAddingTroop(true);
             setError(null);
             const createdTroop = await ApiService.rosterData.addTroop(trimmedNum, newTroopName.trim());
-            await load();
             setShowAddTroopModal(false);
             setNewTroopNumber("");
             setNewTroopName("");
-            // Auto-select the newly created troop
-            const createdNum = createdTroop?.number || trimmedNum;
-            const match = summary?.troops.find(t => t.troopNumber === createdNum);
-            if (match) {
-                setTroopId(match.troopId);
-            }
+            // A troop only joins this event's roster once it has people, so go
+            // straight to adding them.
+            openAddAttendeesModalForTroop(createdTroop?.number || trimmedNum);
         } catch (err) {
             console.error("Failed to add troop:", err);
             setError(err?.message || "Failed to add troop.");
@@ -271,6 +270,9 @@ export default function Arrivals() {
     }
 
     function openAddAttendeesModalForTroop(troopNum = "") {
+        ApiService.rosterData.listTroops()
+            .then(setAllTroops)
+            .catch(() => setError("Could not load the troop list."));
         setTargetTroopNumber(troopNum || (selectedTroop ? selectedTroop.troopNumber : ""));
         setBatchRows([
             {
@@ -679,9 +681,9 @@ export default function Arrivals() {
                                     onChange={e => setTargetTroopNumber(e.target.value)}
                                 >
                                     <option value="">Select a troop…</option>
-                                    {summary?.troops.map(t => (
-                                        <option key={t.troopId || t.troopNumber} value={t.troopNumber}>
-                                            {t.troopNumber}
+                                    {allTroops.map(t => (
+                                        <option key={t.id} value={t.number}>
+                                            {t.number}
                                         </option>
                                     ))}
                                 </select>

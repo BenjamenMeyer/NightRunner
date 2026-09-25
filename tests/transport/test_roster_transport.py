@@ -236,3 +236,26 @@ class TestAttendeeStatusAndArrivals:
         assert troop["coming"] == 1
         assert troop["notComing"] == 1
         assert troop["missing"] == 1
+
+    async def test_arrivals_summary_only_lists_this_events_troops(self, test_client, token_factory):
+        # Troops are shared across events. The summary feeds the arrivals
+        # dashboard, the gate dropdown and the print roster, so a troop that
+        # only has people in another event, or none at all, must not appear.
+        await seed_user(is_admin=True)
+        headers = token_factory(roles={}, is_admin=True)
+
+        await test_client.simulate_post(
+            "/v1/events/event-1/attendees",
+            headers=headers,
+            json={"troopNumber": "GA-0100", "firstName": "Alice", "lastName": "Smith", "category": "Youth"},
+        )
+        await test_client.simulate_post(
+            "/v1/events/event-2/attendees",
+            headers=headers,
+            json={"troopNumber": "GA-0200", "firstName": "Dana", "lastName": "Lee", "category": "Youth"},
+        )
+        await test_client.simulate_post("/v1/troops", headers=headers, json={"number": "GA-0300"})
+
+        resp = await test_client.simulate_get("/v1/events/event-1/arrivals", headers=headers)
+        assert resp.status == falcon.HTTP_200
+        assert [t["troopNumber"] for t in resp.json["troops"]] == ["GA-0100"]
