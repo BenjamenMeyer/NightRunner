@@ -134,6 +134,8 @@ export default function RosterImport() {
                     phone: row.phone,
                     emergencyContact1: row.emergencyContact1,
                     emergencyContact2: row.emergencyContact2,
+                    primaryEmail: row.primaryEmail,
+                    secondaryEmail: row.secondaryEmail,
                     keyOrdinal: row.suggestedKeyOrdinal ?? 1,
                     renameAttendeeId:
                         row.bucket === "possible_rename"
@@ -333,6 +335,11 @@ export default function RosterImport() {
                                                  row.sourceCategory !== row.category
                                                     ? ` (sheet said ${row.sourceCategory})`
                                                     : ""}
+                                                {row.phone ? ` · Phone: ${row.phone}` : ""}
+                                                {row.primaryEmail ? ` · Primary: ${row.primaryEmail}` : ""}
+                                                {row.secondaryEmail ? ` · Secondary: ${row.secondaryEmail}` : ""}
+                                                {row.emergencyContact1 ? ` · EC1: ${row.emergencyContact1}` : ""}
+                                                {row.emergencyContact2 ? ` · EC2: ${row.emergencyContact2}` : ""}
                                             </span>
 
                                             {row.error && (

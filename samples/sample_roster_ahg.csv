@@ -1,0 +1,8 @@
+Troop,First Name,Last Name,Category,Phone,Primary Email,Secondary Email,Emergency Contact 1,Emergency Contact 2
+AHG-0142,Abigail,Anderson,Youth,555-0301,parent.anderson@example.com,abigail.a@example.com,Rachel Anderson (Mother) 555-0302,Tom Anderson (Father) 555-0303
+AHG-0142,Hannah,Thomas,Youth,555-0304,parent.thomas@example.com,hannah.t@example.com,Laura Thomas (Mother) 555-0305,Brian Thomas (Father) 555-0310
+AHG-0142,Grace,Jackson,Youth,555-0306,parent.jackson@example.com,grace.j@example.com,James Jackson (Father) 555-0307,Julie Jackson (Mother) 555-0311
+AHG-0142,Elizabeth,White,Adult,555-0308,elizabeth.white@example.com,elizabeth.white.alt@example.com,Paul White (Husband) 555-0309,Sarah White (Sister) 555-0312
+AHG-0815,Chloe,Harris,Youth,555-0401,parent.harris@example.com,chloe.h@example.com,Megan Harris (Mother) 555-0402,Kevin Harris (Father) 555-0407
+AHG-0815,Samantha,Martin,Youth,555-0403,parent.martin@example.com,sam.martin@example.com,Daniel Martin (Father) 555-0404,Rebecca Martin (Mother) 555-0408
+AHG-0815,Victoria,Thompson,Adult,555-0405,victoria.thompson@example.com,victoria.thompson.alt@example.com,Andrew Thompson (Husband) 555-0406,Emily Thompson (Sister) 555-0409

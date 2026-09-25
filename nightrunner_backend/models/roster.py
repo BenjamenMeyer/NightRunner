@@ -113,6 +113,8 @@ class EventAttendee:
         phone: Optional[str] = None,
         emergency_contact_1: Optional[str] = None,
         emergency_contact_2: Optional[str] = None,
+        primary_email: Optional[str] = None,
+        secondary_email: Optional[str] = None,
         member_id: Optional[str] = None,
         youth_protection_completed: bool = False,
         status: str = "coming",
@@ -132,6 +134,8 @@ class EventAttendee:
         self.phone = phone
         self.emergency_contact_1 = emergency_contact_1
         self.emergency_contact_2 = emergency_contact_2
+        self.primary_email = primary_email
+        self.secondary_email = secondary_email
         self.member_id = member_id
         self.youth_protection_completed = youth_protection_completed
         self.status = status
@@ -168,6 +172,8 @@ class EventAttendee:
             "phone": self.phone,
             "emergencyContact1": self.emergency_contact_1,
             "emergencyContact2": self.emergency_contact_2,
+            "primaryEmail": self.primary_email,
+            "secondaryEmail": self.secondary_email,
             "memberId": self.member_id,
             "youthProtectionCompleted": self.youth_protection_completed,
             "status": self.status,

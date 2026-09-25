@@ -259,3 +259,30 @@ class TestAttendeeStatusAndArrivals:
         resp = await test_client.simulate_get("/v1/events/event-1/arrivals", headers=headers)
         assert resp.status == falcon.HTTP_200
         assert [t["troopNumber"] for t in resp.json["troops"]] == ["GA-0100"]
+
+    async def test_attendee_primary_and_secondary_email(self, test_client, token_factory):
+        await seed_user(role="event-admin")
+        headers = token_factory(roles={"event-1": "event-admin"}, is_admin=False)
+
+        resp = await test_client.simulate_post(
+            "/v1/events/event-1/attendees",
+            headers=headers,
+            json={
+                "troopNumber": "GA-0200",
+                "firstName": "Dan",
+                "lastName": "Miller",
+                "category": "Youth",
+                "primaryEmail": "parent@example.com",
+                "secondaryEmail": "youth@example.com",
+            },
+        )
+        assert resp.status == falcon.HTTP_201
+        data = resp.json
+        assert data["primaryEmail"] == "parent@example.com"
+        assert data["secondaryEmail"] == "youth@example.com"
+
+        get_resp = await test_client.simulate_get("/v1/events/event-1/attendees", headers=headers)
+        assert get_resp.status == falcon.HTTP_200
+        attendee = next(a for a in get_resp.json["attendees"] if a["id"] == data["id"])
+        assert attendee["primaryEmail"] == "parent@example.com"
+        assert attendee["secondaryEmail"] == "youth@example.com"
