@@ -188,9 +188,17 @@ export default function UserManager() {
                 const activeTs = u.lastActiveAt ? new Date(u.lastActiveAt).getTime() : 0;
                 const latestTs = Math.max(createdTs, activeTs);
 
+                if (activityFilter === "new_4") {
+                    // Created within last 4 days (single weekend event window)
+                    return createdTs > 0 && (now - createdTs) <= (4 * 24 * 60 * 60 * 1000);
+                }
                 if (activityFilter === "new_14") {
                     // Created within last 14 days
                     return createdTs > 0 && (now - createdTs) <= (14 * 24 * 60 * 60 * 1000);
+                }
+                if (activityFilter === "active_4") {
+                    // Active within last 4 days (current event weekend)
+                    return latestTs > 0 && (now - latestTs) <= (4 * 24 * 60 * 60 * 1000);
                 }
                 if (activityFilter === "active_30") {
                     // Active within last 30 days
@@ -551,7 +559,9 @@ export default function UserManager() {
                         title="Filter by user activity"
                     >
                         <option value="all">All Activity Times</option>
+                        <option value="new_4">New (Past 4 Days / Event Window)</option>
                         <option value="new_14">New (Past 14 Days)</option>
+                        <option value="active_4">Active This Weekend (&lt; 4 Days)</option>
                         <option value="active_30">Active Recently (&lt; 30 Days)</option>
                         <option value="active_180">Active This Season (&lt; 180 Days)</option>
                         <option value="inactive">Inactive (&gt; 180 Days)</option>
