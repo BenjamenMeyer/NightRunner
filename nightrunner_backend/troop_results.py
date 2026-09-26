@@ -244,6 +244,7 @@ def build_troop_results(
             station_pages.append({
                 "stationName": st.name,
                 "stationWeight": float(getattr(st, "station_weight", 1.0) or 1.0),
+                "description": (getattr(st, "description", None) or "").strip(),
                 "explanation": (getattr(st, "scoring_explanation", None) or "").strip(),
                 "score": station_scores.get(sid, {}).get(pid),
                 "rankStr": summary["ranks"].get(pid),
