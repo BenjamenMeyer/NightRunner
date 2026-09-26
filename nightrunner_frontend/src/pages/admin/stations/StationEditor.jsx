@@ -38,6 +38,7 @@ function createEmptyStation() {
     return {
         name: "",
         description: "",
+        scoringExplanation: "",
         eventId: null,
         activeConfigurationId: null,
         stationWeight: 1.0,
@@ -332,6 +333,7 @@ export default function StationEditor() {
                 eventId: eventId,
                 name: station.name.trim(),
                 description: station.description?.trim() ?? "",
+                scoringExplanation: station.scoringExplanation?.trim() ?? "",
                 activeConfigurationId: station.activeConfigurationId
             };
 
@@ -549,6 +551,29 @@ export default function StationEditor() {
                             placeholder="Describe this station"
                             rows={3}
                         />
+                    </label>
+
+                    <label className="form-field">
+                        <span>
+                            How this station is scored (for families)
+                        </span>
+
+                        <textarea
+                            value={
+                                station.scoringExplanation ?? ""
+                            }
+                            onChange={event =>
+                                updateStation(
+                                    "scoringExplanation",
+                                    event.target.value
+                                )
+                            }
+                            placeholder="e.g. Your time in minutes is subtracted from 30. Each missed knot costs 2 points."
+                            rows={3}
+                        />
+                        <small style={{ color: "var(--text-secondary)" }}>
+                            Printed on each patrol's results sheet. Plain English, no formulas.
+                        </small>
                     </label>
 
                     <div className="form-field duration-scoring-section" style={{ gridColumn: "1 / -1", marginTop: "0.5rem", padding: "1rem", background: "var(--card-bg)", borderRadius: "8px", border: "1px solid var(--border)" }}>

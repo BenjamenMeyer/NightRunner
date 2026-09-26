@@ -4,16 +4,16 @@ import uuid6
 from nightrunner_backend.drivers.base import DatabaseDriver
 from nightrunner_backend.models.station import Station
 
-GET_STATIONS = "SELECT id, event_id, name, description, active_configuration_id, station_weight, tasks FROM stations ORDER BY name ASC"
-GET_STATIONS_BY_EVENT = "SELECT id, event_id, name, description, active_configuration_id, station_weight, tasks FROM stations WHERE event_id = :event_id ORDER BY name ASC"
-GET_STATION = "SELECT id, event_id, name, description, active_configuration_id, station_weight, tasks FROM stations WHERE id = :id"
+GET_STATIONS = "SELECT id, event_id, name, description, scoring_explanation, active_configuration_id, station_weight, tasks FROM stations ORDER BY name ASC"
+GET_STATIONS_BY_EVENT = "SELECT id, event_id, name, description, scoring_explanation, active_configuration_id, station_weight, tasks FROM stations WHERE event_id = :event_id ORDER BY name ASC"
+GET_STATION = "SELECT id, event_id, name, description, scoring_explanation, active_configuration_id, station_weight, tasks FROM stations WHERE id = :id"
 CREATE_STATION = """
-    INSERT INTO stations (id, event_id, name, description, active_configuration_id, station_weight, tasks)
-    VALUES (:id, :event_id, :name, :description, :active_configuration_id, :station_weight, :tasks)
+    INSERT INTO stations (id, event_id, name, description, scoring_explanation, active_configuration_id, station_weight, tasks)
+    VALUES (:id, :event_id, :name, :description, :scoring_explanation, :active_configuration_id, :station_weight, :tasks)
 """
 UPDATE_STATION = """
     UPDATE stations
-    SET event_id = :event_id, name = :name, description = :description, active_configuration_id = :active_configuration_id, station_weight = :station_weight, tasks = :tasks
+    SET event_id = :event_id, name = :name, description = :description, scoring_explanation = :scoring_explanation, active_configuration_id = :active_configuration_id, station_weight = :station_weight, tasks = :tasks
     WHERE id = :id
 """
 DELETE_STATION = "DELETE FROM stations WHERE id = :id"
@@ -172,6 +172,7 @@ class StationsStore:
                 event_id=row.get("event_id"),
                 name=row.get("name") or "",
                 description=row.get("description"),
+            scoring_explanation=row.get("scoring_explanation"),
                 active_configuration_id=row.get("active_configuration_id"),
                 station_weight=float(row.get("station_weight") if row.get("station_weight") is not None else 1.0),
                 tasks=tasks,
@@ -189,6 +190,7 @@ class StationsStore:
             event_id=row.get("event_id"),
             name=row.get("name") or "",
             description=row.get("description"),
+            scoring_explanation=row.get("scoring_explanation"),
             active_configuration_id=row.get("active_configuration_id"),
             station_weight=float(row.get("station_weight") if row.get("station_weight") is not None else 1.0),
             tasks=tasks,
@@ -212,6 +214,7 @@ class StationsStore:
             "event_id": station.event_id,
             "name": station.name,
             "description": station.description,
+            "scoring_explanation": station.scoring_explanation,
             "active_configuration_id": station.active_configuration_id,
             "station_weight": station.station_weight,
             "tasks": json.dumps(station.tasks) if station.tasks else None,
@@ -237,6 +240,7 @@ class StationsStore:
             "event_id": station.event_id,
             "name": station.name,
             "description": station.description,
+            "scoring_explanation": station.scoring_explanation,
             "active_configuration_id": station.active_configuration_id,
             "station_weight": station.station_weight,
             "tasks": json.dumps(station.tasks) if station.tasks else None,

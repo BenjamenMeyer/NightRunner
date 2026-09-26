@@ -14,6 +14,9 @@ from nightrunner_backend.reports_scoring_pdf import generate_event_scoring_pdf
 
 from nightrunner_backend.reports_attendance_pdf import generate_attendance_report_pdf
 from nightrunner_backend.drivers.store.roster import RosterStore
+from nightrunner_backend.drivers.store.stations import StationsStore as _StationsStore
+from nightrunner_backend.troop_results import build_troop_results, scoring_mode_of
+from nightrunner_backend.reports_troop_results_pdf import generate_troop_results_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +93,52 @@ async def _background_generate_patrol_qr_pdf(report_id: str, event_id: str, even
         await reports_store.mark_report_ready(report_id, file_key, len(pdf_bytes))
     except Exception as ex:
         logger.exception(f"Failed generating report {report_id}: {ex}")
+        await reports_store.mark_report_failed(report_id, str(ex))
+
+
+async def _load_troop_results(driver, event_id: str):
+    """Returns (troop groups, scoring mode), or (None, None) before finalizing.
+
+    Only finalized numbers are printed, so an event nobody has finalized
+    yet has no troop results at all rather than draft ones.
+    """
+    scores_store = ScoresStore(driver)
+    finalized_rows = await scores_store.list_finalized_results(event_id)
+    if not finalized_rows:
+        return None, None
+
+    roster_store = RosterStore(driver)
+    patrols = await PatrolsStore(driver).list(event_id=event_id)
+    stations = await _StationsStore(driver).list(event_id=event_id)
+    scores = await scores_store.list_for_event(event_id)
+    attendees = await roster_store.list_attendees(event_id)
+    troops = await roster_store.list_troops()
+
+    groups = build_troop_results(
+        patrols=patrols,
+        stations=stations,
+        finalized_rows=finalized_rows,
+        scores=scores,
+        attendee_troop_ids={a.id: a.troop_id for a in attendees if a.troop_id},
+        troops=troops,
+    )
+    return groups, scoring_mode_of(finalized_rows)
+
+
+async def _background_generate_troop_results_pdf(report_id: str, event_id: str, event_name: str, troop_key: str):
+    driver = get_driver()
+    reports_store = ReportsStore(driver)
+    try:
+        groups, scoring_mode = await _load_troop_results(driver, event_id)
+        troop = next((g for g in groups or [] if g["troopKey"] == troop_key), None)
+        if troop is None:
+            raise ValueError(f"No finalized results for troop {troop_key}")
+        pdf_bytes = generate_troop_results_pdf(event_name, troop, scoring_mode=scoring_mode)
+        file_key = f"events/{event_id}/reports/{report_id}-troop-results.pdf"
+        upload_report_bytes(file_key, pdf_bytes, content_type="application/pdf")
+        await reports_store.mark_report_ready(report_id, file_key, len(pdf_bytes))
+    except Exception as ex:
+        logger.exception(f"Failed generating troop results report {report_id}: {ex}")
         await reports_store.mark_report_failed(report_id, str(ex))
 
 
@@ -366,7 +415,8 @@ class CompiledReportsResource:
     Lists all compiled reports for an event.
 
     POST /v1/events/{eventId}/compiled-reports
-    Triggers asynchronous generation of a report (e.g. reportType="patrols-pdf", "event-scoring", "event-scoring-draft", or "event-scoring-ods").
+    Triggers asynchronous generation of a report (e.g. reportType="patrols-pdf", "event-scoring", "event-scoring-draft", "event-scoring-ods",
+    or "troop-results", which queues one PDF per troop and returns {"reports": [...]}).
     """
 
     async def on_get(self, req: falcon.Request, resp: falcon.Response, event_id: str):
@@ -386,6 +436,10 @@ class CompiledReportsResource:
         
         event = await events_store.get(event_id)
         event_name = event.name if event else "Event"
+
+        if report_type == "troop-results":
+            await self._queue_troop_results(req, resp, event_id, event_name, body)
+            return
 
         report_id = f"rep-{uuid6.uuid7().hex[:12]}"
         if report_type == "event-scoring-draft":
@@ -413,6 +467,37 @@ class CompiledReportsResource:
             asyncio.create_task(_background_generate_patrol_qr_pdf(report_id, event_id, event_name))
 
         resp.media = job
+        resp.status = falcon.HTTP_202
+
+    async def _queue_troop_results(self, req, resp, event_id: str, event_name: str, body: dict):
+        """One report job per troop, or just one when `troopId` is given.
+
+        `troopId` accepts a troop record id or a troop number, so the troop
+        portal (section 6) can link a single troop's sheet later.
+        """
+        driver = get_driver()
+        store = ReportsStore(driver)
+        groups, _mode = await _load_troop_results(driver, event_id)
+        if groups is None:
+            raise falcon.HTTPConflict(
+                title="Scores Not Finalized",
+                description="Finalize the event in the Score Finalizer before generating troop results.",
+            )
+
+        wanted = body.get("troopId")
+        if wanted:
+            groups = [g for g in groups if wanted in (g["troopId"], g["troopKey"], g["troopNumber"])]
+            if not groups:
+                raise falcon.HTTPNotFound(title="Troop Not Found", description=f"No patrols found for troop {wanted}.")
+
+        jobs = []
+        for g in groups:
+            report_id = f"rep-{uuid6.uuid7().hex[:12]}"
+            name = f"Troop Results — {g['troopLabel']} ({event_name})"
+            jobs.append(await store.create_report_job(report_id, event_id, "troop-results", name))
+            asyncio.create_task(_background_generate_troop_results_pdf(report_id, event_id, event_name, g["troopKey"]))
+
+        resp.media = {"reports": jobs}
         resp.status = falcon.HTTP_202
 
 
