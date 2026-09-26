@@ -202,3 +202,18 @@ async def test_station_scoring_explanation_round_trips(test_client, token_factor
                                    json={"scoringExplanation": "Time taken from 30 minutes."})
     got = await test_client.simulate_get(f"/v1/stations/{sid}", headers=headers)
     assert got.json["scoringExplanation"] == "Time taken from 30 minutes."
+
+
+def test_station_score_says_out_of_10_only_in_relative_mode():
+    from nightrunner_backend.reports_troop_results_pdf import _station_score
+    assert _station_score(7.5, "relative") == "7.50 out of 10"
+    assert _station_score(42, "absolute") == "42.00"
+    assert _station_score(None, "relative") == "—"
+
+
+def test_station_description_is_carried_to_the_page():
+    st = _station()
+    st.description = "Build a fire and burn the string."
+    groups = build_troop_results([_patrol("a", 1, ["GA-0594"])], [st],
+                                 _finalized({("a", "st-1"): 10}, {"a": 10}), [], {}, [])
+    assert groups[0]["patrols"][0]["stations"][0]["description"] == "Build a fire and burn the string."

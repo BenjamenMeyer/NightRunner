@@ -8,6 +8,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 from reportlab.platypus import (
+    HRFlowable,
     KeepTogether,
     PageBreak,
     Paragraph,
@@ -44,6 +45,13 @@ class _FooterCanvas(canvas.Canvas):
 
 def _score(value: Optional[float]) -> str:
     return f"{float(value):.2f}" if value is not None else "—"
+
+
+def _station_score(value: Optional[float], scoring_mode: str) -> str:
+    """Relative mode is a 10-point scale, so say so: '7.50 out of 10'."""
+    if value is None:
+        return "—"
+    return f"{float(value):.2f} out of 10" if scoring_mode == "relative" else f"{float(value):.2f}"
 
 
 def _weight_note(weight: float) -> str:
@@ -90,6 +98,7 @@ def generate_troop_results_pdf(
                                  fontSize=9, leading=12, textColor=colors.HexColor("#4a5568"),
                                  spaceBefore=3)
     th = ParagraphStyle("TH", parent=body, fontName="Helvetica-Bold", textColor=colors.white)
+    result_cell = ParagraphStyle("ResultCell", parent=body, fontName="Helvetica-Bold")
 
     grid = TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4a5568")),
@@ -100,6 +109,17 @@ def generate_troop_results_pdf(
         ("RIGHTPADDING", (0, 0), (-1, -1), 6),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e0")),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f7fafc")]),
+    ])
+
+    result_grid = TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2b6cb0")),
+        ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#ebf4ff")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e0")),
     ])
 
     troop_label = troop.get("troopLabel") or "Troop"
@@ -136,7 +156,7 @@ def generate_troop_results_pdf(
         if p.get("troops"):
             story.append(_p(f"Troop(s): {p['troops']}", subtitle))
         if p.get("members"):
-            story.append(_p("Scouts: " + ", ".join(p["members"]), body))
+            story.append(_p("Patrol Members: " + ", ".join(p["members"]), body))
         story.append(_p(
             f"Overall: {p.get('overallRankStr') or '—'} of {p.get('patrolCount')}, "
             f"{_score(p.get('overallScore'))} points",
@@ -144,8 +164,15 @@ def generate_troop_results_pdf(
         ))
         story.append(_p(MODE_NOTES.get(scoring_mode, MODE_NOTES["absolute"]), muted))
 
-        for st in p.get("stations", []):
-            block = [_p(f"{st['stationName']}{_weight_note(st['stationWeight'])}", station_heading)]
+        for index, st in enumerate(p.get("stations", [])):
+            block = []
+            if index > 0:
+                block.append(HRFlowable(width="100%", thickness=0.75, color=colors.HexColor("#cbd5e0"),
+                                        spaceBefore=6, spaceAfter=2))
+            block.append(_p(f"{st['stationName']}{_weight_note(st['stationWeight'])}", station_heading))
+            if st.get("description"):
+                block.append(_p(st["description"], body))
+                block.append(Spacer(1, 4))
 
             if st.get("attempted") and st.get("entries"):
                 rows = [[_p("What was recorded", th), _p("Entry", th)]]
@@ -158,14 +185,21 @@ def generate_troop_results_pdf(
             else:
                 block.append(_p("Not scored at this station.", muted))
 
-            summary = (
-                f"Station score {_score(st.get('score'))}"
-                f" · {st.get('rankStr') or '—'} of {p.get('patrolCount')}"
-                f" · Average {_score(st.get('average'))}"
-                f" · Best {_score(st.get('best'))}"
+            block.append(Spacer(1, 4))
+            results = Table(
+                [
+                    [_p("Station score", th), _p("Placement", th), _p("Event average", th), _p("Best score", th)],
+                    [
+                        _p(_station_score(st.get("score"), scoring_mode), result_cell),
+                        _p(f"{st.get('rankStr') or '—'} of {p.get('patrolCount')} patrols", result_cell),
+                        _p(_score(st.get("average")), body),
+                        _p(_score(st.get("best")), body),
+                    ],
+                ],
+                colWidths=[1.9 * inch, 1.9 * inch, 1.5 * inch, 1.5 * inch],
             )
-            block.append(Spacer(1, 3))
-            block.append(_p(summary, body))
+            results.setStyle(result_grid)
+            block.append(results)
             if st.get("explanation"):
                 block.append(_p(f"How it was scored: {st['explanation']}", explanation))
             story.append(KeepTogether(block))
