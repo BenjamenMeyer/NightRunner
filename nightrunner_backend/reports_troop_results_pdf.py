@@ -156,7 +156,7 @@ def generate_troop_results_pdf(
         if p.get("troops"):
             story.append(_p(f"Troop(s): {p['troops']}", subtitle))
         if p.get("members"):
-            story.append(_p("Scouts: " + ", ".join(p["members"]), body))
+            story.append(_p("Patrol Members: " + ", ".join(p["members"]), body))
         story.append(_p(
             f"Overall: {p.get('overallRankStr') or '—'} of {p.get('patrolCount')}, "
             f"{_score(p.get('overallScore'))} points",
