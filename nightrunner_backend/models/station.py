@@ -19,6 +19,9 @@ class Station:
     event_id: Optional[str] = None
     name: str = ""
     description: Optional[str] = None
+    # How the station is scored, in plain English for families. Printed on the
+    # per-troop results report; `description` is written for volunteers.
+    scoring_explanation: Optional[str] = None
     active_configuration_id: Optional[str] = None
     station_weight: float = 1.0
     members: List[StationMember] = field(default_factory=list)
@@ -30,6 +33,7 @@ class Station:
             "eventId": self.event_id,
             "name": self.name,
             "description": self.description,
+            "scoringExplanation": self.scoring_explanation,
             "activeConfigurationId": self.active_configuration_id,
             "stationWeight": self.station_weight,
             "members": self.members,

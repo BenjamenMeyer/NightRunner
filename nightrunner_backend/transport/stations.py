@@ -26,6 +26,7 @@ class StationsResource:
             raise falcon.HTTPBadRequest(description="'eventId' is required when creating a station.")
         name = data.get("name") or ""
         description = data.get("description")
+        scoring_explanation = data.get("scoringExplanation")
         active_config_id = data.get("activeConfigurationId")
         stationWeight = data.get("stationWeight", 1.0)
         station = Station(
@@ -33,6 +34,7 @@ class StationsResource:
             event_id=str(event_id) if event_id is not None and not isinstance(event_id, str) else event_id,
             name=str(name),
             description=str(description) if description is not None and not isinstance(description, str) else description,
+            scoring_explanation=str(scoring_explanation) if scoring_explanation is not None else None,
             active_configuration_id=str(active_config_id) if active_config_id is not None and not isinstance(active_config_id, str) else active_config_id,
             station_weight=float(stationWeight) if stationWeight is not None else 1.0,
             members=data.get("members", []),
@@ -71,6 +73,9 @@ class StationResource:
         if "description" in data:
             desc_val = data.get("description")
             station.description = str(desc_val) if desc_val is not None else None
+        if "scoringExplanation" in data:
+            expl_val = data.get("scoringExplanation")
+            station.scoring_explanation = str(expl_val) if expl_val is not None else None
         if "activeConfigurationId" in data:
             cfg_val = data.get("activeConfigurationId")
             station.active_configuration_id = str(cfg_val) if cfg_val is not None else None

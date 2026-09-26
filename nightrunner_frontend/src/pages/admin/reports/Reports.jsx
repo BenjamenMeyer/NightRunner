@@ -3,6 +3,15 @@ import ApiService from "@/api/ApiService.js";
 import { useEventContext } from "@/api/helpers/event/EventContext.jsx";
 import "./reports.css";
 
+const REPORT_TYPE_LABELS = {
+    "event-scoring-draft": "Draft Scoring",
+    "event-scoring": "Final Scoring",
+    "event-scoring-ods": "Scoring ODS",
+    "attendance-pdf": "Attendance",
+    "troop-results": "Troop Results",
+    "patrols-pdf": "Patrol QR Badges"
+};
+
 export default function Reports() {
     const {
         event,
@@ -63,6 +72,9 @@ export default function Reports() {
             await loadCompiledReports();
         } catch (err) {
             console.error("Failed initiating report generation job:", err);
+            // Troop results refuse to run before scores are finalized; say so
+            // instead of leaving the button looking like it did nothing.
+            setError(err?.message || "Failed queueing the report.");
         } finally {
             setGeneratingReport(false);
         }
@@ -164,6 +176,16 @@ export default function Reports() {
                     <button
                         type="button"
                         className="reports-button"
+                        onClick={() => handleGenerateCompiledReport("troop-results")}
+                        disabled={generatingReport}
+                        title="One PDF per troop, one page per patrol, from the finalized scores"
+                    >
+                        {generatingReport ? "Queueing..." : "Generate Troop Results (PDFs)"}
+                    </button>
+
+                    <button
+                        type="button"
+                        className="reports-button"
                         onClick={() => handleGenerateCompiledReport("patrols-pdf")}
                         disabled={generatingReport}
                     >
@@ -239,7 +261,7 @@ export default function Reports() {
                                             </td>
                                             <td>
                                                 <span className="badge" style={{ background: "var(--input-bg)", border: "1px solid var(--border)", padding: "2px 8px", borderRadius: "4px", fontSize: "0.8rem" }}>
-                                                    {item.report_type === "event-scoring-draft" ? "Draft Scoring" : (item.report_type === "event-scoring" ? "Final Scoring" : (item.report_type === "event-scoring-ods" ? "Scoring ODS" : "Patrol QR Badges"))}
+                                                    {REPORT_TYPE_LABELS[item.report_type] ?? "Patrol QR Badges"}
                                                 </span>
                                             </td>
                                             <td>
